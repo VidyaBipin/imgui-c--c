@@ -5597,6 +5597,30 @@ void ImGui::SpinnerBounceBall(const char *label, float radius, float thickness, 
     window->DrawList->AddCircleFilled(ImVec2(centre.x, centre.y + radius - ImSin(start) * 2.f * maxht), thickness, color, 8);
 }
 
+void ImGui::SpinnerArcRotation(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t arcs)
+{
+    SPINNER_HEADER(pos, size, centre);
+
+    // Render
+    const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius) / 2;
+    float start = (float)ImGui::GetTime()* speed;
+
+    for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
+    {
+        window->DrawList->PathClear();
+        float arc_angle = 2.f * IM_PI / (float)arcs;
+        const float angle_offset = arc_angle / num_segments;
+        ImColor c = color;
+        c.Value.w = ImMax(0.1f, arc_num / (float)arcs);
+        for (size_t i = 0; i <= num_segments; i++)
+        {
+          const float a = start + arc_angle * arc_num + (i * angle_offset);
+          window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+        }
+        window->DrawList->PathStroke(c, false, thickness);
+    }
+}
+
 void ImGui::SpinnerTwinBall(const char *label, float radius1, float radius2, float thickness, float b_thickness, const ImColor &ball, const ImColor &bg, float speed, size_t balls)
 {
     float radius = ImMax(radius1, radius2);
@@ -5676,6 +5700,40 @@ void ImGui::SpinnerAngEclipse(const char *label, float radius, float thickness, 
         window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
                                 ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
                                 color,
+                                th * i);
+    }
+}
+
+void ImGui::SpinnerIngYang(const char *label, float radius, float thickness, bool reverse, float yang_detlta_r, const ImColor &colorI, const ImColor &colorY, float speed, float angle)
+{
+    SPINNER_HEADER(pos, size, centre);
+
+    // Render
+    const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+    float startI = (float)ImGui::GetTime() * speed;
+    float startY = (float)ImGui::GetTime() * (speed + (yang_detlta_r > 0.f ? ImClamp(yang_detlta_r * 0.5f, 0.5f, 2.f) : 0.f));
+
+    const float angle_offset = angle / num_segments;
+    const float th = thickness / num_segments;
+    for (size_t i = 0; i < num_segments; i++)
+    {
+        const float a = startI + (i * angle_offset);
+        const float a1 = startI + ((i + 1) * angle_offset);
+        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
+                                ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
+                                colorI,
+                                th * i);
+    }
+
+    const float rv = reverse ? -1 : 1;
+    const float yang_radius = (radius - yang_detlta_r);
+    for (size_t i = 0; i < num_segments; i++)
+    {
+        const float a = startY + IM_PI + (i * angle_offset);
+        const float a1 = startY + IM_PI + ((i+1) * angle_offset);
+        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a * rv) * yang_radius, centre.y + ImSin(a * rv) * yang_radius),
+                                ImVec2(centre.x + ImCos(a1 * rv) * yang_radius, centre.y + ImSin(a1 * rv) * yang_radius),
+                                colorY,
                                 th * i);
     }
 }
