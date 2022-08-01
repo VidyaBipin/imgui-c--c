@@ -5605,11 +5605,12 @@ void ImGui::SpinnerArcRotation(const char *label, float radius, float thickness,
     const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius) / 2;
     float start = (float)ImGui::GetTime()* speed;
 
+    float arc_angle = 2.f * IM_PI / (float)arcs;
+    const float angle_offset = arc_angle / num_segments;
+
     for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
     {
         window->DrawList->PathClear();
-        float arc_angle = 2.f * IM_PI / (float)arcs;
-        const float angle_offset = arc_angle / num_segments;
         ImColor c = color;
         c.Value.w = ImMax(0.1f, arc_num / (float)arcs);
         for (size_t i = 0; i <= num_segments; i++)
@@ -5617,6 +5618,58 @@ void ImGui::SpinnerArcRotation(const char *label, float radius, float thickness,
           const float a = start + arc_angle * arc_num + (i * angle_offset);
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
         }
+        window->DrawList->PathStroke(c, false, thickness);
+    }
+}
+
+void ImGui::SpinnerArcFade(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t arcs)
+{
+    SPINNER_HEADER(pos, size, centre);
+
+    // Render
+    const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius) / 2;
+    float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 4.f);
+
+    float arc_angle = 2.f * IM_PI / (float)arcs;
+    const float angle_offset = arc_angle / num_segments;
+    for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
+    {
+        window->DrawList->PathClear();
+        for (size_t i = 0; i <= num_segments + 1; i++)
+        {
+            const float a = arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f - IM_PI / 4.f;
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+        }
+        const float a = arc_angle * arc_num;
+        ImColor c = color;
+        if (start < IM_PI * 2.f)
+        {
+            c.Value.w = 0.f;
+            if (start > a && start < (a + arc_angle))
+            {
+                c.Value.w = 1.f - (start - a) / (float)arc_angle;
+            }
+            else if (start < a)
+            {
+                c.Value.w = 1.f;
+            }
+            c.Value.w = ImMax(0.05f, 1.f - c.Value.w);
+        }
+        else
+        {
+            const float startk = start - IM_PI * 2.f;
+            c.Value.w = 0.f;
+            if (startk > a && startk < (a + arc_angle))
+            {
+                c.Value.w = 1.f - (startk - a) / (float)arc_angle;
+            }
+            else if (startk < a)
+            {
+                c.Value.w = 1.f;
+            }
+            c.Value.w = ImMax(0.05f, c.Value.w);
+        }
+
         window->DrawList->PathStroke(c, false, thickness);
     }
 }
@@ -5725,7 +5778,7 @@ void ImGui::SpinnerIngYang(const char *label, float radius, float thickness, boo
                                 th * i);
     }
 
-    const float rv = reverse ? -1 : 1;
+    const float rv = reverse ? -1.f : 1.f;
     const float yang_radius = (radius - yang_detlta_r);
     for (size_t i = 0; i < num_segments; i++)
     {
