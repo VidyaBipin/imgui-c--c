@@ -127,6 +127,8 @@ static ImGui_ImplSDL2_Data* ImGui_ImplSDL2_GetBackendData()
 static void ImGui_ImplSDL2_UpdateMonitors();
 static void ImGui_ImplSDL2_InitPlatformInterface(SDL_Window* window, void* sdl_gl_context);
 static void ImGui_ImplSDL2_ShutdownPlatformInterface();
+// Add By Dicky for PlatformImeData
+static void ImGui_ImplSDL2_SetPlatformImeData(ImGuiViewport* viewport, ImGuiPlatformImeData* data);
 
 // Functions
 static const char* ImGui_ImplSDL2_GetClipboardText(void*)
@@ -401,6 +403,8 @@ static bool ImGui_ImplSDL2_Init(SDL_Window* window, SDL_Renderer* renderer, void
     io.SetClipboardTextFn = ImGui_ImplSDL2_SetClipboardText;
     io.GetClipboardTextFn = ImGui_ImplSDL2_GetClipboardText;
     io.ClipboardUserData = NULL;
+
+    io.SetPlatformImeDataFn = ImGui_ImplSDL2_SetPlatformImeData;
 
     // Load mouse cursors
     bd->MouseCursors[ImGuiMouseCursor_Arrow] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
@@ -958,6 +962,12 @@ static void ImGui_ImplSDL2_ShutdownPlatformInterface()
 }
 
 // Add By Dicky
+static void ImGui_ImplSDL2_SetPlatformImeData(ImGuiViewport* viewport, ImGuiPlatformImeData* data)
+{
+    SDL_Rect rect = { (int)(data->InputPos.x - viewport->Pos.x), (int)(data->InputPos.y - viewport->Pos.y + data->InputLineHeight), 0, 0 };
+	SDL_SetTextInputRect(&rect);
+}
+
 void ImGui_ImplSDL2_WaitForEvent()
 {
     if (!(ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode) &&
