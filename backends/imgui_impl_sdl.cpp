@@ -404,7 +404,11 @@ static bool ImGui_ImplSDL2_Init(SDL_Window* window, SDL_Renderer* renderer, void
     io.GetClipboardTextFn = ImGui_ImplSDL2_GetClipboardText;
     io.ClipboardUserData = NULL;
 
+    // Add By Dicky
+#ifndef _WIN32
     io.SetPlatformImeDataFn = ImGui_ImplSDL2_SetPlatformImeData;
+#endif
+    // Add By Dicky end
 
     // Load mouse cursors
     bd->MouseCursors[ImGuiMouseCursor_Arrow] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
@@ -943,6 +947,7 @@ static void ImGui_ImplSDL2_InitPlatformInterface(SDL_Window* window, void* sdl_g
 #endif
     // add By Dicky
     platform_io.Platform_FullScreen = ImGui_ImplSDL2_FullScreen;
+    // add By Dicky end
 
     // Register main window handle (which is owned by the main application, not by us)
     // This is mostly for simplicity and consistency, so that our code (e.g. mouse handling etc.) can use same logic for main and secondary viewports.
@@ -964,8 +969,8 @@ static void ImGui_ImplSDL2_ShutdownPlatformInterface()
 // Add By Dicky
 static void ImGui_ImplSDL2_SetPlatformImeData(ImGuiViewport* viewport, ImGuiPlatformImeData* data)
 {
-    SDL_Rect rect = { (int)(data->InputPos.x - viewport->Pos.x), (int)(data->InputPos.y - viewport->Pos.y + data->InputLineHeight), 0, 0 };
-	SDL_SetTextInputRect(&rect);
+    SDL_Rect rect = { (int)(data->InputPos.x - viewport->Pos.x), (int)(data->InputPos.y - viewport->Pos.y + data->InputLineHeight), 0, 0};
+    SDL_SetTextInputRect(&rect);
 }
 
 void ImGui_ImplSDL2_WaitForEvent()
