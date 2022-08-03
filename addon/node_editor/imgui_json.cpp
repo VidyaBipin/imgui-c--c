@@ -334,17 +334,17 @@ void value::dump(dump_context_t& context, int level) const
             break;
 
         case type_t::vec2:
-            context.out << '[';
+            context.out << '(';
             {
                 context.out << (*vec2_ptr(m_Storage)).x;
                 context.out << ',' << ' ';
                 context.out << (*vec2_ptr(m_Storage)).y;
             }
-            context.out << ']';
+            context.out << ')';
             break;
 
         case type_t::vec4:
-            context.out << '[';
+            context.out << '(';
             {
                 context.out << (*vec4_ptr(m_Storage)).x;
                 context.out << ',' << ' ';
@@ -354,7 +354,7 @@ void value::dump(dump_context_t& context, int level) const
                 context.out << ',' << ' ';
                 context.out << (*vec4_ptr(m_Storage)).w;
             }
-            context.out << ']';
+            context.out << ')';
             break;
 
         default:
@@ -517,6 +517,52 @@ private:
                 break;
             a.emplace_back(std::move(v));
         }
+
+        return true;
+    }
+
+    bool accept_elements(vec2& a)
+    {
+        value v = nullptr;
+        auto s = state();
+        if (s(accept_number(v) && accept(',')))
+            a.x = v.get<number>();
+        else
+            return false;
+        s = state();
+        if (s(accept(' ') && accept_number(v)))
+            a.y = v.get<number>();
+        else
+            return false;
+
+        return true;
+    }
+
+    bool accept_elements(vec4& a)
+    {
+        value v = nullptr;
+        auto s = state();
+        if (s(accept_number(v) && accept(',')))
+            a.x = v.get<number>();
+        else
+            return false;
+        s = state();
+        if (s(accept(' ') && accept_number(v) && accept(',')))
+            a.y = v.get<number>();
+        else
+            return false;
+
+        s = state();
+        if (s(accept(' ') && accept_number(v) && accept(',')))
+            a.z = v.get<number>();
+        else
+            return false;
+        
+        s = state();
+        if (s(accept(' ') && accept_number(v)))
+            a.w = v.get<number>();
+        else
+            return false;
 
         return true;
     }
@@ -796,10 +842,10 @@ private:
     bool accept_vec2(value& result)
     {
         auto s = state();
-
-        if (s(accept('[') && accept_ws() && accept(']')))
+        vec2 v;
+        if (s(accept('(') && accept_elements(v) && accept(')')))
         {
-            result = vec2();
+            result = v;
             return true;
         }
 
@@ -809,10 +855,10 @@ private:
     bool accept_vec4(value& result)
     {
         auto s = state();
-
-        if (s(accept('[') && accept_ws() && accept(']')))
+        vec4 v;
+        if (s(accept('(') && accept_elements(v) && accept(')')))
         {
-            result = vec4();
+            result = v;
             return true;
         }
 
