@@ -14,6 +14,7 @@
 #if IMGUI_VULKAN_SHADER
 #include <ImVulkanShader.h>
 #endif
+#include <vulkan/vulkan_win32.h>
 #include "entry_vulkan.h"
 
 #ifndef WM_DPICHANGED

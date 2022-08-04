@@ -700,6 +700,25 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARA
         if (wParam > 0 && wParam < 0x10000)
             io.AddInputCharacterUTF16((unsigned short)wParam);
         return 0;
+    // add By Dicky
+    case WM_IME_CHAR:
+        {
+            // Character is encoded as MBCS.
+            char* narrow = (char*)&wParam;
+            // The byte order is reversed, so swap it.
+            // This code only works on little endian system.
+            char tmp = narrow[0];
+            narrow[0] = narrow[1];
+            narrow[1] = tmp;
+
+            // Convert to UTF-16.
+            wchar_t widen;
+            MultiByteToWideChar(CP_ACP, 0, narrow, 2, &widen, 1);
+
+            io.AddInputCharacterUTF16(widen);
+            return 1; // Skip WM_CHAR
+        }
+    // add By Dicky end
     case WM_SETCURSOR:
         // This is required to restore cursor when transitioning from e.g resize borders to client area.
         if (LOWORD(lParam) == HTCLIENT && ImGui_ImplWin32_UpdateMouseCursor())
@@ -1115,6 +1134,22 @@ static LRESULT CALLBACK ImGui_ImplWin32_WndProcHandler_PlatformWindow(HWND hWnd,
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
+// add By Dicky for win32 vulkan multiview 
+#if IMGUI_RENDERING_VULKAN
+#include <vulkan/vulkan_win32.h>
+static int ImGui_ImplWin32_CreateVkSurface(ImGuiViewport* viewport, ImU64 vk_instance, const void* vk_allocator, ImU64* out_vk_surface)
+{
+    ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
+    IM_ASSERT(vd->Hwnd != 0);
+    VkWin32SurfaceCreateInfoKHR surface_create_info = {};
+    surface_create_info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    surface_create_info.hwnd = vd->Hwnd;
+    VkResult err = vkCreateWin32SurfaceKHR((VkInstance)vk_instance, &surface_create_info, (const VkAllocationCallbacks*)vk_allocator, (VkSurfaceKHR *)out_vk_surface);
+    return err;
+}
+#endif
+// add By Dicky end
+
 static void ImGui_ImplWin32_InitPlatformInterface()
 {
     WNDCLASSEX wcex;
@@ -1154,6 +1189,10 @@ static void ImGui_ImplWin32_InitPlatformInterface()
 
     // add By Dicky
     platform_io.Platform_FullScreen = ImGui_ImplWin32_FullScreen;
+#if IMGUI_RENDERING_VULKAN
+    platform_io.Platform_CreateVkSurface = ImGui_ImplWin32_CreateVkSurface;
+#endif
+    // add By Dicky end
     // Register main window handle (which is owned by the main application, not by us)
     // This is mostly for simplicity and consistency, so that our code (e.g. mouse handling etc.) can use same logic for main and secondary viewports.
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
