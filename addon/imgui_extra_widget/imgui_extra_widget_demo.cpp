@@ -330,6 +330,12 @@ void ShowExtraWidgetDemoWindow()
         // Next line
         ImGui::SpinnerArcFade("SpinnerArcFade", 13, 5, ImColor(255, 255, 255), 3 * velocity, 4);
 
+        ImGui::SameLine();
+        ImGui::SpinnerFilling("SpinnerFilling", 16, 6, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity);
+
+        ImGui::SameLine();
+        ImGui::SpinnerTopup("SpinnerTopup", 16, 12, ImColor(255, 0, 0), ImColor(80, 80, 80), ImColor(255, 255, 255), 1 * velocity);
+
         // End
         ImGui::TreePop();
     }
