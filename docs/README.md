@@ -8,6 +8,18 @@ Add following addon collection also：
 * ImGui Node editor(https://github.com/thedmd/imgui-node-editor/tree/feature/blueprint-next)
 * TextEditor and other widget(https://github.com/Flix01/imgui/tree/imgui_with_addons/addons)
 * Hotkey(https://github.com/CedricGuillemet/ImHotKey)
+* ImageInspect(https://github.com/CedricGuillemet/imgInspect)
+* CurveEdit(https://github.com/CedricGuillemet/ImGuizmo)
+* ImSpinner(https://github.com/dalerank/imspinner)
+
+* ImGui::Piano (MIDI keyboard)
+* Bezier Widget
+* Slider 2D and Slider 3D widgets
+* ImSpectrogram (Audio spectrogram widget)
+* Many Vertical Text Helper API
+* Many Extensions to ImDrawList
+* May Color Selector widgets
+* May Knob widgets
 
 - Add VkShader for vulkan compute(Tanlu team).
 - Add immat for simulation OpenCV Mat(Tanlu team).
