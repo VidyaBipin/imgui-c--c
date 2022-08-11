@@ -426,4 +426,90 @@ IMGUI_API void SpinnerRotateGooeyBalls(const char *label, float radius, float th
 IMGUI_API void SpinnerMoonLine(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xff000000, float speed = 2.8f, float angle = IM_PI);
 } // namespace ImGui
 
+// CurveEdit from https://github.com/CedricGuillemet/ImGuizmo
+namespace ImGui
+{
+struct ImCurveEdit
+{
+    enum CurveType
+    {
+        Hold,
+        Step,
+        Linear,
+        Smooth,
+        QuadIn,
+        QuadOut,
+        QuadInOut,
+        CubicIn,
+        CubicOut,
+        CubicInOut,
+        SineIn,
+        SineOut,
+        SineInOut,
+        ExpIn,
+        ExpOut,
+        ExpInOut,
+        CircIn,
+        CircOut,
+        CircInOut,
+        ElasticIn,
+        ElasticOut,
+        ElasticInOut,
+        BackIn,
+        BackOut,
+        BackInOut,
+        BounceIn,
+        BounceOut,
+        BounceInOut
+    };
+
+    struct EditPoint
+    {
+        int curveIndex;
+        int pointIndex;
+        bool operator <(const EditPoint& other) const
+        {
+            if (curveIndex < other.curveIndex)
+                return true;
+            if (curveIndex > other.curveIndex)
+                return false;
+            if (pointIndex < other.pointIndex)
+                return true;
+            return false;
+        }
+    };
+    struct Delegate
+    {
+        bool focused = false;
+        virtual size_t GetCurveCount() = 0;
+        virtual bool IsVisible(size_t /*curveIndex*/) { return true; }
+        virtual CurveType GetCurveType(size_t /*curveIndex*/) const { return Linear; }
+        virtual ImVec2& GetMin() = 0;
+        virtual ImVec2& GetMax() = 0;
+        virtual void SetMin(ImVec2 vmin) = 0;
+        virtual void SetMax(ImVec2 vmax) = 0;
+        virtual size_t GetPointCount(size_t curveIndex) = 0;
+        virtual uint32_t GetCurveColor(size_t curveIndex) = 0;
+        virtual ImVec2* GetPoints(size_t curveIndex) = 0;
+        virtual int EditPoint(size_t curveIndex, int pointIndex, ImVec2 value) = 0;
+        virtual void AddPoint(size_t curveIndex, ImVec2 value) = 0;
+        virtual float GetValue(size_t curveIndex, float t) = 0;
+        virtual void DeletePoint(size_t curveIndex, int pointIndex) = 0;
+        virtual unsigned int GetBackgroundColor() { return 0xFF202020; }
+        // TODO::Dicky handle undo/redo thru this functions
+        virtual void BeginEdit(int /*index*/) {}
+        virtual void EndEdit() {}
+    };
+private:
+    static int DrawPoint(ImDrawList* draw_list, ImVec2 pos, const ImVec2 size, const ImVec2 offset, bool edited);
+public:
+    static int GetCurveTypeName(char**& list);
+    static float smoothstep(float edge0, float edge1, float t, CurveType type);
+    static float distance(float x1, float y1, float x2, float y2);
+    static float distance(float x, float y, float x1, float y1, float x2, float y2);
+    static int Edit(Delegate& delegate, const ImVec2& size, unsigned int id, const ImRect* clippingRect = NULL, ImVector<EditPoint>* selectedPoints = NULL);
+};
+
+
+} // namespace ImGui
 #endif // IMGUI_WIDGET_H
