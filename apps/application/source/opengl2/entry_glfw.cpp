@@ -48,6 +48,20 @@ int main(int, char**)
 
     std::string title = property.name;
     title += " GLFW_GL2";
+
+    if (property.resizable) glfwWindowHint(GLFW_RESIZABLE, true);
+    else glfwWindowHint(GLFW_RESIZABLE, false);
+    if (property.full_size || property.full_screen)
+    {
+        GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode * mode = glfwGetVideoMode(pMonitor);
+        property.pos_x = 0;
+        property.pos_y = 0 + SYSTEM_MENU_BAR_HEIGHT;
+        property.width = mode->width;
+        property.height = mode->height - SYSTEM_MENU_BAR_HEIGHT;
+        glfwWindowHint(GLFW_DECORATED, false);
+    }
+
     GLFWwindow* window = glfwCreateWindow(property.width, property.height, title.c_str(), NULL, NULL);
     if (!window)
     {

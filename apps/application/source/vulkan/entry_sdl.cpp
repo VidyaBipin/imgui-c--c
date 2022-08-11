@@ -36,6 +36,20 @@ int main(int, char**)
     title += " Vulkan SDL";
     int window_flags = SDL_WINDOW_VULKAN | SDL_WINDOW_ALLOW_HIGHDPI;
     if (property.resizable) window_flags |= SDL_WINDOW_RESIZABLE;
+    if (property.full_size)
+    {
+        SDL_DisplayMode DM;
+        SDL_GetCurrentDisplayMode(0, &DM);
+        property.pos_x = 0;
+        property.pos_y = 0 + SYSTEM_MENU_BAR_HEIGHT;
+        property.width = DM.w;
+        property.height = DM.h - SYSTEM_MENU_BAR_HEIGHT;
+        window_flags |= SDL_WINDOW_BORDERLESS;
+    }
+    else if (property.full_screen)
+    {
+        window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    }
     SDL_Window* window = SDL_CreateWindow(title.c_str(), property.center ? SDL_WINDOWPOS_CENTERED : property.pos_x, 
                                                         property.center ? SDL_WINDOWPOS_CENTERED : property.pos_y, 
                                                         property.width, property.height, window_flags);

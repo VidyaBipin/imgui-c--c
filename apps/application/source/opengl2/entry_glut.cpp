@@ -48,6 +48,17 @@ void glut_display_func()
     glutPostRedisplay();
 }
 
+void Application_FullScreen(bool on)
+{
+    if (on)
+        glutFullScreen();
+    else
+    {
+        glutReshapeWindow(property.width, property.height);
+        glutPositionWindow(property.pos_x, property.pos_y);
+    }
+}
+
 int main(int argc, char** argv)
 {
     // Create GLUT window
@@ -57,13 +68,14 @@ int main(int argc, char** argv)
 #endif
     
     Application_GetWindowProperties(property);
-
+    
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH | GLUT_MULTISAMPLE);
     glutInitWindowSize(property.width, property.height);
     if (!property.center) glutInitWindowPosition(property.pos_x, property.pos_y);
     std::string title = property.name;
     title += " GLUT_GL2";
     glutCreateWindow(title.c_str());
+
     // Setup GLUT display function
     // We will also call ImGui_ImplGLUT_InstallFuncs() to get all the other functions installed for us,
     // otherwise it is possible to install our own functions and call the imgui_impl_glut.h functions ourselves.

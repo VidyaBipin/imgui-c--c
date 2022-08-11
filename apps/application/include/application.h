@@ -1,6 +1,13 @@
 #pragma once
 #include <imgui.h>
 #include <string>
+#if defined(__APPLE__)
+#define SYSTEM_MENU_BAR_HEIGHT  24
+#elif defined(__linux__)
+#define SYSTEM_MENU_BAR_HEIGHT 24
+#else
+#define SYSTEM_MENU_BAR_HEIGHT 0
+#endif
 
 typedef struct ApplicationWindowProperty
 {
@@ -17,6 +24,8 @@ typedef struct ApplicationWindowProperty
     bool auto_merge {true};
     bool center     {true};
     bool power_save {true};
+    bool full_screen{false};
+    bool full_size  {false};
     void* handle    {nullptr};
 
 } ApplicationWindowProperty;
