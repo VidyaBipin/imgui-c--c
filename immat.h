@@ -1551,8 +1551,9 @@ inline ImMat ImMat::clone(Allocator* _allocator) const
     else if (dims == 3)
         m.create(w, h, c, elemsize, elempack, _allocator);
 
-    if (total() > 0)
+    if (total() > 0 && device == IM_DD_CPU)
     {
+        // only copy date from CPU mat, if mat is GPU mat, please concert to CPU mat first
         if (cstep == m.cstep)
             memcpy(m.data, data, total() * elemsize);
         else
