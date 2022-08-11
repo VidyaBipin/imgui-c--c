@@ -150,6 +150,22 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     const auto c_ClassName  = _T("Imgui Application Class");
     ApplicationWindowProperty property;
     Application_GetWindowProperties(property);
+    DWORD dwStyle = WS_OVERLAPPED | WS_THICKFRAME;
+    if (property.full_size)
+    {
+        UINT width = GetSystemMetrics(SM_CXSCREEN);
+        UINT height = GetSystemMetrics(SM_CYSCREEN);
+        property.pos_x = 0;
+        property.pos_y = 0 + SYSTEM_MENU_BAR_HEIGHT;
+        property.width = width;
+        property.height = height - SYSTEM_MENU_BAR_HEIGHT;
+        property.center = false;
+        dwStyle |= WS_MAXIMIZE;
+    }
+    else
+    {
+        dwStyle |= WS_CAPTION | WS_SYSMENU |  WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+    }
 # if defined(_UNICODE)
     const std::wstring c_WindowName = widen(property.name);
 # else
@@ -164,7 +180,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         LoadCursor(nullptr, IDC_ARROW), nullptr, nullptr, c_ClassName, LoadIcon(GetModuleHandle(nullptr), IDI_APPLICATION) };
     RegisterClassEx(&wc); AX_SCOPE_EXIT { UnregisterClass(c_ClassName, wc.hInstance) ; };
 
-    auto hwnd = CreateWindow(c_ClassName, c_WindowName.c_str(), WS_OVERLAPPEDWINDOW, 
+    auto hwnd = CreateWindow(c_ClassName, c_WindowName.c_str(), dwStyle, 
                             property.center ? 100 : property.pos_x, property.center ? 100 : property.pos_y, property.width, property.height, 
                             nullptr, nullptr, wc.hInstance, nullptr);
 
@@ -205,6 +221,17 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 #endif
 
     // Show the window
+    UINT flags = 0;
+    if (!property.resizable)
+    {
+        flags |= SWP_NOSIZE;
+    }
+    if (property.full_size)
+    {
+        flags |= SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED;
+        ::SetWindowLong(hwnd,GWL_STYLE,GetWindowLong(hwnd,GWL_STYLE) & ~WS_CAPTION ); 
+    }
+    ::SetWindowPos(hwnd, NULL, property.pos_x, property.pos_y, 0, 0, flags);
     ::ShowWindow(hwnd, SW_SHOWDEFAULT);
     ::UpdateWindow(hwnd);
 
