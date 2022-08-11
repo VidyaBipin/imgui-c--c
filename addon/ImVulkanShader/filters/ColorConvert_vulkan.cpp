@@ -83,20 +83,22 @@ bool ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMat,
     if (srcClrCatg == 1)
     {
         // TODO: add other rgb format support
-        // only support input format ABGR/ARGB.
-        if (srcMat.color_format != IM_CF_ABGR && srcMat.color_format != IM_CF_ARGB)
+        // only support input format ABGR/ARGB/RGBA/BGRA.
+        if (srcMat.color_format != IM_CF_ABGR && srcMat.color_format != IM_CF_ARGB &&
+            dstMat.color_format != IM_CF_RGBA && dstMat.color_format != IM_CF_BGRA)
         {
-            mErrMsg = "Only support rgb input format ABGR/ARGB!";
+            mErrMsg = "Only support rgb input format ABGR/ARGB/RGBA/BGRA!";
             return false;
         }
     }
     // destination is RGB
     if (dstClrCatg == 1)
     {
-        // only support output format ABGR/ARGB.
-        if (dstMat.color_format != IM_CF_ABGR && dstMat.color_format != IM_CF_ARGB)
+        // only support output format ABGR/ARGB/RGBA/BGRA.
+        if (dstMat.color_format != IM_CF_ABGR && dstMat.color_format != IM_CF_ARGB &&
+            dstMat.color_format != IM_CF_RGBA && dstMat.color_format != IM_CF_BGRA)
         {
-            mErrMsg = "Only support rgb output format ABGR/ARGB!";
+            mErrMsg = "Only support rgb output format ABGR/ARGB/RGBA/BGRA!";
             return false;
         }
         dstMat.color_range = IM_CR_FULL_RANGE;
