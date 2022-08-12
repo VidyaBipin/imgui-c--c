@@ -80,22 +80,17 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     const auto c_ClassName  = _T("Imgui Application Class");
     ApplicationWindowProperty property;
     Application_GetWindowProperties(property);
-    DWORD dwStyle = WS_OVERLAPPED | WS_THICKFRAME;
     if (property.full_size)
     {
         UINT width = GetSystemMetrics(SM_CXSCREEN);
         UINT height = GetSystemMetrics(SM_CYSCREEN);
         property.pos_x = 0;
-        property.pos_y = 0 + SYSTEM_MENU_BAR_HEIGHT;
+        property.pos_y = 0;
         property.width = width;
-        property.height = height - SYSTEM_MENU_BAR_HEIGHT;
+        property.height = height - 32;
         property.center = false;
-        dwStyle |= WS_MAXIMIZE;
     }
-    else
-    {
-        dwStyle |= WS_CAPTION | WS_SYSMENU |  WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
-    }
+
 # if defined(_UNICODE)
     const std::wstring c_WindowName = widen(property.name);
 # else
@@ -110,7 +105,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         LoadCursor(nullptr, IDC_ARROW), nullptr, nullptr, c_ClassName, LoadIcon(GetModuleHandle(nullptr), IDI_APPLICATION) };
     RegisterClassEx(&wc);
 
-    auto hwnd = CreateWindow(c_ClassName, c_WindowName.c_str(), dwStyle,
+    auto hwnd = CreateWindow(c_ClassName, c_WindowName.c_str(), WS_OVERLAPPEDWINDOW,
                             property.center ? 100 : property.pos_x, property.center ? 100 : property.pos_y, property.width, property.height,
                             nullptr, nullptr, wc.hInstance, nullptr);
     if (hwnd == nullptr)
@@ -192,7 +187,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 #endif
 
     // Show the window
-    UINT flags = 0;
+    UINT flags = SWP_SHOWWINDOW;
     if (!property.resizable)
     {
         flags |= SWP_NOSIZE;
@@ -200,10 +195,13 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     if (property.full_size)
     {
         flags |= SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED;
-        ::SetWindowLong(hwnd,GWL_STYLE,GetWindowLong(hwnd,GWL_STYLE) & ~WS_CAPTION ); 
+        ::SetWindowLong(hwnd, GWL_STYLE, (GetWindowLong(hwnd, GWL_STYLE) & ~WS_CAPTION & ~WS_SYSMENU & ~WS_MINIMIZEBOX & ~WS_MAXIMIZEBOX & ~WS_THICKFRAME) | WS_BORDER); 
+    }
+    else if (property.full_screen)
+    {
+        ImGui_ImplWin32_FullScreen(ImGui::GetMainViewport(), true);
     }
     ::SetWindowPos(hwnd, NULL, property.pos_x, property.pos_y, 0, 0, flags);
-    ::ShowWindow(hwnd, SW_SHOWDEFAULT);
     ::UpdateWindow(hwnd);
 
     Application_Initialize(&property.handle);
