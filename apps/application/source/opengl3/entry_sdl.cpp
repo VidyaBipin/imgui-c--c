@@ -71,10 +71,11 @@ int main(int, char**)
     {
         SDL_DisplayMode DM;
         SDL_GetCurrentDisplayMode(0, &DM);
-        property.pos_x = 0;
-        property.pos_y = 0 + SYSTEM_MENU_BAR_HEIGHT;
-        property.width = DM.w;
-        property.height = DM.h - SYSTEM_MENU_BAR_HEIGHT;
+        property.pos_x = 0 + FULLSCREEN_OFFSET_X;
+        property.pos_y = 0 + FULLSCREEN_OFFSET_Y;
+        property.width = DM.w - FULLSCREEN_WIDTH_ADJ;
+        property.height = DM.h - FULLSCREEN_HEIGHT_ADJ;
+        property.center = false;
         window_flags |= SDL_WINDOW_BORDERLESS;
     }
     else if (property.full_screen)

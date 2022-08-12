@@ -2,11 +2,20 @@
 #include <imgui.h>
 #include <string>
 #if defined(__APPLE__)
-#define SYSTEM_MENU_BAR_HEIGHT  24
+#define FULLSCREEN_OFFSET_X  0
+#define FULLSCREEN_OFFSET_Y  24
+#define FULLSCREEN_WIDTH_ADJ  0
+#define FULLSCREEN_HEIGHT_ADJ  24
 #elif defined(__linux__)
-#define SYSTEM_MENU_BAR_HEIGHT 24
+#define FULLSCREEN_OFFSET_X  64
+#define FULLSCREEN_OFFSET_Y  24
+#define FULLSCREEN_WIDTH_ADJ  64
+#define FULLSCREEN_HEIGHT_ADJ  24
 #else
-#define SYSTEM_MENU_BAR_HEIGHT 0
+#define FULLSCREEN_OFFSET_X  0
+#define FULLSCREEN_OFFSET_Y  0
+#define FULLSCREEN_WIDTH_ADJ  0
+#define FULLSCREEN_HEIGHT_ADJ  32
 #endif
 
 typedef struct ApplicationWindowProperty
