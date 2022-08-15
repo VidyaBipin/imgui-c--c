@@ -9,133 +9,6 @@
 
 namespace ImGui
 {
-struct RampEdit : public ImCurveEdit::Delegate
-{
-    RampEdit()
-    {
-        mPts[0][0] = ImVec2(0.f, 0);
-        mPts[0][1] = ImVec2(250.f, 0.610f);
-        mPts[0][2] = ImVec2(500.f, 1.0f);
-        mPts[0][3] = ImVec2(750.f, 0.610f);
-        mPts[0][4] = ImVec2(1000.f, 0.f);
-        mPointCount[0] = 5;
-
-        mPts[1][0] = ImVec2(0.f, 1.f);
-        mPts[1][1] = ImVec2(250.f, 0.75f);
-        mPts[1][2] = ImVec2(500.f, 0.5f);
-        mPts[1][3] = ImVec2(750.f, 0.75f);
-        mPts[1][4] = ImVec2(1000.f, 1.f);
-        mPointCount[1] = 5;
-
-        mPts[2][0] = ImVec2(0.f, 0.f);
-        mPts[2][1] = ImVec2(250.f, 0.05f);
-        mPts[2][2] = ImVec2(500.f, 0.25f);
-        mPts[2][3] = ImVec2(750.f, 0.75f);
-        mPts[2][4] = ImVec2(1000.f, 1.f);
-        mPointCount[2] = 5;
-        mbVisible[0] = mbVisible[1] = mbVisible[2] = true;
-        mMax = ImVec2(-1.f, -1.f);
-        mMin = ImVec2(-1.f, -1.f);
-    }
-    size_t GetCurveCount()
-    {
-        return 3;
-    }
-
-    bool IsVisible(size_t curveIndex)
-    {
-        return mbVisible[curveIndex];
-    }
-    size_t GetPointCount(size_t curveIndex)
-    {
-        return mPointCount[curveIndex];
-    }
-
-    uint32_t GetCurveColor(size_t curveIndex)
-    {
-        uint32_t cols[] = { 0x800000FF, 0x8000FF00, 0x80FF0000 };
-        return cols[curveIndex];
-    }
-    ImVec2* GetPoints(size_t curveIndex)
-    {
-        return mPts[curveIndex];
-    }
-    virtual ImCurveEdit::CurveType GetCurveType(size_t curveIndex) const { return mCurveType; }
-    virtual int EditPoint(size_t curveIndex, int pointIndex, ImVec2 value)
-    {
-        mPts[curveIndex][pointIndex] = ImVec2(value.x, value.y);
-        SortValues(curveIndex);
-        for (size_t i = 0; i < GetPointCount(curveIndex); i++)
-        {
-            if (mPts[curveIndex][i].x == value.x)
-                return (int)i;
-        }
-        return pointIndex;
-    }
-    virtual void AddPoint(size_t curveIndex, ImVec2 value)
-    {
-        if (mPointCount[curveIndex] >= 8)
-            return;
-        mPts[curveIndex][mPointCount[curveIndex]++] = value;
-        SortValues(curveIndex);
-    }
-    virtual void DeletePoint(size_t curveIndex, int pointIndex)
-    {
-        // TODO::Dicky
-        if (mPointCount[curveIndex] <= 0 || pointIndex >= mPointCount[curveIndex])
-            return;
-        mPts[curveIndex][pointIndex] = ImVec2(FLT_MAX, 0);
-        SortValues(curveIndex);
-        mPointCount[curveIndex] --;
-    }
-    virtual float GetValue(size_t curveIndex, float t)
-    {
-        auto range = GetMax() - GetMin() + ImVec2(1.f, 0.f); 
-        auto pointToRange = [&](ImVec2 pt) { return (pt - GetMin()) / range; };
-        const size_t ptCount = GetPointCount(curveIndex);
-        const ImVec2* pts = GetPoints(curveIndex);
-        ImCurveEdit::CurveType curveType = GetCurveType(curveIndex);
-        int found_index = -1;
-        for (int i = 0; i < ptCount -1; i++)
-        {
-            if (t >= pts[i].x && t <= pts[i + 1].x)
-            {
-                found_index = i;
-                break;
-            }
-        }
-        if (found_index != -1)
-        {
-            const ImVec2 p1 = pointToRange(pts[found_index]);
-            const ImVec2 p2 = pointToRange(pts[found_index + 1]);
-            float x = (t - pts[found_index].x) / (pts[found_index + 1].x - pts[found_index].x);
-            const ImVec2 sp = ImLerp(p1, p2, x);
-            const float rt = ImCurveEdit::smoothstep(p1.x, p2.x, sp.x, curveType);
-            const float v = ImLerp(p1.y, p2.y, rt);
-            return v;
-        }
-        return 0;
-    }
-    virtual ImVec2& GetMax() { return mMax; }
-    virtual ImVec2& GetMin() { return mMin; }
-    virtual void SetMin(ImVec2 vmin) { mMin = vmin; }
-    virtual void SetMax(ImVec2 vmax) { mMax = vmax; }
-    virtual unsigned int GetBackgroundColor() { return IM_COL32(64, 64, 64, 255); }
-    ImVec2 mPts[3][8];
-    size_t mPointCount[3];
-    bool mbVisible[3];
-    ImVec2 mMin {-1.f, -1.f};
-    ImVec2 mMax {-1.f, -1.f};
-    ImCurveEdit::CurveType mCurveType {ImCurveEdit::Linear};
-private:
-    void SortValues(size_t curveIndex)
-    {
-        auto b = std::begin(mPts[curveIndex]);
-        auto e = std::begin(mPts[curveIndex]) + GetPointCount(curveIndex);
-        std::sort(b, e, [](ImVec2 a, ImVec2 b) { return a.x < b.x; });
-    }
-};
-
 void ShowKnobDemoWindow()
 {
     static float val = 0.5, val_default = 0.5;
@@ -312,15 +185,11 @@ void ShowExtraWidgetDemoWindow()
         nextdot -= 0.07f;
         static float velocity = 1.f;
         ImGui::SliderFloat("Speed", &velocity, 0.0f, 10.0f, "velocity = %.3f");
-        ImGui::Spinner("Spinner", 16, 2, ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f), 8 * velocity);
 
-        ImGui::SameLine();
-        ImGui::SpinnerAng("SpinnerAng", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 128), 6 * velocity);
+        ImGui::Spinner<e_st_rainbow>("Spinner", Radius{16.f}, Thickness{2.f}, Color{ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f)}, Speed{8 * velocity}); ImGui::SameLine();
+        ImGui::Spinner<e_st_angle>("SpinnerAng", Radius{16.f}, Thickness{2.f}, Color{ImColor(255, 255, 255)}, BgColor{ImColor(255, 255, 255, 128)}, Speed{8 * velocity}, Angle{IM_PI}); ImGui::SameLine();
+        ImGui::Spinner<e_st_dots>("SpinnerDots", FloatPtr{&nextdot}, Radius{16}, Thickness{4}, Color{ImColor(255, 255, 255)}, Speed{1 * velocity}, Dots{12}, MiddleDots{6}, MinThickness{-1.f}); ImGui::SameLine();
 
-        ImGui::SameLine();
-        ImGui::SpinnerDots("SpinnerDots", nextdot, 16, 4, ImColor(255, 255, 255), 1 * velocity);
-
-        ImGui::SameLine();
         ImGui::SpinnerAng("SpinnerAngNoBg", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 0), 6 * velocity);
 
         ImGui::SameLine();
@@ -376,7 +245,7 @@ void ShowExtraWidgetDemoWindow()
 
         ImGui::SameLine();
         nextdot2 -= 0.2f * velocity;
-        ImGui::SpinnerDots("SpinnerDots", nextdot2, 16, 4, ImColor(255, 255, 255), 0.3f, 12, 6, 0.f);
+        ImGui::SpinnerDots("SpinnerDots", &nextdot2, 16, 4, ImColor(255, 255, 255), 0.3f, 12, 6, 0.f);
 
         ImGui::SameLine();
         ImGui::SpinnerIncScaleDots("SpinnerIncScaleDots", 16, 4, ImColor(255, 255, 255), 6.6f, 6);
@@ -462,6 +331,20 @@ void ShowExtraWidgetDemoWindow()
 
         ImGui::SameLine();
         ImGui::SpinnerTopup("SpinnerTopup", 16, 12, ImColor(255, 0, 0), ImColor(80, 80, 80), ImColor(255, 255, 255), 1 * velocity);
+
+
+        ImGui::SameLine(); 
+        ImGui::SpinnerFadePulsar("SpinnerFadePulsar", 16, ImColor(255, 255, 255), 1.5f * velocity, 1);
+
+        ImGui::SameLine(); 
+        ImGui::SpinnerFadePulsar("SpinnerFadePulsar2", 16, ImColor(255, 255, 255), 0.9f * velocity, 2);
+
+
+        ImGui::SameLine(); 
+        ImGui::SpinnerPulsar("SpinnerPulsar", 16, 2, ImColor(255, 255, 255), 1 * velocity, false);
+
+        ImGui::SameLine(); 
+        ImGui::SpinnerDoubleFadePulsar("SpinnerDoubleFadePulsar", 16, 2, ImColor(255, 255, 255), 2 * velocity);
 
         // End
         ImGui::TreePop();
@@ -675,21 +558,44 @@ void ShowExtraWidgetDemoWindow()
     {
         ImGuiIO& io = ImGui::GetIO();
         bool reset = false;
-        static RampEdit rampEdit;
+        static ImGui::KeyPointEditor rampEdit;
         char ** curve_type_list = nullptr;
         auto curve_type_count = ImCurveEdit::GetCurveTypeName(curve_type_list);
-        auto size_x = ImGui::GetWindowSize().x - 60;
-        ImGui::Combo("Curve Type", (int*)&rampEdit.mCurveType, curve_type_list, curve_type_count);
-        ImGui::SameLine();
+        float table_width = 300;
+        auto size_x = ImGui::GetWindowSize().x - table_width - 60;
+        if (rampEdit.GetCurveCount() <= 0)
+        {
+            rampEdit.AddCurve("key1", ImCurveEdit::Smooth, IM_COL32(255, 0, 0, 255), true);
+            rampEdit.AddPoint(0, ImVec2(size_x * 0.f, 0), ImCurveEdit::Smooth);
+            rampEdit.AddPoint(0, ImVec2(size_x * 0.25f, 0.610f), ImCurveEdit::Smooth);
+            rampEdit.AddPoint(0, ImVec2(size_x * 0.5f, 1.0f), ImCurveEdit::Smooth);
+            rampEdit.AddPoint(0, ImVec2(size_x * 0.75f, 0.610f), ImCurveEdit::Smooth);
+            rampEdit.AddPoint(0, ImVec2(size_x * 1.f, 0.f), ImCurveEdit::Smooth);
+
+            rampEdit.AddCurve("key2", ImCurveEdit::Smooth, IM_COL32(0, 255, 0, 255), true);
+            rampEdit.AddPoint(1, ImVec2(size_x * 0.f, 1.f), ImCurveEdit::Smooth);
+            rampEdit.AddPoint(1, ImVec2(size_x * 0.25f, 0.75f), ImCurveEdit::Smooth);
+            rampEdit.AddPoint(1, ImVec2(size_x * 0.5f, 0.5f), ImCurveEdit::Smooth);
+            rampEdit.AddPoint(1, ImVec2(size_x * 0.75f, 0.75f), ImCurveEdit::Smooth);
+            rampEdit.AddPoint(1, ImVec2(size_x * 1.f, 1.f), ImCurveEdit::Smooth);
+
+            rampEdit.AddCurve("key3", ImCurveEdit::Smooth, IM_COL32(0, 0, 255, 255), true);
+            rampEdit.AddPoint(2, ImVec2(size_x * 0.f, 0.f), ImCurveEdit::Smooth);
+            rampEdit.AddPoint(2, ImVec2(size_x * 0.25f, 0.05f), ImCurveEdit::Smooth);
+            rampEdit.AddPoint(2, ImVec2(size_x * 0.5f, 0.25f), ImCurveEdit::Smooth);
+            rampEdit.AddPoint(2, ImVec2(size_x * 0.75f, 0.75f), ImCurveEdit::Smooth);
+            rampEdit.AddPoint(2, ImVec2(size_x * 1.f, 1.f), ImCurveEdit::Smooth);
+        }
         if (ImGui::Button("Reset##curve_reset"))
             reset = true;
-        if (rampEdit.mMax.x <= 0 || reset)
+        if (rampEdit.GetMax().x <= 0 || reset)
         {
-            rampEdit.mMax = ImVec2(size_x, 1.f);
-            rampEdit.mMin = ImVec2(0.f, 0.f);
+            rampEdit.SetMax(ImVec2(size_x, 1.f));
+            rampEdit.SetMin(ImVec2(0.f, 0.f));
         }
         ImVec2 item_pos = ImGui::GetCursorScreenPos();
-        ImCurveEdit::Edit(rampEdit, ImVec2(size_x, 300), ImGui::GetID("##bezier_view"));
+        ImVector<ImCurveEdit::editPoint> edit_points;
+        ImCurveEdit::Edit(rampEdit, ImVec2(size_x, 300), ImGui::GetID("##bezier_view"), NULL , &edit_points);
         if (ImGui::IsItemHovered())
         {
             float pos = io.MousePos.x - item_pos.x;
@@ -700,6 +606,62 @@ void ShowExtraWidgetDemoWindow()
                 ImGui::Text("pos=%.0f val=%f", pos, value);
             }
             ImGui::EndTooltip();
+        }
+
+        ImGui::SameLine();
+        static ImGuiTableFlags flags = ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
+        if (ImGui::BeginTable("table_selected", 5, flags, ImVec2(table_width, 300.f)))
+        {
+            ImGui::TableSetupScrollFreeze(2, 1);
+            ImGui::TableSetupColumn("C", ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_WidthFixed, 20); // Make the first column not hideable to match our use of TableSetupScrollFreeze()
+            ImGui::TableSetupColumn("P", ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_WidthFixed, 20);
+            ImGui::TableSetupColumn("X", ImGuiTableColumnFlags_WidthFixed, 80);
+            ImGui::TableSetupColumn("Y", ImGuiTableColumnFlags_WidthFixed, 80);
+            ImGui::TableSetupColumn("T", ImGuiTableColumnFlags_WidthFixed, 100);
+            ImGui::TableHeadersRow();
+            for (int row = 0; row < edit_points.size(); row++)
+            {
+                ImGui::TableNextRow(ImGuiTableRowFlags_None);
+                for (int column = 0; column < 5; column++)
+                {
+                    if (!ImGui::TableSetColumnIndex(column) && column > 0)
+                        continue;
+                    auto point = rampEdit.GetPoint(edit_points[row].curveIndex, edit_points[row].pointIndex);
+                    std::string column_id = std::to_string(edit_points[row].curveIndex) + "@" + std::to_string(edit_points[row].pointIndex);
+                    switch (column)
+                    {
+                        case 0 : ImGui::Text("%u", edit_points[row].curveIndex); break;
+                        case 1 : ImGui::Text("%u", edit_points[row].pointIndex); break;
+                        case 2 :
+                            ImGui::PushItemWidth(80);
+                            if (ImGui::SliderFloat(("##x_pos@" + column_id).c_str(), &point.point.x, 0.f, size_x, "%.0f"))
+                            {
+                                rampEdit.EditPoint(edit_points[row].curveIndex, edit_points[row].pointIndex, point.point, point.type);
+                            }
+                            ImGui::PopItemWidth();
+                        break;
+                        case 3 :
+                            ImGui::PushItemWidth(80);
+                            if (ImGui::SliderFloat(("##y_pos" + column_id).c_str(), &point.point.y, 0.f, 1.f, "%.1f"))
+                            {
+                                rampEdit.EditPoint(edit_points[row].curveIndex, edit_points[row].pointIndex, point.point, point.type);
+                            }
+                            ImGui::PopItemWidth();
+                        break;
+                        case 4 :
+                            ImGui::PushItemWidth(100);
+                            if (ImGui::Combo(("##type" + column_id).c_str(), (int*)&point.type, curve_type_list, curve_type_count))
+                            {
+                                rampEdit.EditPoint(edit_points[row].curveIndex, edit_points[row].pointIndex, point.point, point.type);
+                            }
+                            ImGui::PopItemWidth();
+                        break;
+                        default : break;
+                    }
+                    
+                }
+            }
+            ImGui::EndTable();
         }
         ImGui::TreePop();
     }

@@ -4888,7 +4888,7 @@ static bool SpinnerBegin(const char *label, float radius, ImVec2 &pos, ImVec2 &s
 
 #define SPINNER_HEADER(pos, size, centre) ImVec2 pos, size, centre; if (!SpinnerBegin(label, radius, pos, size, centre)) { return; }; ImGuiWindow *window = ImGui::GetCurrentWindow();
 
-void ImGui::Spinner(const char *label, float radius, float thickness, const ImColor &color, float speed)
+void ImGui::SpinnerRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed)
 {
     SPINNER_HEADER(pos, size, centre);
 
@@ -4955,7 +4955,7 @@ void ImGui::SpinnerClock(const char *label, float radius, float thickness, const
     window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(start * 0.5f) * radius / 2.f, centre.y + ImSin(start * 0.5f) * radius / 2.f), color, thickness * 2);
 }
 
-void ImGui::SpinnerPulsar(const char *label, float radius, float thickness, const ImColor &bg, float speed)
+void ImGui::SpinnerPulsar(const char *label, float radius, float thickness, const ImColor &bg, float speed, bool sequence)
 {
     SPINNER_HEADER(pos, size, centre);
 
@@ -4979,11 +4979,18 @@ void ImGui::SpinnerPulsar(const char *label, float radius, float thickness, cons
     }
     window->DrawList->PathStroke(bg, false, thickness);
 
-    radius_b -= (0.005f * speed);
-    radius_b = ImMax(radius_k, ImMax(0.8f, radius_b));
+    if (sequence)
+    {
+        radius_b -= (0.005f * speed);
+        radius_b = ImMax(radius_k, ImMax(0.8f, radius_b));
+    } 
+    else 
+    {
+        radius_b = (1 - radius_k);
+    }
     storage->SetFloat(radiusbId, radius_b);
-
-    float radius_tb = ImMax(radius_k, radius_b) * radius;
+    
+    float radius_tb = sequence ? ImMax(radius_k, radius_b) * radius : (radius_b * radius);
     window->DrawList->PathClear();
     for (size_t i = 0; i <= num_segments; i++)
     {
@@ -4991,6 +4998,35 @@ void ImGui::SpinnerPulsar(const char *label, float radius, float thickness, cons
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius_tb, centre.y + ImSin(a) * radius_tb));
     }
     window->DrawList->PathStroke(bg, false, thickness);
+}
+
+void ImGui::SpinnerDoubleFadePulsar(const char *label, float radius, float thickness, const ImColor &bg, float speed)
+{
+    SPINNER_HEADER(pos, size, centre);
+
+    ImGuiStorage* storage = window->DC.StateStorage;
+    const ImGuiID radiusbId = window->GetID("##radiusb");
+    float radius_b = storage->GetFloat(radiusbId, 0.8f);
+
+    // Render
+    const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+    float start = (float)ImGui::GetTime() * speed;
+    const float bg_angle_offset = IM_PI * 2.f / num_segments;
+
+    float start_r = ImFmod(start, IM_PI / 2.f);
+    float radius_k = ImSin(start_r);
+    float radius1 = radius_k * radius;
+    ImColor c = bg;
+    c.Value.w = ImMin(0.1f, radius_k);
+    window->DrawList->AddCircleFilled(centre, radius1, c, num_segments);
+
+    radius_b = (1 - radius_k);
+    storage->SetFloat(radiusbId, radius_b);
+
+    float radius_tb = radius_b * radius;
+    c = bg;
+    c.Value.w = ImMin(0.3f, radius_b);
+    window->DrawList->AddCircleFilled(centre, radius_tb, c, num_segments);
 }
 
 void ImGui::SpinnerTwinPulsar(const char *label, float radius, float thickness, const ImColor &color, float speed, int rings)
@@ -5023,43 +5059,66 @@ void ImGui::SpinnerTwinPulsar(const char *label, float radius, float thickness, 
     }
 }
 
-void ImGui::SpinnerDots(const char *label, float &nextdot, float radius, float thickness, const ImColor &color, float speed, size_t dots, size_t mdots, float minth)
+void ImGui::SpinnerFadePulsar(const char *label, float radius, const ImColor &color, float speed, int rings)
 {
     SPINNER_HEADER(pos, size, centre);
 
-    // Render
+    const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+    const float bg_angle_offset = IM_PI * 2.f / num_segments;
+    const float koeff = IM_PI / (2 * (float)rings);
     float start = (float)ImGui::GetTime() * speed;
-    const float bg_angle_offset = IM_PI * 2.f / dots;
-    dots = ImMin<size_t>(dots, 32);
 
-    if (nextdot < 0.f)
-        nextdot = (float)dots;
-
-    auto thcorrect = [&thickness, &nextdot, &mdots, &minth](int i)
+    for (int num_ring = 0; num_ring < rings; ++num_ring)
     {
-        const float nth = minth < 0.f ? thickness / 2.f : minth;
-        return ImMax(nth, ImSin(((i - nextdot) / mdots) * IM_PI) * thickness);
-    };
-
-    for (size_t i = 0; i <= dots; i++)
-    {
-        float a = start + (i * bg_angle_offset);
-        a = ImFmod(a, 2 * IM_PI);
-        float th = minth < 0 ? thickness / 2.f : minth;
-
-        if (nextdot + mdots < dots)
+        float start_r = ImFmod(start + (num_ring * koeff), IM_PI / 2.f);
+        float radius_k = ImSin(start_r);
+        float radius1 = radius_k * radius;
+        ImColor c = color;
+        if (radius_k > 0.5f)
         {
-            if (i > nextdot && i < nextdot + mdots)
-                th = thcorrect(i);
-        }
-        else
-        {
-            if ((i > nextdot && i < dots) || (i < ((int)(nextdot + mdots)) % dots))
-                th = thcorrect(i);
+            c.Value.w = 2.f - (radius_k * 2.f);
         }
 
-        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(-a) * radius, centre.y + ImSin(-a) * radius), th, color, 8);
+        c.Value.w = (radius_k > 0.5f) ? (2.f - (radius_k * 2.f)) : c.Value.w;
+        window->DrawList->AddCircleFilled(centre, radius1, c, num_segments);
     }
+}
+
+void ImGui::SpinnerDots(const char *label, float *nextdot, float radius, float thickness, const ImColor &color, float speed, size_t dots, size_t mdots, float minth)
+{
+        SPINNER_HEADER(pos, size, centre);
+
+        // Render
+        float start = (float)ImGui::GetTime() * speed;
+        const float bg_angle_offset = IM_PI * 2.f / dots;
+        dots = ImMin<size_t>(dots, 32);
+
+        float def_nextdot = 0;
+        float &ref_nextdot = nextdot ? *nextdot : def_nextdot;
+        if (ref_nextdot < 0.f)
+        ref_nextdot = (float)dots;
+
+        auto thcorrect = [&thickness, &ref_nextdot, &mdots, &minth] (int i) {
+            const float nth = minth < 0.f ? thickness / 2.f : minth;
+            return ImMax(nth, ImSin(((i - ref_nextdot) / mdots) * IM_PI) * thickness);
+        };
+
+        for (size_t i = 0; i <= dots; i++)
+        {
+            float a = start + (i * bg_angle_offset);
+            a = ImFmod(a, 2 * IM_PI);
+            float th = minth < 0 ? thickness / 2.f : minth;
+
+            if (ref_nextdot + mdots < dots) {
+                if (i > ref_nextdot && i < ref_nextdot + mdots)
+                    th = thcorrect(i);
+            } else {
+                if ((i > ref_nextdot && i < dots) || (i < ((int)(ref_nextdot + mdots)) % dots))
+                    th = thcorrect(i);
+            }
+
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(-a) * radius, centre.y + ImSin(-a) * radius), th, color, 8);
+        }
 }
 
 void ImGui::SpinnerVDots(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t dots, size_t mdots)
@@ -6091,14 +6150,14 @@ int ImGui::ImCurveEdit::DrawPoint(ImDrawList* draw_list, ImVec2 pos, const ImVec
     return ret;
 }
 
-int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned int id, const ImRect* clippingRect, ImVector<EditPoint>* selectedPoints)
+int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned int id, const ImRect* clippingRect, ImVector<editPoint>* selectedPoints)
 {
     static bool selectingQuad = false;
     static ImVec2 quadSelection;
     static int overCurve = -1;
     static int movingCurve = -1;
-    static bool scrollingV = false;
-    static std::set<EditPoint> selection;
+    //static bool scrollingV = false;
+    static std::set<editPoint> selection;
     static bool overSelectedPoint = false;
 
     int ret = 0;
@@ -6120,6 +6179,7 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
     ImVec2& vmax = delegate.GetMax();
 
     // handle zoom and VScroll
+    /*
     if (container.Contains(io.MousePos))
     {
         if (fabsf(io.MouseWheel) > FLT_EPSILON)
@@ -6142,12 +6202,14 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
             scrollingV = true;
         }
     }
+    */
     ImVec2 range = vmax - vmin + ImVec2(1.f, 0.f);  // +1 because of inclusive last frame
 
     const ImVec2 viewSize(size.x, -size.y);
     const ImVec2 sizeOfPixel = ImVec2(1.f, 1.f) / viewSize;
     const size_t curveCount = delegate.GetCurveCount();
 
+    /*
     if (scrollingV)
     {
         float deltaH = io.MouseDelta.y * range.y * sizeOfPixel.y;
@@ -6156,13 +6218,18 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
         if (!ImGui::IsMouseDown(2))
             scrollingV = false;
     }
-
-    //draw_list->AddRectFilled(offset, offset + ssize, delegate.GetBackgroundColor());
+    */
 
     auto pointToRange = [&](ImVec2 pt) { return (pt - vmin) / range; };
     auto rangeToPoint = [&](ImVec2 pt) { return (pt * range) + vmin; };
 
-    //draw_list->AddLine(ImVec2(-1.f, -vmin.y / range.y) * viewSize + offset, ImVec2(1.f, -vmin.y / range.y) * viewSize + offset, 0xFF000000, 1.5f);
+    // draw graticule line
+    const float graticule_height = size.y / 10.f;
+    for (int i = 0; i <= 10; i++)
+    {
+        draw_list->AddLine(offset + ImVec2(0, - graticule_height * i), offset + ImVec2(size.x, - graticule_height * i), delegate.GetGraticuleColor(), 1.0f);
+    }
+
     bool overCurveOrPoint = false;
 
     int localOverCurve = -1;
@@ -6183,20 +6250,20 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
         int c = curvesIndex[cur];
         if (!delegate.IsVisible(c))
             continue;
-        const size_t ptCount = delegate.GetPointCount(c);
+        const size_t ptCount = delegate.GetCurvePointCount(c);
         if (ptCount < 1)
             continue;
-        CurveType curveType = delegate.GetCurveType(c);
-        const ImVec2* pts = delegate.GetPoints(c);
+        const KeyPoint* pts = delegate.GetPoints(c);
         uint32_t curveColor = delegate.GetCurveColor(c);
         if ((c == highLightedCurveIndex && selection.empty() && !selectingQuad) || movingCurve == c)
             curveColor = 0xFFFFFFFF;
 
         for (size_t p = 0; p < ptCount - 1; p++)
         {
-            const ImVec2 p1 = pointToRange(pts[p]);
-            const ImVec2 p2 = pointToRange(pts[p + 1]);
-            size_t subStepCount = distance(pts[p].x, pts[p].y, pts[p + 1].x, pts[p + 1].y);
+            const ImVec2 p1 = pointToRange(pts[p].point);
+            const ImVec2 p2 = pointToRange(pts[p + 1].point);
+            CurveType curveType = delegate.GetCurvePointType(c, p + 1);
+            size_t subStepCount = distance(pts[p].point.x, pts[p].point.y, pts[p + 1].point.x, pts[p + 1].point.y);
             subStepCount = ImMax(subStepCount, (size_t)50);
 
             float step = 1.f / float(subStepCount - 1);
@@ -6213,7 +6280,7 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
                 const ImVec2 pos1 = ImVec2(sp1.x, ImLerp(p1.y, p2.y, rt1)) * viewSize + offset;
                 const ImVec2 pos2 = ImVec2(sp2.x, ImLerp(p1.y, p2.y, rt2)) * viewSize + offset;
 
-                if (distance(io.MousePos.x, io.MousePos.y, pos1.x, pos1.y, pos2.x, pos2.y) < 8.f && !scrollingV)
+                if (distance(io.MousePos.x, io.MousePos.y, pos1.x, pos1.y, pos2.x, pos2.y) < 8.f/* && !scrollingV*/)
                 {
                     localOverCurve = int(c);
                     overCurve = int(c);
@@ -6226,7 +6293,7 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
 
         for (size_t p = 0; p < ptCount; p++)
         {
-            const int drawState = DrawPoint(draw_list, pointToRange(pts[p]), viewSize, offset, (selection.find({ int(c), int(p) }) != selection.end() && movingCurve == -1 && !scrollingV));
+            const int drawState = DrawPoint(draw_list, pointToRange(pts[p].point), viewSize, offset, (selection.find({ int(c), int(p) }) != selection.end() && movingCurve == -1/* && !scrollingV*/));
             if (drawState && movingCurve == -1 && !selectingQuad)
             {
                 overCurveOrPoint = true;
@@ -6249,7 +6316,7 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
     // move selection
     static bool pointsMoved = false;
     static ImVec2 mousePosOrigin;
-    static std::vector<ImVec2> originalPoints;
+    static std::vector<KeyPoint> originalPoints;
     if (overSelectedPoint && io.MouseDown[0])
     {
         if ((fabsf(io.MouseDelta.x) > 0.f || fabsf(io.MouseDelta.y) > 0.f) && !selection.empty())
@@ -6262,7 +6329,7 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
                 int index = 0;
                 for (auto& sel : selection)
                 {
-                    const ImVec2* pts = delegate.GetPoints(sel.curveIndex);
+                    const KeyPoint* pts = delegate.GetPoints(sel.curveIndex);
                     originalPoints[index++] = pts[sel.pointIndex];
                 }
             }
@@ -6272,8 +6339,16 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
             int originalIndex = 0;
             for (auto& sel : prevSelection)
             {
-                const ImVec2 p = rangeToPoint(pointToRange(originalPoints[originalIndex]) + (io.MousePos - mousePosOrigin) * sizeOfPixel);
-                const int newIndex = delegate.EditPoint(sel.curveIndex, sel.pointIndex, p);
+                ImVec2 p = rangeToPoint(pointToRange(originalPoints[originalIndex].point) + (io.MousePos - mousePosOrigin) * sizeOfPixel);
+                if (p.x < vmin.x) p.x = vmin.x;
+                if (p.y < vmin.y) p.y = vmin.y;
+                if (p.x > vmax.x) p.x = vmax.x;
+                if (p.y > vmax.y) p.y = vmax.y;
+                const CurveType t = originalPoints[originalIndex].type;
+                const int newIndex = delegate.EditPoint(sel.curveIndex, sel.pointIndex, p, t);
+                ImGui::BeginTooltip();
+                ImGui::Text("%.2f", p.y);
+                ImGui::EndTooltip();
                 if (newIndex != sel.pointIndex)
                 {
                     selection.erase(sel);
@@ -6298,8 +6373,9 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
     if (overCurve != -1 && io.MouseDoubleClicked[0])
     {
         const ImVec2 np = rangeToPoint((io.MousePos - offset) / viewSize);
+        const CurveType t = delegate.GetCurveType(overCurve);
         delegate.BeginEdit(overCurve);
-        delegate.AddPoint(overCurve, np);
+        delegate.AddPoint(overCurve, np, t);
         delegate.EndEdit();
         ret = 1;
     }
@@ -6311,7 +6387,7 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
         delegate.BeginEdit(localOverCurve);
         delegate.DeletePoint(localOverCurve, localOverPoint);
         delegate.EndEdit();
-        auto selected_point = std::find_if(selection.begin(), selection.end(), [&](const EditPoint& point) {
+        auto selected_point = std::find_if(selection.begin(), selection.end(), [&](const editPoint& point) {
             return point.curveIndex == localOverCurve && point.pointIndex == localOverPoint;
         });
         if (selected_point != selection.end())
@@ -6322,8 +6398,8 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
     // move curve
     if (movingCurve != -1)
     {
-        const size_t ptCount = delegate.GetPointCount(movingCurve);
-        const ImVec2* pts = delegate.GetPoints(movingCurve);
+        const size_t ptCount = delegate.GetCurvePointCount(movingCurve);
+        const KeyPoint* pts = delegate.GetPoints(movingCurve);
         if (!pointsMoved)
         {
             mousePosOrigin = io.MousePos;
@@ -6338,7 +6414,12 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
         {
             for (size_t p = 0; p < ptCount; p++)
             {
-                delegate.EditPoint(movingCurve, int(p), rangeToPoint(pointToRange(originalPoints[p]) + (io.MousePos - mousePosOrigin) * sizeOfPixel));
+                ImVec2 pt = rangeToPoint(pointToRange(originalPoints[p].point) + (io.MousePos - mousePosOrigin) * sizeOfPixel);
+                if (pt.x < vmin.x) pt.x = vmin.x;
+                if (pt.y < vmin.y) pt.y = vmin.y;
+                if (pt.x > vmax.x) pt.x = vmax.x;
+                if (pt.y > vmax.y) pt.y = vmax.y;
+                delegate.EditPoint(movingCurve, int(p), pt, originalPoints[p].type);
             }
             ret = 1;
         }
@@ -6349,7 +6430,7 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
             delegate.EndEdit();
         }
     }
-    if (movingCurve == -1 && overCurve != -1 && ImGui::IsMouseClicked(0) && selection.empty() && !selectingQuad)
+    if (movingCurve == -1 && overCurve != -1 && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && selection.empty() && !selectingQuad)
     {
         movingCurve = overCurve;
         delegate.BeginEdit(overCurve);
@@ -6373,14 +6454,14 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
                 if (!delegate.IsVisible(c))
                     continue;
 
-                const size_t ptCount = delegate.GetPointCount(c);
+                const size_t ptCount = delegate.GetCurvePointCount(c);
                 if (ptCount < 1)
                     continue;
 
-                const ImVec2* pts = delegate.GetPoints(c);
+                const KeyPoint* pts = delegate.GetPoints(c);
                 for (size_t p = 0; p < ptCount; p++)
                 {
-                    const ImVec2 center = pointToRange(pts[p]) * viewSize + offset;
+                    const ImVec2 center = pointToRange(pts[p].point) * viewSize + offset;
                     if (selectionQuad.Contains(center))
                         selection.insert({ int(c), int(p) });
                 }

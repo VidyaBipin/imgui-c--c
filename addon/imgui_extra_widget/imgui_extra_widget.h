@@ -390,12 +390,65 @@ namespace ImGui
 {
 // Set of nice spinners for imgui
 // https://github.com/dalerank/imspinner
-IMGUI_API void Spinner(const char *label, float radius, float thickness, const ImColor &color, float speed);
+#define DECLPROP(name,type,def) struct name { type value = def; operator type() { return value; } };
+    enum SpinnerTypeT {
+        e_st_rainbow = 0,
+        e_st_angle,
+        e_st_dots,
+
+        e_st_count
+    };
+
+    using float_ptr = float *;
+
+    DECLPROP (SpinnerType, SpinnerTypeT, e_st_rainbow)
+    DECLPROP (Radius, float, 16.f)
+    DECLPROP (Speed, float, 1.f)
+    DECLPROP (Thickness, float, 1.f)
+    DECLPROP (Color, ImColor, 0xffffffff)
+    DECLPROP (BgColor, ImColor, 0xffffffff)
+    DECLPROP (Angle, float, IM_PI)
+    DECLPROP (FloatPtr, float_ptr, nullptr)
+    DECLPROP (Dots, int, 0)
+    DECLPROP (MiddleDots, int, 0)
+    DECLPROP (MinThickness, float, 0.f)
+#undef DECLPROP
+
+#define IMPLRPOP(basetype,type) basetype m_##type; \
+                                void set##type(const basetype& v) { m_##type = v;} \
+                                void set(type h) { m_##type = h.value;} \
+                                template<typename First, typename... Args> \
+                                void set(const type& h, const Args&... args) { set##type(h.value); this->template set<Args...>(args...); }
+    struct SpinnerConfig {
+        SpinnerConfig() {}
+
+        template<typename none = void> void set() {}
+
+        template<typename... Args>
+        SpinnerConfig(const Args&... args) { this->template set<Args...>(args...); }
+
+        IMPLRPOP(SpinnerTypeT, SpinnerType)
+        IMPLRPOP(float, Radius)
+        IMPLRPOP(float, Speed)
+        IMPLRPOP(float, Thickness)
+        IMPLRPOP(ImColor, Color)
+        IMPLRPOP(ImColor, BgColor)
+        IMPLRPOP(float, Angle)
+        IMPLRPOP(float_ptr, FloatPtr)
+        IMPLRPOP(int, Dots)
+        IMPLRPOP(int, MiddleDots)
+        IMPLRPOP(float, MinThickness)
+    };
+#undef IMPLRPOP
+
+IMGUI_API void SpinnerRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed);
 IMGUI_API void SpinnerAng(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI);
 IMGUI_API void SpinnerClock(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f);
-IMGUI_API void SpinnerPulsar(const char *label, float radius, float thickness, const ImColor &bg = 0xffffff80, float speed = 2.8f);
+IMGUI_API void SpinnerPulsar(const char *label, float radius, float thickness, const ImColor &bg = 0xffffff80, float speed = 2.8f, bool sequence = true);
+IMGUI_API void SpinnerDoubleFadePulsar(const char *label, float radius, float thickness, const ImColor &bg = 0xffffff80, float speed = 2.8f);
 IMGUI_API void SpinnerTwinPulsar(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int rings = 2);
-IMGUI_API void SpinnerDots(const char *label, float &nextdot, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6, float minth = -1.f);
+IMGUI_API void SpinnerFadePulsar(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, int rings = 2);
+IMGUI_API void SpinnerDots(const char *label, float *nextdot, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6, float minth = -1.f);
 IMGUI_API void SpinnerVDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6);
 IMGUI_API void SpinnerBounceDots(const char *label, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3);
 IMGUI_API void SpinnerFadeDots(const char *label, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3);
@@ -424,6 +477,23 @@ IMGUI_API void SpinnerIngYang(const char *label, float radius, float thickness, 
 IMGUI_API void SpinnerGooeyBalls(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f);
 IMGUI_API void SpinnerRotateGooeyBalls(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int balls = 1);
 IMGUI_API void SpinnerMoonLine(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xff000000, float speed = 2.8f, float angle = IM_PI);
+template<SpinnerTypeT Type, typename... Args>
+void Spinner(const char *label, const Args&... args)
+{
+    struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const SpinnerConfig &); }
+
+    spinner_draw_funcs[e_st_count] = {
+        { e_st_rainbow, [] (const char *label, const SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
+        { e_st_angle, [] (const char *label, const SpinnerConfig &c) { SpinnerAng(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Angle); } },
+        { e_st_dots, [] (const char *label, const SpinnerConfig &c) { SpinnerDots(label, c.m_FloatPtr, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_Dots, c.m_MiddleDots, c.m_MinThickness); } }
+    };
+
+    SpinnerConfig config(SpinnerType{Type}, args...);
+    if (config.m_SpinnerType < sizeof(spinner_draw_funcs))
+    {
+        spinner_draw_funcs[config.m_SpinnerType].func(label, config);
+    }
+}
 } // namespace ImGui
 
 // CurveEdit from https://github.com/CedricGuillemet/ImGuizmo
@@ -463,11 +533,29 @@ struct ImCurveEdit
         BounceInOut
     };
 
-    struct EditPoint
+    struct KeyPoint
+    {
+        ImVec2 point;
+        ImCurveEdit::CurveType type;
+    };
+
+    struct keys
+    {
+        keys(std::string _name, ImGui::ImCurveEdit::CurveType _type, ImU32 _color, bool _visible)
+            : type(_type), name(_name), color(_color), visible(_visible)
+        {};
+        std::vector<ImGui::ImCurveEdit::KeyPoint> points;
+        ImGui::ImCurveEdit::CurveType type {ImGui::ImCurveEdit::Smooth};
+        std::string name;
+        ImU32 color;
+        bool visible {true};
+    };
+
+    struct editPoint
     {
         int curveIndex;
         int pointIndex;
-        bool operator <(const EditPoint& other) const
+        bool operator <(const editPoint& other) const
         {
             if (curveIndex < other.curveIndex)
                 return true;
@@ -484,18 +572,24 @@ struct ImCurveEdit
         virtual size_t GetCurveCount() = 0;
         virtual bool IsVisible(size_t /*curveIndex*/) { return true; }
         virtual CurveType GetCurveType(size_t /*curveIndex*/) const { return Linear; }
+        virtual CurveType GetCurvePointType(size_t /*curveIndex*/, size_t /*pointIndex*/) const { return Linear; }
         virtual ImVec2& GetMin() = 0;
         virtual ImVec2& GetMax() = 0;
         virtual void SetMin(ImVec2 vmin) = 0;
         virtual void SetMax(ImVec2 vmax) = 0;
-        virtual size_t GetPointCount(size_t curveIndex) = 0;
+        virtual size_t GetCurvePointCount(size_t curveIndex) = 0;
         virtual uint32_t GetCurveColor(size_t curveIndex) = 0;
-        virtual ImVec2* GetPoints(size_t curveIndex) = 0;
-        virtual int EditPoint(size_t curveIndex, int pointIndex, ImVec2 value) = 0;
-        virtual void AddPoint(size_t curveIndex, ImVec2 value) = 0;
+        virtual KeyPoint* GetPoints(size_t curveIndex) = 0;
+        virtual KeyPoint GetPoint(size_t curveIndex, int pointIndex) = 0;
+        virtual int EditPoint(size_t curveIndex, int pointIndex, ImVec2 value, CurveType type) = 0;
+        virtual void AddPoint(size_t curveIndex, ImVec2 value, CurveType type) = 0;
         virtual float GetValue(size_t curveIndex, float t) = 0;
         virtual void DeletePoint(size_t curveIndex, int pointIndex) = 0;
-        virtual unsigned int GetBackgroundColor() { return 0xFF202020; }
+        virtual void AddCurve(std::string name, CurveType type, ImU32 color, bool visible) = 0;
+        virtual void DeleteCurve(size_t curveIndex) = 0;
+
+        virtual ImU32 GetBackgroundColor() { return 0xFF101010; }
+        virtual ImU32 GetGraticuleColor() { return 0xFF202020; }
         // TODO::Dicky handle undo/redo thru this functions
         virtual void BeginEdit(int /*index*/) {}
         virtual void EndEdit() {}
@@ -507,9 +601,154 @@ public:
     static float smoothstep(float edge0, float edge1, float t, CurveType type);
     static float distance(float x1, float y1, float x2, float y2);
     static float distance(float x, float y, float x1, float y1, float x2, float y2);
-    static int Edit(Delegate& delegate, const ImVec2& size, unsigned int id, const ImRect* clippingRect = NULL, ImVector<EditPoint>* selectedPoints = NULL);
+    static int Edit(Delegate& delegate, const ImVec2& size, unsigned int id, const ImRect* clippingRect = NULL, ImVector<editPoint>* selectedPoints = NULL);
 };
 
+struct KeyPointEditor : public ImCurveEdit::Delegate
+{
+    KeyPointEditor() {}
+    ~KeyPointEditor() { mKeys.clear(); }
+
+    ImU32 GetBackgroundColor() { return IM_COL32(16, 16, 16, 255); }
+    ImU32 GetGraticuleColor() { return IM_COL32(32, 32, 32, 128); }
+    size_t GetCurveCount() { return mKeys.size(); }
+    size_t GetCurvePointCount(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].points.size(); return 0; }
+    uint32_t GetCurveColor(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].color; return 0; }
+    ImCurveEdit::CurveType GetCurveType(size_t curveIndex) const { if (curveIndex < mKeys.size()) return mKeys[curveIndex].type; return ImCurveEdit::Linear; }
+    ImCurveEdit::CurveType GetCurvePointType(size_t curveIndex, size_t point) const 
+    {
+        if (curveIndex < mKeys.size())
+        {
+            if (point < mKeys[curveIndex].points.size())
+            {
+                return mKeys[curveIndex].points[point].type;
+            }
+        }
+        return ImCurveEdit::CurveType::Hold;
+    }
+    ImCurveEdit::KeyPoint* GetPoints(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].points.data(); return nullptr; }
+    ImCurveEdit::KeyPoint GetPoint(size_t curveIndex, int pointIndex)
+    {
+        if (curveIndex < mKeys.size())
+        {
+            if (pointIndex < mKeys[curveIndex].points.size())
+            {
+                return mKeys[curveIndex].points[pointIndex];
+            }
+        }
+        return {};
+    }
+    
+    int EditPoint(size_t curveIndex, int pointIndex, ImVec2 value, ImCurveEdit::CurveType type)
+    {
+        if (curveIndex < mKeys.size())
+        {
+            if (pointIndex < mKeys[curveIndex].points.size())
+            {
+                mKeys[curveIndex].points[pointIndex] = {ImVec2(value.x, value.y), type};
+                SortValues(curveIndex);
+                for (size_t i = 0; i < GetCurvePointCount(curveIndex); i++)
+                {
+                    if (mKeys[curveIndex].points[i].point.x == value.x)
+                        return (int)i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    void AddPoint(size_t curveIndex, ImVec2 value, ImCurveEdit::CurveType type)
+    {
+        if (curveIndex < mKeys.size())
+        {
+            mKeys[curveIndex].points.push_back({ImVec2(value.x, value.y), type});
+            SortValues(curveIndex);
+        }
+    }
+    void DeletePoint(size_t curveIndex, int pointIndex)
+    {
+        if (curveIndex < mKeys.size())
+        {
+            if (pointIndex < mKeys[curveIndex].points.size())
+            {
+                auto iter = mKeys[curveIndex].points.begin() + pointIndex;
+                mKeys[curveIndex].points.erase(iter);
+            }
+        }
+    }
+    void AddCurve(std::string name, ImCurveEdit::CurveType type, ImU32 color, bool visible)
+    {
+        auto new_key = ImCurveEdit::keys(name, type, color, visible);
+        mKeys.push_back(new_key);
+    }
+
+    void DeleteCurve(size_t curveIndex)
+    {
+        if (curveIndex < mKeys.size())
+        {
+            auto iter = mKeys.begin() + curveIndex;
+            mKeys.erase(iter);
+        }
+    }
+
+    float GetValue(size_t curveIndex, float t)
+    {
+        if (curveIndex <  mKeys.size())
+        {
+            auto range = GetMax() - GetMin() + ImVec2(1.f, 0.f); 
+            auto pointToRange = [&](ImVec2 pt) { return (pt - GetMin()) / range; };
+            const size_t ptCount = GetCurvePointCount(curveIndex);
+            if (ptCount <= 0)
+                return 0;
+            const ImCurveEdit::KeyPoint* pts = GetPoints(curveIndex);
+            if (ptCount <= 1)
+                return pointToRange(pts[0].point).x;
+            int found_index = -1;
+            for (int i = 0; i < ptCount - 1; i++)
+            {
+                if (t >= pts[i].point.x && t <= pts[i + 1].point.x)
+                {
+                    found_index = i;
+                    break;
+                }
+            }
+            if (found_index != -1)
+            {
+                const ImVec2 p1 = pointToRange(pts[found_index].point);
+                const ImVec2 p2 = pointToRange(pts[found_index + 1].point);
+                float x = (t - pts[found_index].point.x) / (pts[found_index + 1].point.x - pts[found_index].point.x);
+                const ImVec2 sp = ImLerp(p1, p2, x);
+                ImCurveEdit::CurveType type = (t - pts[found_index].point.x) < (pts[found_index + 1].point.x - t) ? pts[found_index].type : pts[found_index + 1].type;
+                const float rt = ImCurveEdit::smoothstep(p1.x, p2.x, sp.x, type);
+                const float v = ImLerp(p1.y, p2.y, rt);
+                return v;
+            }
+        }
+        return 0;
+    }
+
+    ImVec2& GetMax() { return mMax; }
+    ImVec2& GetMin() { return mMin; }
+    void SetMin(ImVec2 vmin) { mMin = vmin; }
+    void SetMax(ImVec2 vmax) { mMax = vmax; }
+    bool IsVisible(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].visible; return false; }
+
+private:
+    std::vector<ImCurveEdit::keys> mKeys;
+    ImVec2 mMin {-1.f, -1.f};
+    ImVec2 mMax {-1.f, -1.f};
+
+private:
+    void SortValues(size_t curveIndex)
+    {
+        if (curveIndex < mKeys.size())
+        {
+            auto b = std::begin(mKeys[curveIndex].points);
+            auto e = std::begin(mKeys[curveIndex].points) + GetCurvePointCount(curveIndex);
+            std::sort(b, e, [](ImCurveEdit::KeyPoint a, ImCurveEdit::KeyPoint b) { return a.point.x < b.point.x; });
+        }
+    }
+};
 
 } // namespace ImGui
 #endif // IMGUI_WIDGET_H
