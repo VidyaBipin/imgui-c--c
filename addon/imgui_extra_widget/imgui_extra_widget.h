@@ -591,6 +591,8 @@ struct ImCurveEdit
 
         virtual ImU32 GetBackgroundColor() { return 0xFF101010; }
         virtual ImU32 GetGraticuleColor() { return 0xFF202020; }
+        virtual void SetBackgroundColor(ImU32 color) = 0;
+        virtual void SetGraticuleColor(ImU32 color) = 0;
         // TODO::Dicky handle undo/redo thru this functions
         virtual void BeginEdit(int /*index*/) {}
         virtual void EndEdit() {}
@@ -608,10 +610,15 @@ public:
 struct KeyPointEditor : public ImCurveEdit::Delegate
 {
     KeyPointEditor() {}
+    KeyPointEditor(ImU32 bg_color, ImU32 gr_color) 
+        : BackgroundColor(bg_color), GraticuleColor(gr_color)
+    {}
     ~KeyPointEditor() { mKeys.clear(); }
 
-    ImU32 GetBackgroundColor() { return IM_COL32(16, 16, 16, 255); }
-    ImU32 GetGraticuleColor() { return IM_COL32(32, 32, 32, 128); }
+    ImU32 GetBackgroundColor() { return BackgroundColor; }
+    ImU32 GetGraticuleColor() { return GraticuleColor; }
+    void SetBackgroundColor(ImU32 color) { BackgroundColor = color; }
+    void SetGraticuleColor(ImU32 color) { GraticuleColor = color; }
     size_t GetCurveCount() { return mKeys.size(); }
     size_t GetCurvePointCount(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].points.size(); return 0; }
     uint32_t GetCurveColor(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].color; return 0; }
@@ -738,6 +745,8 @@ private:
     std::vector<ImCurveEdit::keys> mKeys;
     ImVec2 mMin {-1.f, -1.f};
     ImVec2 mMax {-1.f, -1.f};
+    ImU32 BackgroundColor {IM_COL32(24, 24, 24, 255)};
+    ImU32 GraticuleColor {IM_COL32(48, 48, 48, 128)};
 
 private:
     void SortValues(size_t curveIndex)

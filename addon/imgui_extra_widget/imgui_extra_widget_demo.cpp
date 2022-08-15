@@ -558,7 +558,7 @@ void ShowExtraWidgetDemoWindow()
     {
         ImGuiIO& io = ImGui::GetIO();
         bool reset = false;
-        static ImGui::KeyPointEditor rampEdit;
+        static ImGui::KeyPointEditor rampEdit(IM_COL32(0, 0, 0, 255), IM_COL32(32, 32, 32, 128));
         char ** curve_type_list = nullptr;
         auto curve_type_count = ImCurveEdit::GetCurveTypeName(curve_type_list);
         float table_width = 300;
