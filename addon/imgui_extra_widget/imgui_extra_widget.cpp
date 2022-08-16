@@ -6508,7 +6508,6 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
                 {
                     localOverCurve = int(c);
                     overCurve = int(c);
-                    overCurveOrPoint = true;
                 }
 
                 draw_list->AddLine(pos1, pos2, curveColor, 1.3f);
@@ -6528,8 +6527,8 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
                     if (!io.KeyShift && selection.find({ int(c), int(p) }) == selection.end())
                         selection.clear();
                     selection.insert({ int(c), int(p) });
-                    localOverPoint = (int)p;
                 }
+                localOverPoint = (int)p;
             }
         }
     } // curves loop
@@ -6593,7 +6592,7 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
         }
     }
 
-    // add point
+    // add point with double left click 
     if (overCurve != -1 && io.MouseDoubleClicked[0])
     {
         const ImVec2 np = rangeToPoint((io.MousePos - offset) / viewSize);
@@ -6604,9 +6603,8 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
         ret = 1;
     }
 
-    // delete point
-    const bool bDeleting = ImGui::IsKeyDown(ImGuiKey_LeftAlt) && (io.KeyMods == ImGuiKeyModFlags_Alt);
-    if (overSelectedPoint && localOverCurve !=-1 && localOverPoint != -1 && io.MouseDoubleClicked[0] && bDeleting)
+    // delete point with right click
+    if (localOverCurve !=-1 && localOverPoint != -1 && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
     {
         delegate.BeginEdit(localOverCurve);
         delegate.DeletePoint(localOverCurve, localOverPoint);
