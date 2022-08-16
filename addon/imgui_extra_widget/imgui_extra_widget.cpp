@@ -5991,6 +5991,230 @@ void ImGui::SpinnerMoonLine(const char *label, float radius, float thickness, co
     }
 }
 
+// draw leader
+static void draw_leader(int type, bool filled, bool arrow)
+{
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    if (window->SkipItems)
+        return;
+    auto drawList = window->DrawList;
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    const float line_height = ImMax(ImMin(window->DC.CurrLineSize.y, g.FontSize + style.FramePadding.y * 2), g.FontSize);
+    const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(g.FontSize, line_height));
+    ImGui::ItemSize(bb);
+    if (!ImGui::ItemAdd(bb, 0))
+    {
+        ImGui::SameLine(0, style.FramePadding.x * 2);
+        return;
+    }
+    auto rect           = bb;
+    auto rect_x         = rect.Min.x;
+    auto rect_y         = rect.Min.y;
+    auto rect_w         = rect.Max.x - rect.Min.x;
+    auto rect_h         = rect.Max.y - rect.Min.y;
+    auto rect_center_x  = (rect.Min.x + rect.Max.x) * 0.5f;
+    auto rect_center_y  = (rect.Min.y + rect.Max.y + style.FramePadding.y) * 0.5f;
+    auto rect_center    = ImVec2(rect_center_x, rect_center_y);
+    auto rect_center_l  = ImVec2(rect_center_x - 2.0f, rect_center_y);
+    const   auto outline_scale  = ImMin(rect_w, rect_h) / 24.0f;
+    const   auto extra_segments = static_cast<int>(2 * outline_scale); // for full circle
+    auto triangleStart = rect_center_x + 0.32f * rect_w;
+    auto rect_offset = -static_cast<int>(rect_w * 0.25f * 0.25f);
+
+    rect.Min.x    += rect_offset;
+    rect.Max.x    += rect_offset;
+    rect_x        += rect_offset;
+    rect_center_x += rect_offset * 0.5f;
+    rect_center.x += rect_offset * 0.5f;
+
+    ImU32 color = ImGui::GetColorU32(ImGuiCol_Text);
+    switch (type)
+    {
+        case 0:
+        {
+            // Circle
+            const auto c = rect_center;
+            if (!filled)
+            {
+                const auto r = 0.5f * rect_w / 2.0f - 0.5f;
+                drawList->AddCircle(c, r, color, 12 + extra_segments, 2.0f * outline_scale);
+            }
+            else
+            {
+                drawList->AddCircleFilled(c, 0.5f * rect_w / 2.0f, color, 12 + extra_segments);
+            }
+        }
+        break;
+        case 1:
+        {
+            // Square
+            if (filled)
+            {
+                const auto r  = 0.5f * rect_w / 2.0f;
+                const auto p0 = rect_center - ImVec2(r, r);
+                const auto p1 = rect_center + ImVec2(r, r);
+                drawList->AddRectFilled(p0, p1, color, 0, ImDrawFlags_RoundCornersAll);
+            }
+            else
+            {
+                const auto r = 0.5f * rect_w / 2.0f - 0.5f;
+                const auto p0 = rect_center - ImVec2(r, r);
+                const auto p1 = rect_center + ImVec2(r, r);
+                drawList->AddRect(p0, p1, color, 0, extra_segments, 2.0f * outline_scale);
+            }
+        }
+        break;
+        case 2:
+        {
+            // BracketSquare
+            const auto r  = 0.5f * rect_w / 2.0f;
+            const auto w = ceilf(r / 3.0f);
+            const auto s = r / 1.5f;
+            const auto p00 = rect_center - ImVec2(r, r);
+            const auto p00w = p00 + ImVec2(s, 0);
+            const auto p01 = p00 + ImVec2(0, 2 * r);
+            const auto p01w = p01 + ImVec2(s, 0);
+            const auto p10 = p00 + ImVec2(2 * r, 0);
+            const auto p10w = p10 - ImVec2(s, 0);
+            const auto p11 = rect_center + ImVec2(r, r);
+            const auto p11w = p11 - ImVec2(s, 0);
+            drawList->AddLine(p00, p01, color, 2.0f * outline_scale);
+            drawList->AddLine(p10, p11, color, 2.0f * outline_scale);
+            drawList->AddLine(p00, p00w, color, 2.0f * outline_scale);
+            drawList->AddLine(p01, p01w, color, 2.0f * outline_scale);
+            drawList->AddLine(p10, p10w, color, 2.0f * outline_scale);
+            drawList->AddLine(p11, p11w, color, 2.0f * outline_scale);
+            if (filled)
+            {
+                const auto pc0 = rect_center - ImVec2(1, 1);
+                const auto pc1 = rect_center + ImVec2(2, 2);
+                drawList->AddRectFilled(pc0, pc1, color, 0, ImDrawFlags_RoundCornersAll);
+            }
+            triangleStart = p11.x + w + 1.0f / 8.0f * rect_w;
+        }
+        break;
+        case 3:
+        {
+            // RoundSquare
+            if (filled)
+            {
+                const auto r  = 0.5f * rect_w / 2.0f;
+                const auto cr = r * 0.5f;
+                const auto p0 = rect_center - ImVec2(r, r);
+                const auto p1 = rect_center + ImVec2(r, r);
+                drawList->AddRectFilled(p0, p1, color, cr, ImDrawFlags_RoundCornersAll);
+            }
+            else
+            {
+                const auto r = 0.5f * rect_w / 2.0f - 0.5f;
+                const auto cr = r * 0.5f;
+                const auto p0 = rect_center - ImVec2(r, r);
+                const auto p1 = rect_center + ImVec2(r, r);
+                drawList->AddRect(p0, p1, color, cr, ImDrawFlags_RoundCornersAll, 2.0f * outline_scale);
+            }
+        }
+        break;
+        case 4:
+        {
+            // GridSquare
+            const auto r = 0.5f * rect_w / 2.0f;
+            const auto w = ceilf(r / 3.0f);
+            const auto baseTl = ImVec2(floorf(rect_center_x - w * 2.5f), floorf(rect_center_y - w * 2.5f));
+            const auto baseBr = ImVec2(floorf(baseTl.x + w), floorf(baseTl.y + w));
+            auto tl = baseTl;
+            auto br = baseBr;
+            for (int i = 0; i < 3; ++i)
+            {
+                tl.x = baseTl.x;
+                br.x = baseBr.x;
+                drawList->AddRectFilled(tl, br, color);
+                tl.x += w * 2;
+                br.x += w * 2;
+                if (i != 1 || filled)
+                    drawList->AddRectFilled(tl, br, color);
+                tl.x += w * 2;
+                br.x += w * 2;
+                drawList->AddRectFilled(tl, br, color);
+                tl.y += w * 2;
+                br.y += w * 2;
+            }
+            triangleStart = br.x + w + 1.0f / 8.0f * rect_w;
+        }
+        break;
+        case 5:
+        {
+            // Diamond
+            if (filled)
+            {
+                const auto r = 0.607f * rect_w / 2.0f;
+                const auto c = rect_center;
+                drawList->PathLineTo(c + ImVec2( 0, -r));
+                drawList->PathLineTo(c + ImVec2( r,  0));
+                drawList->PathLineTo(c + ImVec2( 0,  r));
+                drawList->PathLineTo(c + ImVec2(-r,  0));
+                drawList->PathFillConvex(color);
+            }
+            else
+            {
+                const auto r = 0.607f * rect_w / 2.0f - 0.5f;
+                const auto c = rect_center;
+                drawList->PathLineTo(c + ImVec2( 0, -r));
+                drawList->PathLineTo(c + ImVec2( r,  0));
+                drawList->PathLineTo(c + ImVec2( 0,  r));
+                drawList->PathLineTo(c + ImVec2(-r,  0));
+                drawList->PathStroke(color, true, 2.0f * outline_scale);
+            }
+        }
+        break;
+        default:
+        break;
+    }
+    
+    if (arrow)
+    {
+        const auto triangleTip = triangleStart + rect_w * (0.45f - 0.32f);
+        drawList->AddTriangleFilled(
+            ImVec2(ceilf(triangleTip), rect_y + (rect_h + style.FramePadding.y) * 0.5f),
+            ImVec2(triangleStart, rect_center_y + 0.15f * (rect_h + style.FramePadding.y)),
+            ImVec2(triangleStart, rect_center_y - 0.15f * (rect_h + style.FramePadding.y)),
+            color);
+    }
+
+    ImGui::SameLine(0, style.FramePadding.x * 2.0f);
+}
+
+void ImGui::Circle(bool filled, bool arrow)
+{
+    draw_leader(0, filled, arrow);
+}
+
+void ImGui::Square(bool filled, bool arrow)
+{
+    draw_leader(1, filled, arrow);
+}
+
+void ImGui::BracketSquare(bool filled, bool arrow)
+{
+    draw_leader(2, filled, arrow);
+}
+
+void ImGui::RoundSquare(bool filled, bool arrow)
+{
+    draw_leader(3, filled, arrow);
+}
+
+void ImGui::GridSquare(bool filled, bool arrow)
+{
+    draw_leader(4, filled, arrow);
+}
+
+void ImGui::Diamond(bool filled, bool arrow)
+{
+    draw_leader(5, filled, arrow);
+}
+
+
 // CurveEdit from https://github.com/CedricGuillemet/ImGuizmo
 template <typename T>
 static T __tween_bounceout(const T& p) { return (p) < 4 / 11.0 ? (121 * (p) * (p)) / 16.0 : (p) < 8 / 11.0 ? (363 / 40.0 * (p) * (p)) - (99 / 10.0 * (p)) + 17 / 5.0 : (p) < 9 / 10.0 ? (4356 / 361.0 * (p) * (p)) - (35442 / 1805.0 * (p)) + 16061 / 1805.0 : (54 / 5.0 * (p) * (p)) - (513 / 25.0 * (p)) + 268 / 25.0; }

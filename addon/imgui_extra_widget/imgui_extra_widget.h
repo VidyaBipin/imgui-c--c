@@ -386,6 +386,16 @@ IMGUI_API void  ImSpectrogram(const ImMat& in_mat, ImMat& out_mat, int window = 
 
 } // namespace ImGui
 
+// draw leader
+namespace ImGui
+{
+IMGUI_API void Circle(bool filled, bool arrow = false);
+IMGUI_API void Square(bool filled, bool arrow = false);
+IMGUI_API void BracketSquare(bool filled, bool arrow = false);
+IMGUI_API void RoundSquare(bool filled, bool arrow = false);
+IMGUI_API void GridSquare(bool filled, bool arrow = false);
+IMGUI_API void Diamond(bool filled, bool arrow = false);
+} // namespace ImGui
 
 namespace ImGui
 {

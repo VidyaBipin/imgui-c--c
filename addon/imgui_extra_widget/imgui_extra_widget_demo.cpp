@@ -143,6 +143,39 @@ void ShowExtraWidgetDemoWindow()
 
         ImGui::TreePop();
     }
+    if (ImGui::TreeNode("Line leader"))
+    {
+        ImGui::Circle(false); ImGui::TextUnformatted("Circle");
+        ImGui::Circle(true); ImGui::TextUnformatted("Circle filled");
+        ImGui::Circle(false, true); ImGui::TextUnformatted("Circle arrow");
+        ImGui::Circle(true, true); ImGui::TextUnformatted("Circle filled arrow");
+        ImGui::Separator();
+        ImGui::Square(false); ImGui::TextUnformatted("Square");
+        ImGui::Square(true); ImGui::TextUnformatted("Square filled");
+        ImGui::Square(false, true); ImGui::TextUnformatted("Square arrow");
+        ImGui::Square(true, true); ImGui::TextUnformatted("Square filled arrow");
+        ImGui::Separator();
+        ImGui::BracketSquare(false); ImGui::TextUnformatted("Bracket Square");
+        ImGui::BracketSquare(true); ImGui::TextUnformatted("Bracket Square filled");
+        ImGui::BracketSquare(false, true); ImGui::TextUnformatted("Bracket Square arrow");
+        ImGui::BracketSquare(true, true); ImGui::TextUnformatted("Bracket Square filled arrow");
+        ImGui::Separator();
+        ImGui::RoundSquare(false); ImGui::TextUnformatted("Round Square");
+        ImGui::RoundSquare(true); ImGui::TextUnformatted("Round Square filled");
+        ImGui::RoundSquare(false, true); ImGui::TextUnformatted("Round Square arrow");
+        ImGui::RoundSquare(true, true); ImGui::TextUnformatted("Round Square filled arrow");
+        ImGui::Separator();
+        ImGui::GridSquare(false); ImGui::TextUnformatted("Grid Square");
+        ImGui::GridSquare(true); ImGui::TextUnformatted("Grid Square filled");
+        ImGui::GridSquare(false, true); ImGui::TextUnformatted("Grid Square arrow");
+        ImGui::GridSquare(true, true); ImGui::TextUnformatted("Grid Square filled arrow");
+        ImGui::Separator();
+        ImGui::Diamond(false); ImGui::TextUnformatted("Diamond");
+        ImGui::Diamond(true); ImGui::TextUnformatted("Diamond filled");
+        ImGui::Diamond(false, true); ImGui::TextUnformatted("Diamond arrow");
+        ImGui::Diamond(true, true); ImGui::TextUnformatted("Diamond filled arrow");
+        ImGui::TreePop();
+    }
     if (ImGui::TreeNode("Extended ProgressBar and Indicator"))
     {
         const float time = ((float)(((unsigned int) (ImGui::GetTime() * 1000.f)) % 50000) - 25000.f) / 25000.f;
