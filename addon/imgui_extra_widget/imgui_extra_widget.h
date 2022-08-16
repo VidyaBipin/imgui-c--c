@@ -500,7 +500,7 @@ void Spinner(const char *label, const Args&... args)
 // CurveEdit from https://github.com/CedricGuillemet/ImGuizmo
 namespace ImGui
 {
-struct ImCurveEdit
+struct IMGUI_API ImCurveEdit
 {
     enum CurveType
     {
@@ -607,7 +607,7 @@ public:
     static int Edit(Delegate& delegate, const ImVec2& size, unsigned int id, const ImRect* clippingRect = NULL, ImVector<editPoint>* selectedPoints = NULL);
 };
 
-struct KeyPointEditor : public ImCurveEdit::Delegate
+struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
 {
     KeyPointEditor() {}
     KeyPointEditor(ImU32 bg_color, ImU32 gr_color) 
