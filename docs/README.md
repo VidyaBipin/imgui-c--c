@@ -43,14 +43,16 @@ Add following addon collection also：
   ![chinese1 view Image](images/chinese1.jpg)
   ![chinese2 view Image](images/chinese2.jpg)
 * kalman algorithm test
-  ![kalman view Image](images/kalman.jpg)
+  ![kalman view Image](images/kalman.gif)
 * Other widgets
   ![Other1 view Image](images/other1.jpg)
   ![Other2 view Image](images/other2.gif)
 * ImGui::Piano (MIDI keyboard)
-* Many Vertical Text Helper API
-* Many Extensions to ImDrawList
+  ![Piano view Image](images/piano.jpg)
+  
 
+- Add many Vertical Text Helper API
+- Add many Extensions to ImDrawList
 - Add VkShader for vulkan compute(Tanlu team).
 - Add Icon collection(https://github.com/juliettef/IconFontCppHeaders).
 - Add Application framework to create app simply few function
