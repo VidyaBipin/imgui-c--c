@@ -1,25 +1,45 @@
 Fork from *Dear ImGui(https://github.com/ocornut/imgui)* docking/multiview branch and stack layout support and add CMake build script
 Add following addon collection also：
 * implot(https://github.com/epezent/implot)
+  ![implot view Image](images/implot.jpg)
 * ImGuiFileDialog(https://github.com/aiekick/ImGuiFileDialog/tree/Lib_Only)
+  ![imguifiledialog view Image](images/ImGuiFileDialog.jpg)
 * ImGuiTabWindow(https://github.com/Flix01/imgui/tree/imgui_with_addons)
+  ![tabwindow view Image](images/TableWindow.jpg)
 * Markdown(https://github.com/juliettef/imgui_markdown)
+  ![markdown view Image](images/markdown.jpg)
 * MemoryEditor(http://www.github.com/ocornut/imgui_club)
+  ![memoryedit view Image](images/memeditor.jpg)
 * ImGui Node editor(https://github.com/thedmd/imgui-node-editor/tree/feature/blueprint-next)
+  ![node edit view Image](images/nodeeditor.jpg)
 * TextEditor and other widget(https://github.com/Flix01/imgui/tree/imgui_with_addons/addons)
+  ![text edit view Image](images/texteditor.jpg)
 * Hotkey(https://github.com/CedricGuillemet/ImHotKey)
+  ![hotkey view Image](images/hotkey.jpg)
 * ImageInspect(https://github.com/CedricGuillemet/imgInspect)
+  ![ImageInspect view Image](images/ImageInspect.jpg)
 * CurveEdit(https://github.com/CedricGuillemet/ImGuizmo)
+  ![CurveEdit view Image](images/CurveEdit.jpg)
 * ImSpinner(https://github.com/dalerank/imspinner)
+  ![ImSpinner view Image](images/ImSpinner.gif)
 
-* ImGui::Piano (MIDI keyboard)
 * Bezier Widget
+  ![Bezier view Image](images/Bezier.jpg)
 * Slider 2D and Slider 3D widgets
+ ![Slider view Image](images/Slider2D3D.jpg)
 * ImSpectrogram (Audio spectrogram widget)
+  ![ImSpectrogram view Image](images/ImSpectrogram.jpg)
+* Color Selector widgets
+  ![Color Selector view Image](images/colorselect.jpg)
+* Color Band widgets
+  ![Color Band view Image](images/colorband.jpg)
+* Color Ring widgets
+  ![Color Ring view Image](images/colorring.jpg)
+* Many Knob widgets
+  ![Knob view Image](images/knob.gif)
+* ImGui::Piano (MIDI keyboard)
 * Many Vertical Text Helper API
 * Many Extensions to ImDrawList
-* May Color Selector widgets
-* May Knob widgets
 
 - Add VkShader for vulkan compute(Tanlu team).
 - Add immat for simulation OpenCV Mat(Tanlu team).
