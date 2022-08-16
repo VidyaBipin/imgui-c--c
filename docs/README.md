@@ -37,14 +37,22 @@ Add following addon collection also：
   ![Color Ring view Image](images/colorring.jpg)
 * Many Knob widgets
   ![Knob view Image](images/knob.gif)
+* immat for simulation OpenCV Mat(Tanlu team)
+  ![immat view Image](images/immat_draw.gif)
+* mono Chinese fonts small (hei/kai/song/sarasa).
+  ![chinese1 view Image](images/chinese1.jpg)
+  ![chinese2 view Image](images/chinese2.jpg)
+* kalman algorithm test
+  ![kalman view Image](images/kalman.jpg)
+* Other widgets
+  ![Other1 view Image](images/other1.jpg)
+  ![Other2 view Image](images/other2.gif)
 * ImGui::Piano (MIDI keyboard)
 * Many Vertical Text Helper API
 * Many Extensions to ImDrawList
 
 - Add VkShader for vulkan compute(Tanlu team).
-- Add immat for simulation OpenCV Mat(Tanlu team).
 - Add Icon collection(https://github.com/juliettef/IconFontCppHeaders).
-- Add mono Chinese fonts(hei/kai/song/sarasa).
 - Add Application framework to create app simply few function
 - Add power saving mode for imgui, Configurable by coding.
 - Add vulkan texture support(ugly)
