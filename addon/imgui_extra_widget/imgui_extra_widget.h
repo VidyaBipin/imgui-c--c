@@ -512,6 +512,13 @@ namespace ImGui
 {
 struct IMGUI_API ImCurveEdit
 {
+#define CURVE_EDIT_FLAG_NONE            (0)
+#define CURVE_EDIT_FLAG_VALUE_LIMITED   (1)
+#define CURVE_EDIT_FLAG_SCROLL_V        (1<<1)
+#define CURVE_EDIT_FLAG_MOVE_CURVE      (1<<2)
+#define CURVE_EDIT_FLAG_KEEP_BEGIN_END  (1<<3)
+#define CURVE_EDIT_FLAG_DOCK_BEGIN_END  (1<<4)
+
     enum CurveType
     {
         Hold,
@@ -596,8 +603,9 @@ struct IMGUI_API ImCurveEdit
         virtual void AddPoint(size_t curveIndex, ImVec2 value, CurveType type) = 0;
         virtual float GetValue(size_t curveIndex, float t) = 0;
         virtual void DeletePoint(size_t curveIndex, int pointIndex) = 0;
-        virtual void AddCurve(std::string name, CurveType type, ImU32 color, bool visible) = 0;
+        virtual int AddCurve(std::string name, CurveType type, ImU32 color, bool visible) = 0;
         virtual void DeleteCurve(size_t curveIndex) = 0;
+        virtual int GetCurveIndex(std::string name) = 0;
 
         virtual ImU32 GetBackgroundColor() { return 0xFF101010; }
         virtual ImU32 GetGraticuleColor() { return 0xFF202020; }
@@ -614,7 +622,7 @@ public:
     static float smoothstep(float edge0, float edge1, float t, CurveType type);
     static float distance(float x1, float y1, float x2, float y2);
     static float distance(float x, float y, float x1, float y1, float x2, float y2);
-    static int Edit(Delegate& delegate, const ImVec2& size, unsigned int id, const ImRect* clippingRect = NULL, ImVector<editPoint>* selectedPoints = NULL);
+    static int Edit(Delegate& delegate, const ImVec2& size, unsigned int id, unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, ImVector<editPoint>* selectedPoints = NULL);
 };
 
 struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
@@ -694,10 +702,11 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
             }
         }
     }
-    void AddCurve(std::string name, ImCurveEdit::CurveType type, ImU32 color, bool visible)
+    int AddCurve(std::string name, ImCurveEdit::CurveType type, ImU32 color, bool visible)
     {
         auto new_key = ImCurveEdit::keys(name, type, color, visible);
         mKeys.push_back(new_key);
+        return mKeys.size() - 1;
     }
 
     void DeleteCurve(size_t curveIndex)
@@ -707,6 +716,20 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
             auto iter = mKeys.begin() + curveIndex;
             mKeys.erase(iter);
         }
+    }
+
+    int GetCurveIndex(std::string name)
+    {
+        int index = -1;
+        auto iter = std::find_if(mKeys.begin(), mKeys.end(), [name](const ImCurveEdit::keys& key)
+        {
+            return key.name == name;
+        });
+        if (iter != mKeys.end())
+        {
+            index = iter - mKeys.begin();
+        }
+        return index;
     }
 
     float GetValue(size_t curveIndex, float t)

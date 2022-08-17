@@ -591,6 +591,11 @@ void ShowExtraWidgetDemoWindow()
     {
         ImGuiIO& io = ImGui::GetIO();
         bool reset = false;
+        static bool value_limited = true;
+        static bool scroll_v = true;
+        static bool move_curve = true;
+        static bool keep_begin_end = false;
+        static bool dock_begin_end = false;
         static ImGui::KeyPointEditor rampEdit(IM_COL32(0, 0, 0, 255), IM_COL32(32, 32, 32, 128));
         char ** curve_type_list = nullptr;
         auto curve_type_count = ImCurveEdit::GetCurveTypeName(curve_type_list);
@@ -626,9 +631,21 @@ void ShowExtraWidgetDemoWindow()
             rampEdit.SetMax(ImVec2(size_x, 1.f));
             rampEdit.SetMin(ImVec2(0.f, 0.f));
         }
+        ImGui::Checkbox("Value limited", &value_limited); ImGui::SameLine();
+        ImGui::Checkbox("Scroll V", &scroll_v); ImGui::SameLine();
+        ImGui::Checkbox("Move Curve", &move_curve); ImGui::SameLine();
+        ImGui::Checkbox("Keep Begin End", &keep_begin_end); ImGui::SameLine();
+        ImGui::Checkbox("Dock Begin End", &dock_begin_end);
+        uint32_t curvs_flags = CURVE_EDIT_FLAG_NONE;
+        if (value_limited) curvs_flags |= CURVE_EDIT_FLAG_VALUE_LIMITED;
+        if (scroll_v) curvs_flags |= CURVE_EDIT_FLAG_SCROLL_V;
+        if (move_curve) curvs_flags |= CURVE_EDIT_FLAG_MOVE_CURVE;
+        if (keep_begin_end) curvs_flags |= CURVE_EDIT_FLAG_KEEP_BEGIN_END;
+        if (dock_begin_end) curvs_flags |= CURVE_EDIT_FLAG_DOCK_BEGIN_END;
+
         ImVec2 item_pos = ImGui::GetCursorScreenPos();
         ImVector<ImCurveEdit::editPoint> edit_points;
-        ImCurveEdit::Edit(rampEdit, ImVec2(size_x, 300), ImGui::GetID("##bezier_view"), NULL , &edit_points);
+        ImCurveEdit::Edit(rampEdit, ImVec2(size_x, 300), ImGui::GetID("##bezier_view"), curvs_flags, NULL, &edit_points);
         if (ImGui::IsItemHovered())
         {
             float pos = io.MousePos.x - item_pos.x;
