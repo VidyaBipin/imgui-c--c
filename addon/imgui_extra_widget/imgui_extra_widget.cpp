@@ -6477,7 +6477,7 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
         if (ptCount < 1)
             continue;
         const KeyPoint* pts = delegate.GetPoints(c);
-        uint32_t curveColor = delegate.GetCurveColor(c);
+        ImU32 curveColor = delegate.GetCurveColor(c);
         if ((c == highLightedCurveIndex && selection.empty() && !selectingQuad) || movingCurve == c)
             curveColor = 0xFFFFFFFF;
 

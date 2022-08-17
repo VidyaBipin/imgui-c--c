@@ -76,9 +76,14 @@ IMGUI_API bool Base85Decode(const char* input,ImVector<char>& output);
 
 IMGUI_API bool BinaryStringify(const char* input, int inputSize, ImVector<char>& output, int numInputBytesPerLineInStringifiedMode=80, bool serializeUnsignedBytes=false);
 IMGUI_API bool TextStringify(const char* input, ImVector<char>& output, int numCharsPerLineInStringifiedMode=0, int inputSize=0, bool noBackslashAtLineEnds=false);
+
 // Two methods that fill rv and return true on success
 IMGUI_API bool Base64DecodeFromFile(const char* filePath,ImVector<char>& rv);
 IMGUI_API bool Base85DecodeFromFile(const char* filePath,ImVector<char>& rv);
+
+// Generate color
+IMGUI_API void RandomColor(ImVec4& color, float alpha = 1.0);
+IMGUI_API void RandomColor(ImU32& color, float alpha = 1.0);
 
 // FFT 1D
 IMGUI_API void ImFFT (float* data, int N, bool forward);
@@ -90,6 +95,7 @@ IMGUI_API int ImReComposePhase(float * in, float * out, int samples);
 IMGUI_API int ImReComposeDBShort(float * in, float * out, int samples, bool inverse = true);
 IMGUI_API int ImReComposeDBLong(float * in, float * out, int samples, bool inverse = true);
 IMGUI_API float ImDoDecibel(float * in, int samples, bool inverse = true);
+
 // STFT 1D
 struct IMGUI_API ImSTFT
 {

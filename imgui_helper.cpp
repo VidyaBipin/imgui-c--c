@@ -2868,6 +2868,24 @@ bool Base85DecodeFromFile(const char* filePath,ImVector<char>& rv)  {
     if (!ImGuiHelper::GetFileContent(filePath,f_data,true,"r",true)) return false;
     return ImGui::Base85Decode(&f_data[0],rv);
 }
+
+// Generate color
+void RandomColor(ImVec4& color, float alpha)
+{
+    int r = std::rand() % 255;
+    int g = std::rand() % 255;
+    int b = std::rand() % 255;
+    color = ImVec4(r / 255.0, g / 255.0, b / 255.0, alpha);
+}
+
+void RandomColor(ImU32& color, float alpha)
+{
+    int r = std::rand() % 255;
+    int g = std::rand() % 255;
+    int b = std::rand() % 255;
+    color = IM_COL32(r, g, b, (int)alpha * 255);
+}
+
 } // namespace ImGui
 
 namespace ImGui
