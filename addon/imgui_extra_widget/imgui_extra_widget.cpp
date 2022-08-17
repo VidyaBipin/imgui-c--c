@@ -6753,3 +6753,108 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
     }
     return ret;
 }
+
+void ImGui::KeyPointEditor::Load(const imgui_json::value& keypoint)
+{
+    if (!keypoint.is_object())
+        return;
+    // keypoint global
+    if (keypoint.contains("Min"))
+    {
+        auto& val = keypoint["Min"];
+        if (val.is_vec2()) SetMin(val.get<imgui_json::vec2>());
+    }
+    if (keypoint.contains("Max"))
+    {
+        auto& val = keypoint["Max"];
+        if (val.is_vec2()) SetMax(val.get<imgui_json::vec2>());
+    }
+    // keypoint curve
+    const imgui_json::array* curveArray = nullptr;
+    if (imgui_json::GetPtrTo(keypoint, "Curves", curveArray))
+    {
+        for (auto& curve : *curveArray)
+        {
+            if (!curve.is_object()) continue;
+            std::string name = "";
+            int type = -1;
+            ImU32 color = 0;
+            bool visible = false;
+            if (curve.contains("Name"))
+            {
+                auto& val = curve["Name"];
+                if (val.is_string()) name = val.get<imgui_json::string>();
+            }
+            if (curve.contains("Type"))
+            {
+                auto& val = curve["Type"];
+                if (val.is_number()) type = val.get<imgui_json::number>();
+            }
+            if (curve.contains("Color"))
+            {
+                auto& val = curve["Color"];
+                if (val.is_number()) color = val.get<imgui_json::number>();
+            }
+            if (curve.contains("Visible"))
+            {
+                auto& val = curve["Visible"];
+                if (val.is_boolean()) visible = val.get<imgui_json::boolean>();
+            }
+            if (!name.empty())
+            {
+                auto curve_index = AddCurve(name, (ImGui::ImCurveEdit::CurveType)type, color, visible);
+                const imgui_json::array* pointArray = nullptr;
+                if (imgui_json::GetPtrTo(curve, "KeyPoints", pointArray))
+                {
+                    for (auto& point : *pointArray)
+                    {
+                        if (!point.is_object()) continue;
+                        ImGui::ImCurveEdit::KeyPoint p;
+                        if (point.contains("Point"))
+                        {
+                            auto& val = point["Point"];
+                            if (val.is_vec2()) p.point = val.get<imgui_json::vec2>();
+                        }
+                        if (point.contains("Type"))
+                        {
+                            auto& val = point["Type"];
+                            if (val.is_number()) p.type = (ImGui::ImCurveEdit::CurveType)val.get<imgui_json::number>();
+                        }
+                        if (p.type != ImGui::ImCurveEdit::CurveType::UnKnown)
+                        {
+                            AddPoint(curve_index, p.point, p.type);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void ImGui::KeyPointEditor::Save(imgui_json::value& keypoint)
+{
+    keypoint["Min"] = imgui_json::vec2(GetMin());
+    keypoint["Max"] = imgui_json::vec2(GetMax());
+    imgui_json::value curves;
+    for (int i = 0; i < GetCurveCount(); i++)
+    {
+        imgui_json::value curve;
+        curve["Name"] = GetCurveName(i);
+        curve["Type"] = imgui_json::number(GetCurveType(i));
+        curve["Color"] = imgui_json::number(GetCurveColor(i));
+        curve["Visible"] = imgui_json::boolean(IsVisible(i));
+        // save curve key point
+        imgui_json::value points;
+        for (int p = 0; p < GetCurvePointCount(i); p++)
+        {
+            imgui_json::value point;
+            auto pt = GetPoint(i, p);
+            point["Point"] = imgui_json::vec2(pt.point);
+            point["Type"] = imgui_json::number(pt.type);
+            points.push_back(point);
+        }
+        curve["KeyPoints"] = points;
+        curves.push_back(curve);
+    }
+    keypoint["Curves"] = curves;
+}

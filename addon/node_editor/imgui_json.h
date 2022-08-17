@@ -282,6 +282,29 @@ template <> inline       point*   value::get_ptr<point>()         { if (m_Type =
 template <> inline       vec2*    value::get_ptr<vec2>()          { if (m_Type == type_t::vec2)    return vec2_ptr(m_Storage);    else return nullptr; }
 template <> inline       vec4*    value::get_ptr<vec4>()          { if (m_Type == type_t::vec4)    return vec4_ptr(m_Storage);    else return nullptr; }
 
+template <typename T>
+inline bool GetPtrTo(const imgui_json::value& value, std::string key, const T*& result)
+{
+    if (!value.contains(key))
+        return false;
+    auto& valueObject = value[key];
+    auto valuePtr = valueObject.get_ptr<T>();
+    if (valuePtr == nullptr)
+        return false;
+    result = valuePtr;
+    return true;
+};
+
+template <typename T, typename V>
+inline bool GetTo(const imgui_json::value& value, std::string key, V& result)
+{
+    const T* valuePtr = nullptr;
+    if (!GetPtrTo(value, key, valuePtr))
+        return false;
+    result = static_cast<V>(*valuePtr);
+    return true;
+};
+
 } // namespace imgui_json
 
 # endif // __IMGUI_JSON_H__

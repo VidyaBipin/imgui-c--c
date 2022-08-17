@@ -7,6 +7,7 @@
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
+#include <imgui_json.h>
 #include <immat.h>
 
 namespace ImGui {
@@ -521,6 +522,7 @@ struct IMGUI_API ImCurveEdit
 
     enum CurveType
     {
+        UnKnown = -1,
         Hold,
         Step,
         Linear,
@@ -553,8 +555,8 @@ struct IMGUI_API ImCurveEdit
 
     struct KeyPoint
     {
-        ImVec2 point;
-        ImCurveEdit::CurveType type;
+        ImVec2 point {0, 0};
+        ImCurveEdit::CurveType type {UnKnown};
     };
 
     struct keys
@@ -841,6 +843,9 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
         }
     }
     bool IsVisible(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].visible; return false; }
+
+    void Load(const imgui_json::value& value);
+    void Save(imgui_json::value& value);
 
 private:
     std::vector<ImCurveEdit::keys> mKeys;
