@@ -34,7 +34,7 @@ layout (push_constant) uniform parameter \n\
 " \n\
 void store_rgba_planer_float16_no_clamp(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec4 o_offset = (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)) + (y * w + x); \n\
+    ivec4 o_offset = color_format_mapping_vec4(format) + (y * w + x); \n\
     dst_data_float16[o_offset.r] = float16_t(val.r); \n\
     dst_data_float16[o_offset.g] = float16_t(val.g); \n\
     dst_data_float16[o_offset.b] = float16_t(val.b); \n\
@@ -46,7 +46,7 @@ void store_rgba_planer_float16_no_clamp(sfpvec4 val, int x, int y, int w, int cs
 " \n\
 void store_rgba_planer_float32_no_clamp(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec4 o_offset = (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)) + (y * w + x); \n\
+    ivec4 o_offset = color_format_mapping_vec4(format) + (y * w + x); \n\
     dst_data_float32[o_offset.r] = float(val.r); \n\
     dst_data_float32[o_offset.g] = float(val.g); \n\
     dst_data_float32[o_offset.b] = float(val.b); \n\
@@ -72,7 +72,7 @@ void store_rgba_planer_float_no_clamp(sfpvec4 val, int x, int y, int w, int cste
 " \n\
 void store_rgb_planer_float16_no_clamp(sfpvec3 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec3 o_offset = (format == CF_BGR ? ivec3(0, 1, 2) : ivec3(2, 1, 0)) * cstep + (y * w + x); \n\
+    ivec3 o_offset = color_format_mapping_vec3(format) * cstep + (y * w + x); \n\
     dst_data_float16[o_offset.r] = float16_t(val.r); \n\
     dst_data_float16[o_offset.g] = float16_t(val.g); \n\
     dst_data_float16[o_offset.b] = float16_t(val.b); \n\
@@ -83,7 +83,7 @@ void store_rgb_planer_float16_no_clamp(sfpvec3 val, int x, int y, int w, int cst
 " \n\
 void store_rgb_planer_float32_no_clamp(sfpvec3 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec3 o_offset = (format == CF_BGR ? ivec3(0, 1, 2) : ivec3(2, 1, 0)) * cstep + (y * w + x); \n\
+    ivec3 o_offset = color_format_mapping_vec3(format) * cstep + (y * w + x); \n\
     dst_data_float32[o_offset.r] = float(val.r); \n\
     dst_data_float32[o_offset.g] = float(val.g); \n\
     dst_data_float32[o_offset.b] = float(val.b); \n\

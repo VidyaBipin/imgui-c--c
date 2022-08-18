@@ -33,7 +33,7 @@ layout (push_constant) uniform parameter \n\
 sfpvec4 load_blur_rgba_int8(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp(blur_int8_data[i_offset.r]) / sfp(255.f); \n\
     rgb_in.g = sfp(blur_int8_data[i_offset.g]) / sfp(255.f); \n\
     rgb_in.b = sfp(blur_int8_data[i_offset.b]) / sfp(255.f); \n\
@@ -47,7 +47,7 @@ sfpvec4 load_blur_rgba_int8(int x, int y, int w, int cstep, int format) \n\
 sfpvec4 load_blur_rgba_int16(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp(blur_int16_data[i_offset.r]) / sfp(65535.f); \n\
     rgb_in.g = sfp(blur_int16_data[i_offset.g]) / sfp(65535.f); \n\
     rgb_in.b = sfp(blur_int16_data[i_offset.b]) / sfp(65535.f); \n\
@@ -61,7 +61,7 @@ sfpvec4 load_blur_rgba_int16(int x, int y, int w, int cstep, int format) \n\
 sfpvec4 load_blur_rgba_float16(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp(blur_float16_data[i_offset.r]); \n\
     rgb_in.g = sfp(blur_float16_data[i_offset.g]); \n\
     rgb_in.b = sfp(blur_float16_data[i_offset.b]); \n\
@@ -75,7 +75,7 @@ sfpvec4 load_blur_rgba_float16(int x, int y, int w, int cstep, int format) \n\
 sfpvec4 load_blur_rgba_float32(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp(blur_float32_data[i_offset.r]); \n\
     rgb_in.g = sfp(blur_float32_data[i_offset.g]); \n\
     rgb_in.b = sfp(blur_float32_data[i_offset.b]); \n\

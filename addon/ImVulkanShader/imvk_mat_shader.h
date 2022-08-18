@@ -170,8 +170,30 @@ void main()
 #define DT_FLOAT64      6 \n\
 #define M_PI sfp(3.141592653589793) \n\
 #define M_SQRT1_2 sfp(0.707106781186547524401) \n\
+ivec3 color_format_mapping_vec3(int format) \n\
+{ \n\
+    if (format == CF_BGR) \n\
+        return ivec3(0, 1, 2); \n\
+    else if (format == CF_RGB) \n\
+        return ivec3(2, 1, 0); \n\
+    else \n\
+        return ivec3(0, 0, 0); \n\
+} \n\
+ivec4 color_format_mapping_vec4(int format) \n\
+{ \n\
+    if (format == CF_ABGR) \n\
+        return ivec4(0, 1, 2, 3); \n\
+    else if (format == CF_ARGB) \n\
+        return ivec4(2, 1, 0, 3); \n\
+    else if (format == CF_BGRA) \n\
+        return ivec4(1, 2, 3, 0); \n\
+    else if (format == CF_RGBA) \n\
+        return ivec4(3, 2, 1, 0); \n\
+    else \n\
+        return ivec4(0, 0, 0, 0); \n\
+} \n\
 \
-" // 45 lines
+" // 67 lines
 
 // shader binding for command data
 #define SHADER_SRC_DATA \
@@ -283,7 +305,7 @@ sfp load_gray(int x, int y, int w, int cstep, int format, int type, float scale)
 sfpvec3 load_rgb_int8(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec3 rgb_in = sfpvec3(0.f); \n\
-    ivec3 i_offset = (y * w + x) * cstep + (format == CF_BGR ? ivec3(0, 1, 2) : ivec3(2, 1, 0)); \n\
+    ivec3 i_offset = (y * w + x) * cstep + color_format_mapping_vec3(format); \n\
     rgb_in.r = sfp(uint(src_data_int8[i_offset.r])) / sfp(255.f); \n\
     rgb_in.g = sfp(uint(src_data_int8[i_offset.g])) / sfp(255.f); \n\
     rgb_in.b = sfp(uint(src_data_int8[i_offset.b])) / sfp(255.f); \n\
@@ -296,7 +318,7 @@ sfpvec3 load_rgb_int8(int x, int y, int w, int cstep, int format) \n\
 sfpvec3 load_rgb_int16(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec3 rgb_in = sfpvec3(0.f); \n\
-    ivec3 i_offset = (y * w + x) * cstep + (format == CF_BGR ? ivec3(0, 1, 2) : ivec3(2, 1, 0)); \n\
+    ivec3 i_offset = (y * w + x) * cstep + color_format_mapping_vec3(format); \n\
     rgb_in.r = sfp(uint(src_data_int16[i_offset.r])) / sfp(65535.f); \n\
     rgb_in.g = sfp(uint(src_data_int16[i_offset.g])) / sfp(65535.f); \n\
     rgb_in.b = sfp(uint(src_data_int16[i_offset.b])) / sfp(65535.f); \n\
@@ -309,7 +331,7 @@ sfpvec3 load_rgb_int16(int x, int y, int w, int cstep, int format) \n\
 sfpvec3 load_rgb_float16(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec3 rgb_in = sfpvec3(0.f); \n\
-    ivec3 i_offset = (y * w + x) * cstep + (format == CF_BGR ? ivec3(0, 1, 2) : ivec3(2, 1, 0)); \n\
+    ivec3 i_offset = (y * w + x) * cstep + color_format_mapping_vec3(format); \n\
     rgb_in.r = sfp(src_data_float16[i_offset.r]); \n\
     rgb_in.g = sfp(src_data_float16[i_offset.g]); \n\
     rgb_in.b = sfp(src_data_float16[i_offset.b]); \n\
@@ -322,7 +344,7 @@ sfpvec3 load_rgb_float16(int x, int y, int w, int cstep, int format) \n\
 sfpvec3 load_rgb_float32(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec3 rgb_in = sfpvec3(0.f); \n\
-    ivec3 i_offset = (y * w + x) * cstep + (format == CF_BGR ? ivec3(0, 1, 2) : ivec3(2, 1, 0)); \n\
+    ivec3 i_offset = (y * w + x) * cstep + color_format_mapping_vec3(format); \n\
     rgb_in.r = sfp(src_data_float32[i_offset.r]); \n\
     rgb_in.g = sfp(src_data_float32[i_offset.g]); \n\
     rgb_in.b = sfp(src_data_float32[i_offset.b]); \n\
@@ -357,7 +379,7 @@ sfpvec3 load_rgb(int x, int y, int w, int cstep, int format, int type) \n\
 sfpvec4 load_rgba_int8(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp(uint(src_data_int8[i_offset.r])) / sfp(255.f); \n\
     rgb_in.g = sfp(uint(src_data_int8[i_offset.g])) / sfp(255.f); \n\
     rgb_in.b = sfp(uint(src_data_int8[i_offset.b])) / sfp(255.f); \n\
@@ -371,7 +393,7 @@ sfpvec4 load_rgba_int8(int x, int y, int w, int cstep, int format) \n\
 sfpvec4 load_rgba_int16(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp(uint(src_data_int16[i_offset.r])) / sfp(65535.f); \n\
     rgb_in.g = sfp(uint(src_data_int16[i_offset.g])) / sfp(65535.f); \n\
     rgb_in.b = sfp(uint(src_data_int16[i_offset.b])) / sfp(65535.f); \n\
@@ -385,7 +407,7 @@ sfpvec4 load_rgba_int16(int x, int y, int w, int cstep, int format) \n\
 sfpvec4 load_rgba_float16(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp(src_data_float16[i_offset.r]); \n\
     rgb_in.g = sfp(src_data_float16[i_offset.g]); \n\
     rgb_in.b = sfp(src_data_float16[i_offset.b]); \n\
@@ -399,7 +421,7 @@ sfpvec4 load_rgba_float16(int x, int y, int w, int cstep, int format) \n\
 sfpvec4 load_rgba_float32(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp(src_data_float32[i_offset.r]); \n\
     rgb_in.g = sfp(src_data_float32[i_offset.g]); \n\
     rgb_in.b = sfp(src_data_float32[i_offset.b]); \n\
@@ -434,7 +456,7 @@ sfpvec4 load_rgba(int x, int y, int w, int cstep, int format, int type) \n\
 sfpvec4 load_rgba_int8_"#src"(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp(uint("#src"_data_int8[i_offset.r])) / sfp(255.f); \n\
     rgb_in.g = sfp(uint("#src"_data_int8[i_offset.g])) / sfp(255.f); \n\
     rgb_in.b = sfp(uint("#src"_data_int8[i_offset.b])) / sfp(255.f); \n\
@@ -448,7 +470,7 @@ sfpvec4 load_rgba_int8_"#src"(int x, int y, int w, int cstep, int format) \n\
 sfpvec4 load_rgba_int16_"#src"(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp(uint("#src"_data_int16[i_offset.r])) / sfp(65535.f); \n\
     rgb_in.g = sfp(uint("#src"_data_int16[i_offset.g])) / sfp(65535.f); \n\
     rgb_in.b = sfp(uint("#src"_data_int16[i_offset.b])) / sfp(65535.f); \n\
@@ -462,7 +484,7 @@ sfpvec4 load_rgba_int16_"#src"(int x, int y, int w, int cstep, int format) \n\
 sfpvec4 load_rgba_float16_"#src"(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp("#src"_data_float16[i_offset.r]); \n\
     rgb_in.g = sfp("#src"_data_float16[i_offset.g]); \n\
     rgb_in.b = sfp("#src"_data_float16[i_offset.b]); \n\
@@ -476,7 +498,7 @@ sfpvec4 load_rgba_float16_"#src"(int x, int y, int w, int cstep, int format) \n\
 sfpvec4 load_rgba_float32_"#src"(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp("#src"_data_float32[i_offset.r]); \n\
     rgb_in.g = sfp("#src"_data_float32[i_offset.g]); \n\
     rgb_in.b = sfp("#src"_data_float32[i_offset.b]); \n\
@@ -512,7 +534,7 @@ sfpvec4 load_rgba_"#src"(int x, int y, int w, int cstep, int format, int type) \
 sfpvec4 load_dst_rgba_int8(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp(uint(dst_data_int8[i_offset.r])) / sfp(255.f); \n\
     rgb_in.g = sfp(uint(dst_data_int8[i_offset.g])) / sfp(255.f); \n\
     rgb_in.b = sfp(uint(dst_data_int8[i_offset.b])) / sfp(255.f); \n\
@@ -526,7 +548,7 @@ sfpvec4 load_dst_rgba_int8(int x, int y, int w, int cstep, int format) \n\
 sfpvec4 load_dst_rgba_int16(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp(uint(dst_data_int16[i_offset.r])) / sfp(65535.f); \n\
     rgb_in.g = sfp(uint(dst_data_int16[i_offset.g])) / sfp(65535.f); \n\
     rgb_in.b = sfp(uint(dst_data_int16[i_offset.b])) / sfp(65535.f); \n\
@@ -540,7 +562,7 @@ sfpvec4 load_dst_rgba_int16(int x, int y, int w, int cstep, int format) \n\
 sfpvec4 load_dst_rgba_float16(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp(dst_data_float16[i_offset.r]); \n\
     rgb_in.g = sfp(dst_data_float16[i_offset.g]); \n\
     rgb_in.b = sfp(dst_data_float16[i_offset.b]); \n\
@@ -554,7 +576,7 @@ sfpvec4 load_dst_rgba_float16(int x, int y, int w, int cstep, int format) \n\
 sfpvec4 load_dst_rgba_float32(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp(dst_data_float32[i_offset.r]); \n\
     rgb_in.g = sfp(dst_data_float32[i_offset.g]); \n\
     rgb_in.b = sfp(dst_data_float32[i_offset.b]); \n\
@@ -645,7 +667,7 @@ void store_gray(sfp val, int x, int y, int w, int cstep, int format, int type) \
 " \n\
 void store_rgb_int8(sfpvec3 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec3 o_offset = (y * w + x) * cstep + (format == CF_BGR ? ivec3(0, 1, 2) : ivec3(2, 1, 0)); \n\
+    ivec3 o_offset = (y * w + x) * cstep + color_format_mapping_vec3(format); \n\
     dst_data_int8[o_offset.r] = uint8_t(clamp(uint(floor(val.r * sfp(255.0f))), 0, 255)); \n\
     dst_data_int8[o_offset.g] = uint8_t(clamp(uint(floor(val.g * sfp(255.0f))), 0, 255)); \n\
     dst_data_int8[o_offset.b] = uint8_t(clamp(uint(floor(val.b * sfp(255.0f))), 0, 255)); \n\
@@ -656,7 +678,7 @@ void store_rgb_int8(sfpvec3 val, int x, int y, int w, int cstep, int format) \n\
 " \n\
 void store_rgb_int16(sfpvec3 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec3 o_offset = (y * w + x) * cstep + (format == CF_BGR ? ivec3(0, 1, 2) : ivec3(2, 1, 0)); \n\
+    ivec3 o_offset = (y * w + x) * cstep + color_format_mapping_vec3(format); \n\
     dst_data_int16[o_offset.r] = uint16_t(clamp(uint(floor(val.r * sfp(65535.0f))), 0, 65535)); \n\
     dst_data_int16[o_offset.g] = uint16_t(clamp(uint(floor(val.g * sfp(65535.0f))), 0, 65535)); \n\
     dst_data_int16[o_offset.b] = uint16_t(clamp(uint(floor(val.b * sfp(65535.0f))), 0, 65535)); \n\
@@ -667,7 +689,7 @@ void store_rgb_int16(sfpvec3 val, int x, int y, int w, int cstep, int format) \n
 " \n\
 void store_rgb_float16(sfpvec3 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec3 o_offset = (y * w + x) * cstep + (format == CF_BGR ? ivec3(0, 1, 2) : ivec3(2, 1, 0)); \n\
+    ivec3 o_offset = (y * w + x) * cstep + color_format_mapping_vec3(format); \n\
     dst_data_float16[o_offset.r] = float16_t(clamp(val.r, sfp(0.f), sfp(1.f))); \n\
     dst_data_float16[o_offset.g] = float16_t(clamp(val.g, sfp(0.f), sfp(1.f))); \n\
     dst_data_float16[o_offset.b] = float16_t(clamp(val.b, sfp(0.f), sfp(1.f))); \n\
@@ -678,7 +700,7 @@ void store_rgb_float16(sfpvec3 val, int x, int y, int w, int cstep, int format) 
 " \n\
 void store_rgb_float32(sfpvec3 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec3 o_offset = (y * w + x) * cstep + (format == CF_BGR ? ivec3(0, 1, 2) : ivec3(2, 1, 0)); \n\
+    ivec3 o_offset = (y * w + x) * cstep + color_format_mapping_vec3(format); \n\
     dst_data_float32[o_offset.r] = float(clamp(val.r, sfp(0.f), sfp(1.f))); \n\
     dst_data_float32[o_offset.g] = float(clamp(val.g, sfp(0.f), sfp(1.f))); \n\
     dst_data_float32[o_offset.b] = float(clamp(val.b, sfp(0.f), sfp(1.f))); \n\
@@ -709,7 +731,7 @@ void store_rgb(sfpvec3 val, int x, int y, int w, int cstep, int format, int type
 " \n\
 void store_rgba_int8(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec4 o_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 o_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     dst_data_int8[o_offset.r] = uint8_t(clamp(uint(floor(val.r * sfp(255.0f))), 0, 255)); \n\
     dst_data_int8[o_offset.g] = uint8_t(clamp(uint(floor(val.g * sfp(255.0f))), 0, 255)); \n\
     dst_data_int8[o_offset.b] = uint8_t(clamp(uint(floor(val.b * sfp(255.0f))), 0, 255)); \n\
@@ -721,7 +743,7 @@ void store_rgba_int8(sfpvec4 val, int x, int y, int w, int cstep, int format) \n
 " \n\
 void store_rgba_int16(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec4 o_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 o_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     dst_data_int16[o_offset.r] = uint16_t(clamp(uint(floor(val.r * sfp(65535.0f))), 0, 65535)); \n\
     dst_data_int16[o_offset.g] = uint16_t(clamp(uint(floor(val.g * sfp(65535.0f))), 0, 65535)); \n\
     dst_data_int16[o_offset.b] = uint16_t(clamp(uint(floor(val.b * sfp(65535.0f))), 0, 65535)); \n\
@@ -733,7 +755,7 @@ void store_rgba_int16(sfpvec4 val, int x, int y, int w, int cstep, int format) \
 " \n\
 void store_rgba_float16(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec4 o_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 o_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     dst_data_float16[o_offset.r] = float16_t(clamp(val.r, sfp(0.f), sfp(1.f))); \n\
     dst_data_float16[o_offset.g] = float16_t(clamp(val.g, sfp(0.f), sfp(1.f))); \n\
     dst_data_float16[o_offset.b] = float16_t(clamp(val.b, sfp(0.f), sfp(1.f))); \n\
@@ -745,7 +767,7 @@ void store_rgba_float16(sfpvec4 val, int x, int y, int w, int cstep, int format)
 " \n\
 void store_rgba_float32(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec4 o_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 o_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     dst_data_float32[o_offset.r] = float(clamp(val.r, sfp(0.f), sfp(1.f))); \n\
     dst_data_float32[o_offset.g] = float(clamp(val.g, sfp(0.f), sfp(1.f))); \n\
     dst_data_float32[o_offset.b] = float(clamp(val.b, sfp(0.f), sfp(1.f))); \n\
@@ -778,7 +800,7 @@ void store_rgba(sfpvec4 val, int x, int y, int w, int cstep, int format, int typ
 void store_rgba_int8_side_by_side(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
     int planner = x % 2 == 0 ? x / 2 : x / 2 + p.w / 2; \n\
-    ivec4 o_offset = (y * w + planner) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 o_offset = (y * w + planner) * cstep + color_format_mapping_vec4(format); \n\
     dst_data_int8[o_offset.r] = uint8_t(clamp(uint(floor(val.r * sfp(255.0f))), 0, 255)); \n\
     dst_data_int8[o_offset.g] = uint8_t(clamp(uint(floor(val.g * sfp(255.0f))), 0, 255)); \n\
     dst_data_int8[o_offset.b] = uint8_t(clamp(uint(floor(val.b * sfp(255.0f))), 0, 255)); \n\
@@ -791,7 +813,7 @@ void store_rgba_int8_side_by_side(sfpvec4 val, int x, int y, int w, int cstep, i
 void store_rgba_int16_side_by_side(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
     int planner = x % 2 == 0 ? x / 2 : x / 2 + p.w / 2; \n\
-    ivec4 o_offset = (y * w + planner) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 o_offset = (y * w + planner) * cstep + color_format_mapping_vec4(format); \n\
     dst_data_int16[o_offset.r] = uint16_t(clamp(uint(floor(val.r * sfp(65535.0f))), 0, 65535)); \n\
     dst_data_int16[o_offset.g] = uint16_t(clamp(uint(floor(val.g * sfp(65535.0f))), 0, 65535)); \n\
     dst_data_int16[o_offset.b] = uint16_t(clamp(uint(floor(val.b * sfp(65535.0f))), 0, 65535)); \n\
@@ -804,7 +826,7 @@ void store_rgba_int16_side_by_side(sfpvec4 val, int x, int y, int w, int cstep, 
 void store_rgba_float16_side_by_side(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
     int planner = x % 2 == 0 ? x / 2 : x / 2 + p.w / 2; \n\
-    ivec4 o_offset = (y * w + planner) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 o_offset = (y * w + planner) * cstep + color_format_mapping_vec4(format); \n\
     dst_data_float16[o_offset.r] = float16_t(clamp(val.r, sfp(0.f), sfp(1.f))); \n\
     dst_data_float16[o_offset.g] = float16_t(clamp(val.g, sfp(0.f), sfp(1.f))); \n\
     dst_data_float16[o_offset.b] = float16_t(clamp(val.b, sfp(0.f), sfp(1.f))); \n\
@@ -817,7 +839,7 @@ void store_rgba_float16_side_by_side(sfpvec4 val, int x, int y, int w, int cstep
 void store_rgba_float32_side_by_side(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
     int planner = x % 2 == 0 ? x / 2 : x / 2 + p.w / 2; \n\
-    ivec4 o_offset = (y * w + planner) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 o_offset = (y * w + planner) * cstep + color_format_mapping_vec4(format); \n\
     dst_data_float32[o_offset.r] = float(clamp(val.r, sfp(0.f), sfp(1.f))); \n\
     dst_data_float32[o_offset.g] = float(clamp(val.g, sfp(0.f), sfp(1.f))); \n\
     dst_data_float32[o_offset.b] = float(clamp(val.b, sfp(0.f), sfp(1.f))); \n\
@@ -849,7 +871,7 @@ void store_rgba_side_by_side(sfpvec4 val, int x, int y, int w, int cstep, int fo
 " \n\
 void store_rgb_float16_no_clamp(sfpvec3 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec3 o_offset = (y * w + x) * cstep + (format == CF_BGR ? ivec3(0, 1, 2) : ivec3(2, 1, 0)); \n\
+    ivec3 o_offset = (y * w + x) * cstep + color_format_mapping_vec3(format); \n\
     dst_data_float16[o_offset.r] = float16_t(val.r); \n\
     dst_data_float16[o_offset.g] = float16_t(val.g); \n\
     dst_data_float16[o_offset.b] = float16_t(val.b); \n\
@@ -860,7 +882,7 @@ void store_rgb_float16_no_clamp(sfpvec3 val, int x, int y, int w, int cstep, int
 " \n\
 void store_rgb_float32_no_clamp(sfpvec3 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec3 o_offset = (y * w + x) * cstep + (format == CF_BGR ? ivec3(0, 1, 2) : ivec3(2, 1, 0)); \n\
+    ivec3 o_offset = (y * w + x) * cstep + color_format_mapping_vec3(format); \n\
     dst_data_float32[o_offset.r] = float(val.r); \n\
     dst_data_float32[o_offset.g] = float(val.g); \n\
     dst_data_float32[o_offset.b] = float(val.b); \n\
@@ -885,7 +907,7 @@ void store_rgb_float_no_clamp(sfpvec3 val, int x, int y, int w, int cstep, int f
 " \n\
 void store_rgba_float16_no_clamp_"#dst"(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec4 o_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 o_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     "#dst"_data_float16[o_offset.r] = float16_t(val.r); \n\
     "#dst"_data_float16[o_offset.g] = float16_t(val.g); \n\
     "#dst"_data_float16[o_offset.b] = float16_t(val.b); \n\
@@ -897,7 +919,7 @@ void store_rgba_float16_no_clamp_"#dst"(sfpvec4 val, int x, int y, int w, int cs
 " \n\
 void store_rgba_float32_no_clamp_"#dst"(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    ivec4 o_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 o_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     "#dst"_data_float32[o_offset.r] = float(val.r); \n\
     "#dst"_data_float32[o_offset.g] = float(val.g); \n\
     "#dst"_data_float32[o_offset.b] = float(val.b); \n\
@@ -924,7 +946,7 @@ void store_rgba_float_no_clamp_"#dst"(sfpvec4 val, int x, int y, int w, int cste
 sfpvec4 load_float16_rgba_"#src"(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp("#src"_data[i_offset.r]); \n\
     rgb_in.g = sfp("#src"_data[i_offset.g]); \n\
     rgb_in.b = sfp("#src"_data[i_offset.b]); \n\
@@ -938,7 +960,7 @@ sfpvec4 load_float16_rgba_"#src"(int x, int y, int w, int cstep, int format) \n\
 sfpvec4 load_float32_rgba_"#src"(int x, int y, int w, int cstep, int format) \n\
 { \n\
     sfpvec4 rgb_in = sfpvec4(0.f); \n\
-    ivec4 i_offset = (y * w + x) * cstep + (format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
+    ivec4 i_offset = (y * w + x) * cstep + color_format_mapping_vec4(format); \n\
     rgb_in.r = sfp("#src"_data[i_offset.r]); \n\
     rgb_in.g = sfp("#src"_data[i_offset.g]); \n\
     rgb_in.b = sfp("#src"_data[i_offset.b]); \n\
