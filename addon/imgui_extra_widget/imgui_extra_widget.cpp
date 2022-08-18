@@ -6473,7 +6473,7 @@ int ImGui::ImCurveEdit::DrawPoint(ImDrawList* draw_list, ImVec2 pos, const ImVec
     return ret;
 }
 
-bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned int id, unsigned int flags, const ImRect* clippingRect, ImVector<editPoint>* selectedPoints)
+bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned int id, unsigned int flags, const ImRect* clippingRect, ImVector<editPoint>* selectedPoints, float cursor_pos)
 {
     static bool selectingQuad = false;
     static ImVec2 quadSelection;
@@ -6494,7 +6494,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     if (clippingRect)
         draw_list->PushClipRect(clippingRect->Min, clippingRect->Max, true);
-
+    
     const ImVec2 offset = ImGui::GetCursorScreenPos() + ImVec2(0.f, size.y);
     const ImVec2 ssize(size.x, -size.y);
     const ImRect container(offset + ImVec2(0.f, ssize.y), offset + ImVec2(ssize.x, 0.f));
@@ -6550,6 +6550,13 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
     for (int i = 0; i <= 10; i++)
     {
         draw_list->AddLine(offset + ImVec2(0, - graticule_height * i), offset + ImVec2(size.x, - graticule_height * i), delegate.GetGraticuleColor(), 1.0f);
+    }
+
+    // draw cursor line
+    if (cursor_pos >= vmin.x && cursor_pos <= vmax.x)
+    {
+        auto pt = pointToRange(ImVec2(cursor_pos, 0)) * viewSize + offset;
+        draw_list->AddLine(pt, pt - ImVec2(0, size.y), IM_COL32(0, 255, 0, 224), 2);
     }
 
     bool overCurveOrPoint = false;
@@ -6847,6 +6854,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
         selectingQuad = true;
         quadSelection = io.MousePos;
     }
+
     if (clippingRect)
         draw_list->PopClipRect();
 
@@ -6861,6 +6869,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
         for (auto& point : selection)
             (*selectedPoints)[index++] = point;
     }
+
     return hold;
 }
 
