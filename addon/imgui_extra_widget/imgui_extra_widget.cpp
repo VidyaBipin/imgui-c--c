@@ -1947,6 +1947,105 @@ bool ImGui::SliderScalar3D(char const* pLabel, float* pValueX, float* pValueY, f
     return bModified;
 }
 
+// drag for timestamp
+bool ImGui::DragTimeMS(const char* label, float* p_data, float v_speed, float p_min, float p_max, const int decimals, ImGuiSliderFlags flags)
+{
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    const ImGuiID id = window->GetID(label);
+    const float w = CalcItemWidth();
+
+    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+    const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y * 2.0f));
+    const ImRect total_bb(frame_bb.Min, frame_bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
+
+    const bool temp_input_allowed = (flags & ImGuiSliderFlags_NoInput) == 0;
+    ItemSize(total_bb, style.FramePadding.y);
+    if (!ItemAdd(total_bb, id, &frame_bb, temp_input_allowed ? ImGuiItemFlags_Inputable : 0))
+        return false;
+
+    const bool hovered = ItemHoverable(frame_bb, id);
+    bool temp_input_is_active = temp_input_allowed && TempInputIsActive(id);
+    if (!temp_input_is_active)
+    {
+        // Tabbing or CTRL-clicking on Drag turns it into an InputText
+        const bool input_requested_by_tabbing = temp_input_allowed && (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
+        const bool clicked = (hovered && g.IO.MouseClicked[0]);
+        const bool double_clicked = (hovered && g.IO.MouseClickedCount[0] == 2);
+        const bool make_active = (input_requested_by_tabbing || clicked || double_clicked || g.NavActivateId == id || g.NavActivateInputId == id);
+        if (make_active && temp_input_allowed)
+            if (input_requested_by_tabbing || (clicked && g.IO.KeyCtrl) || double_clicked || g.NavActivateInputId == id)
+                temp_input_is_active = true;
+
+        // (Optional) simple click (without moving) turns Drag into an InputText
+        if (g.IO.ConfigDragClickToInputText && temp_input_allowed && !temp_input_is_active)
+            if (g.ActiveId == id && hovered && g.IO.MouseReleased[0] && !IsMouseDragPastThreshold(0, g.IO.MouseDragThreshold * 0.5f)) // DRAG_MOUSE_THRESHOLD_FACTOR
+            {
+                g.NavActivateId = g.NavActivateInputId = id;
+                g.NavActivateFlags = ImGuiActivateFlags_PreferInput;
+                temp_input_is_active = true;
+            }
+
+        if (make_active && !temp_input_is_active)
+        {
+            SetActiveID(id, window);
+            SetFocusID(id, window);
+            FocusWindow(window);
+            g.ActiveIdUsingNavDirMask = (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right);
+        }
+    }
+
+    // Draw frame
+    const ImU32 frame_col = GetColorU32(g.ActiveId == id ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
+    RenderNavHighlight(frame_bb, id);
+    RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, style.FrameRounding);
+
+    // Drag behavior
+    const bool value_changed = DragBehavior(id, ImGuiDataType_Float, p_data, v_speed, &p_min, &p_max, "%.0f", flags);
+    if (value_changed)
+        MarkItemEdited(id);
+
+    // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
+    char value_buf[64] = {0};
+    // print time format string
+    float data = fabs(*p_data);
+    bool negative = (*p_data) < 0;
+    uint64_t t = (uint64_t)data;
+    uint32_t milli = (uint32_t)(t%1000); t /= 1000;
+    uint32_t sec = (uint32_t)(t%60); t /= 60;
+    uint32_t min = (uint32_t)(t%60); t /= 60;
+    uint32_t hour = (uint32_t)t;
+    if (hour > 0)
+    {
+        sprintf(value_buf, "%02d:", hour);
+    }
+    sprintf(value_buf, "%s%02u:%02u", value_buf, min, sec);
+    if (decimals == 3)
+        sprintf(value_buf, "%s.%03u", value_buf, milli);
+    else if (decimals == 2)
+        sprintf(value_buf, "%s.%02u", value_buf, milli / 10);
+    else if (decimals == 1)
+        sprintf(value_buf, "%s.%01u", value_buf, milli / 100);
+
+    if (negative)
+        sprintf(value_buf, "-%s:", value_buf);
+
+    const char* value_buf_end = value_buf + strlen(value_buf);
+    if (g.LogEnabled)
+        LogSetNextTextDecoration("{", "}");
+    RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.5f, 0.5f));
+
+    if (label_size.x > 0.0f)
+        RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
+
+    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
+    return value_changed;
+}
+
 // RangeSelect
 bool ImGui::InputVec2(char const* pLabel, ImVec2* pValue, ImVec2 const vMinValue, ImVec2 const vMaxValue, float const fScale /*= 1.0f*/)
 {
@@ -3092,7 +3191,7 @@ void ImGui::BalanceSelector(char const* label, ImVec2 const size, ImVec4 * rgba,
                 float angle = PointToAngle(x_offset, y_offset);
                 float length = sqrt(x_offset * x_offset + y_offset * y_offset);
                 float r, g, b;
-		        ImGui::ColorConvertHSVtoRGB(angle / 360.0, length, 1.0f, r, g, b);
+                ImGui::ColorConvertHSVtoRGB(angle / 360.0, length, 1.0f, r, g, b);
                 if (std::min(r, std::min(g, b)) == r)
                 { r = -length; g = g + length - 1.f; b = b + length - 1.0f; }
                 if (std::min(r, std::min(g, b)) == g)
@@ -6374,7 +6473,7 @@ int ImGui::ImCurveEdit::DrawPoint(ImDrawList* draw_list, ImVec2 pos, const ImVec
     return ret;
 }
 
-int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned int id, unsigned int flags, const ImRect* clippingRect, ImVector<editPoint>* selectedPoints)
+bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned int id, unsigned int flags, const ImRect* clippingRect, ImVector<editPoint>* selectedPoints)
 {
     static bool selectingQuad = false;
     static ImVec2 quadSelection;
@@ -6384,7 +6483,7 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
     static std::set<editPoint> selection;
     static bool overSelectedPoint = false;
 
-    int ret = 0;
+    bool hold = false;
 
     ImGuiIO& io = ImGui::GetIO();
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
@@ -6555,7 +6654,7 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
                 }
             }
             pointsMoved = true;
-            ret = 1;
+            hold = true;
             auto prevSelection = selection;
             int originalIndex = 0;
             for (auto& sel : prevSelection)
@@ -6582,9 +6681,12 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
                 }
                 const CurveType t = originalPoints[originalIndex].type;
                 const int newIndex = delegate.EditPoint(sel.curveIndex, sel.pointIndex, p, t);
-                ImGui::BeginTooltip();
-                ImGui::Text("%.2f", p.y);
-                ImGui::EndTooltip();
+                if (localOverPoint == -1)
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("%.2f", p.y);
+                    ImGui::EndTooltip();
+                }
                 if (newIndex != sel.pointIndex)
                 {
                     selection.erase(sel);
@@ -6613,7 +6715,16 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
         delegate.BeginEdit(overCurve);
         delegate.AddPoint(overCurve, np, t);
         delegate.EndEdit();
-        ret = 1;
+    }
+
+    // draw value in tooltip
+    if (localOverCurve != -1 && localOverPoint != -1)
+    {
+        const KeyPoint* pts = delegate.GetPoints(localOverCurve);
+        const ImVec2 p = pointToRange(pts[localOverPoint].point);
+        ImGui::BeginTooltip();
+        ImGui::Text("%.2f", p.y);
+        ImGui::EndTooltip();
     }
 
     // delete point with right click
@@ -6636,7 +6747,6 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
             });
             if (selected_point != selection.end())
                 selection.erase(selected_point);
-            ret = 1;
         }
     }
 
@@ -6682,7 +6792,7 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
                     }
                     delegate.EditPoint(movingCurve, int(p), pt, originalPoints[p].type);
                 }
-                ret = 1;
+                hold = true;
             }
             if (!io.MouseDown[0])
             {
@@ -6751,7 +6861,7 @@ int ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned in
         for (auto& point : selection)
             (*selectedPoints)[index++] = point;
     }
-    return ret;
+    return hold;
 }
 
 void ImGui::KeyPointEditor::Load(const imgui_json::value& keypoint)

@@ -94,6 +94,9 @@ IMGUI_API void  PlotLines(const char* label, float(*values_getter)(void* data, i
 IMGUI_API bool  MenuItemEx(const char* label, const char* icon, const char* shortcut = NULL, bool selected = false, bool enabled = true, const char* subscript = nullptr);
 IMGUI_API bool  MenuItem(const char* label, const char* shortcut, bool selected, bool enabled, const char* subscript);  
 
+// new Drag for timestamp(millisecond)
+IMGUI_API bool DragTimeMS(const char* label, float* v, float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const int decimals = 3, ImGuiSliderFlags flags = 0);
+
 // Slider 2D and Slider 3D 
 IMGUI_API bool InputVec2(char const* pLabel, ImVec2* pValue, ImVec2 const vMinValue, ImVec2 const vMaxValue, float const fScale = 1.0f);
 IMGUI_API bool InputVec3(char const* pLabel, ImVec4* pValue, ImVec4 const vMinValue, ImVec4 const vMaxValue, float const fScale = 1.0f);
@@ -628,7 +631,7 @@ public:
     static float smoothstep(float edge0, float edge1, float t, CurveType type);
     static float distance(float x1, float y1, float x2, float y2);
     static float distance(float x, float y, float x1, float y1, float x2, float y2);
-    static int Edit(Delegate& delegate, const ImVec2& size, unsigned int id, unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, ImVector<editPoint>* selectedPoints = NULL);
+    static bool Edit(Delegate& delegate, const ImVec2& size, unsigned int id, unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, ImVector<editPoint>* selectedPoints = NULL);
 };
 
 struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
