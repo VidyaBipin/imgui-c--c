@@ -6473,7 +6473,7 @@ int ImGui::ImCurveEdit::DrawPoint(ImDrawList* draw_list, ImVec2 pos, const ImVec
     return ret;
 }
 
-bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned int id, unsigned int flags, const ImRect* clippingRect, ImVector<editPoint>* selectedPoints, float cursor_pos)
+bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned int id, unsigned int flags, const ImRect* clippingRect, bool * changed , ImVector<editPoint>* selectedPoints, float cursor_pos)
 {
     static bool selectingQuad = false;
     static ImVec2 quadSelection;
@@ -6484,6 +6484,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
     static bool overSelectedPoint = false;
 
     bool hold = false;
+    bool curve_changed = false;
 
     ImGuiIO& io = ImGui::GetIO();
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
@@ -6520,6 +6521,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
                 vmax.y = scaleValue(vmax.y);
                 delegate.SetMin(vmin);
                 delegate.SetMax(vmax);
+                curve_changed = true;
             }
             if (!scrollingV && ImGui::IsMouseDown(2))
             {
@@ -6540,6 +6542,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
         vmax.y -= deltaH;
         if (!ImGui::IsMouseDown(2))
             scrollingV = false;
+        curve_changed = true;
     }
 
     auto pointToRange = [&](ImVec2 pt) { return (pt - vmin) / range; };
@@ -6701,6 +6704,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
                 }
                 originalIndex++;
             }
+            curve_changed = true;
         }
     }
 
@@ -6722,6 +6726,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
         delegate.BeginEdit(overCurve);
         delegate.AddPoint(overCurve, np, t);
         delegate.EndEdit();
+        curve_changed = true;
     }
 
     // draw value in tooltip
@@ -6754,6 +6759,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
             });
             if (selected_point != selection.end())
                 selection.erase(selected_point);
+            curve_changed = true;
         }
     }
 
@@ -6800,6 +6806,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
                     delegate.EditPoint(movingCurve, int(p), pt, originalPoints[p].type);
                 }
                 hold = true;
+                curve_changed = true;
             }
             if (!io.MouseDown[0])
             {
@@ -6869,8 +6876,28 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
         for (auto& point : selection)
             (*selectedPoints)[index++] = point;
     }
+    if (changed)
+        *changed = curve_changed;
 
     return hold;
+}
+
+ImGui::KeyPointEditor& ImGui::KeyPointEditor::operator=(const ImGui::KeyPointEditor& keypoint)
+{
+    mKeys.clear();
+    for (auto curve : keypoint.mKeys)
+    {
+        auto curve_index = AddCurve(curve.name, curve.type, curve.color, curve.visible);
+        for (auto p : curve.points)
+        {
+            AddPoint(curve_index, p.point, p.type);
+        }
+    }
+    mMin = keypoint.mMin;
+    mMax = keypoint.mMax;
+    BackgroundColor = keypoint.BackgroundColor;
+    GraticuleColor = keypoint.GraticuleColor;
+    return *this;
 }
 
 void ImGui::KeyPointEditor::Load(const imgui_json::value& keypoint)

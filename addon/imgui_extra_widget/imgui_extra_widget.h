@@ -631,7 +631,7 @@ public:
     static float smoothstep(float edge0, float edge1, float t, CurveType type);
     static float distance(float x1, float y1, float x2, float y2);
     static float distance(float x, float y, float x1, float y1, float x2, float y2);
-    static bool Edit(Delegate& delegate, const ImVec2& size, unsigned int id, unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, ImVector<editPoint>* selectedPoints = NULL, float cursor_pos = -1.f);
+    static bool Edit(Delegate& delegate, const ImVec2& size, unsigned int id, unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, bool * changed = nullptr, ImVector<editPoint>* selectedPoints = NULL, float cursor_pos = -1.f);
 };
 
 struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
@@ -641,6 +641,8 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
         : BackgroundColor(bg_color), GraticuleColor(gr_color)
     {}
     ~KeyPointEditor() { mKeys.clear(); }
+
+    KeyPointEditor& operator=(const KeyPointEditor& keypoint);
 
     ImU32 GetBackgroundColor() { return BackgroundColor; }
     ImU32 GetGraticuleColor() { return GraticuleColor; }

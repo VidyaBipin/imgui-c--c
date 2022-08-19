@@ -645,7 +645,7 @@ void ShowExtraWidgetDemoWindow()
 
         ImVec2 item_pos = ImGui::GetCursorScreenPos();
         ImVector<ImCurveEdit::editPoint> edit_points;
-        ImCurveEdit::Edit(rampEdit, ImVec2(size_x, 300), ImGui::GetID("##bezier_view"), curvs_flags, NULL, &edit_points);
+        ImCurveEdit::Edit(rampEdit, ImVec2(size_x, 300), ImGui::GetID("##bezier_view"), curvs_flags, nullptr, nullptr, &edit_points);
         if (ImGui::IsItemHovered())
         {
             float pos = io.MousePos.x - item_pos.x;
