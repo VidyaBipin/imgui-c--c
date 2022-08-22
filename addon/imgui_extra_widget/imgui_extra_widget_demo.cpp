@@ -222,11 +222,8 @@ void ShowExtraWidgetDemoWindow()
         ImGui::Spinner<e_st_rainbow>("Spinner", Radius{16.f}, Thickness{2.f}, Color{ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f)}, Speed{8 * velocity}); ImGui::SameLine();
         ImGui::Spinner<e_st_angle>("SpinnerAng", Radius{16.f}, Thickness{2.f}, Color{ImColor(255, 255, 255)}, BgColor{ImColor(255, 255, 255, 128)}, Speed{8 * velocity}, Angle{IM_PI}); ImGui::SameLine();
         ImGui::Spinner<e_st_dots>("SpinnerDots", FloatPtr{&nextdot}, Radius{16}, Thickness{4}, Color{ImColor(255, 255, 255)}, Speed{1 * velocity}, Dots{12}, MiddleDots{6}, MinThickness{-1.f}); ImGui::SameLine();
-
-        ImGui::SpinnerAng("SpinnerAngNoBg", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 0), 6 * velocity);
-
-        ImGui::SameLine();
-        ImGui::SpinnerAng("SpinnerAng270", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 128), 6 * velocity, 270.f / 360.f * 2 * IM_PI);
+        ImGui::Spinner<e_st_ang>("SpinnerAngNoBg", Radius{16.f}, Thickness{2.f}, Color{ImColor(255, 255, 255)}, BgColor{ImColor(255, 255, 255, 0)}, Speed{6 * velocity}, Angle{IM_PI}); ImGui::SameLine();
+        ImGui::Spinner<e_st_ang>("SpinnerAng270", Radius{16.f}, Thickness{2.f}, Color{ImColor(255, 255, 255)}, BgColor{ImColor(255, 255, 255, 128)}, Speed{6 * velocity}, Angle{270.f / 360.f * 2 * IM_PI});
 
         ImGui::SameLine();
         ImGui::SpinnerAng("SpinnerAng270NoBg", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 0), 6 * velocity, 270.f / 360.f * 2 * IM_PI );
@@ -378,6 +375,20 @@ void ShowExtraWidgetDemoWindow()
 
         ImGui::SameLine(); 
         ImGui::SpinnerDoubleFadePulsar("SpinnerDoubleFadePulsar", 16, 2, ImColor(255, 255, 255), 2 * velocity);
+
+
+        ImGui::SameLine(); 
+        ImGui::SpinnerFilledArcFade("SpinnerFilledArcFade", 16, ImColor(255, 255, 255), 4 * velocity, 4);
+
+        ImGui::SameLine(); 
+        ImGui::SpinnerFilledArcFade("SpinnerFilledArcFade6", 16, ImColor(255, 255, 255), 6 * velocity, 6);
+
+        ImGui::SameLine(); 
+        ImGui::SpinnerFilledArcFade("SpinnerFilledArcFade6", 16, ImColor(255, 255, 255), 8 * velocity, 12);
+
+
+        ImGui::SameLine(); 
+        ImGui::SpinnerFilledArcColor("SpinnerFilledArcColor", 16, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f, 4);
 
         // End
         ImGui::TreePop();
