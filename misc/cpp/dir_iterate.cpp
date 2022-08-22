@@ -93,13 +93,14 @@ int DIR_Iterate(std::string directory, std::vector<std::string>& filesAbsolutePa
                 }
                 else
                     need_add = true;
-				filesAbsolutePath.push_back(absolutePath);
+
+				if (need_add) filesAbsolutePath.push_back(absolutePath);
 				if (!suffix)
 				{
 					char * pos = strrchr(d_ent->d_name, '.');
 					if (pos) *pos = '\0';
 				}
-				filesname.push_back(d_ent->d_name);
+				if (need_add) filesname.push_back(d_ent->d_name);
 			}
 		}
 	}
