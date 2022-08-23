@@ -614,21 +614,21 @@ void ShowExtraWidgetDemoWindow()
         auto size_x = ImGui::GetWindowSize().x - table_width - 60;
         if (rampEdit.GetCurveCount() <= 0)
         {
-            rampEdit.AddCurve("key1", ImCurveEdit::Smooth, IM_COL32(255, 0, 0, 255), true);
+            rampEdit.AddCurve("key1", ImCurveEdit::Smooth, IM_COL32(255, 0, 0, 255), true, -1, 1, 0);
             rampEdit.AddPoint(0, ImVec2(size_x * 0.f, 0), ImCurveEdit::Smooth);
             rampEdit.AddPoint(0, ImVec2(size_x * 0.25f, 0.610f), ImCurveEdit::Smooth);
             rampEdit.AddPoint(0, ImVec2(size_x * 0.5f, 1.0f), ImCurveEdit::Smooth);
             rampEdit.AddPoint(0, ImVec2(size_x * 0.75f, 0.610f), ImCurveEdit::Smooth);
             rampEdit.AddPoint(0, ImVec2(size_x * 1.f, 0.f), ImCurveEdit::Smooth);
 
-            rampEdit.AddCurve("key2", ImCurveEdit::Smooth, IM_COL32(0, 255, 0, 255), true);
+            rampEdit.AddCurve("key2", ImCurveEdit::Smooth, IM_COL32(0, 255, 0, 255), true, 0, 1, 0);
             rampEdit.AddPoint(1, ImVec2(size_x * 0.f, 1.f), ImCurveEdit::Smooth);
             rampEdit.AddPoint(1, ImVec2(size_x * 0.25f, 0.75f), ImCurveEdit::Smooth);
             rampEdit.AddPoint(1, ImVec2(size_x * 0.5f, 0.5f), ImCurveEdit::Smooth);
             rampEdit.AddPoint(1, ImVec2(size_x * 0.75f, 0.75f), ImCurveEdit::Smooth);
             rampEdit.AddPoint(1, ImVec2(size_x * 1.f, 1.f), ImCurveEdit::Smooth);
 
-            rampEdit.AddCurve("key3", ImCurveEdit::Smooth, IM_COL32(0, 0, 255, 255), true);
+            rampEdit.AddCurve("key3", ImCurveEdit::Smooth, IM_COL32(0, 0, 255, 255), true, 0, 100, 50);
             rampEdit.AddPoint(2, ImVec2(size_x * 0.f, 0.f), ImCurveEdit::Smooth);
             rampEdit.AddPoint(2, ImVec2(size_x * 0.25f, 0.05f), ImCurveEdit::Smooth);
             rampEdit.AddPoint(2, ImVec2(size_x * 0.5f, 0.25f), ImCurveEdit::Smooth);

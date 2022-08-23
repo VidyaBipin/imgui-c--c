@@ -6770,6 +6770,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
             for (auto& sel : prevSelection)
             {
                 const size_t ptCount = delegate.GetCurvePointCount(sel.curveIndex);
+                auto value_range = fabs(delegate.GetCurveMax(sel.curveIndex) - delegate.GetCurveMin(sel.curveIndex)); 
                 ImVec2 p = rangeToPoint(pointToRange(originalPoints[originalIndex].point) + (io.MousePos - mousePosOrigin) * sizeOfPixel);
                 if (flags & CURVE_EDIT_FLAG_VALUE_LIMITED)
                 {
@@ -6790,6 +6791,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
                     }
                 }
                 const CurveType t = originalPoints[originalIndex].type;
+                p.y = (p.y * value_range) + delegate.GetCurveMin(sel.curveIndex);
                 const int newIndex = delegate.EditPoint(sel.curveIndex, sel.pointIndex, p, t);
                 if (localOverPoint == -1)
                 {
@@ -6832,10 +6834,11 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
     // draw value in tooltip
     if (localOverCurve != -1 && localOverPoint != -1)
     {
+        auto value_range = fabs(delegate.GetCurveMax(localOverCurve) - delegate.GetCurveMin(localOverCurve)); 
         const KeyPoint* pts = delegate.GetPoints(localOverCurve);
         const ImVec2 p = pointToRange(pts[localOverPoint].point);
         ImGui::BeginTooltip();
-        ImGui::Text("%.2f", p.y);
+        ImGui::Text("%.2f", p.y * value_range + delegate.GetCurveMin(localOverCurve));
         ImGui::EndTooltip();
     }
 
@@ -6868,6 +6871,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
         // move curve
         if (movingCurve != -1)
         {
+            auto value_range = fabs(delegate.GetCurveMax(movingCurve) - delegate.GetCurveMin(movingCurve)); 
             const size_t ptCount = delegate.GetCurvePointCount(movingCurve);
             const KeyPoint* pts = delegate.GetPoints(movingCurve);
             if (!pointsMoved)
@@ -6903,6 +6907,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
                             pt.x = vmax.x;
                         }
                     }
+                    pt.y = pt.y * value_range + delegate.GetCurveMin(movingCurve);
                     delegate.EditPoint(movingCurve, int(p), pt, originalPoints[p].type);
                 }
                 hold = true;
@@ -6987,7 +6992,7 @@ ImGui::KeyPointEditor& ImGui::KeyPointEditor::operator=(const ImGui::KeyPointEdi
     mKeys.clear();
     for (auto curve : keypoint.mKeys)
     {
-        auto curve_index = AddCurve(curve.name, curve.type, curve.color, curve.visible);
+        auto curve_index = AddCurve(curve.name, curve.type, curve.color, curve.visible, curve.m_min, curve.m_max, curve.m_default);
         for (auto p : curve.points)
         {
             AddPoint(curve_index, p.point, p.type);
@@ -7026,6 +7031,9 @@ void ImGui::KeyPointEditor::Load(const imgui_json::value& keypoint)
             int type = -1;
             ImU32 color = 0;
             bool visible = false;
+            float _min = 0.f;
+            float _max = 0.f;
+            float _default = 0.f;
             if (curve.contains("Name"))
             {
                 auto& val = curve["Name"];
@@ -7046,9 +7054,24 @@ void ImGui::KeyPointEditor::Load(const imgui_json::value& keypoint)
                 auto& val = curve["Visible"];
                 if (val.is_boolean()) visible = val.get<imgui_json::boolean>();
             }
+            if (curve.contains("Min"))
+            {
+                auto& val = curve["Min"];
+                if (val.is_number()) _min = val.get<imgui_json::number>();
+            }
+            if (curve.contains("Max"))
+            {
+                auto& val = curve["Max"];
+                if (val.is_number()) _max = val.get<imgui_json::number>();
+            }
+            if (curve.contains("Default"))
+            {
+                auto& val = curve["Default"];
+                if (val.is_number()) _default = val.get<imgui_json::number>();
+            }
             if (!name.empty())
             {
-                auto curve_index = AddCurve(name, (ImGui::ImCurveEdit::CurveType)type, color, visible);
+                auto curve_index = AddCurve(name, (ImGui::ImCurveEdit::CurveType)type, color, visible, _min, _max, _default);
                 const imgui_json::array* pointArray = nullptr;
                 if (imgui_json::GetPtrTo(curve, "KeyPoints", pointArray))
                 {
@@ -7089,12 +7112,15 @@ void ImGui::KeyPointEditor::Save(imgui_json::value& keypoint)
         curve["Type"] = imgui_json::number(GetCurveType(i));
         curve["Color"] = imgui_json::number(GetCurveColor(i));
         curve["Visible"] = imgui_json::boolean(IsVisible(i));
+        curve["Min"] = imgui_json::number(GetCurveMin(i));
+        curve["Max"] = imgui_json::number(GetCurveMax(i));
+        curve["Default"] = imgui_json::number(GetCurveDefault(i));
         // save curve key point
         imgui_json::value points;
         for (int p = 0; p < GetCurvePointCount(i); p++)
         {
             imgui_json::value point;
-            auto pt = GetPoint(i, p);
+            auto pt = mKeys[i].points[p];
             point["Point"] = imgui_json::vec2(pt.point);
             point["Type"] = imgui_json::number(pt.type);
             points.push_back(point);
