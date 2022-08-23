@@ -2841,7 +2841,7 @@ void ImGui::HueSelector(char const* label, ImVec2 const size, float* hueCenter, 
 	HueSelectorEx(label, size, hueCenter, hueWidth, featherLeft, featherRight, defaultVal, ui_zoom, IM_COL32(255, 128, 0, 255), division, alpha, hideHueAlpha, offset);
 }
 
-void ImGui::LumianceSelector(char const* label, ImVec2 const size, float* lumCenter, float defaultVal, float ui_zoom, int division, float gamma, bool rgb_color, ImVec4 const color)
+void ImGui::LumianceSelector(char const* label, ImVec2 const size, float* lumCenter, float defaultVal, float vmin, float vmax, float ui_zoom, int division, float gamma, bool rgb_color, ImVec4 const color)
 {
     ImGuiIO &io = ImGui::GetIO();
 	ImGuiID const iID = ImGui::GetID(label);
@@ -2850,6 +2850,8 @@ void ImGui::LumianceSelector(char const* label, ImVec2 const size, float* lumCen
 	ImDrawList* pDrawList = ImGui::GetWindowDrawList();
     const float arrowWidth = pDrawList->_Data->FontSize;
     ImRect selectorRect = ImRect(curPos, curPos + size + ImVec2(0, arrowWidth));
+    IM_ASSERT(vmax > vmin);
+    float range = vmax - vmin;
     ImGui::BeginGroup();
     ImGui::InvisibleButton("##ZoneLumianceSlider", selectorRect.GetSize());
     if (!rgb_color)
@@ -2872,16 +2874,16 @@ void ImGui::LumianceSelector(char const* label, ImVec2 const size, float* lumCen
     {
         if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
         {
-            auto diff = io.MouseDelta.x * 2 * ui_zoom / size.x;
-            *lumCenter += diff;
-            *lumCenter = ImClamp(*lumCenter, -1.f, 1.f);
+            auto diff = io.MouseDelta.x * ui_zoom / size.x;
+            *lumCenter += diff * range;
+            *lumCenter = ImClamp(*lumCenter, vmin, vmax);
         }
         if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
         {
             *lumCenter = defaultVal;
         }
     }
-    float arrowOffset = curPos.x + (*lumCenter / 2 + 0.5) * size.x;
+    float arrowOffset = curPos.x + (*lumCenter / range + 0.5) * size.x;
     ImGui::Dummy(ImVec2(0, arrowWidth / 2));
     ImGui::RenderArrow(pDrawList, ImVec2(arrowOffset - arrowWidth / 2, curPos.y + size.y), IM_COL32(255,255,0,255), ImGuiDir_Up);
     std::ostringstream oss;
@@ -2993,7 +2995,7 @@ void ImGui::TemperatureSelector(char const* label, ImVec2 const size, float* tem
     ImGui::PopID();
 }
 
-void ImGui::SaturationSelector(char const* label, ImVec2 const size, float* satCenter, float defaultVal, float ui_zoom, int division, float gamma, bool rgb_color, ImVec4 const color)
+void ImGui::SaturationSelector(char const* label, ImVec2 const size, float* satCenter, float defaultVal, float vmin, float vmax, float ui_zoom, int division, float gamma, bool rgb_color, ImVec4 const color)
 {
     ImGuiIO &io = ImGui::GetIO();
 	ImGuiID const iID = ImGui::GetID(label);
@@ -3002,6 +3004,8 @@ void ImGui::SaturationSelector(char const* label, ImVec2 const size, float* satC
 	ImDrawList* pDrawList = ImGui::GetWindowDrawList();
     const float arrowWidth = pDrawList->_Data->FontSize;
     ImRect selectorRect = ImRect(curPos, curPos + size + ImVec2(0, arrowWidth));
+    IM_ASSERT(vmax > vmin);
+    float range = vmax - vmin;
     ImGui::BeginGroup();
     ImGui::InvisibleButton("##ZoneSaturationSlider", selectorRect.GetSize());
     if (!rgb_color)
@@ -3024,16 +3028,16 @@ void ImGui::SaturationSelector(char const* label, ImVec2 const size, float* satC
     {
         if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
         {
-            auto diff = io.MouseDelta.x * 2 * ui_zoom / size.x;
-            *satCenter += diff;
-            *satCenter = ImClamp(*satCenter, -1.f, 1.f);
+            auto diff = io.MouseDelta.x * ui_zoom / size.x;
+            *satCenter += diff * range;
+            *satCenter = ImClamp(*satCenter, vmin, vmax);
         }
         if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
         {
             *satCenter = defaultVal;
         }
     }
-    float arrowOffset = curPos.x + (*satCenter / 2 + 0.5) * size.x;
+    float arrowOffset = curPos.x + (*satCenter / range + 0.5) * size.x;
     ImGui::Dummy(ImVec2(0, arrowWidth / 2));
     ImGui::RenderArrow(pDrawList, ImVec2(arrowOffset - arrowWidth / 2, curPos.y + size.y), IM_COL32(255,255,0,255), ImGuiDir_Up);
 	std::ostringstream oss;

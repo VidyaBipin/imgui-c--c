@@ -546,12 +546,12 @@ void ShowExtraWidgetDemoWindow()
         ImGui::Spacing();
         static float lumianceCenter = 0.0f;
         ImGui::TextUnformatted("Lum:"); ImGui::SameLine();
-        ImGui::LumianceSelector("Lumiance Selector", ImVec2(width, height), &lumianceCenter, 0.0f, 1.0f, division, gamma, rgb_color);
+        ImGui::LumianceSelector("Lumiance Selector", ImVec2(width, height), &lumianceCenter, 0.0f, -1.f, 1.f, 1.0f, division, gamma, rgb_color);
 
         ImGui::Spacing();
         static float saturationCenter = 0.0f;
         ImGui::TextUnformatted("Sat:"); ImGui::SameLine();
-        ImGui::SaturationSelector("Saturation Selector", ImVec2(width, height), &saturationCenter, 0.0f, 1.0f, division, gamma, rgb_color);
+        ImGui::SaturationSelector("Saturation Selector", ImVec2(width, height), &saturationCenter, 0.0f, -1.f, 1.f, 1.0f, division, gamma, rgb_color);
         
         ImGui::Spacing();
         static float contrastCenter = 1.0f;
