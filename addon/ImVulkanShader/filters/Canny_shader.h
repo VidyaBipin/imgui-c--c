@@ -96,12 +96,12 @@ layout (push_constant) uniform parameter \n\
 " \n\
 sfpvec2 normDirection(sfpvec2 dxy) \n\
 { \n\
-    sfpvec2 normalizedDirection = normalize(dxy); \n\
+    vec2 normalizedDirection = normalize(vec2(dxy)); \n\
     // Offset by 1-sin(pi/8) to set to 0 if near axis, 1 if away \n\
-    normalizedDirection = sign(normalizedDirection) * floor(abs(normalizedDirection) + sfp(0.617316f)); \n\
+    normalizedDirection = sign(normalizedDirection) * floor(abs(normalizedDirection) + 0.617316f); \n\
     // Place -1.0 - 1.0 within 0 - 1.0 \n\
     //normalizedDirection = (normalizedDirection + 1.0) * 0.5; \n\
-    return normalizedDirection; \n\
+    return sfpvec2(normalizedDirection); \n\
 } \n\
 void main() \n\
 { \n\
