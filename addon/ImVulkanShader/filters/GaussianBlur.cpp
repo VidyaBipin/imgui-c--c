@@ -16,11 +16,12 @@ GaussianBlur_vulkan::~GaussianBlur_vulkan()
 void GaussianBlur_vulkan::prepare_kernel()
 {
     int ksize = blurRadius * 2 + 1;
+    float _sigma = sigma;
     if (sigma <= 0.0f) 
     {
-        sigma = ((ksize - 1) * 0.5 - 1) * 0.3 + 0.8;
+        _sigma = ((ksize - 1) * 0.5 - 1) * 0.3 + 0.8;
     }
-    double scale = 1.0f / (sigma * sigma * 2.0);
+    double scale = 1.0f / (_sigma * _sigma * 2.0);
     double sum = 0.0;
 
 #if 1
