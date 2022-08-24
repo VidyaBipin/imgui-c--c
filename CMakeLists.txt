@@ -97,12 +97,6 @@ _OPTION(IMGUI_DX10                  "Build ImGui Direct10 backends(Windows only)
 _OPTION(IMGUI_DX11                  "Build ImGui Direct11 backends(Windows only)" ON IF WIN32)
 _OPTION(IMGUI_DX12                  "Build ImGui Direct12 backends(Windows only)" ON IF WIN32)
 _OPTION(IMGUI_FREETYPE              "Build ImGui with FreeType support" OFF)
-_OPTION(IMGUI_FONT_TAHOMA           "Internal Tahoma Fonts build in library" ON)
-_OPTION(IMGUI_FONT_SARASA           "Internal Mono Sarasa Fonts build in library" ON)
-_OPTION(IMGUI_FONT_HEI              "Internal Mono Hei Fonts build in library" OFF)
-_OPTION(IMGUI_FONT_KAI              "Internal Mono Kai Fonts build in library" OFF)
-_OPTION(IMGUI_FONT_SONG             "Internal Mono Song Fonts build in library" OFF)
-_OPTION(IMGUI_FONT_YUAN             "Internal Mono Yuan Fonts build in library" OFF)
 _OPTION(IMGUI_ICONS                 "Internal Icons build in library" ON)
 _OPTION(IMGUI_APPS                  "build apps base on imgui" ON)
 _OPTION(IMGUI_APPLE_APP             "build apple app base on imgui(Apple only)" OFF IF APPLE)
@@ -226,14 +220,6 @@ set(IMGUI_SRC
     imgui_widgets.cpp
     imgui_tables.cpp
     imgui_helper.cpp
-    fonts/SourceCodePro-Regular.cpp
-    fonts/Monaco.cpp
-    fonts/Cousine-Regular.cpp
-    fonts/DroidSans.cpp
-    fonts/Karla-Regular.cpp
-    fonts/ProggyTiny.cpp
-    fonts/ProggyClean.cpp
-    fonts/Roboto-Medium.cpp
     misc/cpp/imgui_stdlib.cpp
     misc/cpp/dir_iterate.cpp
 )
@@ -255,6 +241,75 @@ set(IMGUI_INCS
     misc/stb_image_resize.h
     misc/DynObjectLoader.h
 )
+
+set(IMGUI_FONT_UTF8 Sans CACHE STRING "ImGui internal UTF8 font")
+set_property(CACHE IMGUI_FONT_UTF8 PROPERTY STRINGS 
+    None Sans WeiHei BoldHei Hei Yuan Song Kai
+)
+
+set(IMGUI_FONT_LATIN MonoNarrow CACHE STRING "ImGui internal Latin font")
+set_property(CACHE IMGUI_FONT_LATIN PROPERTY STRINGS 
+    None MonoNarrow Inconsolata Tahoma Cousine-Regular DroidSans Karla-Regular Monaco ProggyTiny Roboto-Medium SourceCodePro-Regular
+)
+
+if (${IMGUI_FONT_UTF8} MATCHES "None")
+    set(IMGUI_FONT_NO_UTF8 ON)
+endif()
+if (${IMGUI_FONT_UTF8} MATCHES "Sans")
+    set(IMGUI_FONT_SANS ON)
+endif()
+if (${IMGUI_FONT_UTF8} MATCHES "WeiHei")
+    set(IMGUI_FONT_WEIHEI ON)
+endif()
+if (${IMGUI_FONT_UTF8} MATCHES "BoldHei")
+    set(IMGUI_FONT_SARASA ON)
+endif()
+if (${IMGUI_FONT_UTF8} MATCHES "Hei")
+    set(IMGUI_FONT_HEI ON)
+endif()
+if (${IMGUI_FONT_UTF8} MATCHES "Yuan")
+    set(IMGUI_FONT_YUAN ON)
+endif()
+if (${IMGUI_FONT_UTF8} MATCHES "Song")
+    set(IMGUI_FONT_SONG ON)
+endif()
+if (${IMGUI_FONT_UTF8} MATCHES "Kai")
+    set(IMGUI_FONT_KAI ON)
+endif()
+
+if (${IMGUI_FONT_LATIN} MATCHES "None")
+    set(IMGUI_FONT_NO_LATIN ON)
+endif()
+if (${IMGUI_FONT_LATIN} MATCHES "MonoNarrow")
+    set(IMGUI_FONT_MONONARROW ON)
+endif()
+if (${IMGUI_FONT_LATIN} MATCHES "Inconsolata")
+    set(IMGUI_FONT_INCONSOLATA ON)
+endif()
+if (${IMGUI_FONT_LATIN} MATCHES "Tahoma")
+    set(IMGUI_FONT_TAHOMA ON)
+endif()
+if (${IMGUI_FONT_LATIN} MATCHES "Cousine-Regular")
+    set(IMGUI_FONT_COUSINE ON)
+endif()
+if (${IMGUI_FONT_LATIN} MATCHES "DroidSans")
+    set(IMGUI_FONT_DROIDSANS ON)
+endif()
+if (${IMGUI_FONT_LATIN} MATCHES "Karla-Regular")
+    set(IMGUI_FONT_KARLA ON)
+endif()
+if (${IMGUI_FONT_LATIN} MATCHES "Monaco")
+    set(IMGUI_FONT_MONACO ON)
+endif()
+if (${IMGUI_FONT_LATIN} MATCHES "ProggyTiny")
+    set(IMGUI_FONT_PROGGYTINY ON)
+endif()
+if (${IMGUI_FONT_LATIN} MATCHES "Roboto-Medium")
+    set(IMGUI_FONT_ROBOTO ON)
+endif()
+if (${IMGUI_FONT_LATIN} MATCHES "SourceCodePro-Regular")
+    set(IMGUI_FONT_SOURCECODEPRO ON)
+endif()
 
 if(IMGUI_BUILD_EXAMPLE)
     set(IMGUI_SRC
@@ -576,6 +631,66 @@ if(WIN32)
 endif(WIN32)
 
 # Add Fonts
+if (IMGUI_FONT_MONONARROW)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        fonts/mono_narrow.cpp
+    )
+endif (IMGUI_FONT_MONONARROW)
+if (IMGUI_FONT_INCONSOLATA)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        fonts/Inconsolata.cpp
+    )
+endif (IMGUI_FONT_INCONSOLATA)
+if (IMGUI_FONT_TAHOMA)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        fonts/Tahoma.cpp
+    )
+endif (IMGUI_FONT_TAHOMA)
+if (IMGUI_FONT_COUSINE)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        fonts/Cousine-Regular.cpp
+    )
+endif (IMGUI_FONT_COUSINE)
+if (IMGUI_FONT_DROIDSANS)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        fonts/DroidSans.cpp
+    )
+endif (IMGUI_FONT_DROIDSANS)
+if (IMGUI_FONT_KARLA)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        fonts/Karla-Regular.cpp
+    )
+endif (IMGUI_FONT_KARLA)
+if (IMGUI_FONT_MONACO)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        fonts/Monaco.cpp
+    )
+endif (IMGUI_FONT_MONACO)
+if (IMGUI_FONT_PROGGYTINY)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        fonts/ProggyTiny.cpp
+    )
+endif (IMGUI_FONT_PROGGYTINY)
+if (IMGUI_FONT_ROBOTO)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        fonts/Roboto-Medium.cpp
+    )
+endif (IMGUI_FONT_ROBOTO)
+if (IMGUI_FONT_SOURCECODEPRO)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        fonts/SourceCodePro-Regular.cpp
+    )
+endif (IMGUI_FONT_SOURCECODEPRO)
 if (IMGUI_FONT_HEI)
     set(IMGUI_SRC
         ${IMGUI_SRC}
@@ -606,6 +721,21 @@ if (IMGUI_FONT_SARASA)
         fonts/mono_sarasa.cpp
     )
 endif (IMGUI_FONT_SARASA)
+if (IMGUI_FONT_WEIHEI)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        fonts/mono_weihei.cpp
+    )
+endif(IMGUI_FONT_WEIHEI)
+if (IMGUI_FONT_SANS)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        fonts/mono_sans.cpp
+    )
+endif(IMGUI_FONT_SANS)
+message(STATUS "    [ImGui Internal UTF-8 Font] ${IMGUI_FONT_UTF8}")
+message(STATUS "    [ImGui Internal Latin Font] ${IMGUI_FONT_LATIN}")
+
 # Add Icons
 if (IMGUI_ICONS)
     set(IMGUI_SRC
@@ -948,8 +1078,9 @@ endif(IMGUI_STATIC)
 
 set(IMGUI_VERSION_MAJOR 1)
 set(IMGUI_VERSION_MINOR 88)
-set(IMGUI_VERSION_PATCH 08)
-set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH})
+set(IMGUI_VERSION_PATCH 09)
+set(IMGUI_VERSION_BUILD 02)
+set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH}.${IMGUI_VERSION_BUILD})
 
 add_library(imgui ${LIBRARY} ${IMGUI_SRC} ${IMGUI_INCS})
 set_property(TARGET imgui PROPERTY POSITION_INDEPENDENT_CODE ON)

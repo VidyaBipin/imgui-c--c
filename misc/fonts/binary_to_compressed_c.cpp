@@ -94,7 +94,7 @@ bool binary_to_compressed_c(const char* filename, const char* symbol, bool use_b
     FILE* out = stdout;
     fprintf(out, "// File: '%s' (%d bytes)\n", filename, (int)data_sz);
     fprintf(out, "// Exported using binary_to_compressed_c.cpp\n");
-    const char* static_str = use_static ? "static " : "";
+    const char* static_str = use_static ? "static " : "extern ";
     const char* compressed_str = use_compression ? "compressed_" : "";
     if (use_base85_encoding)
     {

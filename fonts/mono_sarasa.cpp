@@ -1,4 +1,4 @@
-// File: '../misc/fonts/sarasa.ttf' (2198768 bytes)
+// File: 'sarasa.ttf' (2198768 bytes)
 // Exported using binary_to_compressed_c.cpp
 extern const char mono_sarasa_compressed_data_base85[2215575+1] =
     "7])#######mNL=q'/###I),##aq0hLYqH##JZn42$`#D[_.>>#*KG=6aNV=BcKl,pqoao7iD')3w0XGHLiEh+oWVM0wUBd3nIk7DaX^>1>C+;HE*El]La(*Hr>EY.Oi%d<A'[#5#-0%J"
