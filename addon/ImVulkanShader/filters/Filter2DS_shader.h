@@ -26,7 +26,7 @@ layout (push_constant) uniform parameter \n\
 
 #define SHADER_FILTER_COLUMN_MAIN \
 " \n\
-const int PATCH_PER_BLOCK = 4;\n\
+const int PATCH_PER_BLOCK = 1;\n\
 const int HALO_SIZE = 1; \n\
 shared sfpvec4 column_shared[16 * (PATCH_PER_BLOCK + HALO_SIZE * 2)][16]; \n\
 void main() \n\
@@ -118,7 +118,7 @@ void main() \n\
 
 #define SHADER_FILTER_ROW_MAIN \
 " \n\
-const int PATCH_PER_BLOCK = 4;\n\
+const int PATCH_PER_BLOCK = 1;\n\
 const int HALO_SIZE = 1; \n\
 shared sfpvec4 row_shared[16][16 * (PATCH_PER_BLOCK + HALO_SIZE * 2)]; \n\
 void main() \n\
