@@ -40,6 +40,7 @@ IMGUI_API void CloseAllPopupMenus();  // Never Tested
 
 IMGUI_API bool IsItemActiveLastFrame();
 IMGUI_API bool IsItemJustReleased();
+IMGUI_API bool IsItemDisabled();
 
 IMGUI_API void ShowTooltipOnHover(const char* fmt, ...) IM_FMTARGS(1);
 IMGUI_API void ShowTooltipOnHoverV(const char* fmt, va_list args) IM_FMTLIST(1);

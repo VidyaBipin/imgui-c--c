@@ -755,6 +755,10 @@ bool IsItemActiveLastFrame()    {
 bool IsItemJustReleased()   {
     return IsItemActiveLastFrame() && !ImGui::IsItemActive();
 }
+bool IsItemDisabled()    {
+    ImGuiContext& g = *GImGui;
+    return (g.CurrentItemFlags & ImGuiItemFlags_Disabled) == ImGuiItemFlags_Disabled;
+}
 
 void ShowTooltipOnHoverV(const char* fmt, va_list args)
 {

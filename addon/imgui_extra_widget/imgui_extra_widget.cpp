@@ -2760,6 +2760,7 @@ static void HueSelectorEx(char const* label, ImVec2 const size, float* hueCenter
 	float featherL = ImClamp(*featherLeft, 0.0f, 0.5f - 1e-4f);
 	float featherR = ImClamp(*featherRight, 0.0f, 0.5f - 1e-4f);
 	float xCenter = curPos.x + center * size.x;
+    ImU32 text_color = ImGui::IsItemDisabled() ? IM_COL32(255,255,0,128) : IM_COL32(255,255,0,255);
 	if (width == 0.0f)
 	{
 		pDrawList->AddLine(ImVec2(xCenter, curPos.y), ImVec2(xCenter, curPos.y + size.y), IM_COL32(0, 0, 0, 255));
@@ -2824,13 +2825,13 @@ static void HueSelectorEx(char const* label, ImVec2 const size, float* hueCenter
 
     float arrowOffset = curPos.x + *hueCenter * size.x;
     ImGui::Dummy(ImVec2(0, arrowWidth / 2));
-    ImGui::RenderArrow(pDrawList, ImVec2(arrowOffset - arrowWidth / 2, curPos.y + size.y), IM_COL32(255,255,0,255), ImGuiDir_Up);
+    ImGui::RenderArrow(pDrawList, ImVec2(arrowOffset - arrowWidth / 2, curPos.y + size.y), text_color, ImGuiDir_Up);
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(2) << *hueCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
     ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
-    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), IM_COL32(255,255,0,255), value_str.c_str());
+    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
     ImGui::PopStyleVar();
     ImGui::EndGroup();
 	ImGui::PopID();
@@ -2854,6 +2855,7 @@ void ImGui::LumianceSelector(char const* label, ImVec2 const size, float* lumCen
     float range = vmax - vmin;
     ImGui::BeginGroup();
     ImGui::InvisibleButton("##ZoneLumianceSlider", selectorRect.GetSize());
+    ImU32 text_color = ImGui::IsItemDisabled() ? IM_COL32(255,255,0,128) : IM_COL32(255,255,0,255);
     if (!rgb_color)
     {
         ImGui::DrawLumianceBand(curPos, size, division, color, gamma);
@@ -2885,13 +2887,13 @@ void ImGui::LumianceSelector(char const* label, ImVec2 const size, float* lumCen
     }
     float arrowOffset = curPos.x + (*lumCenter / range + 0.5) * size.x;
     ImGui::Dummy(ImVec2(0, arrowWidth / 2));
-    ImGui::RenderArrow(pDrawList, ImVec2(arrowOffset - arrowWidth / 2, curPos.y + size.y), IM_COL32(255,255,0,255), ImGuiDir_Up);
+    ImGui::RenderArrow(pDrawList, ImVec2(arrowOffset - arrowWidth / 2, curPos.y + size.y), text_color, ImGuiDir_Up);
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(2) << *lumCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
     ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
-    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), IM_COL32(255,255,0,255), value_str.c_str());
+    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
 	ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
@@ -2911,7 +2913,7 @@ void ImGui::GammaSelector(char const* label, ImVec2 const size, float* gammaCent
     ImRect selectorRect = ImRect(curPos, curPos + size + ImVec2(0, arrowWidth));
     ImGui::BeginGroup();
     ImGui::InvisibleButton("##ZoneGammaSlider", selectorRect.GetSize());
-
+    ImU32 text_color = ImGui::IsItemDisabled() ? IM_COL32(255,255,0,128) : IM_COL32(255,255,0,255);
 	auto GammaFunc = [v_range](float const t) -> ImU32
 	{
         float gamma = t * v_range;
@@ -2935,13 +2937,13 @@ void ImGui::GammaSelector(char const* label, ImVec2 const size, float* gammaCent
     }
     float arrowOffset = curPos.x + ((*gammaCenter - vmin) / v_range) * size.x;
     ImGui::Dummy(ImVec2(0, arrowWidth / 2));
-    ImGui::RenderArrow(pDrawList, ImVec2(arrowOffset - arrowWidth / 2, curPos.y + size.y), IM_COL32(255,255,0,255), ImGuiDir_Up);
+    ImGui::RenderArrow(pDrawList, ImVec2(arrowOffset - arrowWidth / 2, curPos.y + size.y), text_color, ImGuiDir_Up);
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(2) << *gammaCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
     ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
-    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), IM_COL32(255,255,0,255), value_str.c_str());
+    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
 	ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
@@ -2961,7 +2963,7 @@ void ImGui::TemperatureSelector(char const* label, ImVec2 const size, float* tem
     ImRect selectorRect = ImRect(curPos, curPos + size + ImVec2(0, arrowWidth));
     ImGui::BeginGroup();
     ImGui::InvisibleButton("##ZoneTemperatureSlider", selectorRect.GetSize());
-
+    ImU32 text_color = ImGui::IsItemDisabled() ? IM_COL32(255,255,0,128) : IM_COL32(255,255,0,255);
 	auto TemperatureFunc = [](float const t) -> ImU32
 	{
 		return IM_COL32(t * 255, 0, (1 - t) * 255, 255);
@@ -2983,13 +2985,13 @@ void ImGui::TemperatureSelector(char const* label, ImVec2 const size, float* tem
     }
     float arrowOffset = curPos.x + ((*tempCenter - vmin) / v_range) * size.x;
     ImGui::Dummy(ImVec2(0, arrowWidth / 2));
-    ImGui::RenderArrow(pDrawList, ImVec2(arrowOffset - arrowWidth / 2, curPos.y + size.y), IM_COL32(255,255,0,255), ImGuiDir_Up);
+    ImGui::RenderArrow(pDrawList, ImVec2(arrowOffset - arrowWidth / 2, curPos.y + size.y), text_color, ImGuiDir_Up);
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(2) << *tempCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
     ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
-    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), IM_COL32(255,255,0,255), value_str.c_str());
+    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
 	ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
@@ -3008,6 +3010,7 @@ void ImGui::SaturationSelector(char const* label, ImVec2 const size, float* satC
     float range = vmax - vmin;
     ImGui::BeginGroup();
     ImGui::InvisibleButton("##ZoneSaturationSlider", selectorRect.GetSize());
+    ImU32 text_color = ImGui::IsItemDisabled() ? IM_COL32(255,255,0,128) : IM_COL32(255,255,0,255);
     if (!rgb_color)
     {
         ImGui::DrawSaturationBand(curPos, size, division, color, gamma);
@@ -3039,13 +3042,13 @@ void ImGui::SaturationSelector(char const* label, ImVec2 const size, float* satC
     }
     float arrowOffset = curPos.x + (*satCenter / range + 0.5) * size.x;
     ImGui::Dummy(ImVec2(0, arrowWidth / 2));
-    ImGui::RenderArrow(pDrawList, ImVec2(arrowOffset - arrowWidth / 2, curPos.y + size.y), IM_COL32(255,255,0,255), ImGuiDir_Up);
+    ImGui::RenderArrow(pDrawList, ImVec2(arrowOffset - arrowWidth / 2, curPos.y + size.y), text_color, ImGuiDir_Up);
 	std::ostringstream oss;
     oss << std::fixed << std::setprecision(2) << *satCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
     ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
-    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), IM_COL32(255,255,0,255), value_str.c_str());
+    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
     ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
@@ -3062,6 +3065,7 @@ void ImGui::ContrastSelector(char const* label, ImVec2 const size, float* conCen
     ImRect selectorRect = ImRect(curPos, curPos + size + ImVec2(0, arrowWidth));
     ImGui::BeginGroup();
     ImGui::InvisibleButton("##ZoneContrastSlider", selectorRect.GetSize());
+    ImU32 text_color = ImGui::IsItemDisabled() ? IM_COL32(255,255,0,128) : IM_COL32(255,255,0,255);
     if (!rgb_color)
     {
         ImGui::DrawContrastBand(curPos, size, color);
@@ -3093,13 +3097,13 @@ void ImGui::ContrastSelector(char const* label, ImVec2 const size, float* conCen
     }
     float arrowOffset = curPos.x + (*conCenter / 4) * size.x;
     ImGui::Dummy(ImVec2(0, arrowWidth / 2));
-    ImGui::RenderArrow(pDrawList, ImVec2(arrowOffset - arrowWidth / 2, curPos.y + size.y), IM_COL32(255,255,0,255), ImGuiDir_Up);
+    ImGui::RenderArrow(pDrawList, ImVec2(arrowOffset - arrowWidth / 2, curPos.y + size.y), text_color, ImGuiDir_Up);
 	std::ostringstream oss;
     oss << std::fixed << std::setprecision(2) << *conCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
     ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
-    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), rgb_color ? IM_COL32(255,255,0,255) : IM_COL32(0,0,0,255), value_str.c_str());
+    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), rgb_color ? text_color : IM_COL32(0,0,0,255), value_str.c_str());
     ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
