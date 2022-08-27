@@ -24,7 +24,7 @@ private:
 private:
     ImMat kernel;
     VkMat vk_kernel;
-    int blurRadius  {3};
+    int blurRadius  {2};
     int xksize;
     int yksize;
     int xanchor;
