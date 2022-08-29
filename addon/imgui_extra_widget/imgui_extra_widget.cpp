@@ -6700,8 +6700,9 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
     if (clippingRect)
         draw_list->PushClipRect(clippingRect->Min, clippingRect->Max, true);
     
-    const ImVec2 offset = ImGui::GetCursorScreenPos() + ImVec2(0.f, size.y);
-    const ImVec2 ssize(size.x, -size.y);
+    ImVec2 edit_size = size - ImVec2(0, 4);
+    const ImVec2 offset = ImGui::GetCursorScreenPos() + ImVec2(0.f, edit_size.y + 2);
+    const ImVec2 ssize(edit_size.x, -edit_size.y);
     const ImRect container(offset + ImVec2(0.f, ssize.y), offset + ImVec2(ssize.x, 0.f));
     ImVec2& vmin = delegate.GetMin();
     ImVec2& vmax = delegate.GetMax();
@@ -6735,7 +6736,7 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
     }
     ImVec2 range = vmax - vmin + ImVec2(1.f, 0.f);  // +1 because of inclusive last frame
 
-    const ImVec2 viewSize(size.x, -size.y);
+    const ImVec2 viewSize(edit_size.x, -edit_size.y);
     const ImVec2 sizeOfPixel = ImVec2(1.f, 1.f) / viewSize;
     const size_t curveCount = delegate.GetCurveCount();
 
@@ -6753,17 +6754,17 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
     auto rangeToPoint = [&](ImVec2 pt) { return (pt * range) + vmin; };
 
     // draw graticule line
-    const float graticule_height = size.y / 10.f;
+    const float graticule_height = edit_size.y / 10.f;
     for (int i = 0; i <= 10; i++)
     {
-        draw_list->AddLine(offset + ImVec2(0, - graticule_height * i), offset + ImVec2(size.x, - graticule_height * i), delegate.GetGraticuleColor(), 1.0f);
+        draw_list->AddLine(offset + ImVec2(0, - graticule_height * i), offset + ImVec2(edit_size.x, - graticule_height * i), delegate.GetGraticuleColor(), 1.0f);
     }
 
     // draw cursor line
     if (cursor_pos >= vmin.x && cursor_pos <= vmax.x)
     {
         auto pt = pointToRange(ImVec2(cursor_pos, 0)) * viewSize + offset;
-        draw_list->AddLine(pt, pt - ImVec2(0, size.y), IM_COL32(0, 255, 0, 224), 2);
+        draw_list->AddLine(pt, pt - ImVec2(0, edit_size.y), IM_COL32(0, 255, 0, 224), 2);
     }
 
     bool overCurveOrPoint = false;
@@ -6929,8 +6930,11 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
     {
         const ImVec2 np = rangeToPoint((io.MousePos - offset) / viewSize);
         const CurveType t = delegate.GetCurveType(overCurve);
+        auto value_range = delegate.GetCurveMax(overCurve) - delegate.GetCurveMin(overCurve); 
+        auto point_value = delegate.GetValue(overCurve, np.x);
+        point_value = (point_value - delegate.GetCurveMin(overCurve)) / (value_range + FLT_EPSILON);
         delegate.BeginEdit(overCurve);
-        delegate.AddPoint(overCurve, np, t);
+        delegate.AddPoint(overCurve, ImVec2(np.x, point_value), t);
         delegate.EndEdit();
         curve_changed = true;
     }

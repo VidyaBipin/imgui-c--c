@@ -783,7 +783,7 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
         if (curveIndex <  mKeys.size())
         {
             auto range = GetMax() - GetMin() + ImVec2(1.f, 0.f); 
-            auto value_range = GetCurveMax(curveIndex) - GetCurveMin(curveIndex); 
+            auto value_range = fabs(GetCurveMax(curveIndex) - GetCurveMin(curveIndex)); 
             auto pointToRange = [&](ImVec2 pt) { return (pt - GetMin()) / range; };
             const size_t ptCount = GetCurvePointCount(curveIndex);
             if (ptCount <= 0)
