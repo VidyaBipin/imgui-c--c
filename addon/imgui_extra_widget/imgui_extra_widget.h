@@ -590,6 +590,7 @@ struct IMGUI_API ImCurveEdit
         float m_max {0.f};
         float m_default {0.f};
         bool visible {true};
+        int64_t m_id {-1};
     };
 
     struct editPoint
@@ -922,6 +923,8 @@ private:
         }
     }
 };
+
+IMGUI_API bool ImCurveEditKey(std::string button_lable, ImGui::ImCurveEdit::keys * key, std::string name, float _min, float _max, float _default);
 
 } // namespace ImGui
 #endif // IMGUI_WIDGET_H

@@ -7234,3 +7234,21 @@ void ImGui::KeyPointEditor::Save(imgui_json::value& keypoint)
     }
     keypoint["Curves"] = curves;
 }
+
+bool ImGui::ImCurveEditKey(std::string button_lable, ImGui::ImCurveEdit::keys * key, std::string name, float _min, float _max, float _default)
+{
+    if (!key || name.empty() || button_lable.empty() || key->m_id == -1)
+        return false;
+    ImGui::SameLine();
+    std::string button_id_str = button_lable + "@" + std::to_string(key->m_id);
+    std::string key_name = name + "@" + std::to_string(key->m_id);
+    if (ImGui::DiamondButton(button_id_str.c_str(), false)) 
+    {
+        key->name = key_name;
+        key->m_min = _min;
+        key->m_max = _max;
+        key->m_default = _default;
+        return true;
+    }
+    return false;
+}
