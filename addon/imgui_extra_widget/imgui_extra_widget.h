@@ -579,11 +579,11 @@ struct IMGUI_API ImCurveEdit
 
     struct keys
     {
+        keys() {};
         keys(std::string _name, ImGui::ImCurveEdit::CurveType _type, ImU32 _color, bool _visible, float _min, float _max, float _default)
-            : type(_type), name(_name), color(_color), visible(_visible), m_min(_min), m_max(_max), m_default(_default)
-        {};
+            : type(_type), name(_name), color(_color), visible(_visible), m_min(_min), m_max(_max), m_default(_default) {};
         std::vector<ImGui::ImCurveEdit::KeyPoint> points;
-        ImGui::ImCurveEdit::CurveType type {ImGui::ImCurveEdit::Smooth};
+        ImGui::ImCurveEdit::CurveType type {Smooth};
         std::string name;
         ImU32 color;
         float m_min {0.f};
