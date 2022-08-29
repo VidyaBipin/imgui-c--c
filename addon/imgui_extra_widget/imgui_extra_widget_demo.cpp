@@ -570,7 +570,7 @@ void ShowExtraWidgetDemoWindow()
 
         ImGui::Spacing();
         static ImVec4 rgba = ImVec4(0.0, 0.0, 0.0, 0.0);
-        ImGui::BalanceSelector("Balance Selector", ImVec2(width / 2, height), &rgba, ImVec4(0, 0, 0, 0), 1.0f);
+        ImGui::BalanceSelector("Balance Selector", ImVec2(width / 2, height), &rgba, ImVec4(0, 0, 0, 0));
 
         ImGui::PopItemWidth();
         ImGui::TreePop();

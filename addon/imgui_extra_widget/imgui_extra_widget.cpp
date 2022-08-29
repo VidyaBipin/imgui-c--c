@@ -3154,8 +3154,9 @@ static ImVec2 AngleToPoint(float angle, float length)
     return point;
 }
 
-void ImGui::BalanceSelector(char const* label, ImVec2 const size, ImVec4 * rgba, ImVec4 defaultVal, float ui_zoom, int division, float thickness, float colorOffset)
+bool ImGui::BalanceSelector(char const* label, ImVec2 const size, ImVec4 * rgba, ImVec4 defaultVal, ImVec2* offset, float ui_zoom, float speed, int division, float thickness, float colorOffset)
 {
+    bool reset = false;
     ImGuiIO &io = ImGui::GetIO();
 	ImGuiID const iID = ImGui::GetID(label);
 	ImGui::PushID(iID);
@@ -3164,7 +3165,7 @@ void ImGui::BalanceSelector(char const* label, ImVec2 const size, ImVec4 * rgba,
     const float ringRadius = ringDiameter / 2;
 	ImDrawList* pDrawList = ImGui::GetWindowDrawList();
     const float sliderHeight = pDrawList->_Data->FontSize;
-
+    const bool is_Enabled = !ImGui::IsItemDisabled();
     ImGui::BeginGroup();
     auto str_size = ImGui::CalcTextSize(label);
     auto text_pos = ImVec2(curPos.x + size.x / 2 - str_size.x / 2, curPos.y);
@@ -3175,61 +3176,93 @@ void ImGui::BalanceSelector(char const* label, ImVec2 const size, ImVec4 * rgba,
     ImGui::SetCursorScreenPos(ringPos);
     ImGui::InvisibleButton("##ZoneBalanceSlider", ringSize);
     pDrawList->AddCircle(center_point, ringRadius + 2, IM_COL32_WHITE, 0, 2);
-    ImGui::DrawColorRingEx< true >(pDrawList, ringPos, ImVec2(ringDiameter, ringDiameter), thickness,
-		[rgba](float t)
+    ImGui::DrawColorRingEx< true >(pDrawList, ringPos, ImVec2(ringDiameter, ringDiameter), thickness, [rgba, is_Enabled](float t)
 	{
 		float r, g, b;
 		ImGui::ColorConvertHSVtoRGB(t, 1.0f, 1.0f, r, g, b);
-
-		return IM_COL32(r * 255, g * 255, b * 255, 144);
+		return IM_COL32(r * 255, g * 255, b * 255, is_Enabled ? 255 : 144);
 	}, division, colorOffset);
     
-    if (ImGui::IsItemHovered())
+    auto RGBToPoint = [](ImVec4 rgba)
     {
-        if (isCircleContainsPoint(io.MousePos, ringRadius, center_point))
-        {
-            float x_offset = (io.MousePos.x - center_point.x) / ringRadius;
-            float y_offset = -(io.MousePos.y - center_point.y) / ringRadius;
-            if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-            {
-                *rgba = defaultVal;
-            }
-            else if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-            {
-                float angle = PointToAngle(x_offset, y_offset);
-                float length = sqrt(x_offset * x_offset + y_offset * y_offset);
-                float r, g, b;
-                ImGui::ColorConvertHSVtoRGB(angle / 360.0, length, 1.0f, r, g, b);
-                if (std::min(r, std::min(g, b)) == r)
-                { r = -length; g = g + length - 1.f; b = b + length - 1.0f; }
-                if (std::min(r, std::min(g, b)) == g)
-                { g = -length; r = r + length - 1.f; b = b + length - 1.0f; }
-                if (std::min(r, std::min(g, b)) == b)
-                { b = -length; r = r + length - 1.f; g = g + length - 1.0f; }
-                rgba->x = r; rgba->y = g; rgba->z = b;
-            }            
-        }
-    }
-    {
-        float l, r = rgba->x, g = rgba->y, b = rgba->z;
+        float l = 0, r = rgba.x, g = rgba.y, b = rgba.z;;
         if (std::min(r, std::min(g, b)) == r)
         { l = -r; r = 1 - l; g = g + 1 - l; b = b + 1 - l; }
         if (std::min(r, std::min(g, b)) == b)
         { l = -b; b = 1 - l; g = g + 1 - l; r = r + 1 - l; }
         if (std::min(r, std::min(g, b)) == g)
         { l = -g; g = 1 - l; b = b + 1 - l; r = r + 1 - l; }
-        if (rgba->x == 0 && rgba->y == 0 && rgba->z == 0)
+        if (rgba.x == 0 && rgba.y == 0 && rgba.z == 0)
         {
             r = 1.f; b = 1.f; g = 1.f; l = 0.f;
         }
-        
         float angle, length, v;
         ImGui::ColorConvertRGBtoHSV(r, g, b, angle, length, v);
         angle = angle * 360;
-        auto point = AngleToPoint(angle, length);
-        point = ImVec2(point.x * ringRadius, -point.y * ringRadius);
-        pDrawList->AddCircle(center_point + point, 3, IM_COL32_BLACK);
-        pDrawList->AddCircle(center_point + point, 2, IM_COL32_WHITE);
+        return AngleToPoint(angle, length);
+    };
+    auto pointToRGB = [](float x, float y)
+    {
+        float a = PointToAngle(x, y);
+        float l = sqrt(x * x + y * y);
+        l = ImClamp(l, 0.f, 1.f);
+        float r, g, b;
+        ImGui::ColorConvertHSVtoRGB(a / 360.0, l, 1.0f, r, g, b);
+        if (std::min(r, std::min(g, b)) == r)
+        { r = -l; g = g + l - 1.f; b = b + l - 1.0f; }
+        if (std::min(r, std::min(g, b)) == g)
+        { g = -l; r = r + l - 1.f; b = b + l - 1.0f; }
+        if (std::min(r, std::min(g, b)) == b)
+        { b = -l; r = r + l - 1.f; g = g + l - 1.0f; }
+        if (x == 0 && y == 0)
+        {
+            r = 0; g = 0; b = 0;
+        }
+        return ImVec4(r, g, b, 1.0);
+    };
+
+    auto point = RGBToPoint(*rgba);
+    point = ImVec2(point.x * ringRadius, -point.y * ringRadius);
+    pDrawList->AddCircle(center_point + point, 3, IM_COL32_BLACK);
+    pDrawList->AddCircle(center_point + point, 2, IM_COL32_WHITE);
+
+    if (is_Enabled)
+    {
+        if (isCircleContainsPoint(io.MousePos, ringRadius, center_point))
+        {
+            if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            {
+                *rgba = defaultVal;
+                if (offset)
+                {
+                    offset->x = 0;
+                    offset->y = 0;
+                }
+                reset = true;
+            }
+            else if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+            {
+                float x_offset = ( io.MouseDelta.x * speed + point.x) / ringRadius;
+                float y_offset = (-io.MouseDelta.y * speed - point.y) / ringRadius;
+                if (offset)
+                {
+                    offset->x = io.MouseDelta.x;
+                    offset->y = io.MouseDelta.y;
+                }
+                *rgba = pointToRGB(x_offset, y_offset);
+            }
+        }
+        else if (offset)
+        {
+            float x_offset = ( offset->x * speed + point.x) / ringRadius;
+            float y_offset = (-offset->y * speed - point.y) / ringRadius;
+            *rgba = pointToRGB(x_offset, y_offset);
+        }
+        if (offset && !ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        {
+            offset->x = 0;
+            offset->y = 0;
+        }
     }
 
     ImGui::SetCursorScreenPos(ringPos + ImVec2(0, ringSize.y));
@@ -3256,6 +3289,7 @@ void ImGui::BalanceSelector(char const* label, ImVec2 const size, ImVec4 * rgba,
     ImGui::SetWindowFontScale(1.0);
     ImGui::EndGroup();
     ImGui::PopID();
+    return reset;
 }
 
 // imgInspect
