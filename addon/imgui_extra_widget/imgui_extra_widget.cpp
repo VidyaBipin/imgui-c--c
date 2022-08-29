@@ -6229,22 +6229,9 @@ void ImGui::SpinnerMoonLine(const char *label, float radius, float thickness, co
 }
 
 // draw leader
-static void draw_leader(int type, bool filled, bool arrow)
+static void draw_badge(ImDrawList* drawList, ImRect bb, int type, bool filled, bool arrow, ImU32 color)
 {
-    ImGuiWindow* window = ImGui::GetCurrentWindow();
-    if (window->SkipItems)
-        return;
-    auto drawList = window->DrawList;
-    ImGuiContext& g = *GImGui;
-    const ImGuiStyle& style = g.Style;
-    const float line_height = ImMax(ImMin(window->DC.CurrLineSize.y, g.FontSize + style.FramePadding.y * 2), g.FontSize);
-    const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(g.FontSize, line_height));
-    ImGui::ItemSize(bb);
-    if (!ImGui::ItemAdd(bb, 0))
-    {
-        ImGui::SameLine(0, style.FramePadding.x * 2);
-        return;
-    }
+    const ImGuiStyle& style = GImGui->Style;
     auto rect           = bb;
     auto rect_x         = rect.Min.x;
     auto rect_y         = rect.Min.y;
@@ -6265,7 +6252,6 @@ static void draw_leader(int type, bool filled, bool arrow)
     rect_center_x += rect_offset * 0.5f;
     rect_center.x += rect_offset * 0.5f;
 
-    ImU32 color = ImGui::GetColorU32(ImGuiCol_Text);
     switch (type)
     {
         case 0:
@@ -6417,6 +6403,26 @@ static void draw_leader(int type, bool filled, bool arrow)
             ImVec2(triangleStart, rect_center_y - 0.15f * (rect_h + style.FramePadding.y)),
             color);
     }
+}
+
+static void draw_leader(int type, bool filled, bool arrow)
+{
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    if (window->SkipItems)
+        return;
+    auto drawList = window->DrawList;
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    const float line_height = ImMax(ImMin(window->DC.CurrLineSize.y, g.FontSize + style.FramePadding.y * 2), g.FontSize);
+    const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(g.FontSize, line_height));
+    ImGui::ItemSize(bb);
+    if (!ImGui::ItemAdd(bb, 0))
+    {
+        ImGui::SameLine(0, style.FramePadding.x * 2);
+        return;
+    }
+    
+    draw_badge(drawList, bb, type, filled, arrow, ImGui::GetColorU32(ImGuiCol_Text));
 
     ImGui::SameLine(0, style.FramePadding.x * 2.0f);
 }
@@ -6451,6 +6457,66 @@ void ImGui::Diamond(bool filled, bool arrow)
     draw_leader(5, filled, arrow);
 }
 
+static bool draw_leader_button(const char* id_str, int type, bool filled, bool arrow, ImGuiButtonFlags flags)
+{
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+    auto drawList = window->DrawList;
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    const ImGuiID id = window->GetID(id_str);
+    const float line_height = ImMax(ImMin(window->DC.CurrLineSize.y, g.FontSize + style.FramePadding.y * 2), g.FontSize);
+    const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(g.FontSize, line_height));
+    ImGui::ItemSize(bb);
+    if (!ImGui::ItemAdd(bb, id))
+        return false;
+
+    if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
+        flags |= ImGuiButtonFlags_Repeat;
+    
+    bool hovered, held;
+    bool pressed = ImGui::ButtonBehavior(bb, id, &hovered, &held, flags);
+    // Render
+    const ImU32 col = ImGui::GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+    ImGui::RenderNavHighlight(bb, id);
+    ImGui::RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
+
+    ImU32 color = ImGui::GetColorU32(ImGuiCol_Text);
+    draw_badge(drawList, bb, type, filled, arrow, color);
+    
+    return pressed;
+}
+
+bool ImGui::CircleButton(const char* id_str, bool filled, bool arrow)
+{
+    return draw_leader_button(id_str, 0, filled, arrow, ImGuiButtonFlags_None);
+}
+
+bool ImGui::SquareButton(const char* id_str, bool filled, bool arrow)
+{
+    return draw_leader_button(id_str, 1, filled, arrow, ImGuiButtonFlags_None);
+}
+
+bool ImGui::BracketSquareButton(const char* id_str, bool filled, bool arrow)
+{
+    return draw_leader_button(id_str, 2, filled, arrow, ImGuiButtonFlags_None);
+}
+
+bool ImGui::RoundSquareButton(const char* id_str, bool filled, bool arrow)
+{
+    return draw_leader_button(id_str, 3, filled, arrow, ImGuiButtonFlags_None);
+}
+
+bool ImGui::GridSquareButton(const char* id_str, bool filled, bool arrow)
+{
+    return draw_leader_button(id_str, 4, filled, arrow, ImGuiButtonFlags_None);
+}
+
+bool ImGui::DiamondButton(const char* id_str, bool filled, bool arrow)
+{
+    return draw_leader_button(id_str, 5, filled, arrow, ImGuiButtonFlags_None);
+}
 
 // CurveEdit from https://github.com/CedricGuillemet/ImGuizmo
 template <typename T>

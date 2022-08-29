@@ -176,6 +176,39 @@ void ShowExtraWidgetDemoWindow()
         ImGui::Diamond(true, true); ImGui::TextUnformatted("Diamond filled arrow");
         ImGui::TreePop();
     }
+    if (ImGui::TreeNode("Custom badge button"))
+    {
+        ImGui::CircleButton("Circle", false); ImGui::SameLine();
+        ImGui::CircleButton("Circle filled", true); ImGui::SameLine();
+        ImGui::CircleButton("Circle arrow", false, true); ImGui::SameLine();
+        ImGui::CircleButton("Circle filled arrow", true, true);
+
+        ImGui::SquareButton("Square", false); ImGui::SameLine();
+        ImGui::SquareButton("Square filled", true); ImGui::SameLine();
+        ImGui::SquareButton("Square arrow", false, true); ImGui::SameLine();
+        ImGui::SquareButton("Square filled arrow", true, true);
+
+        ImGui::BracketSquareButton("Bracket Square", false); ImGui::SameLine();
+        ImGui::BracketSquareButton("Bracket Square filled", true); ImGui::SameLine();
+        ImGui::BracketSquareButton("Bracket Square arrow", false, true); ImGui::SameLine();
+        ImGui::BracketSquareButton("Bracket Square filled arrow", true, true);
+
+        ImGui::RoundSquareButton("Round Square", false); ImGui::SameLine();
+        ImGui::RoundSquareButton("Round Square filled", true); ImGui::SameLine();
+        ImGui::RoundSquareButton("Round Square arrow", false, true); ImGui::SameLine();
+        ImGui::RoundSquareButton("Round Square filled arrow", true, true);
+
+        ImGui::GridSquareButton("Grid Square", false); ImGui::SameLine();
+        ImGui::GridSquareButton("Grid Square filled", true); ImGui::SameLine();
+        ImGui::GridSquareButton("Grid Square arrow", false, true); ImGui::SameLine();
+        ImGui::GridSquareButton("Grid Square filled arrow", true, true);
+
+        ImGui::DiamondButton("Diamond", false); ImGui::SameLine();
+        ImGui::DiamondButton("Diamond filled", true); ImGui::SameLine();
+        ImGui::DiamondButton("Diamond arrow", false, true); ImGui::SameLine();
+        ImGui::DiamondButton("Diamond filled arrow", true, true);
+        ImGui::TreePop();
+    }
     if (ImGui::TreeNode("Extended ProgressBar and Indicator"))
     {
         const float time = ((float)(((unsigned int) (ImGui::GetTime() * 1000.f)) % 50000) - 25000.f) / 25000.f;

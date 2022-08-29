@@ -390,7 +390,7 @@ IMGUI_API void  ImSpectrogram(const ImMat& in_mat, ImMat& out_mat, int window = 
 
 } // namespace ImGui
 
-// draw leader
+// custom draw leader
 namespace ImGui
 {
 IMGUI_API void Circle(bool filled, bool arrow = false);
@@ -399,6 +399,17 @@ IMGUI_API void BracketSquare(bool filled, bool arrow = false);
 IMGUI_API void RoundSquare(bool filled, bool arrow = false);
 IMGUI_API void GridSquare(bool filled, bool arrow = false);
 IMGUI_API void Diamond(bool filled, bool arrow = false);
+} // namespace ImGui
+
+// custom badge draw button
+namespace ImGui
+{
+IMGUI_API bool CircleButton(const char* id_str, bool filled, bool arrow = false);
+IMGUI_API bool SquareButton(const char* id_str, bool filled, bool arrow = false);
+IMGUI_API bool BracketSquareButton(const char* id_str, bool filled, bool arrow = false);
+IMGUI_API bool RoundSquareButton(const char* id_str, bool filled, bool arrow = false);
+IMGUI_API bool GridSquareButton(const char* id_str, bool filled, bool arrow = false);
+IMGUI_API bool DiamondButton(const char* id_str, bool filled, bool arrow = false);
 } // namespace ImGui
 
 namespace ImGui
