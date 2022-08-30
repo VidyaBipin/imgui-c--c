@@ -179,6 +179,7 @@ set(VKSHADER_SRCS
     filters/HQDN3D_vulkan.cpp
     filters/DeBand_vulkan.cpp
     filters/DeInterlace_vulkan.cpp
+    filters/Guided_vulkan.cpp
     filters/CIE_vulkan.cpp
     filters/Histogram_vulkan.cpp
     filters/Waveform_vulkan.cpp
@@ -251,6 +252,8 @@ set(VKSHADER_INCS
     filters/DeBand_vulkan.h
     filters/DeInterlace_shader.h
     filters/DeInterlace_vulkan.h
+    filters/Guided_shader.h
+    filters/Guided_vulkan.h
     filters/CIE_shader.h
     filters/CIE_vulkan.h
     filters/Histogram_shader.h
