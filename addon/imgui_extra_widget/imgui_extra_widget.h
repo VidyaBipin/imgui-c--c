@@ -777,7 +777,13 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
         }
         return index;
     }
-
+    float GetPointValue(size_t curveIndex, float t)
+    {
+        auto value_range = GetCurveMax(curveIndex) - GetCurveMin(curveIndex); 
+        auto value = GetValue(curveIndex, t);
+        value = (value - GetCurveMin(curveIndex)) / (value_range + FLT_EPSILON);
+        return value;
+    }
     float GetValue(size_t curveIndex, float t)
     {
         if (curveIndex <  mKeys.size())
@@ -840,65 +846,75 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
 
     void SetMin(ImVec2 vmin, bool dock = false)
     {
-        mMin = vmin;
         if (dock)
         {
-            for (auto & key : mKeys)
+            for (size_t i = 0; i < mKeys.size(); i++)
             {
-                // first delete out of range points, keep begin end
-                if (key.points.size() > 2)
+                // first get current begin value
+                auto value = GetPointValue(i, mMin.x);
+                if (vmin.x > mMin.x) value = GetPointValue(i, vmin.x);
+                // second delete out of range points, keep begin end
+                if (mKeys[i].points.size() > 2)
                 {
-                    for (auto iter = key.points.begin() + 1; iter != key.points.end() - 1;)
+                    for (auto iter = mKeys[i].points.begin() + 1; iter != mKeys[i].points.end() - 1;)
                     {
-                        if (iter->point.x < mMin.x || iter->point.y < mMin.y)
+                        if (iter->point.x < vmin.x || iter->point.y < vmin.y)
                         {
-                            iter = key.points.erase(iter);
+                            iter = mKeys[i].points.erase(iter);
                         }
                         else
                             ++iter;
                     }
                 }
-                // second reset begin end point
-                if (key.points.size() > 0)
+                // finanl reset begin point
+                if (mKeys[i].points.size() > 0)
                 {
-                    auto start_iter = key.points.begin();
-                    if (start_iter != key.points.end()) start_iter->point.x = mMin.x;
-                    auto end_iter = key.points.begin() + key.points.size() - 1;
-                    if (end_iter != key.points.end()) end_iter->point.x = mMax.x;
+                    auto start_iter = mKeys[i].points.begin();
+                    if (start_iter != mKeys[i].points.end()) 
+                    {
+                        start_iter->point.x = vmin.x;
+                        start_iter->point.y = value;
+                    }
                 }
             }
         }
+        mMin = vmin;
     }
     void SetMax(ImVec2 vmax, bool dock = false)
     {
-        mMax = vmax;
         if (dock)
         {
-            for (auto & key : mKeys)
+            for (size_t i = 0; i < mKeys.size(); i++)
             {
-                // first delete out of range points, keep begin end
-                if (key.points.size() > 2)
+                // first get current begin value
+                auto value = GetPointValue(i, mMax.x);
+                if (vmax.x < mMax.x) value = GetPointValue(i, vmax.x);
+                // second delete out of range points, keep begin end
+                if (mKeys[i].points.size() > 2)
                 {
-                    for (auto iter = key.points.begin() + 1; iter != key.points.end() - 1;)
+                    for (auto iter = mKeys[i].points.begin() + 1; iter != mKeys[i].points.end() - 1;)
                     {
-                        if (iter->point.x > mMax.x || iter->point.y > mMax.y)
+                        if (iter->point.x > vmax.x)
                         {
-                            iter = key.points.erase(iter);
+                            iter = mKeys[i].points.erase(iter);
                         }
                         else
                             ++iter;
                     }
                 }
-                // second reset begin end point
-                if (key.points.size() > 0)
+                // finanl reset begin end point
+                if (mKeys[i].points.size() > 0)
                 {
-                    auto start_iter = key.points.begin();
-                    if (start_iter != key.points.end()) start_iter->point.x = mMin.x;
-                    auto end_iter = key.points.begin() + key.points.size() - 1;
-                    if (end_iter != key.points.end()) end_iter->point.x = mMax.x;
+                    auto end_iter = mKeys[i].points.begin() + mKeys[i].points.size() - 1;
+                    if (end_iter != mKeys[i].points.end()) 
+                    {
+                        end_iter->point.x = vmax.x;
+                        end_iter->point.y = value;
+                    }
                 }
             }
         }
+        mMax = vmax;
     }
     bool IsVisible(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].visible; return false; }
 
