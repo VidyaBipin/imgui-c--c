@@ -2284,8 +2284,8 @@ void ImGui_ImplVulkan_DestroyTexture(ImTextureVk* texture)
         {
             if (textureVK->textureDescriptor) { vkFreeDescriptorSets(v->Device, v->DescriptorPool, 1, &textureVK->textureDescriptor); textureVK->textureDescriptor = VK_NULL_HANDLE; }
             if (textureVK->textureSampler) { vkDestroySampler(v->Device, textureVK->textureSampler, v->Allocator); textureVK->textureSampler = VK_NULL_HANDLE; }
+            //if (textureVK->textureImage) { vkDestroyImage(v->Device, textureVK->textureImage, v->Allocator); textureVK->textureImage = VK_NULL_HANDLE; }
             if (textureVK->textureImageMemory) { vkFreeMemory(v->Device, textureVK->textureImageMemory, v->Allocator); textureVK->textureImageMemory = VK_NULL_HANDLE; }
-            if (textureVK->textureImage) { vkDestroyImage(v->Device, textureVK->textureImage, v->Allocator); textureVK->textureImage = VK_NULL_HANDLE; } 
             if (textureVK->textureView) { vkDestroyImageView(v->Device, textureVK->textureView, v->Allocator); textureVK->textureView = VK_NULL_HANDLE; }
         }
         textureVK->mark_to_release = true;

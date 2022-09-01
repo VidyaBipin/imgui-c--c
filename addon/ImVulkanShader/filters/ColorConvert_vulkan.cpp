@@ -58,6 +58,7 @@ ColorConvert_vulkan::~ColorConvert_vulkan()
     if (vkdev)
     {
         if (pipeline_yuv_rgb) { delete pipeline_yuv_rgb; pipeline_yuv_rgb = nullptr; }
+        if (pipeline_rgb_yuv) { delete pipeline_rgb_yuv; pipeline_rgb_yuv = nullptr; }
         if (pipeline_gray_rgb) { delete pipeline_gray_rgb; pipeline_gray_rgb = nullptr; }
         if (pipeline_conv) { delete pipeline_conv; pipeline_conv = nullptr; }
 
