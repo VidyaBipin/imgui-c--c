@@ -2,6 +2,8 @@
 #include "imvk_gpu.h"
 #include "imvk_pipeline.h"
 #include "immat.h"
+#define NO_STB_IMAGE
+#include "imgui.h"
 
 #define FILTER_2DS_BLUR 0
 #define CHROMAKEY_OUTPUT_NORMAL      0  // normal RGBA with masked alpha channel
@@ -27,7 +29,7 @@ public:
     // alphaExponent {0.1f}
 
     void filter(const ImMat& src, ImMat& dst,
-                float lumaMask, std::vector<float> chromaColor,
+                float lumaMask, ImVec4 chromaColor,
                 float alphaCutoffMin, float alphaScale, float alphaExponent,
                 int output_type);
 
@@ -56,7 +58,7 @@ private:
 private:
     
     void upload_param(const VkMat& src, VkMat& dst,
-                    float lumaMask, std::vector<float> chromaColor, 
+                    float lumaMask, ImVec4 chromaColor, 
                     float alphaCutoffMin, float alphaScale, float alphaExponent,
                     int output_type);
 };

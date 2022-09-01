@@ -129,7 +129,7 @@ void ChromaKey_vulkan::prepare_kernel()
 }
 
 void ChromaKey_vulkan::upload_param(const VkMat& src, VkMat& dst,
-                                    float lumaMask, std::vector<float> chromaColor,
+                                    float lumaMask, ImVec4 chromaColor,
                                     float alphaCutoffMin, float alphaScale, float alphaExponent,
                                     int output_type)
 {
@@ -156,9 +156,9 @@ void ChromaKey_vulkan::upload_param(const VkMat& src, VkMat& dst,
     constants[8].i = alpha_mat.color_format;
     constants[9].i = alpha_mat.type;
     constants[10].f = lumaMask;
-    constants[11].f = chromaColor[0];
-    constants[12].f = chromaColor[1];
-    constants[13].f = chromaColor[2];
+    constants[11].f = chromaColor.x;
+    constants[12].f = chromaColor.y;
+    constants[13].f = chromaColor.z;
     constants[14].f = alphaCutoffMin;
     constants[15].f = alphaScale;
     constants[16].f = alphaExponent;
@@ -290,16 +290,16 @@ void ChromaKey_vulkan::upload_param(const VkMat& src, VkMat& dst,
     despill_constants[12].i = blur_alpha_mat.c;
     despill_constants[13].i = blur_alpha_mat.color_format;
     despill_constants[14].i = blur_alpha_mat.type;
-    despill_constants[15].f = chromaColor[0];
-    despill_constants[16].f = chromaColor[1];
-    despill_constants[17].f = chromaColor[2];
+    despill_constants[15].f = chromaColor.x;
+    despill_constants[16].f = chromaColor.y;
+    despill_constants[17].f = chromaColor.z;
     despill_constants[18].i = output_type;
 
     cmd->record_pipeline(pipe_despill, despill_bindings, despill_constants, dst);
 }
 
 void ChromaKey_vulkan::filter(const ImMat& src, ImMat& dst,
-                            float lumaMask, std::vector<float> chromaColor,
+                            float lumaMask, ImVec4 chromaColor,
                             float alphaCutoffMin, float alphaScale, float alphaExponent,
                             int output_type)
 {
