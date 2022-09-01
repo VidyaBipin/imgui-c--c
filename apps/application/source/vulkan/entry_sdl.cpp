@@ -210,7 +210,7 @@ int main(int, char**)
 
     // Cleanup
 #if IMGUI_VULKAN_SHADER
-    ImGui::ImVulkanShaderClear();
+    //ImGui::ImVulkanShaderClear();
 #endif
     err = vkDeviceWaitIdle(g_Device);
     check_vk_result(err);
@@ -219,8 +219,12 @@ int main(int, char**)
     ImGui::DestroyContext();
 
     CleanupVulkanWindow();
+#if IMGUI_VULKAN_SHADER
+    ImGui::ImVulkanShaderClear();
+    CleanupVulkan(true);
+#else
     CleanupVulkan();
-
+#endif
     SDL_DestroyWindow(window);
     SDL_Quit();
 

@@ -279,7 +279,7 @@ static void UpdateVulkanFont(ImGui_ImplVulkanH_Window* wd)
     ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
 
-static void CleanupVulkan()
+static void CleanupVulkan(bool clean_only = false)
 {
     vkDestroyDescriptorPool(g_Device, g_DescriptorPool, g_Allocator);
 
@@ -288,9 +288,11 @@ static void CleanupVulkan()
     auto vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(g_Instance, "vkDestroyDebugReportCallbackEXT");
     vkDestroyDebugReportCallbackEXT(g_Instance, g_DebugReport, g_Allocator);
 #endif // IMGUI_VULKAN_DEBUG_REPORT
-
-    vkDestroyDevice(g_Device, g_Allocator);
-    vkDestroyInstance(g_Instance, g_Allocator);
+    if (!clean_only)
+    {
+        vkDestroyDevice(g_Device, g_Allocator);
+        vkDestroyInstance(g_Instance, g_Allocator);
+    }
 }
 
 static void CleanupVulkanWindow()
