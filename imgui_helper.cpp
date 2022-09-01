@@ -2876,6 +2876,7 @@ bool Base85DecodeFromFile(const char* filePath,ImVector<char>& rv)  {
 // Generate color
 void RandomColor(ImVec4& color, float alpha)
 {
+    alpha = ImClamp(alpha, 0.0f, 1.0f);
     int r = std::rand() % 255;
     int g = std::rand() % 255;
     int b = std::rand() % 255;
@@ -2884,10 +2885,11 @@ void RandomColor(ImVec4& color, float alpha)
 
 void RandomColor(ImU32& color, float alpha)
 {
+    alpha = ImClamp(alpha, 0.0f, 1.0f);
     int r = std::rand() % 255;
     int g = std::rand() % 255;
     int b = std::rand() % 255;
-    color = IM_COL32(r, g, b, (int)alpha * 255);
+    color = IM_COL32(r, g, b, (int)(alpha * 255.f));
 }
 
 } // namespace ImGui
