@@ -153,7 +153,6 @@ if(PKG_CONFIG_FOUND)
         endif()
     endif()
     pkg_search_module(SDL2 REQUIRED sdl2)
-    pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image>=2.0.0)
     if(SDL2_FOUND)
         message("sdl2 found")
     endif()
@@ -366,7 +365,6 @@ if(SDL2_FOUND)
     set(LINK_LIBS
         ${LINK_LIBS}
         ${SDL2_STATIC_LDFLAGS}
-        ${SDL2_IMAGE_STATIC_LDFLAGS}
     )
 endif(SDL2_FOUND)
 
@@ -1097,6 +1095,31 @@ if (APPLE AND IMGUI_MATAL AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 if (IMGUI_BUILD_EXAMPLE AND SDL2_FOUND AND IMGUI_SDL2)
+    find_package(SDL2_image REQUIRED)
+    if(SDL2_IMAGE_FOUND)
+        message("sdl2 image found")
+        add_executable(
+            img2c
+            misc/tools/img2c.cpp
+        )
+        target_link_libraries(
+            img2c
+            ${SDL2_IMAGE_LIBRARY}
+            ${LINK_LIBS}
+        )
+        if(BACKEND_RENDERING MATCHES OPENGL3)
+            add_executable(
+                example_sdl_rendering
+                test/example_sdl_rendering.cpp
+            )
+            target_link_libraries(
+                example_sdl_rendering
+                imgui
+                ${SDL2_IMAGE_LIBRARY}
+                ${LINK_LIBS}
+            )
+        endif()
+    endif(SDL2_IMAGE_FOUND)
     # Build utils
     add_executable(
         binary_to_compressed
@@ -1106,14 +1129,6 @@ if (IMGUI_BUILD_EXAMPLE AND SDL2_FOUND AND IMGUI_SDL2)
         binary_to_compressed
         imgui
     )
-    add_executable(
-        img2c
-        misc/tools/img2c.cpp
-    )
-    target_link_libraries(
-        img2c
-        ${LINK_LIBS}
-    )
     # Build examples
     if(BACKEND_RENDERING MATCHES OPENGL3)
         add_executable(
@@ -1122,15 +1137,6 @@ if (IMGUI_BUILD_EXAMPLE AND SDL2_FOUND AND IMGUI_SDL2)
         )
         target_link_libraries(
             example_sdl_opengl3
-            imgui
-            ${LINK_LIBS}
-        )
-        add_executable(
-            example_sdl_rendering
-            test/example_sdl_rendering.cpp
-        )
-        target_link_libraries(
-            example_sdl_rendering
             imgui
             ${LINK_LIBS}
         )
