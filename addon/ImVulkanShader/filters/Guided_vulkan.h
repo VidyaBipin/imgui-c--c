@@ -5,7 +5,7 @@
 
 namespace ImGui
 {
-class Guided_vulkan
+class VKSHADER_API Guided_vulkan
 {
 public:
     Guided_vulkan(int gpu = 0);
