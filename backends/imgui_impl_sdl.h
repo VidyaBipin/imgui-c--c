@@ -32,8 +32,12 @@ IMGUI_IMPL_API bool     ImGui_ImplSDL2_InitForSDLRenderer(SDL_Window* window, SD
 IMGUI_IMPL_API void     ImGui_ImplSDL2_Shutdown();
 IMGUI_IMPL_API void     ImGui_ImplSDL2_NewFrame();
 IMGUI_IMPL_API bool     ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event);
-IMGUI_IMPL_API void     ImGui_ImplSDL2_WaitForEvent(); // Add By Dicky
-IMGUI_IMPL_API void     ImGui_ImplSDL2_FullScreen(ImGuiViewport* viewport, bool on); // Add By Dicky
+// Add By Dicky
+IMGUI_IMPL_API void     ImGui_ImplSDL2_WaitForEvent();
+IMGUI_IMPL_API void     ImGui_ImplSDL2_FullScreen(ImGuiViewport* viewport, bool on);
+IMGUI_IMPL_API void     ImGui_ImplSDL2_InitIme();
+IMGUI_IMPL_API void     ImGui_ImplSDL2_HookIme(SDL_Window* window);
+// Add By Dicky end
 
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 static inline void ImGui_ImplSDL2_NewFrame(SDL_Window*) { ImGui_ImplSDL2_NewFrame(); } // 1.84: removed unnecessary parameter

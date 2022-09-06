@@ -37,6 +37,9 @@ int main(int, char**)
 
     ApplicationWindowProperty property;
     Application_GetWindowProperties(property);
+    // Init IME effect windows only
+    ImGui_ImplSDL2_InitIme();
+
     // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
     // GL ES 2.0 + GLSL 100
@@ -92,6 +95,9 @@ int main(int, char**)
         fprintf(stderr, "Failed to Create Window: %s\n", SDL_GetError());
         return -1;
     }
+    // Hook IME effect windows only
+    ImGui_ImplSDL2_HookIme(window);
+    
     SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);

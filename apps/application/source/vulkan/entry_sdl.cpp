@@ -31,6 +31,8 @@ int main(int, char**)
     // Setup window
     ApplicationWindowProperty property;
     Application_GetWindowProperties(property);
+    // Init IME effect windows only
+    ImGui_ImplSDL2_InitIme();
 
     std::string title = property.name;
     title += " Vulkan SDL";
@@ -60,6 +62,8 @@ int main(int, char**)
         return -1;
     }
 
+    // Hook IME effect windows only
+    ImGui_ImplSDL2_HookIme(window);
     // Setup Vulkan
     uint32_t extensions_count = 0;
     SDL_Vulkan_GetInstanceExtensions(window, &extensions_count, NULL);

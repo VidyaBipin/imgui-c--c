@@ -33,6 +33,8 @@ int main(int, char**)
 
     ApplicationWindowProperty property;
     Application_GetWindowProperties(property);
+    // Init IME effect windows only
+    ImGui_ImplSDL2_InitIme();
 
     // Create window with graphics context
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -67,6 +69,9 @@ int main(int, char**)
         fprintf(stderr, "Failed to Create Window: %s\n", SDL_GetError());
         return -1;
     }
+    // Hook IME effect windows only
+    ImGui_ImplSDL2_HookIme(window);
+    
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
