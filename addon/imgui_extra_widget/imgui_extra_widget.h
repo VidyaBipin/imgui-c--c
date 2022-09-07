@@ -630,6 +630,7 @@ struct IMGUI_API ImCurveEdit
         virtual void DeletePoint(size_t curveIndex, size_t pointIndex) = 0;
         virtual int AddCurve(std::string name, CurveType type, ImU32 color, bool visible, float _min, float _max, float _default) = 0;
         virtual void DeleteCurve(size_t curveIndex) = 0;
+        virtual void DeleteCurve(std::string name) = 0;
         virtual int GetCurveIndex(std::string name) = 0;
         virtual void SetCurveColor(size_t curveIndex, ImU32 color) = 0;
         virtual void SetCurveName(size_t curveIndex, std::string name) = 0;
@@ -761,6 +762,15 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
         {
             auto iter = mKeys.begin() + curveIndex;
             mKeys.erase(iter);
+        }
+    }
+
+    void DeleteCurve(std::string name)
+    {
+        int index = GetCurveIndex(name);
+        if (index != -1)
+        {
+            DeleteCurve(index);
         }
     }
 
@@ -941,6 +951,7 @@ private:
 };
 
 IMGUI_API bool ImCurveEditKey(std::string button_lable, ImGui::ImCurveEdit::keys * key, std::string name, float _min, float _max, float _default);
+IMGUI_API bool ImCurveCheckEditKey(std::string button_lable, ImGui::ImCurveEdit::keys * key, bool &check, std::string name, float _min, float _max, float _default);
 
 } // namespace ImGui
 #endif // IMGUI_WIDGET_H
