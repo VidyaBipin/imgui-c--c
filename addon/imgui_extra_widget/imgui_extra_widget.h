@@ -619,6 +619,8 @@ struct IMGUI_API ImCurveEdit
         virtual ImVec2& GetMax() = 0;
         virtual void SetMin(ImVec2 vmin, bool dock = false) = 0;
         virtual void SetMax(ImVec2 vmax, bool dock = false) = 0;
+        virtual void MoveTo(float x) = 0;
+        virtual void SetRangeX(float _min, float _max, bool dock = false) = 0;
         virtual size_t GetCurvePointCount(size_t curveIndex) = 0;
         virtual ImU32 GetCurveColor(size_t curveIndex) = 0;
         virtual std::string GetCurveName(size_t curveIndex) = 0;
@@ -853,7 +855,25 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
             }
         }
     }
-
+    void MoveTo(float x)
+    {
+        float offset = x - mMin.x;
+        float length = fabs(mMax.x - mMin.x);
+        mMin.x = x;
+        mMax.x = mMin.x + length;
+        for (size_t i = 0; i < mKeys.size(); i++)
+        {
+            for (auto iter = mKeys[i].points.begin(); iter != mKeys[i].points.end(); iter++)
+            {
+                iter->point.x += offset;
+            }
+        }
+    }
+    void SetRangeX(float _min, float _max, bool dock)
+    {
+        SetMin(ImVec2(_min, 0.f), dock);
+        SetMax(ImVec2(_max, 1.f), dock);
+    }
     void SetMin(ImVec2 vmin, bool dock = false)
     {
         if (dock)
