@@ -7239,11 +7239,11 @@ void ImGui::KeyPointEditor::Save(imgui_json::value& keypoint)
     keypoint["Curves"] = curves;
 }
 
-bool ImGui::ImCurveEditKey(std::string button_lable, ImGui::ImCurveEdit::keys * key, std::string name, float _min, float _max, float _default)
+bool ImGui::ImCurveEditKey(std::string button_lable, ImGui::ImCurveEdit::keys * key, std::string name, float _min, float _max, float _default, float space)
 {
     if (!key || name.empty() || button_lable.empty() || key->m_id == -1)
         return false;
-    ImGui::SameLine();
+    ImGui::SameLine(space);
     std::string button_id_str = button_lable + "@" + std::to_string(key->m_id);
     std::string key_name = name + "@" + std::to_string(key->m_id);
     if (ImGui::DiamondButton(button_id_str.c_str(), false)) 
@@ -7257,11 +7257,11 @@ bool ImGui::ImCurveEditKey(std::string button_lable, ImGui::ImCurveEdit::keys * 
     return false;
 }
 
-bool ImGui::ImCurveCheckEditKey(std::string button_lable, ImGui::ImCurveEdit::keys * key, bool &check, std::string name, float _min, float _max, float _default)
+bool ImGui::ImCurveCheckEditKey(std::string button_lable, ImGui::ImCurveEdit::keys * key, bool &check, std::string name, float _min, float _max, float _default, float space)
 {
     if (!key || name.empty() || button_lable.empty() || key->m_id == -1)
         return false;
-    ImGui::SameLine();
+    ImGui::SameLine(space);
     std::string button_id_str = button_lable + "@" + std::to_string(key->m_id);
     std::string key_name = name + "@" + std::to_string(key->m_id);
     if (check)
