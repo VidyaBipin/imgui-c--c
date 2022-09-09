@@ -34,7 +34,7 @@ layout (push_constant) uniform parameter \n\
 void main() \n\
 { \n\
     ivec2 uv = ivec2(gl_GlobalInvocationID.xy); \n\
-    if (uv.x >= p.w || uv.y >= p.h) \n\
+    if (uv.x >= p.out_w || uv.y >= p.out_h) \n\
         return; \n\
     sfpvec4 result; \n\
     sfpvec4 rgba_src2 = load_rgba_src2(uv.x, uv.y, p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
@@ -74,7 +74,7 @@ SHADER_ALPHA_MAIN
 void main() \n\
 { \n\
     ivec2 uv = ivec2(gl_GlobalInvocationID.xy); \n\
-    if (uv.x >= p.w || uv.y >= p.h) \n\
+    if (uv.x >= p.out_w || uv.y >= p.out_h) \n\
         return; \n\
     sfpvec4 result; \n\
     sfpvec4 rgba_src2 = load_rgba_src2(uv.x, uv.y, p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
