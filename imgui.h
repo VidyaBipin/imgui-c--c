@@ -973,6 +973,13 @@ namespace ImGui
     IMGUI_API void          SaveIniSettingsToDisk(const char* ini_filename);                    // this is automatically called (if io.IniFilename is not empty) a few seconds after any modification that should be reflected in the .ini file (and also by DestroyContext).
     IMGUI_API const char*   SaveIniSettingsToMemory(size_t* out_ini_size = NULL);               // return a zero-terminated string with the .ini data which you can save by your own mean. call when io.WantSaveIniSettings is set, then save data by your own mean and clear io.WantSaveIniSettings.
 
+    // Language Utilities Add by Dicky
+    IMGUI_API void          LoadIniLanguagesFromDisk(const char* ini_filename);                  // call after CreateContext() and before the first call to NewFrame().
+    IMGUI_API void          LoadIniLanguagesFromMemory(const char* ini_data, size_t ini_size=0); // call after CreateContext() and before the first call to NewFrame() to provide .ini data from your own data source.
+    IMGUI_API void          SaveIniLanguagesToDisk(const char* ini_filename);                    // 
+    IMGUI_API const char*   SaveIniLanguagesToMemory(size_t* out_ini_size = NULL);               // 
+    // Add by Dicky end
+
     // Debug Utilities
     IMGUI_API void          DebugTextEncoding(const char* text);
     IMGUI_API bool          DebugCheckVersionAndDataLayout(const char* version_str, size_t sz_io, size_t sz_style, size_t sz_vec2, size_t sz_vec4, size_t sz_drawvert, size_t sz_drawidx); // This is called by IMGUI_CHECKVERSION() macro.
@@ -1715,9 +1722,12 @@ enum ImGuiStyleVar_
     ImGuiStyleVar_TabRounding,         // float     TabRounding
     ImGuiStyleVar_ButtonTextAlign,     // ImVec2    ButtonTextAlign
     ImGuiStyleVar_SelectableTextAlign, // ImVec2    SelectableTextAlign
-    ImGuiStyleVar_LayoutAlign,         // float     LayoutAlign add By Dicky
-    ImGuiStyleVar_TexGlyphShadowOffset,// ImVec2    TexGlyphShadowOffset add By Dicky
-    ImGuiStyleVar_TexGlyphOutlineWidth,// float     TexGlyphOutlineWidth add By Dicky 
+// add By Dicky
+    ImGuiStyleVar_LayoutAlign,         // float     LayoutAlign
+    ImGuiStyleVar_TexGlyphShadowOffset,// ImVec2    TexGlyphShadowOffset
+    ImGuiStyleVar_TexGlyphOutlineWidth,// float     TexGlyphOutlineWidth
+    ImGuiStyleVar_TextInternationalize,// bool      TextInternationalize 
+// add By Dicky end
     ImGuiStyleVar_COUNT
 };
 
@@ -1987,6 +1997,7 @@ struct ImGuiStyle
     float       LayoutAlign;                // Element alignment inside horizontal and vertical layouts (0.0f - left/top, 1.0f - right/bottom, 0.5f - center).
     ImVec2      TexGlyphShadowOffset;       // If you would like to use shadows with your text use this. Defaults to (0, 0). Defines horizontal and vertical shadows. Can only be positive at the moment.
     float       TexGlyphOutlineWidth;       // If you would like to use outline with your text use this.
+    int         TextInternationalize;       // If you need multi-language supported, set this to 1
     // Add by Dicky end
 
     IMGUI_API ImGuiStyle();
@@ -2023,6 +2034,9 @@ struct ImGuiIO
     float       IniSavingRate;                  // = 5.0f           // Minimum time between saving positions/sizes to .ini file, in seconds.
     const char* IniFilename;                    // = "imgui.ini"    // Path to .ini file (important: default "imgui.ini" is relative to current working dir!). Set NULL to disable automatic .ini loading/saving or if you want to manually call LoadIniSettingsXXX() / SaveIniSettingsXXX() functions.
     const char* LogFilename;                    // = "imgui_log.txt"// Path to .log file (default parameter to ImGui::LogToFile when no file is specified).
+    // Add by Dicky
+    const char* LanguageFileName;               // = "imgui_language.ini" // Path to language file, Set Null to disable multi-language support
+    // Add by Dicky end
     float       MouseDoubleClickTime;           // = 0.30f          // Time for a double-click, in seconds.
     float       MouseDoubleClickMaxDist;        // = 6.0f           // Distance threshold to stay in to validate a double-click, in pixels.
     float       MouseDragThreshold;             // = 6.0f           // Distance threshold before considering we are dragging.

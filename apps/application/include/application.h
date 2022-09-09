@@ -35,6 +35,8 @@ typedef struct ApplicationWindowProperty
     bool power_save {true};
     bool full_screen{false};
     bool full_size  {false};
+    bool using_setting_path {true};
+    bool internationalize {false};
     void* handle    {nullptr};
 
 } ApplicationWindowProperty;

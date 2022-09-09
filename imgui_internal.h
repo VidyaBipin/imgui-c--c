@@ -53,6 +53,8 @@ Index of this file:
 #include <stdlib.h>     // NULL, malloc, free, qsort, atoi, atof
 #include <math.h>       // sqrtf, fabsf, fmodf, powf, floorf, ceilf, cosf, sinf
 #include <limits.h>     // INT_MIN, INT_MAX
+#include <string>       // add by dicky for language support
+#include <map>          // add by dicky for language support
 
 // Enable SSE intrinsics if available
 #if (defined __SSE__ || defined __x86_64__ || defined _M_X64) && !defined(IMGUI_DISABLE_SSE)
@@ -2118,6 +2120,13 @@ struct ImGuiContext
     ImVector<ImGuiContextHook>          Hooks;                  // Hooks for extensions (e.g. test engine)
     ImGuiID                             HookIdNext;             // Next available HookId
 
+    // Multi-language support add by Dicky
+    bool                    LanguagesLoaded;
+    ImGuiTextBuffer         LanguagesIniData;                    // In memory .ini languages
+    std::map<std::string, std::map<std::string, std::string>> StringMap; // language map, first = language, second->first = string second->second = localized string
+    std::string             LanguageName;
+    // Multi-language support add by Dicky end
+
     // Capture/Logging
     bool                    LogEnabled;                         // Currently capturing
     ImGuiLogType            LogType;                            // Capture target
@@ -2293,6 +2302,11 @@ struct ImGuiContext
         SettingsLoaded = false;
         SettingsDirtyTimer = 0.0f;
         HookIdNext = 0;
+
+        // Add by Dicky
+        LanguagesLoaded = false;
+        LanguageName = "";
+        // Add by Dicky end
 
         LogEnabled = false;
         LogType = ImGuiLogType_None;

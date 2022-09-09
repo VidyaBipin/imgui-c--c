@@ -1152,6 +1152,7 @@ ImGuiStyle::ImGuiStyle()
     LayoutAlign             = 0.5f;             // Element alignment inside horizontal and vertical layouts (0.0f - left/top, 1.0f - right/bottom, 0.5f - center).
     TexGlyphShadowOffset    = ImVec2(0, 0);     // Default no Shadow
     TexGlyphOutlineWidth    = 0.0f;             // Default no outline
+    TextInternationalize    = 0;                // Default isn't using multi-language for text
     // add by Dicky end
     // Default theme
     ImGui::StyleColorsDark(this);
@@ -1200,6 +1201,9 @@ ImGuiIO::ImGuiIO()
     IniSavingRate = 5.0f;
     IniFilename = "imgui.ini"; // Important: "imgui.ini" is relative to current working dir, most apps will want to lock this to an absolute path (e.g. same path as executables).
     LogFilename = "imgui_log.txt";
+    // Add by Dicky
+    LanguageFileName = "imgui_language.ini";
+    // Add By Dicky end
     MouseDoubleClickTime = 0.30f;
     MouseDoubleClickMaxDist = 6.0f;
 #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
@@ -3004,6 +3008,7 @@ static const ImGuiStyleVarInfo GStyleVarInfo[] =
     { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, LayoutAlign) },         // ImGuiStyleVar_LayoutAlign
     { ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImGuiStyle, TexGlyphShadowOffset) },// ImGuiStyleVar_TexGlyphShadowOffset
     { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, TexGlyphOutlineWidth) },// ImGuiStyleVar_TexGlyphOutlineWidth
+    { ImGuiDataType_S32,   1, (ImU32)IM_OFFSETOF(ImGuiStyle, TextInternationalize) },// ImGuiStyleVar_TextInternationalize
     // add by Dicky end
 };
 
@@ -12615,6 +12620,16 @@ void ImGui::UpdateSettings()
         g.SettingsLoaded = true;
     }
 
+    // Load Language file add by Dicky
+    if (!g.LanguagesLoaded)
+    {
+        IM_ASSERT(g.StringMap.empty());
+        if (g.IO.LanguageFileName)
+            LoadIniLanguagesFromDisk(g.IO.LanguageFileName);
+        g.LanguagesLoaded = true;
+    }
+    // add by Dicky end
+
     // Save settings (with a delay after the last modification, so we don't spam disk too much)
     if (g.SettingsDirtyTimer > 0.0f)
     {
@@ -12830,6 +12845,90 @@ const char* ImGui::SaveIniSettingsToMemory(size_t* out_size)
         *out_size = (size_t)g.SettingsIniData.size();
     return g.SettingsIniData.c_str();
 }
+
+// Lauguage Utils add By Dicky
+void ImGui::LoadIniLanguagesFromDisk(const char* ini_filename)
+{
+    size_t file_data_size = 0;
+    char* file_data = (char*)ImFileLoadToMemory(ini_filename, "rb", &file_data_size);
+    if (!file_data)
+        return;
+    if (file_data_size > 0)
+        LoadIniLanguagesFromMemory(file_data, (size_t)file_data_size);
+    IM_FREE(file_data);
+}
+
+void ImGui::LoadIniLanguagesFromMemory(const char* ini_data, size_t ini_size)
+{
+    ImGuiContext& g = *GImGui;
+    IM_ASSERT(g.Initialized);
+    if (ini_size == 0)
+        ini_size = strlen(ini_data);
+    g.LanguagesIniData.Buf.resize((int)ini_size + 1);
+    char* const buf = g.LanguagesIniData.Buf.Data;
+    char* const buf_end = buf + ini_size;
+    memcpy(buf, ini_data, ini_size);
+    buf_end[0] = 0;
+
+    char* line_end = NULL;
+    std::map<std::string, std::string> locale_map;
+    std::string language_name;
+    for (char* line = buf; line < buf_end; line = line_end + 1)
+    {
+        // Skip new lines markers, then find end of the line
+        while (*line == '\n' || *line == '\r')
+            line++;
+        line_end = line;
+        while (line_end < buf_end && *line_end != '\n' && *line_end != '\r')
+            line_end++;
+        line_end[0] = 0;
+        if (line[0] == ';')
+            continue;
+        if (line[0] == '[' && line_end > line && line_end[-1] == ']')
+        {
+            const char* type_start = line + 1;
+            char* type_end = line_end - 1; 
+            *type_end = 0; // Overwrite ']'
+            if (language_name.empty())
+                language_name = std::string(type_start);
+            else
+            {
+                g.StringMap[language_name] = locale_map;
+                locale_map.clear();
+                language_name = std::string(type_start);
+            }
+        }
+        else
+        {
+            // add StringMap
+            std::string str = std::string(line);
+            auto pos = str.find_first_of("=");
+            if (pos != std::string::npos)
+            {
+                std::string key = str.substr(0, pos);
+                std::string name = str.substr(pos + 1);
+                locale_map[key] = name;
+            }
+        }
+    }
+    if (!language_name.empty())
+    {
+        g.StringMap[language_name] = locale_map;
+    }
+    g.LanguagesLoaded = true;
+}
+
+void ImGui::SaveIniLanguagesToDisk(const char* ini_filename)
+{
+    // TODO::Dicky
+}
+
+const char* ImGui::SaveIniLanguagesToMemory(size_t* out_ini_size)
+{
+    // TODO::Dicky
+    return nullptr;
+}
+// Add by Dicky end
 
 static void WindowSettingsHandler_ClearAll(ImGuiContext* ctx, ImGuiSettingsHandler*)
 {

@@ -1640,6 +1640,40 @@ void ImDrawList::AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const Im
     PathStroke(col, 0, thickness);
 }
 
+// add by Dicky for multi-language support
+static std::string text_internationalize(const char* text_begin, const char* text_end)
+{
+    ImGuiContext& g = *GImGui;
+    if (g.LanguagesLoaded && !g.LanguageName.empty() && !g.StringMap.empty())
+    {
+        auto& map = g.StringMap[g.LanguageName];
+        if (map.empty())
+            return "";
+        std::string key(text_begin, text_end - text_begin);
+        std::string name = map[key];
+        std::string name_prefix;
+        if (name.empty())
+        {
+            // search key which remove chars before first space in case we add icon before str
+            auto pos = key.find_first_of(" ");
+            if (pos == std::string::npos)
+                return "";
+            auto subkey = key.substr(pos+1);
+            name_prefix = key.substr(0, pos + 1);
+            name = map[subkey];
+        }
+        else
+            return name;
+        if (!name.empty())
+        {
+            std::string new_str = name_prefix + name;
+            return new_str;
+        }
+    }
+    return "";
+}
+// add by Dicky end
+
 void ImDrawList::AddText(const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect)
 {
     if ((col & IM_COL32_A_MASK) == 0)
@@ -1649,6 +1683,21 @@ void ImDrawList::AddText(const ImFont* font, float font_size, const ImVec2& pos,
         text_end = text_begin + strlen(text_begin);
     if (text_begin == text_end)
         return;
+
+    // add by Dicky for multi-language support
+    const char * _text_begin = text_begin;
+    const char * _text_end = text_end;
+    ImGuiContext& g = *GImGui;
+    if (g.Style.TextInternationalize)
+    {
+        auto changed = text_internationalize(text_begin, text_end);
+        if (!changed.empty())
+        {
+            _text_begin = changed.data();
+            _text_end = _text_begin + changed.size();
+        }
+    }
+    // add by Dicky end
 
     // Pull default font/size from the shared ImDrawListSharedData instance
     if (font == NULL)
@@ -1666,7 +1715,8 @@ void ImDrawList::AddText(const ImFont* font, float font_size, const ImVec2& pos,
         clip_rect.z = ImMin(clip_rect.z, cpu_fine_clip_rect->z);
         clip_rect.w = ImMin(clip_rect.w, cpu_fine_clip_rect->w);
     }
-    font->RenderText(this, font_size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip_rect != NULL);
+    // modify by Dicky for multi-language 
+    font->RenderText(this, font_size, pos, col, clip_rect, _text_begin, _text_end, wrap_width, cpu_fine_clip_rect != NULL);
 }
 
 void ImDrawList::AddText(const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end)

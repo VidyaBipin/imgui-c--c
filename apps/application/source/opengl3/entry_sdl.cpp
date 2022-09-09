@@ -108,6 +108,7 @@ int main(int, char**)
     auto ctx = ImGui::CreateContext();
     Application_SetupContext(ctx);
     ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGuiContext& g = *GImGui;
     io.Fonts->AddFontDefault();
     io.FontGlobalScale = property.scale;
     if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
@@ -117,11 +118,18 @@ int main(int, char**)
     if (property.viewport)io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
     if (!property.auto_merge) io.ConfigViewportsNoAutoMerge = true;
     // Setup App setting file path
-    auto setting_path = ImGuiHelper::settings_path(property.name);
+    auto setting_path = property.using_setting_path ? ImGuiHelper::settings_path(property.name) : "";
     auto ini_name = property.name;
-    remove(ini_name.begin(), ini_name.end(), ' ');
+    std::replace(ini_name.begin(), ini_name.end(), ' ', '_');
     setting_path += ini_name + ".ini";
     io.IniFilename = setting_path.c_str();
+    auto language_path = ini_name + "_language.ini";
+    if (property.internationalize)
+    {
+        io.LanguageFileName = language_path.c_str();
+        g.Style.TextInternationalize = 1;
+        g.LanguageName = "Default";
+    }
     
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
