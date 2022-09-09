@@ -3019,6 +3019,22 @@ static const ImGuiStyleVarInfo* GetStyleVarInfo(ImGuiStyleVar idx)
     return &GStyleVarInfo[idx];
 }
 
+// add by Dicky
+void ImGui::PushStyleVar(ImGuiStyleVar idx, int val)
+{
+    const ImGuiStyleVarInfo* var_info = GetStyleVarInfo(idx);
+    if (var_info->Type == ImGuiDataType_S32 && var_info->Count == 1)
+    {
+        ImGuiContext& g = *GImGui;
+        int* pvar = (int*)var_info->GetVarPtr(&g.Style);
+        g.StyleVarStack.push_back(ImGuiStyleMod(idx, *pvar));
+        *pvar = val;
+        return;
+    }
+    IM_ASSERT(0 && "Called PushStyleVar() int variant but variable is not a int!");
+}
+// add by Dicky end
+
 void ImGui::PushStyleVar(ImGuiStyleVar idx, float val)
 {
     const ImGuiStyleVarInfo* var_info = GetStyleVarInfo(idx);
@@ -3062,6 +3078,7 @@ void ImGui::PopStyleVar(int count)
         const ImGuiStyleVarInfo* info = GetStyleVarInfo(backup.VarIdx);
         void* data = info->GetVarPtr(&g.Style);
         if (info->Type == ImGuiDataType_Float && info->Count == 1)      { ((float*)data)[0] = backup.BackupFloat[0]; }
+        else if (info->Type == ImGuiDataType_S32 && info->Count == 1)   { ((int*)data)[0] = backup.BackupInt[0]; } // add by Dicky
         else if (info->Type == ImGuiDataType_Float && info->Count == 2) { ((float*)data)[0] = backup.BackupFloat[0]; ((float*)data)[1] = backup.BackupFloat[1]; }
         g.StyleVarStack.pop_back();
         count--;
@@ -5415,18 +5432,35 @@ void ImGui::Render()
 ImVec2 ImGui::CalcTextSize(const char* text, const char* text_end, bool hide_text_after_double_hash, float wrap_width)
 {
     ImGuiContext& g = *GImGui;
+    // Modify by Dicky For multi-language support
+    const char * _text_begin = text;
+    const char * _text_end = text_end ? text_end : text + strlen(text);
+    if (g.Style.TextInternationalize)
+    {
+        char buffer[4096] = {0};
+        size_t buffer_size = ImMin((size_t)(_text_end - _text_begin), (size_t)4096);
+        memcpy(buffer, text, buffer_size);
+        size_t new_length = 0;
+        auto changed = ImGui::InternationalizedText(buffer, buffer + buffer_size, 4096);
+        if (changed > 0)
+        {
+            _text_begin = buffer;
+            _text_end = _text_begin + changed;
+        }
+    }
 
     const char* text_display_end;
     if (hide_text_after_double_hash)
-        text_display_end = FindRenderedTextEnd(text, text_end);      // Hide anything after a '##' string
+        text_display_end = FindRenderedTextEnd(_text_begin, _text_end);      // Hide anything after a '##' string
     else
-        text_display_end = text_end;
+        text_display_end = _text_end;
 
     ImFont* font = g.Font;
     const float font_size = g.FontSize;
-    if (text == text_display_end)
+    if (_text_begin == text_display_end)
         return ImVec2(0.0f, font_size);
-    ImVec2 text_size = font->CalcTextSizeA(font_size, FLT_MAX, wrap_width, text, text_display_end, NULL);
+    ImVec2 text_size = font->CalcTextSizeA(font_size, FLT_MAX, wrap_width, _text_begin, text_display_end, NULL);
+    // Modify by Dicky end
 
     // Round
     // FIXME: This has been here since Dec 2015 (7b0bf230) but down the line we want this out.
@@ -5437,6 +5471,46 @@ ImVec2 ImGui::CalcTextSize(const char* text, const char* text_end, bool hide_tex
 
     return text_size;
 }
+
+// add by Dicky for multi-language support
+size_t ImGui::InternationalizedText(char* text_begin, char* text_end, size_t max_size)
+{
+    ImGuiContext& g = *GImGui;
+    if (g.LanguagesLoaded && !g.LanguageName.empty() && !g.StringMap.empty())
+    {
+        auto& map = g.StringMap[g.LanguageName];
+        if (map.empty())
+            return 0;
+        std::string key(text_begin, text_end ? text_end - text_begin : strlen(text_begin));
+        std::string name = map[key];
+        std::string name_prefix;
+        if (name.empty())
+        {
+            // search key which remove chars before first space in case we add icon before str
+            auto pos = key.find_first_of(" ");
+            if (pos == std::string::npos)
+                return 0;
+            auto subkey = key.substr(pos+1);
+            name_prefix = key.substr(0, pos + 1);
+            name = map[subkey];
+        }
+        else
+        {
+            size_t new_size = ImMin(name.size(), max_size);
+            memcpy(text_begin, name.data(), new_size);
+            return new_size;
+        }
+        if (!name.empty())
+        {
+            std::string new_str = name_prefix + name;
+            size_t new_size = ImMin(new_str.size(), max_size);
+            memcpy(text_begin, new_str.data(), new_size);
+            return new_size;
+        }
+    }
+    return 0;
+}
+// add by Dicky end
 
 // Find window given position, search front-to-back
 // FIXME: Note that we have an inconsequential lag here: OuterRectClipped is updated in Begin(), so windows moved programmatically

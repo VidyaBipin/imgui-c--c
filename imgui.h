@@ -409,6 +409,9 @@ namespace ImGui
     IMGUI_API void          PushStyleColor(ImGuiCol idx, ImU32 col);                        // modify a style color. always use this if you modify the style after NewFrame().
     IMGUI_API void          PushStyleColor(ImGuiCol idx, const ImVec4& col);
     IMGUI_API void          PopStyleColor(int count = 1);
+    // add by Dicky
+    IMGUI_API void          PushStyleVar(ImGuiStyleVar idx, int val);                       // modify a style int variable. always use this if you modify the style after NewFrame().
+    // add by Dicky end
     IMGUI_API void          PushStyleVar(ImGuiStyleVar idx, float val);                     // modify a style float variable. always use this if you modify the style after NewFrame().
     IMGUI_API void          PushStyleVar(ImGuiStyleVar idx, const ImVec2& val);             // modify a style ImVec2 variable. always use this if you modify the style after NewFrame().
     IMGUI_API void          PopStyleVar(int count = 1);
@@ -918,6 +921,9 @@ namespace ImGui
 
     // Text Utilities
     IMGUI_API ImVec2        CalcTextSize(const char* text, const char* text_end = NULL, bool hide_text_after_double_hash = false, float wrap_width = -1.0f);
+    // add by Dicky to find internationalize text
+    IMGUI_API size_t        InternationalizedText(char* text_begin, char* text_end, size_t max_size);
+    // add by Dicky end
 
     // Color Utilities
     IMGUI_API ImVec4        ColorConvertU32ToFloat4(ImU32 in);

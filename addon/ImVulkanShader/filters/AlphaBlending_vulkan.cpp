@@ -64,7 +64,7 @@ void AlphaBlending_vulkan::upload_param(const VkMat& src1, const VkMat& src2, Vk
     else if (src2.type == IM_DT_FLOAT16)   bindings[10] = src2;
     else if (src2.type == IM_DT_FLOAT32)   bindings[11] = src2;
 
-    std::vector<vk_constant_type> constants(17);
+    std::vector<vk_constant_type> constants(18);
     constants[0].i = src1.w;
     constants[1].i = src1.h;
     constants[2].i = src1.c;

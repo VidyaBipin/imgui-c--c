@@ -51,6 +51,7 @@ Add following addon collection also：
   ![Piano view Image](images/piano.jpg)
   
 
+- Add multi-language(text internationalized with language ini file) support
 - Add many Vertical Text Helper API
 - Add many Extensions to ImDrawList
 - Add VkShader for vulkan compute(Tanlu team).
