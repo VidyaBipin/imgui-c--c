@@ -135,13 +135,13 @@ namespace IGFD
 #define okButtonString "OK"
 #endif // okButtonString
 #ifndef okButtonWidth
-#define okButtonWidth 0.0f
+#define okButtonWidth 80.0f
 #endif // okButtonWidth
 #ifndef cancelButtonString
 #define cancelButtonString "Cancel"
 #endif // cancelButtonString
 #ifndef cancelButtonWidth
-#define cancelButtonWidth 0.0f
+#define cancelButtonWidth 80.0f
 #endif // cancelButtonWidth
 #ifndef okCancelButtonAlignement
 #define okCancelButtonAlignement 0.0f
@@ -199,7 +199,7 @@ namespace IGFD
 #define tableHeaderDescendingIcon "D|"
 #endif // tableHeaderDescendingIcon
 #ifndef tableHeaderFileNameString
-#define tableHeaderFileNameString "File name"
+#define tableHeaderFileNameString " File name"
 #endif // tableHeaderFileNameString
 #ifndef tableHeaderFileTypeString
 #define tableHeaderFileTypeString "Type"
