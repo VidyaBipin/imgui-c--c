@@ -12986,8 +12986,14 @@ void ImGui::LoadIniLanguagesFromMemory(const char* ini_data, size_t ini_size)
             if (pos != std::string::npos)
             {
                 std::string key = str.substr(0, pos);
-                std::string name = str.substr(pos + 1);
-                locale_map[key] = name;
+                std::string value = str.substr(pos + 1);
+                if (key[0] == '\"' && key[key.length() - 1] == '\"' &&
+                    value[0] == '\"' && value[value.length() - 1] == '\"')
+                {
+                    std::string key_name = key.substr(1, key.size() - 2);
+                    std::string value_name = value.substr(1, value.size() - 2);
+                    locale_map[key_name] = value_name;
+                }
             }
         }
     }
