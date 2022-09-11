@@ -2236,7 +2236,7 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
 #if IMGUI_FONT_SANS
     {
         ImFormatString(font_cfg.Name, IM_ARRAYSIZE(font_cfg.Name), "等宽正黑, %dpx", (int)font_cfg.SizePixels);
-        ImFont* cfont = AddFontFromMemoryCompressedBase85TTF(mono_sans_compressed_data_base85, 14.0f, &font_cfg, glyph_ranges);
+        ImFont* cfont = AddFontFromMemoryCompressedBase85TTF(mono_sans_compressed_data_base85, 14.f, &font_cfg, glyph_ranges);
         if (font == nullptr) font = cfont;
     }
 #elif IMGUI_FONT_WEIHEI
@@ -2319,6 +2319,7 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
     const ImWchar* glyph_ranges = font_cfg.GlyphRanges != NULL ? font_cfg.GlyphRanges : GetGlyphRangesDefault();
     font = AddFontFromMemoryCompressedBase85TTF(ttf_compressed_base85, font_cfg.SizePixels, &font_cfg, glyph_ranges);
 #endif
+
 #if IMGUI_ICONS
     ImGui::LoadInternalIcons(this);
 #endif
@@ -3036,8 +3037,8 @@ const ImWchar*   ImFontAtlas::GetGlyphRangesAscII()
 {
     static const ImWchar ranges[] =
     {
-        0x2000, 0x206F, // General Punctuation
         0x0020, 0x00FF, // Basic Latin + Latin Supplement
+        0x2000, 0x206F, // General Punctuation
         //0xFF00, 0xFFEF, // Half-width characters
         //0xFFFD, 0xFFFD, // Invalid
         0,
@@ -3050,8 +3051,11 @@ const ImWchar*  ImFontAtlas::GetGlyphRangesChineseOnly()
     static const ImWchar ranges[] =
     {
         //0x2000, 0x206F, // General Punctuation
+        0x0400, 0x04FF, // Others
         0x3000, 0x30FF, // CJK Symbols and Punctuations, Hiragana, Katakana
+        0x3131, 0x3163, // Korean alphabets
         0x31F0, 0x31FF, // Katakana Phonetic Extensions
+        0xAC00, 0xD7A3, // Korean characters
         0xFF00, 0xFFEF, // Half-width characters
         0xFFFD, 0xFFFD, // Invalid
         0x4e00, 0x9FAF, // CJK Ideograms

@@ -1,4 +1,4 @@
-// File: 'Tahoma.ttf' (310752 bytes)
+// File: 'tahoma.ttf' (310752 bytes)
 // Exported using binary_to_compressed_c.cpp
 extern const char Tahoma_compressed_data_base85[292280+1] =
     "7])#######q8V6l'/###I),##f9_hLjKI##T%1S:98:03PuLJU)^v%+<Z;99viXJ6o^fi^'Kdp/:FxF>u5b.=9euH2/[qr$EHJf=bgg46uOT`3F?^01WZn42PmpJ42->>#ahWX%P@pu8"
