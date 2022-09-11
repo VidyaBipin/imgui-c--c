@@ -3448,7 +3448,7 @@ bool BeginSubplots(const char* title, int rows, int cols, const ImVec2& size, Im
     PushStyleColor(ImPlotCol_FrameBg, IM_COL32_BLACK_TRANS);
     PushStyleVar(ImPlotStyleVar_PlotPadding, half_pad);
     PushStyleVar(ImPlotStyleVar_PlotMinSize, ImVec2(0,0));
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize,0);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize,0.f);
 
     // set initial cursor pos
     Window->DC.CursorPos = subplot.GridRect.Min;
@@ -4583,8 +4583,8 @@ bool ColormapSlider(const char* label, float* t, ImVec4* out, const char* format
     ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,ImVec4(1,1,1,0.1f));
     ImGui::PushStyleColor(ImGuiCol_SliderGrab,grab);
     ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, grab);
-    ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize,2);
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding,0);
+    ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize,2.f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding,0.f);
     const bool changed = ImGui::SliderFloat(label,t,0,1,format);
     ImGui::PopStyleColor(5);
     ImGui::PopStyleVar(2);
@@ -4615,7 +4615,7 @@ bool ColormapButton(const char* label, const ImVec2& size_arg, ImPlotColormap cm
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered,ImVec4(1,1,1,0.1f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive,ImVec4(1,1,1,0.2f));
     ImGui::PushStyleColor(ImGuiCol_Text,text);
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding,0);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding,0.f);
     const bool pressed = ImGui::Button(label,size);
     ImGui::PopStyleColor(4);
     ImGui::PopStyleVar(1);

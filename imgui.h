@@ -1734,7 +1734,7 @@ enum ImGuiStyleVar_
     ImGuiStyleVar_LayoutAlign,         // float     LayoutAlign
     ImGuiStyleVar_TexGlyphShadowOffset,// ImVec2    TexGlyphShadowOffset
     ImGuiStyleVar_TexGlyphOutlineWidth,// float     TexGlyphOutlineWidth
-    ImGuiStyleVar_TextInternationalize,// bool      TextInternationalize 
+    ImGuiStyleVar_TextInternationalize,// int       TextInternationalize 
 // add By Dicky end
     ImGuiStyleVar_COUNT
 };

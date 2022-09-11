@@ -1030,7 +1030,7 @@ bool ImGui::ColorCombo(const char* label,ImVec4 *pColorOut,bool supportsAlpha,fl
         ImGui::SetNextWindowPos(popup_rect.Min);
         ImGui::SetNextWindowSize(ImVec2(windowWidth,-1));//popup_rect.GetSize());
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, style.FramePadding);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4,2));
 
         bool mustCloseCombo = false;
@@ -1087,7 +1087,7 @@ bool ImGui::ColorChooser(bool* open,ImVec4 *pColorOut,bool supportsAlpha)
     WindowFlags |= ImGuiWindowFlags_NoCollapse;
     WindowFlags |= ImGuiWindowFlags_NoScrollWithMouse;
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4,2));
 
     if (open) ImGui::SetNextWindowFocus();
