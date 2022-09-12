@@ -2224,7 +2224,7 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
     if (font_cfg.SizePixels <= 0.0f)
         font_cfg.SizePixels = font_size * 1.0f;
     font_cfg.EllipsisChar = (ImWchar)0x0085;
-    font_cfg.GlyphOffset.y = -2.0f * IM_FLOOR(font_cfg.SizePixels / font_size);  // Add -2 offset per 16 units
+    //font_cfg.GlyphOffset.y = -2.0f * IM_FLOOR(font_cfg.SizePixels / font_size);  // Add -2 offset per 16 units
 #if !IMGUI_FONT_NO_UTF8
     const ImWchar* glyph_ranges = font_cfg.GlyphRanges;
 #if IMGUI_FONT_NO_LATIN
@@ -2286,7 +2286,7 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
     ascii_config.PixelSnapH     = true;
     ascii_config.SizePixels     = ascii_font_size * 1.0f;
     ascii_config.EllipsisChar   = (ImWchar)0x0085;
-    ascii_config.GlyphOffset.y  = -1.0f * IM_FLOOR(ascii_config.SizePixels / ascii_font_size);  // Add -1 offset per 14 units
+    //ascii_config.GlyphOffset.y  = -1.0f * IM_FLOOR(ascii_config.SizePixels / ascii_font_size);  // Add -1 offset per 14 units
 #if IMGUI_FONT_NO_UTF8
     ascii_config.MergeMode      = false;
 #endif

@@ -1087,8 +1087,11 @@ static void ShowDemoWindowWidgets()
                 "CJK text will only appears if the font was loaded with the appropriate CJK character ranges. "
                 "Call io.Fonts->AddFontFromFileTTF() manually to load extra character ranges. "
                 "Read docs/FONTS.md for details.");
-            ImGui::Text(u8"字体测试"); // Normally we would use u8"blah blah" with the proper characters directly in the string.
-            ImGui::Text(u8"UTF-8 字体");
+            //ImGui::Text(u8"Font Test"); // Normally we would use u8"blah blah" with the proper characters directly in the string.
+            ImGui::Text(u8"UTF-8 字体测试");
+            ImGui::Text(u8"UTF-8 글꼴 테스트");
+            ImGui::Text(u8"UTF-8 тест шрифта");
+            ImGui::Text(u8"UTF-8 フォントテスト");
             static char buf[32] = u8"字体测试";
             //static char buf[32] = u8"NIHONGO"; // <- this is how you would write it with C++11, using real kanjis
             ImGui::InputText("UTF-8 input", buf, IM_ARRAYSIZE(buf));

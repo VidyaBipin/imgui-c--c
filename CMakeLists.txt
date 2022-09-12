@@ -241,9 +241,9 @@ set(IMGUI_INCS
     misc/DynObjectLoader.h
 )
 
-set(IMGUI_FONT_UTF8 Sans CACHE STRING "ImGui internal UTF8 font")
+set(IMGUI_FONT_UTF8 WeiHei CACHE STRING "ImGui internal UTF8 font")
 set_property(CACHE IMGUI_FONT_UTF8 PROPERTY STRINGS 
-    None Sans WeiHei BoldHei Hei Yuan Song Kai
+    None WeiHei BoldHei Hei Yuan Song Kai Sans
 )
 
 set(IMGUI_FONT_LATIN MonoNarrow CACHE STRING "ImGui internal Latin font")
