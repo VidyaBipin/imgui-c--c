@@ -2125,6 +2125,7 @@ struct ImGuiContext
     ImGuiTextBuffer         LanguagesIniData;                    // In memory .ini languages
     std::map<std::string, std::map<std::string, std::string>> StringMap; // language map, first = language, second->first = string second->second = localized string
     std::string             LanguageName;
+    char                    InternationalizedBuffer[4096];      // Internationalized convert buffer
     // Multi-language support add by Dicky end
 
     // Capture/Logging

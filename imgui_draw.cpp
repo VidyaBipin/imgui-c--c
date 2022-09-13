@@ -1656,14 +1656,10 @@ void ImDrawList::AddText(const ImFont* font, float font_size, const ImVec2& pos,
     ImGuiContext& g = *GImGui;
     if (g.Style.TextInternationalize)
     {
-        char buffer[4096] = {0};
-        size_t buffer_size = ImMin((size_t)(text_end - text_begin), (size_t)4096);
-        memcpy(buffer, text_begin, buffer_size);
-        size_t new_length = 0;
-        auto changed = ImGui::InternationalizedText(buffer, buffer + buffer_size, 4096);
+        auto changed = ImGui::InternationalizedText(_text_begin, _text_end);
         if (changed > 0)
         {
-            _text_begin = buffer;
+            _text_begin = g.InternationalizedBuffer;
             _text_end = _text_begin + changed;
         }
     }

@@ -922,7 +922,7 @@ namespace ImGui
     // Text Utilities
     IMGUI_API ImVec2        CalcTextSize(const char* text, const char* text_end = NULL, bool hide_text_after_double_hash = false, float wrap_width = -1.0f);
     // add by Dicky to find internationalize text
-    IMGUI_API size_t        InternationalizedText(char* text_begin, char* text_end, size_t max_size);
+    IMGUI_API size_t        InternationalizedText(const char* text_begin, const char* text_end);
     // add by Dicky end
 
     // Color Utilities

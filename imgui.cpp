@@ -5443,14 +5443,10 @@ ImVec2 ImGui::CalcTextSize(const char* text, const char* text_end, bool hide_tex
     const char * _text_end = text_end ? text_end : text + strlen(text);
     if (g.Style.TextInternationalize)
     {
-        char buffer[4096] = {0};
-        size_t buffer_size = ImMin((size_t)(_text_end - _text_begin), (size_t)4096);
-        memcpy(buffer, text, buffer_size);
-        size_t new_length = 0;
-        auto changed = ImGui::InternationalizedText(buffer, buffer + buffer_size, 4096);
+        auto changed = ImGui::InternationalizedText(_text_begin, _text_end);
         if (changed > 0)
         {
-            _text_begin = buffer;
+            _text_begin = g.InternationalizedBuffer;
             _text_end = _text_begin + changed;
         }
     }
@@ -5479,7 +5475,7 @@ ImVec2 ImGui::CalcTextSize(const char* text, const char* text_end, bool hide_tex
 }
 
 // add by Dicky for multi-language support
-size_t ImGui::InternationalizedText(char* text_begin, char* text_end, size_t max_size)
+size_t ImGui::InternationalizedText(const char* text_begin, const char* text_end)
 {
     ImGuiContext& g = *GImGui;
     if (g.LanguagesLoaded && !g.LanguageName.empty() && !g.StringMap.empty())
@@ -5487,7 +5483,9 @@ size_t ImGui::InternationalizedText(char* text_begin, char* text_end, size_t max
         auto& map = g.StringMap[g.LanguageName];
         if (map.empty())
             return 0;
-        std::string key(text_begin, text_end ? text_end - text_begin : strlen(text_begin));
+        size_t buffer_size = ImMin((size_t)(text_end - text_begin), sizeof(g.InternationalizedBuffer));
+        memcpy(g.InternationalizedBuffer, text_begin, buffer_size);
+        std::string key(g.InternationalizedBuffer, buffer_size);
         std::string name = map[key];
         std::string name_prefix;
         if (name.empty())
@@ -5502,15 +5500,15 @@ size_t ImGui::InternationalizedText(char* text_begin, char* text_end, size_t max
         }
         else
         {
-            size_t new_size = ImMin(name.size(), max_size);
-            memcpy(text_begin, name.data(), new_size);
+            size_t new_size = ImMin(name.size(), sizeof(g.InternationalizedBuffer));
+            memcpy(g.InternationalizedBuffer, name.data(), new_size);
             return new_size;
         }
         if (!name.empty())
         {
             std::string new_str = name_prefix + name;
-            size_t new_size = ImMin(new_str.size(), max_size);
-            memcpy(text_begin, new_str.data(), new_size);
+            size_t new_size = ImMin(new_str.size(), sizeof(g.InternationalizedBuffer));
+            memcpy(g.InternationalizedBuffer, new_str.data(), new_size);
             return new_size;
         }
     }
