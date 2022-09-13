@@ -70,7 +70,7 @@ static void SetupVulkan(std::vector<const char*>& extensions, int gpu = -1)
         VkInstanceCreateInfo create_info = {};
 #if defined(__APPLE__)
 #if VK_HEADER_VERSION >= 216
-        extensions.push_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
+        //extensions.push_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
         extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
         extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
         create_info.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
