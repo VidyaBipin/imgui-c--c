@@ -185,6 +185,7 @@ set(VKSHADER_SRCS
     filters/Waveform_vulkan.cpp
     filters/Vector_vulkan.cpp
     filters/warpPerspective_vulkan.cpp
+    filters/warpAffine_vulkan.cpp
 )
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
@@ -265,6 +266,8 @@ set(VKSHADER_INCS
     filters/Vector_vulkan.h
     filters/warpPerspective_shader.h
     filters/warpPerspective_vulkan.h
+    filters/warpAffine_shader.h
+    filters/warpAffine_vulkan.h
 )
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
@@ -307,7 +310,7 @@ add_library(
 
 set(VKSHADER_VERSION_MAJOR 1)
 set(VKSHADER_VERSION_MINOR 2)
-set(VKSHADER_VERSION_PATCH 5)
+set(VKSHADER_VERSION_PATCH 6)
 set(VKSHADER_VERSION_STRING ${VKSHADER_VERSION_MAJOR}.${VKSHADER_VERSION_MINOR}.${VKSHADER_VERSION_PATCH})
 
 if(NOT VKSHADER_STATIC)
