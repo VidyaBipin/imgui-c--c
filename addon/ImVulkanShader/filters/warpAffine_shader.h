@@ -19,6 +19,11 @@ layout (push_constant) uniform parameter \n\
     \n\
     float r,g,b,a; \n\
     \n\
+    int crop_l; \n\
+    int crop_t; \n\
+    int crop_r; \n\
+    int crop_b; \n\
+    \n\
     int interp_type; \n\
 } p; \n\
 #define INTER_BITS 5 \n\
@@ -51,7 +56,7 @@ void warpAffine_nearest() \n\
         int sx = int(X0 >> AB_BITS); \n\
         int sy = int(Y0 >> AB_BITS); \n\
         \n\
-        if (sx >= 0 && sx < p.w && sy >= 0 && sy < p.h) \n\
+        if (sx >= p.crop_l && sx < p.w - p.crop_r && sy >= p.crop_t && sy < p.h - p.crop_b) \n\
         { \n\
             sfpvec4 rgba = load_rgba(sx, sy, p.w, p.cstep, p.in_format, p.in_type); \n\
             store_rgba(rgba, gx, dy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
@@ -87,19 +92,15 @@ void warpAffine_linear() \n\
         int sx = int(X0 >> INTER_BITS), sy = int(Y0 >> INTER_BITS); \n\
         int ax = int(X0 & (INTER_TAB_SIZE-1)), ay = int(Y0 & (INTER_TAB_SIZE-1)); \n\
         sfpvec4 v0 = filled, v1 = filled, v2 = filled, v3 = filled; \n\
-        if (sx >= 0 && sx < p.w) \n\
+        if (sx >= p.crop_l && sx < p.w - p.crop_r) \n\
         { \n\
-            if (sy >= 0 && sy < p.h) \n\
-                v0 = load_rgba(sx, sy, p.w, p.cstep, p.in_format, p.in_type); \n\
-            if (sy + 1 >= 0 && sy + 1 < p.h) \n\
-                v2 = load_rgba(sx, sy + 1, p.w, p.cstep, p.in_format, p.in_type); \n\
+            if (sy + 0 >= p.crop_t && sy + 0 < p.h - p.crop_b) v0 = load_rgba(sx, sy, p.w, p.cstep, p.in_format, p.in_type); \n\
+            if (sy + 1 >= p.crop_t && sy + 1 < p.h - p.crop_b) v2 = load_rgba(sx, sy + 1, p.w, p.cstep, p.in_format, p.in_type); \n\
         } \n\
-        if (sx + 1 >= 0 && sx + 1 < p.w) \n\
+        if (sx + 1 >= p.crop_l && sx + 1 < p.w - p.crop_r) \n\
         { \n\
-            if (sy >= 0 && sy < p.h) \n\
-                v1 = load_rgba(sx + 1, sy, p.w, p.cstep, p.in_format, p.in_type); \n\
-            if (sy + 1 >= 0 && sy + 1 < p.h) \n\
-                v3 = load_rgba(sx + 1, sy + 1, p.w, p.cstep, p.in_format, p.in_type); \n\
+            if (sy + 0 >= p.crop_t && sy + 0 < p.h - p.crop_b) v1 = load_rgba(sx + 1, sy, p.w, p.cstep, p.in_format, p.in_type); \n\
+            if (sy + 1 >= p.crop_t && sy + 1 < p.h - p.crop_b) v3 = load_rgba(sx + 1, sy + 1, p.w, p.cstep, p.in_format, p.in_type); \n\
         } \n\
         \n\
         sfp taby = sfp(1.f / INTER_TAB_SIZE * ay); \n\
@@ -138,22 +139,22 @@ void warpAffine_cubic() \n\
     int sx = int(X0 >> INTER_BITS) - 1, sy = int(Y0 >> INTER_BITS) - 1; \n\
     int ay = int(Y0 & (INTER_TAB_SIZE - 1)), ax = int(X0 & (INTER_TAB_SIZE - 1)); \n\
     sfpvec4 v[16]; \n\
-    v[ 0] = (sx + 0 >= 0 && sx + 0 < p.w && sy + 0 >= 0 && sy + 0 < p.h) ? load_rgba(sx + 0, sy + 0, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[ 1] = (sx + 1 >= 0 && sx + 1 < p.w && sy + 0 >= 0 && sy + 0 < p.h) ? load_rgba(sx + 1, sy + 0, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[ 2] = (sx + 2 >= 0 && sx + 2 < p.w && sy + 0 >= 0 && sy + 0 < p.h) ? load_rgba(sx + 2, sy + 0, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[ 3] = (sx + 3 >= 0 && sx + 3 < p.w && sy + 0 >= 0 && sy + 0 < p.h) ? load_rgba(sx + 3, sy + 0, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[ 4] = (sx + 0 >= 0 && sx + 0 < p.w && sy + 1 >= 0 && sy + 1 < p.h) ? load_rgba(sx + 0, sy + 1, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[ 5] = (sx + 1 >= 0 && sx + 1 < p.w && sy + 1 >= 0 && sy + 1 < p.h) ? load_rgba(sx + 1, sy + 1, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[ 6] = (sx + 2 >= 0 && sx + 2 < p.w && sy + 1 >= 0 && sy + 1 < p.h) ? load_rgba(sx + 2, sy + 1, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[ 7] = (sx + 3 >= 0 && sx + 3 < p.w && sy + 1 >= 0 && sy + 1 < p.h) ? load_rgba(sx + 3, sy + 1, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[ 8] = (sx + 0 >= 0 && sx + 0 < p.w && sy + 2 >= 0 && sy + 2 < p.h) ? load_rgba(sx + 0, sy + 2, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[ 9] = (sx + 1 >= 0 && sx + 1 < p.w && sy + 2 >= 0 && sy + 2 < p.h) ? load_rgba(sx + 1, sy + 2, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[10] = (sx + 2 >= 0 && sx + 2 < p.w && sy + 2 >= 0 && sy + 2 < p.h) ? load_rgba(sx + 2, sy + 2, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[11] = (sx + 3 >= 0 && sx + 3 < p.w && sy + 2 >= 0 && sy + 2 < p.h) ? load_rgba(sx + 3, sy + 2, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[12] = (sx + 0 >= 0 && sx + 0 < p.w && sy + 3 >= 0 && sy + 3 < p.h) ? load_rgba(sx + 0, sy + 3, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[13] = (sx + 1 >= 0 && sx + 1 < p.w && sy + 3 >= 0 && sy + 3 < p.h) ? load_rgba(sx + 1, sy + 3, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[14] = (sx + 2 >= 0 && sx + 2 < p.w && sy + 3 >= 0 && sy + 3 < p.h) ? load_rgba(sx + 2, sy + 3, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
-    v[15] = (sx + 3 >= 0 && sx + 3 < p.w && sy + 3 >= 0 && sy + 3 < p.h) ? load_rgba(sx + 3, sy + 3, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[ 0] = (sx + 0 >= p.crop_l && sx + 0 < p.w - p.crop_r && sy + 0 >= p.crop_t && sy + 0 < p.h - p.crop_b) ? load_rgba(sx + 0, sy + 0, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[ 1] = (sx + 1 >= p.crop_l && sx + 1 < p.w - p.crop_r && sy + 0 >= p.crop_t && sy + 0 < p.h - p.crop_b) ? load_rgba(sx + 1, sy + 0, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[ 2] = (sx + 2 >= p.crop_l && sx + 2 < p.w - p.crop_r && sy + 0 >= p.crop_t && sy + 0 < p.h - p.crop_b) ? load_rgba(sx + 2, sy + 0, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[ 3] = (sx + 3 >= p.crop_l && sx + 3 < p.w - p.crop_r && sy + 0 >= p.crop_t && sy + 0 < p.h - p.crop_b) ? load_rgba(sx + 3, sy + 0, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[ 4] = (sx + 0 >= p.crop_l && sx + 0 < p.w - p.crop_r && sy + 1 >= p.crop_t && sy + 1 < p.h - p.crop_b) ? load_rgba(sx + 0, sy + 1, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[ 5] = (sx + 1 >= p.crop_l && sx + 1 < p.w - p.crop_r && sy + 1 >= p.crop_t && sy + 1 < p.h - p.crop_b) ? load_rgba(sx + 1, sy + 1, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[ 6] = (sx + 2 >= p.crop_l && sx + 2 < p.w - p.crop_r && sy + 1 >= p.crop_t && sy + 1 < p.h - p.crop_b) ? load_rgba(sx + 2, sy + 1, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[ 7] = (sx + 3 >= p.crop_l && sx + 3 < p.w - p.crop_r && sy + 1 >= p.crop_t && sy + 1 < p.h - p.crop_b) ? load_rgba(sx + 3, sy + 1, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[ 8] = (sx + 0 >= p.crop_l && sx + 0 < p.w - p.crop_r && sy + 2 >= p.crop_t && sy + 2 < p.h - p.crop_b) ? load_rgba(sx + 0, sy + 2, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[ 9] = (sx + 1 >= p.crop_l && sx + 1 < p.w - p.crop_r && sy + 2 >= p.crop_t && sy + 2 < p.h - p.crop_b) ? load_rgba(sx + 1, sy + 2, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[10] = (sx + 2 >= p.crop_l && sx + 2 < p.w - p.crop_r && sy + 2 >= p.crop_t && sy + 2 < p.h - p.crop_b) ? load_rgba(sx + 2, sy + 2, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[11] = (sx + 3 >= p.crop_l && sx + 3 < p.w - p.crop_r && sy + 2 >= p.crop_t && sy + 2 < p.h - p.crop_b) ? load_rgba(sx + 3, sy + 2, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[12] = (sx + 0 >= p.crop_l && sx + 0 < p.w - p.crop_r && sy + 3 >= p.crop_t && sy + 3 < p.h - p.crop_b) ? load_rgba(sx + 0, sy + 3, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[13] = (sx + 1 >= p.crop_l && sx + 1 < p.w - p.crop_r && sy + 3 >= p.crop_t && sy + 3 < p.h - p.crop_b) ? load_rgba(sx + 1, sy + 3, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[14] = (sx + 2 >= p.crop_l && sx + 2 < p.w - p.crop_r && sy + 3 >= p.crop_t && sy + 3 < p.h - p.crop_b) ? load_rgba(sx + 2, sy + 3, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
+    v[15] = (sx + 3 >= p.crop_l && sx + 3 < p.w - p.crop_r && sy + 3 >= p.crop_t && sy + 3 < p.h - p.crop_b) ? load_rgba(sx + 3, sy + 3, p.w, p.cstep, p.in_format, p.in_type) : filled; \n\
     \n\
     sfp tab1y[4], tab1x[4]; \n\
     sfp ayy = sfp(INTER_SCALE * ay); \n\

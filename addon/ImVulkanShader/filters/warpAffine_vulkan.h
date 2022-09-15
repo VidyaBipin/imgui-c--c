@@ -11,7 +11,7 @@ public:
     warpAffine_vulkan(int gpu = -1);
     ~warpAffine_vulkan();
 
-    virtual void filter(const ImMat& src, ImMat& dst, const ImMat& M, ImInterpolateMode type = IM_INTERPOLATE_NEAREST) const;
+    virtual void filter(const ImMat& src, ImMat& dst, const ImMat& M, ImInterpolateMode type = IM_INTERPOLATE_NEAREST, ImPixel border_col = {0, 0, 0, 0}, ImPixel crop = {0, 0, 0, 0}) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};
@@ -20,6 +20,6 @@ public:
     Option opt;
 
 private:
-    void upload_param(const VkMat& src, VkMat& dst, const VkMat& M, ImInterpolateMode type) const;
+    void upload_param(const VkMat& src, VkMat& dst, const VkMat& M, ImInterpolateMode type, ImPixel border_col, ImPixel crop) const;
 };
 } // namespace ImGui 

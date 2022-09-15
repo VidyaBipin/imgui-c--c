@@ -38,7 +38,7 @@ warpAffine_vulkan::~warpAffine_vulkan()
     }
 }
 
-void warpAffine_vulkan::upload_param(const VkMat& src, VkMat& dst, const VkMat& M, ImInterpolateMode type) const
+void warpAffine_vulkan::upload_param(const VkMat& src, VkMat& dst, const VkMat& M, ImInterpolateMode type, ImPixel border_col, ImPixel crop) const
 {
     std::vector<VkMat> bindings(9);
     if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
@@ -53,7 +53,7 @@ void warpAffine_vulkan::upload_param(const VkMat& src, VkMat& dst, const VkMat& 
 
     bindings[8] = M;
 
-    std::vector<vk_constant_type> constants(15);
+    std::vector<vk_constant_type> constants(19);
     constants[0].i = src.w;
     constants[1].i = src.h;
     constants[2].i = src.c;
@@ -64,15 +64,19 @@ void warpAffine_vulkan::upload_param(const VkMat& src, VkMat& dst, const VkMat& 
     constants[7].i = dst.c;
     constants[8].i = dst.color_format;
     constants[9].i = dst.type;
-    constants[10].f = 0.f;      // board R
-    constants[11].f = 0.f;      // board G
-    constants[12].f = 0.f;      // board B
-    constants[13].f = 0.f;      // board A
-    constants[14].i = type;
+    constants[10].f = border_col.r; // board R
+    constants[11].f = border_col.g; // board G
+    constants[12].f = border_col.b; // board B
+    constants[13].f = border_col.a; // board A
+    constants[14].i = crop.r;       // crop l
+    constants[15].i = crop.g;       // crop t
+    constants[16].i = crop.b;       // crop r
+    constants[17].i = crop.a;       // crop b
+    constants[18].i = type;
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-void warpAffine_vulkan::filter(const ImMat& src, ImMat& dst, const ImMat& M, ImInterpolateMode type) const
+void warpAffine_vulkan::filter(const ImMat& src, ImMat& dst, const ImMat& M, ImInterpolateMode type, ImPixel border_col, ImPixel crop) const
 {
     if (!vkdev || !pipe || !cmd)
     {
@@ -102,7 +106,7 @@ void warpAffine_vulkan::filter(const ImMat& src, ImMat& dst, const ImMat& M, ImI
         cmd->record_clone(M, m_gpu, opt);
     }
 
-    upload_param(src_gpu, dst_gpu, m_gpu, type);
+    upload_param(src_gpu, dst_gpu, m_gpu, type, border_col, crop);
 
     // download
     if (dst.device == IM_DD_CPU)
