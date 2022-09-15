@@ -171,8 +171,11 @@ void main() \n\
         return; \n\
     sfpvec4 color = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
     sfpvec4 mean = load_float_rgba_inTex(gx, gy, p.mean_w, p.mean_cstep, p.mean_format, p.mean_type); \n\
-    sfp q = clamp(color.x * mean.x + color.y * mean.y + color.z * mean.z + mean.w, sfp(0.f), sfp(1.f)); \n\
-    store_rgba(sfpvec4(color.rgb, q), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    //sfp q = clamp(color.x * mean.x + color.y * mean.y + color.z * mean.z + mean.w, sfp(0.f), sfp(1.f)); \n\
+    color.r = clamp(color.x * mean.x + mean.w, sfp(0.f), sfp(1.f)); \n\
+    color.g = clamp(color.y * mean.y + mean.w, sfp(0.f), sfp(1.f)); \n\
+    color.b = clamp(color.z * mean.z + mean.w, sfp(0.f), sfp(1.f)); \n\
+    store_rgba(color, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

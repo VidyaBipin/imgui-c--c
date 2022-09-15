@@ -31,6 +31,7 @@ void main() \n\
     ivec2 uv = ivec2(gl_GlobalInvocationID.xy); \n\
     if (uv.x >= p.out_w || uv.y >= p.out_h) \n\
         return; \n\
+    sfp alpha = load_rgba(uv.x, uv.y, p.w, p.cstep, p.in_format, p.in_type).a; \n\
     sfpvec3 sum = sfpvec3(sfp(0.0f)); \n\
     int kInd = 0; \n\
     for (int i = 0; i < p.yksize; ++i) \n\
@@ -46,7 +47,7 @@ void main() \n\
             sum = sum + rgb; \n\
         } \n\
     } \n\
-    store_rgba(sfpvec4(sum, sfp(1.0f)), uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(sfpvec4(sum, alpha), uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

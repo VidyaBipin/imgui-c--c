@@ -146,6 +146,12 @@ layout (push_constant) uniform parameter \n\
     int out_cstep; \n\
     int out_format; \n\
     int out_type; \n\
+    \n\
+    int nms_w; \n\
+    int nms_h; \n\
+    int nms_cstep; \n\
+    int nms_format; \n\
+    int nms_type; \n\
 } p; \
 "
 
@@ -158,7 +164,8 @@ void main() \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
     sfp sum = sfp(0.0f); \n\
-    sfp current = load_gray(gx, gy, p.w, p.cstep, p.in_format, p.in_type, 1.f); \n\
+    sfp current = load_gray_nms(gx, gy, p.nms_w, p.nms_cstep, p.nms_format, p.nms_type, 1.f); \n\
+    sfp alpha = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type).a; \n\
     for (int i = 0; i < 3; ++i) \n\
     { \n\
         for (int j = 0; j < 3; ++j) \n\
@@ -168,13 +175,13 @@ void main() \n\
             // REPLICATE border \n\
             x = max(0, min(x, p.out_w - 1)); \n\
             y = max(0, min(y, p.out_h - 1)); \n\
-            sfp value = load_gray(x, y, p.w, p.cstep, p.in_format, p.in_type, 1.f); \n\
+            sfp value = load_gray_nms(x, y, p.nms_w, p.nms_cstep, p.nms_format, p.nms_type, 1.f); \n\
             sum += value; \n\
         } \n\
     } \n\
     sfp sumTest = step(sfp(1.5f), sum); \n\
     sfp pixelTest = step(sfp(0.01f), current); \n\
-    store_rgba(sfpvec4(sfpvec3(sumTest * pixelTest), 1.0f), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(sfpvec4(sfpvec3(sumTest * pixelTest), alpha), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 
@@ -182,7 +189,14 @@ static const char CannyFilter_data[] =
 SHADER_HEADER
 CANNY_SHADER_PARAM
 SHADER_INPUT_OUTPUT_DATA
-SHADER_LOAD_GRAY
+R"(
+layout (binding =  8) readonly buffer nms_int8       { uint8_t   nms_data_int8[]; };
+layout (binding =  9) readonly buffer nms_int16      { uint16_t  nms_data_int16[]; };
+layout (binding = 10) readonly buffer nms_float16    { float16_t nms_data_float16[]; };
+layout (binding = 11) readonly buffer nms_float32    { float     nms_data_float32[]; };
+)"
+SHADER_LOAD_RGBA
+SHADER_LOAD_GRAY_NAME(nms)
 SHADER_STORE_RGBA
 SHADER_CANNY_MAIN
 ;

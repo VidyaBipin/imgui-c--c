@@ -231,28 +231,38 @@ void Canny_vulkan::upload_param(const VkMat& src, VkMat& dst, int _blurRadius, f
     nms_constants[11].f = maxThreshold;
     cmd->record_pipeline(pipe_nms, nms_bindings, nms_constants, vk_nms);
 
-    std::vector<VkMat> canny_bindings(8);
+    std::vector<VkMat> canny_bindings(12);
     if      (dst.type == IM_DT_INT8)     canny_bindings[0] = dst;
     else if (dst.type == IM_DT_INT16)    canny_bindings[1] = dst;
     else if (dst.type == IM_DT_FLOAT16)  canny_bindings[2] = dst;
     else if (dst.type == IM_DT_FLOAT32)  canny_bindings[3] = dst;
 
-    if      (vk_nms.type == IM_DT_INT8)     canny_bindings[4] = vk_nms;
-    else if (vk_nms.type == IM_DT_INT16)    canny_bindings[5] = vk_nms;
-    else if (vk_nms.type == IM_DT_FLOAT16)  canny_bindings[6] = vk_nms;
-    else if (vk_nms.type == IM_DT_FLOAT32)  canny_bindings[7] = vk_nms;
+    if      (src.type == IM_DT_INT8)     canny_bindings[4] = src;
+    else if (src.type == IM_DT_INT16)    canny_bindings[5] = src;
+    else if (src.type == IM_DT_FLOAT16)  canny_bindings[6] = src;
+    else if (src.type == IM_DT_FLOAT32)  canny_bindings[7] = src;
 
-    std::vector<vk_constant_type> canny_constants(10);
-    canny_constants[0].i = vk_nms.w;
-    canny_constants[1].i = vk_nms.h;
-    canny_constants[2].i = vk_nms.c;
-    canny_constants[3].i = vk_nms.color_format;
-    canny_constants[4].i = vk_nms.type;
+    if      (vk_nms.type == IM_DT_INT8)     canny_bindings[8] = vk_nms;
+    else if (vk_nms.type == IM_DT_INT16)    canny_bindings[9] = vk_nms;
+    else if (vk_nms.type == IM_DT_FLOAT16)  canny_bindings[10] = vk_nms;
+    else if (vk_nms.type == IM_DT_FLOAT32)  canny_bindings[11] = vk_nms;
+
+    std::vector<vk_constant_type> canny_constants(15);
+    canny_constants[0].i = src.w;
+    canny_constants[1].i = src.h;
+    canny_constants[2].i = src.c;
+    canny_constants[3].i = src.color_format;
+    canny_constants[4].i = src.type;
     canny_constants[5].i = dst.w;
     canny_constants[6].i = dst.h;
     canny_constants[7].i = dst.c;
     canny_constants[8].i = dst.color_format;
     canny_constants[9].i = dst.type;
+    canny_constants[10].i = vk_nms.w;
+    canny_constants[11].i = vk_nms.h;
+    canny_constants[12].i = vk_nms.c;
+    canny_constants[13].i = vk_nms.color_format;
+    canny_constants[14].i = vk_nms.type;
     cmd->record_pipeline(pipe, canny_bindings, canny_constants, dst);
 }
 

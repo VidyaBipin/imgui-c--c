@@ -30,7 +30,7 @@ void main() \n\
     ivec2 uv = ivec2(gl_GlobalInvocationID.xy); \n\
     if (uv.x >= p.out_w || uv.y >= p.out_h) \n\
         return; \n\
-    sfpvec3 center = load_rgba(uv.x, uv.y, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
+    sfpvec4 center = load_rgba(uv.x, uv.y, p.w, p.cstep, p.in_format, p.in_type); \n\
     sfpvec3 sum1 = sfpvec3(0.0f); \n\
     sfp sum2 = sfp(0.0f); \n\
     int r = p.ksz / 2; \n\
@@ -49,14 +49,14 @@ void main() \n\
                 int bx = max(0, min(cx, p.out_w - 1)); \n\
                 int by = max(0, min(cy, p.out_h - 1)); \n\
                 sfpvec3 color = load_rgba(bx, by, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
-                sfp norm = dot(abs(color - center), sfpvec3(1.0f)); \n\
+                sfp norm = dot(abs(color - center.rgb), sfpvec3(1.0f)); \n\
                 sfp weight = exp(space2 * sfp(p.sigma_spatial2_inv_half) + norm * norm * sfp(p.sigma_color2_inv_half)); \n\
                 sum1 = sum1 + weight * color; \n\
                 sum2 = sum2 + weight; \n\
             } \n\
         } \n\
     } \n\
-    store_rgba(sfpvec4(sfpvec3(sum1/sum2), 1.0f), uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(sfpvec4(sfpvec3(sum1/sum2), center.a), uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

@@ -55,7 +55,7 @@ int lowpass(int prev, int cur, int coef_index) \n\
                       coef_index == CHROMA_SPATIAL ? int(coefs_2_data[d + 256 * 16]) : \n\
                       coef_index == CHROMA_TMP ? int(coefs_3_data[d + 256 * 16]) : 0)); \n\
 } \n\
-sfpvec3 denoise(int x, int y) \n\
+sfpvec4 denoise(int x, int y) \n\
 { \n\
     sfpvec3 yuv = {sfp(0.f), sfp(0.5f), sfp(0.5f)}; \n\
     int pixel_ant; \n\
@@ -63,7 +63,8 @@ sfpvec3 denoise(int x, int y) \n\
     int spatial_y_offset = y * p.w + x; \n\
     int spatial_u_offset = p.w * p.h + y * p.w + x; \n\
     int spatial_v_offset = p.w * p.h * 2 + y * p.w + x; \n\
-    sfpvec3 yuv0 = rgb_to_yuv(load_rgba(x, y, p.w, p.cstep, p.in_format, p.in_type).rgb); \n\
+    sfpvec4 rgba = load_rgba(x, y, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec3 yuv0 = rgb_to_yuv(rgba.rgb); \n\
     sfpvec3 yuv1 = x < p.w - 1 ? rgb_to_yuv(load_rgba(x + 1, y, p.w, p.cstep, p.in_format, p.in_type).rgb) : yuv0; \n\
     // Y \n\
     pixel_ant = lowpass(frame_spatial_data[spatial_y_offset], int(yuv0.x * sfp(65535.0f)) + 128, LUMA_SPATIAL); \n\
@@ -94,7 +95,7 @@ sfpvec3 denoise(int x, int y) \n\
     else \n\
         frame_temporal_data[spatial_v_offset] = tmp; \n\
     yuv.z = sfp(tmp) / sfp(65535.0f); \n\
-    return yuv_to_rgb(yuv); \n\
+    return sfpvec4(yuv_to_rgb(yuv), rgba.a); \n\
 } \
 "
 
@@ -107,7 +108,7 @@ void main() \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
 \n\
-    sfpvec4 result = sfpvec4(denoise(gx, gy), sfp(1.f)); \n\
+    sfpvec4 result = denoise(gx, gy); \n\
     store_rgba(result, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "

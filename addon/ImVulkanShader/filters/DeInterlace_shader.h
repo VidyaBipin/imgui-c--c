@@ -46,7 +46,7 @@ void deinterlace(int x, int y) \n\
         cm.r = sfp(table_data[int(sum.r * sfp(256.0)) + 1024]); \n\
         cm.g = sfp(table_data[int(sum.g * sfp(256.0)) + 1024]); \n\
         cm.b = sfp(table_data[int(sum.b * sfp(256.0)) + 1024]); \n\
-        cm.a = sfp(1.0f); \n\
+        cm.a = d0.a; \n\
         store_rgba(cm, x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
     } \n\
 } \

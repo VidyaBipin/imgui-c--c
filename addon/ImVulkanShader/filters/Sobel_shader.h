@@ -54,6 +54,7 @@ void main() \n\
         return; \n\
     sfp vertical = sfp(0.0f); \n\
     sfp horizont = sfp(0.0f); \n\
+    sfp alpha = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type).a; \n\
     for (int i = 0; i < 3; ++i) \n\
     { \n\
         for (int j = 0; j < 3; ++j) \n\
@@ -70,7 +71,7 @@ void main() \n\
         } \n\
     } \n\
     sfp mag = length(sfpvec2(horizont, vertical)) * sfp(p.strength); \n\
-    store_rgba(sfpvec4(mag, mag, mag, 1.0f), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(sfpvec4(mag, mag, mag, alpha), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

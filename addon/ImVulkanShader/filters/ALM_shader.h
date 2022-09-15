@@ -52,9 +52,10 @@ sfpvec3 xyz_to_rgb(sfpvec3 xyz) \n\
     sfpvec3 rgb = xyz * matrix_mat_x2r; \n\
     return clamp(rgb, sfp(0.f), sfp(1.f)); \n\
 } \n\
-sfpvec3 alm(int x, int y) \n\
+sfpvec4 alm(int x, int y) \n\
 { \n\
-    sfpvec3 xyz = rgb_to_xyz(load_rgba(x, y, p.w, p.cstep, p.in_format, p.in_type).rgb); \n\
+    sfpvec4 rgba = load_rgba(x, y, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec3 xyz = rgb_to_xyz(rgba.rgb); \n\
     sfp xx = xyz.x / (xyz.x + xyz.y + xyz.z); \n\
     sfp yy = xyz.y / (xyz.x + xyz.y + xyz.z); \n\
     sfp _log = log(xyz.y + sfp(1.0f)); \n\
@@ -64,7 +65,7 @@ sfpvec3 alm(int x, int y) \n\
     xyz.x = xyz.y / yy * xx; \n\
     xyz.z = xyz.y / yy * (sfp(1.0f) - xx - yy); \n\
     sfpvec3 rgb = Transform(xyz_to_rgb(xyz), p.gamma); \n\
-    return rgb; \n\
+    return sfpvec4(rgb, rgba.a); \n\
 } \
 "
 
@@ -77,7 +78,7 @@ void main() \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
 \n\
-    sfpvec4 vout = sfpvec4(alm(gx, gy), sfp(1.f)); \n\
+    sfpvec4 vout = alm(gx, gy); \n\
     store_rgba(vout, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "

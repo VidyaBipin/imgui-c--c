@@ -253,7 +253,9 @@ void main() \n\
     // step(maxValue, values[4])需要当前值最大才为1 \n\
     sfp result = values[4]* step(maxValue, values[4]) * multiplier; \n\
     result = step(sfp(p.threshold), result); \n\
-    sfpvec3 rgb_in = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
+    sfpvec4 rgba_in = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec3 rgb_in = rgba_in.rgb; \n\
+    sfp alpha = rgba_in.a; \n\
     if (result > sfp(0.f)) \n\
     { \n\
         rgb_in = sfpvec3(1.0, 0.0, 0.0); \n\
@@ -266,12 +268,12 @@ void main() \n\
                 // REPLICATE border \n\
                 x = max(0, min(x, p.out_w - 1)); \n\
                 y = max(0, min(y, p.out_h - 1)); \n\
-                store_rgba(sfpvec4(rgb_in, 1.0f), x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+                store_rgba(sfpvec4(rgb_in, alpha), x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
             } \n\
         } \n\
     } \n\
     else \n\
-        store_rgba(sfpvec4(rgb_in, 1.0f), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+        store_rgba(sfpvec4(rgb_in, alpha), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

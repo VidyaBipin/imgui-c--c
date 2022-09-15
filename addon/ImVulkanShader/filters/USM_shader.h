@@ -113,24 +113,25 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
-    sfpvec3 src_rgb = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
+    sfpvec4 src_rgba = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
     sfpvec3 blur_rgb = load_blur_rgba(gx, gy, p.blur_w, p.blur_cstep, p.blur_format, p.blur_type).rgb; \n\
-    sfpvec3 diff = abs(src_rgb - blur_rgb); \n\
-    sfpvec3 result = sfpvec3(0.f); \n\
-    sfpvec3 amount = src_rgb * sfp(p.amount) + blur_rgb * sfp(1.f - p.amount); \n\
+    sfpvec3 diff = abs(src_rgba.rgb - blur_rgb); \n\
+    sfpvec4 result = sfpvec4(0.f); \n\
+    result.a = src_rgba.a; \n\
+    sfpvec3 amount = src_rgba.rgb * sfp(p.amount) + blur_rgb * sfp(1.f - p.amount); \n\
     if (diff.r > p.threshold) \n\
-        result.r = src_rgb.r; \n\
+        result.r = src_rgba.r; \n\
     else \n\
         result.r = clamp(amount.r, sfp(0.f), sfp(1.0f)); \n\
     if (diff.g > p.threshold) \n\
-        result.g = src_rgb.g; \n\
+        result.g = src_rgba.g; \n\
     else \n\
         result.g = clamp(amount.g, sfp(0.f), sfp(1.0f)); \n\
     if (diff.b > p.threshold) \n\
-        result.b = src_rgb.b; \n\
+        result.b = src_rgba.b; \n\
     else \n\
         result.b = clamp(amount.b, sfp(0.f), sfp(1.0f)); \n\
-    store_rgba(sfpvec4(result, 1.0f), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

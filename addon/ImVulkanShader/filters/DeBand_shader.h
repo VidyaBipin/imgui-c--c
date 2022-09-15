@@ -26,10 +26,10 @@ layout (push_constant) uniform parameter \n\
 " \n\
 #define CLIP(a, b, c) max(b, min(a, c)) \n\
 #define AVG(a, b, c , d) ((a + b + c + d) / sfp(4.0f)) \n\
-sfpvec3 deband(int x, int y) \n\
+sfpvec4 deband(int x, int y) \n\
 { \n\
     sfp avg, diff; \n\
-    sfpvec3 rgb = sfpvec3(0); \n\
+    sfpvec4 rgba = sfpvec4(0); \n\
     int x_pos = xpos_data[y * p.w + x]; \n\
     int y_pos = ypos_data[y * p.w + x]; \n\
     sfpvec4 ref0 = load_rgba(CLIP(x +  x_pos, 0, p.w - 1), CLIP(y +  y_pos, 0, p.h - 1), p.w, p.cstep, p.in_format, p.in_type); \n\
@@ -42,11 +42,11 @@ sfpvec3 deband(int x, int y) \n\
     { \n\
         avg = AVG(ref0.x, ref1.x, ref2.x, ref3.x); \n\
         diff = abs(src0.x - avg); \n\
-        rgb.r = diff < sfp(p.threshold) ? avg : src0.x; \n\
+        rgba.r = diff < sfp(p.threshold) ? avg : src0.x; \n\
     } \n\
     else \n\
     { \n\
-        rgb.r = ((abs(src0.x - ref0.x) < sfp(p.threshold)) && \n\
+        rgba.r = ((abs(src0.x - ref0.x) < sfp(p.threshold)) && \n\
                 (abs(src0.x - ref1.x) < sfp(p.threshold)) && \n\
                 (abs(src0.x - ref2.x) < sfp(p.threshold)) && \n\
                 (abs(src0.x - ref3.x) < sfp(p.threshold))) ? AVG(ref0.x, ref1.x, ref2.x, ref3.x) : src0.x; \n\
@@ -56,11 +56,11 @@ sfpvec3 deband(int x, int y) \n\
     { \n\
         avg = AVG(ref0.y, ref1.y, ref2.y, ref3.y); \n\
         diff = abs(src0.y - avg); \n\
-        rgb.g = diff < sfp(p.threshold) ? avg : src0.y; \n\
+        rgba.g = diff < sfp(p.threshold) ? avg : src0.y; \n\
     } \n\
     else \n\
     { \n\
-        rgb.g = ((abs(src0.y - ref0.y) < sfp(p.threshold)) && \n\
+        rgba.g = ((abs(src0.y - ref0.y) < sfp(p.threshold)) && \n\
                 (abs(src0.y - ref1.y) < sfp(p.threshold)) && \n\
                 (abs(src0.y - ref2.y) < sfp(p.threshold)) && \n\
                 (abs(src0.y - ref3.y) < sfp(p.threshold))) ? AVG(ref0.y, ref1.y, ref2.y, ref3.y) : src0.y; \n\
@@ -70,16 +70,17 @@ sfpvec3 deband(int x, int y) \n\
     { \n\
         avg = AVG(ref0.z, ref1.z, ref2.z, ref3.z); \n\
         diff = abs(src0.z - avg); \n\
-        rgb.b = diff < sfp(p.threshold) ? avg : src0.z; \n\
+        rgba.b = diff < sfp(p.threshold) ? avg : src0.z; \n\
     } \n\
     else \n\
     { \n\
-        rgb.b = ((abs(src0.z - ref0.z) < sfp(p.threshold)) && \n\
+        rgba.b = ((abs(src0.z - ref0.z) < sfp(p.threshold)) && \n\
                 (abs(src0.z - ref1.z) < sfp(p.threshold)) && \n\
                 (abs(src0.z - ref2.z) < sfp(p.threshold)) && \n\
                 (abs(src0.z - ref3.z) < sfp(p.threshold))) ? AVG(ref0.z, ref1.z, ref2.z, ref3.z) : src0.z; \n\
     } \n\
-    return rgb; \n\
+    rgba.a = src0.a; \n\
+    return rgba; \n\
 } \
 "
 
@@ -91,7 +92,7 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
-    sfpvec4 result = sfpvec4(deband(gx, gy), sfp(1.0f)); \n\
+    sfpvec4 result = deband(gx, gy); \n\
     store_rgba(result, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "

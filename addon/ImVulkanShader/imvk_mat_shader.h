@@ -528,6 +528,73 @@ sfpvec4 load_rgba_"#src"(int x, int y, int w, int cstep, int format, int type) \
 } \n\
 "
 
+// Load gray data with name
+#define SHADER_LOAD_GRAY_NAME_INT8(src) \
+" \n\
+sfp load_gray_int8_"#src"(int x, int y, int w, int cstep, int format, float scale) \n\
+{ \n\
+    sfp rgb_in = sfp(0.f); \n\
+    ivec3 i_offset = (y * w + x) * cstep + ivec3(0, 0, 0); \n\
+    rgb_in = sfp(uint("#src"_data_int8[i_offset.x])) / sfp(scale); \n\
+    return rgb_in; \n\
+} \n\
+"
+
+#define SHADER_LOAD_GRAY_NAME_INT16(src) \
+" \n\
+sfp load_gray_int16_"#src"(int x, int y, int w, int cstep, int format, float scale) \n\
+{ \n\
+    sfp rgb_in = sfp(0.f); \n\
+    ivec3 i_offset = (y * w + x) * cstep + ivec3(0, 0, 0); \n\
+    rgb_in = sfp(uint("#src"_data_int16[i_offset.x])) / sfp(scale); \n\
+    return rgb_in; \n\
+} \n\
+"
+
+#define SHADER_LOAD_GRAY_NAME_FLOAT16(src) \
+" \n\
+sfp load_gray_float16_"#src"(int x, int y, int w, int cstep, int format) \n\
+{ \n\
+    sfp rgb_in = sfp(0.f); \n\
+    ivec3 i_offset = (y * w + x) * cstep + ivec3(0, 0, 0); \n\
+    rgb_in = sfp("#src"_data_float16[i_offset.x]); \n\
+    return rgb_in; \n\
+} \n\
+"
+
+#define SHADER_LOAD_GRAY_NAME_FLOAT32(src) \
+" \n\
+sfp load_gray_float32_"#src"(int x, int y, int w, int cstep, int format) \n\
+{ \n\
+    sfp rgb_in = sfp(0.f); \n\
+    ivec3 i_offset = (y * w + x) * cstep + ivec3(0, 0, 0); \n\
+    rgb_in = sfp("#src"_data_float32[i_offset.x]); \n\
+    return rgb_in; \n\
+} \n\
+"
+
+#define SHADER_LOAD_GRAY_NAME(src) \
+SHADER_LOAD_GRAY_NAME_INT8(src) \
+SHADER_LOAD_GRAY_NAME_INT16(src) \
+SHADER_LOAD_GRAY_NAME_FLOAT16(src) \
+SHADER_LOAD_GRAY_NAME_FLOAT32(src) \
+" \n\
+sfp load_gray_"#src"(int x, int y, int w, int cstep, int format, int type, float scale) \n\
+{ \n\
+    if (type == DT_INT8) \n\
+        return load_gray_int8_"#src"(x, y, w, cstep, format, scale); \n\
+    else if (type == DT_INT16) \n\
+        return load_gray_int16_"#src"(x, y, w, cstep, format, scale); \n\
+    else if (type == DT_FLOAT16) \n\
+        return load_gray_float16_"#src"(x, y, w, cstep, format); \n\
+    else if (type == DT_FLOAT32) \n\
+        return load_gray_float32_"#src"(x, y, w, cstep, format); \n\
+    else \n\
+        return sfp(0.f); \n\
+} \n\
+"
+
+
 // Load data from dst as rgba
 #define SHADER_LOAD_DST_RGBA_INT8 \
 " \n\

@@ -110,7 +110,8 @@ void main() \n\
                 int yy = ly + (HALO_SIZE + j) * wsy - p.yanchor + k; \n\
                 sum = sum + column_shared[yy][lx] * sfp(kernel_data[k]); \n\
             } \n\
-            store_rgba(sfpvec4(sum.rgb, 1.0f), x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+            sum.a = load_rgba(x, y, p.w, p.cstep, p.in_format, p.in_type).a; \n\
+            store_rgba(sum, x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
         } \n\
     } \n\
 } \
@@ -201,7 +202,8 @@ void main() \n\
                 int xx = lx + (HALO_SIZE + j) * wsx - p.xanchor + k; \n\
                 sum = sum + row_shared[ly][xx] * sfp(kernel_data[k]); \n\
             } \n\
-            store_rgba(sfpvec4(sum.rgb, 1.0f), x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+            sum.a = load_rgba(x, y, p.w, p.cstep, p.in_format, p.in_type).a; \n\
+            store_rgba(sum, x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
         } \n\
     } \n\
 } \
