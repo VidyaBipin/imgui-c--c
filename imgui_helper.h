@@ -413,6 +413,13 @@ public:
 };
 } // namespace ImGui
 
+// warpAffine helper
+namespace ImGui
+{
+IMGUI_API ImMat getPerspectiveTransform(const ImVec2 src[], const ImVec2 dst[]);
+IMGUI_API ImMat getAffineTransform(const ImVec2 src[], const ImVec2 dst[]);
+} // namespace ImGui
+
 // These classed are supposed to be used internally
 namespace ImGuiHelper {
 typedef ImGui::FieldType FieldType;

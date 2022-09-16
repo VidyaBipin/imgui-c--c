@@ -258,6 +258,12 @@ struct ImVec2
     constexpr ImVec2(float _x, float _y)    : x(_x), y(_y) { }
     float  operator[] (size_t idx) const    { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
     float& operator[] (size_t idx)          { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
+    // Add by Dicky
+    bool operator==(const ImVec2& d) const          { return x == d.x && y == d.y; }
+    bool operator==(const ImVec2& d)                { return x == d.x && y == d.y; }
+    bool operator!=(const ImVec2& d) const          { return x != d.x || y != d.y; }
+    bool operator!=(const ImVec2& d)                { return x != d.x || y != d.y; }
+    // Add by Dicky end
 #ifdef IM_VEC2_CLASS_EXTRA
     IM_VEC2_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec2.
 #endif

@@ -3432,3 +3432,123 @@ void ImGui::ImKalman::update(ImMat& Y)
     statePost    = statePre    + K * (Y - measurementMatrix * statePre);
     errorCovPost = errorCovPre - K * measurementMatrix * errorCovPre;
 }
+
+// warp Affine help
+static inline int LU(float* A, size_t astep, int m, float* b, size_t bstep, int n, float eps)
+{
+    int i, j, k, p = 1;
+    for( i = 0; i < m; i++ )
+    {
+        k = i;
+
+        for( j = i+1; j < m; j++ )
+            if( std::abs(A[j*astep + i]) > std::abs(A[k*astep + i]) )
+                k = j;
+
+        if( std::abs(A[k*astep + i]) < eps )
+            return 0;
+
+        if( k != i )
+        {
+            for( j = i; j < m; j++ )
+                std::swap(A[i*astep + j], A[k*astep + j]);
+            if( b )
+                for( j = 0; j < n; j++ )
+                    std::swap(b[i*bstep + j], b[k*bstep + j]);
+            p = -p;
+        }
+
+        float d = -1/A[i*astep + i];
+
+        for( j = i+1; j < m; j++ )
+        {
+            float alpha = A[j*astep + i]*d;
+
+            for( k = i+1; k < m; k++ )
+                A[j*astep + k] += alpha*A[i*astep + k];
+
+            if( b )
+                for( k = 0; k < n; k++ )
+                    b[j*bstep + k] += alpha*b[i*bstep + k];
+        }
+    }
+
+    if( b )
+    {
+        for( i = m-1; i >= 0; i-- )
+            for( j = 0; j < n; j++ )
+            {
+                float s = b[i*bstep + j];
+                for( k = i+1; k < m; k++ )
+                    s -= A[i*astep + k]*b[k*bstep + j];
+                b[i*bstep + j] = s/A[i*astep + i];
+            }
+    }
+
+    return p;
+}
+
+static bool solve(const ImGui::ImMat& src, const ImGui::ImMat& src2, ImGui::ImMat& dst)
+{
+    // Gaussian elimination with the optimal pivot element chosen.
+    bool result = true;
+    IM_ASSERT(src.type == src2.type);
+    int m = src.h, m_ = m, n = src.w, nb = src2.w;
+    IM_ASSERT(m >= n); // The function can not solve under-determined linear systems
+    dst.clone_from(src2);
+    result = LU((float*)src.data, src.w, n, (float*)dst.data, dst.w, nb, FLT_EPSILON * 10) != 0;
+    return result;
+}
+
+ImGui::ImMat ImGui::getPerspectiveTransform(const ImVec2 src[], const ImVec2 dst[])
+{
+    float a[8][8], b[8];
+    for (int i = 0; i < 4; ++i)
+    {
+        a[i][0] = a[i + 4][3] = src[i].x;
+        a[i][1] = a[i + 4][4] = src[i].y;
+        a[i][2] = a[i + 4][5] = 1;
+        a[i][3] = a[i][4] = a[i][5] =
+        a[i + 4][0] = a[i + 4][1] = a[i + 4][2] = 0;
+        a[i][6] = -src[i].x * dst[i].x;
+        a[i][7] = -src[i].y * dst[i].x;
+        a[i + 4][6] = -src[i].x * dst[i].y;
+        a[i + 4][7] = -src[i].y * dst[i].y;
+        b[i] = dst[i].x;
+        b[i + 4] = dst[i].y;
+    }
+    ImGui::ImMat A, B;
+    A.create_type(8, 8, a, IM_DT_FLOAT32);
+    B.create_type(1, 8, b, IM_DT_FLOAT32);
+    ImGui::ImMat M, X;
+    M.create_type(3, 3, IM_DT_FLOAT32);
+    solve(A, B, X);
+    memcpy(M.data, X.data, sizeof(float) * X.total());
+    M.at<float>(2, 2) = 1.f;
+    return M;
+}
+
+ImGui::ImMat ImGui::getAffineTransform(const ImVec2 src[], const ImVec2 dst[])
+{
+    float a[6*6], b[6];
+    for( int i = 0; i < 3; i++ )
+    {
+        int j = i * 12;
+        int k = i * 12 + 6;
+        a[j] = a[k + 3] = src[i].x;
+        a[j + 1] = a[k + 4] = src[i].y;
+        a[j + 2] = a[k + 5] = 1;
+        a[j + 3] = a[j + 4] = a[j + 5] = 0;
+        a[k] = a[k + 1] = a[k + 2] = 0;
+        b[i * 2] = dst[i].x;
+        b[i * 2 + 1] = dst[i].y;
+    }
+    ImGui::ImMat A, B;
+    A.create_type(6, 6, a, IM_DT_FLOAT32);
+    B.create_type(1, 6, b, IM_DT_FLOAT32);
+    ImGui::ImMat M, X;
+    M.create_type(3, 2, IM_DT_FLOAT32);
+    solve(A, B, X);
+    memcpy(M.data, X.data, sizeof(float) * X.total());
+    return M;
+}

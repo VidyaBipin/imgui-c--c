@@ -215,6 +215,7 @@ public:
     bool show_markdown_window = false;
     bool show_widget_window = false;
     bool show_mat_draw_window = false;
+    bool show_mat_warp_matrix = false;
     bool show_kalman_window = false;
     bool show_fft_window = false;
     bool show_stft_window = false;
@@ -223,6 +224,7 @@ public:
 
 public:
     void DrawLineDemo();
+    void WarpMatrixDemo();
     std::string get_file_contents(const char *filename);
     static ImGui::MarkdownImageData ImageCallback( ImGui::MarkdownLinkCallbackData data_ );
     static void LinkCallback( ImGui::MarkdownLinkCallbackData data_ );
@@ -390,7 +392,51 @@ void Example::DrawLineDemo()
 
     ImGui::ImMatToTexture(draw_mat, DrawMatTexture);
     ImGui::Image(DrawMatTexture, ImVec2(draw_mat.w, draw_mat.h));
+}
 
+void Example::WarpMatrixDemo()
+{
+    const float width = 1920.f;
+    const float height = 1080.f;
+    ImVec2 src_corners[4];
+    ImVec2 dst_corners[4];
+    src_corners[0] = ImVec2(width / 1.80, height / 4.20);
+    src_corners[1] = ImVec2(width / 1.15, height / 3.32);
+    src_corners[2] = ImVec2(width / 1.33, height / 1.10);
+    src_corners[3] = ImVec2(width / 1.93, height / 1.36);
+    dst_corners[0] = ImVec2(0, 0);
+    dst_corners[1] = ImVec2(width, 0);
+    dst_corners[2] = ImVec2(width, height);
+    dst_corners[3] = ImVec2(0, height);
+    ImGui::ImMat M0 = ImGui::getPerspectiveTransform(dst_corners, src_corners);
+    ImGui::ImMat M1 = ImGui::getAffineTransform(dst_corners, src_corners);
+    for (int i = 0; i < 4; i++)
+    {
+        ImGui::Text("d: x=%.2f y=%.2f", dst_corners[i].x, dst_corners[i].y);
+        ImGui::SameLine(200);
+        ImGui::Text("s: x=%.2f y=%.2f", src_corners[i].x, src_corners[i].y);
+    }
+    ImGui::Separator();
+    ImGui::TextUnformatted("Perspective Transform:");
+    for (int h = 0; h < M0.h; h++)
+    {
+        for (int w = 0; w < M0.w; w++)
+        {
+            ImGui::Text("%.2f", M0.at<float>(w, h));
+            if ( w <  M0.w - 1)
+                ImGui::SameLine((w + 1) * 100);
+        }
+    }
+    ImGui::TextUnformatted("Affine Transform:");
+    for (int h = 0; h < M1.h; h++)
+    {
+        for (int w = 0; w < M1.w; w++)
+        {
+            ImGui::Text("%.2f", M1.at<float>(w, h));
+            if ( w <  M1.w - 1)
+                ImGui::SameLine((w + 1) * 100);
+        }
+    }
 }
 
 void Application_GetWindowProperties(ApplicationWindowProperty& property)
@@ -461,6 +507,7 @@ bool Application_Frame(void* handle, bool app_will_quit)
         ImGui::Checkbox("Show FFT Window", &example->show_fft_window);
         ImGui::Checkbox("Show STFT Window", &example->show_stft_window);
         ImGui::Checkbox("Show ImMat Draw Window", &example->show_mat_draw_window);
+        ImGui::Checkbox("Show ImMat Warp Matrix", &example->show_mat_warp_matrix);
         ImGui::Checkbox("Show Text Edit Window", &example->show_text_editor_window);
         ImGui::Checkbox("Show Tab Window", &example->show_tab_window);
 
@@ -600,6 +647,15 @@ bool Application_Frame(void* handle, bool app_will_quit)
         ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
         ImGui::Begin("ImMat draw Demo", &example->show_mat_draw_window);
         example->DrawLineDemo();
+        ImGui::End();
+    }
+
+    // Show ImMat warp matrix demo
+    if (example->show_mat_warp_matrix)
+    {
+        ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
+        ImGui::Begin("ImMat warp matrix Demo", &example->show_mat_warp_matrix);
+        example->WarpMatrixDemo();
         ImGui::End();
     }
 
