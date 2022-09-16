@@ -101,6 +101,13 @@ _OPTION(IMGUI_ICONS                 "Internal Icons build in library" ON)
 _OPTION(IMGUI_APPS                  "build apps base on imgui" ON)
 _OPTION(IMGUI_APPLE_APP             "build apple app base on imgui(Apple only)" OFF IF APPLE)
 
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86|x86_64)")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mavx")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -mavx")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -msse4.1 -mssse3 -msse2 -msse")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4.2 -msse4.1 -mssse3 -msse2 -msse")
+endif()
+
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 find_package(OpenGL)
 
@@ -1077,7 +1084,7 @@ endif(IMGUI_STATIC)
 set(IMGUI_VERSION_MAJOR 1)
 set(IMGUI_VERSION_MINOR 88)
 set(IMGUI_VERSION_PATCH 18)
-set(IMGUI_VERSION_BUILD 03)
+set(IMGUI_VERSION_BUILD 04)
 set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH}.${IMGUI_VERSION_BUILD})
 
 add_library(imgui ${LIBRARY} ${IMGUI_SRC} ${IMGUI_INCS})
