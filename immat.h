@@ -2964,7 +2964,7 @@ static inline __attribute__((unused)) void madd_float_sse(float* dst, const floa
     {
         X = _mm_loadu_ps(src1 + i); // load chunk of 4 floats
         Y = _mm_loadu_ps(src2 + i); // load chunk of 4 floats
-        X = _mm_add_ps(X, V);
+        X = _mm_add_ps(X, Y);
         _mm_storeu_ps((float*)(dst + i), X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
@@ -3195,7 +3195,7 @@ static inline __attribute__((unused)) void msub_float_sse(float* dst, const floa
     {
         X = _mm_loadu_ps(src1 + i); // load chunk of 4 floats
         Y = _mm_loadu_ps(src2 + i); // load chunk of 4 floats
-        X = _mm_sub_ps(X, V);
+        X = _mm_sub_ps(X, Y);
         _mm_storeu_ps((float*)(dst + i), X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
