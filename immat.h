@@ -501,6 +501,12 @@ public:
     void create_like(const ImMat& m, Allocator* allocator = 0);
     // set all
     template<typename T> void fill(T v);
+    inline void fill(int8_t _v);
+    inline void fill(int16_t _v);
+    inline void fill(int32_t _v);
+    inline void fill(int64_t _v);
+    inline void fill(float _v);
+    inline void fill(double _v);
     // scalar add
     template<typename T> ImMat operator+ (T v);
     template<typename T> ImMat& operator+= (T v);
@@ -1542,6 +1548,90 @@ inline void ImMat::fill(T _v)
     }
 }
 
+inline void ImMat::fill(int8_t _v)
+{
+    int size = (int)total(), i = 0;
+    int8_t* ptr = (int8_t*)data;
+#if __AVX__
+    __m256i V = _mm256_set1_epi8(_v);
+    for (i = 0; i < size - 31; i += 32) _mm256_storeu_si256((__m256i *)(ptr + i), V);
+#elif __SSE__
+    __m128i V = _mm_set1_epi8(_v);
+    for (i = 0; i < size - 15; i += 16) _mm_storeu_si128((__m128i *)(ptr + i), V);
+#endif
+    for (; i < size; ++i) *(ptr + i) = _v;
+}
+
+inline void ImMat::fill(int16_t _v)
+{
+    int size = (int)total(), i = 0;
+    int16_t* ptr = (int16_t*)data;
+#if __AVX__
+    __m256i V = _mm256_set1_epi16(_v);
+    for (i = 0; i < size - 15; i += 16) _mm256_storeu_si256((__m256i *)(ptr + i), V);
+#elif __SSE__
+    __m128i V = _mm_set1_epi16(_v);
+    for (i = 0; i < size - 7; i += 8) _mm_storeu_si128((__m128i *)(ptr + i), V);
+#endif
+    for (; i < size; ++i) *(ptr + i) = _v;
+}
+
+inline void ImMat::fill(int32_t _v)
+{
+    int size = (int)total(), i = 0;
+    int32_t* ptr = (int32_t*)data;
+#if __AVX__
+    __m256i V = _mm256_set1_epi32(_v);
+    for (i = 0; i < size - 7; i += 8) _mm256_storeu_si256((__m256i *)(ptr + i), V);
+#elif __SSE__
+    __m128i V = _mm_set1_epi32(_v);
+    for (i = 0; i < size - 3; i += 4) _mm_storeu_si128((__m128i *)(ptr + i), V);
+#endif
+    for (; i < size; ++i) *(ptr + i) = _v;
+}
+
+inline void ImMat::fill(int64_t _v)
+{
+    int size = (int)total(), i = 0;
+    int64_t* ptr = (int64_t*)data;
+#if __AVX__
+    __m256i V = _mm256_set1_epi64x(_v);
+    for (i = 0; i < size - 3; i += 4) _mm256_storeu_si256((__m256i *)(ptr + i), V);
+#elif __SSE__
+    __m128i V = _mm_set1_epi32(_v);
+    for (i = 0; i < size - 1; i += 2) _mm_storeu_si128((__m128i *)(ptr + i), V);
+#endif
+    for (; i < size; ++i) *(ptr + i) = _v;
+}
+
+inline void ImMat::fill(float _v)
+{
+    int size = (int)total(), i = 0;
+    float* ptr = (float*)data;
+#if __AVX__
+    __m256i V = _mm256_set1_ps(_v);
+    for (i = 0; i < size - 7; i += 8) _mm256_storeu_si256((__m256i *)(ptr + i), V);
+#elif __SSE__
+    __m128i V = _mm_set1_ps(_v);
+    for (i = 0; i < size - 3; i += 4) _mm_storeu_si128((__m128i *)(ptr + i), V);
+#endif
+    for (; i < size; ++i) *(ptr + i) = _v;
+}
+
+inline void ImMat::fill(double _v)
+{
+    int size = (int)total(), i = 0;
+    double* ptr = (double*)data;
+#if __AVX__
+    __m256i V = _mm256_set1_pd(_v);
+    for (i = 0; i < size - 3; i += 4) _mm256_storeu_si256((__m256i *)(ptr + i), V);
+#elif __SSE__
+    __m128i V = _mm_set1_pd(_v);
+    for (i = 0; i < size - 1; i += 2) _mm_storeu_si128((__m128i *)(ptr + i), V);
+#endif
+    for (; i < size; ++i) *(ptr + i) = _v;
+}
+
 inline ImMat ImMat::clone(Allocator* _allocator) const
 {
     if (empty())
@@ -1832,7 +1922,7 @@ inline ImMat ImMat::inv() const
         if (tmp_mat.at<T>(i, i) == 0)
 		{
             // There is no inverse matrix
-            inverse_mat.fill(0);
+            inverse_mat.fill((T)0);
             return inverse_mat;
         }
         temp = tmp_mat.at<T>(i, i);
@@ -2092,7 +2182,7 @@ static inline __attribute__((unused)) void add_int8_sse(int8_t* dst, const int8_
 static inline __attribute__((unused)) void add_int16_sse(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
 {
     int i = 0;
-    __m128i V = _mm_set1_epi8(v);
+    __m128i V = _mm_set1_epi16(v);
     __m128i X;
     for (i = 0; i < (long)len - 7; i += 8)
     {
@@ -2105,7 +2195,7 @@ static inline __attribute__((unused)) void add_int16_sse(int16_t* dst, const int
 static inline __attribute__((unused)) void add_int32_sse(int32_t* dst, const int32_t* src, const size_t len, const int32_t v)
 {
     int i = 0;
-    __m128i V = _mm_set1_epi8(v);
+    __m128i V = _mm_set1_epi32(v);
     __m128i X;
     for (i = 0; i < (long)len - 3; i += 4)
     {
@@ -2118,7 +2208,7 @@ static inline __attribute__((unused)) void add_int32_sse(int32_t* dst, const int
 static inline __attribute__((unused)) void add_int64_sse(int64_t* dst, const int64_t* src, const size_t len, const int64_t v)
 {
     int i = 0;
-    __m128i V = _mm_set1_epi8(v);
+    __m128i V = _mm_set1_epi64x(v);
     __m128i X;
     for (i = 0; i < (long)len - 1; i += 2)
     {
@@ -2144,7 +2234,7 @@ static inline __attribute__((unused)) void add_float_sse(float* dst, const float
 static inline __attribute__((unused)) void add_double_sse(double* dst, const double* src, const size_t len, const double v)
 {
     int i = 0;
-    __m128 V = _mm_set1_ps(v);
+    __m128 V = _mm_set1_pd(v);
     __m128 X;
     for (i = 0; i < (long)len - 1; i += 2)
     {
@@ -2323,7 +2413,7 @@ static inline __attribute__((unused)) void sub_int8_sse(int8_t* dst, const int8_
 static inline __attribute__((unused)) void sub_int16_sse(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
 {
     int i = 0;
-    __m128i V = _mm_set1_epi8(v);
+    __m128i V = _mm_set1_epi16(v);
     __m128i X;
     for (i = 0; i < (long)len - 7; i += 8)
     {
@@ -2336,7 +2426,7 @@ static inline __attribute__((unused)) void sub_int16_sse(int16_t* dst, const int
 static inline __attribute__((unused)) void sub_int32_sse(int32_t* dst, const int32_t* src, const size_t len, const int32_t v)
 {
     int i = 0;
-    __m128i V = _mm_set1_epi8(v);
+    __m128i V = _mm_set1_epi32(v);
     __m128i X;
     for (i = 0; i < (long)len - 3; i += 4)
     {
@@ -2349,7 +2439,7 @@ static inline __attribute__((unused)) void sub_int32_sse(int32_t* dst, const int
 static inline __attribute__((unused)) void sub_int64_sse(int64_t* dst, const int64_t* src, const size_t len, const int64_t v)
 {
     int i = 0;
-    __m128i V = _mm_set1_epi8(v);
+    __m128i V = _mm_set1_epi64x(v);
     __m128i X;
     for (i = 0; i < (long)len - 1; i += 2)
     {
@@ -2375,7 +2465,7 @@ static inline __attribute__((unused)) void sub_float_sse(float* dst, const float
 static inline __attribute__((unused)) void sub_double_sse(double* dst, const double* src, const size_t len, const double v)
 {
     int i = 0;
-    __m128 V = _mm_set1_ps(v);
+    __m128 V = _mm_set1_pd(v);
     __m128 X;
     for (i = 0; i < (long)len - 1; i += 2)
     {
@@ -2530,7 +2620,7 @@ static inline __attribute__((unused)) void mul_int8_sse(int8_t* dst, const int8_
 static inline __attribute__((unused)) void mul_int16_sse(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
 {
     int i = 0;
-    __m128i V = _mm_set1_epi8(v);
+    __m128i V = _mm_set1_epi16(v);
     __m128i X;
     for (i = 0; i < (long)len - 7; i += 8)
     {
@@ -2543,7 +2633,7 @@ static inline __attribute__((unused)) void mul_int16_sse(int16_t* dst, const int
 static inline __attribute__((unused)) void mul_int32_sse(int32_t* dst, const int32_t* src, const size_t len, const int32_t v)
 {
     int i = 0;
-    __m128i V = _mm_set1_epi8(v);
+    __m128i V = _mm_set1_epi32(v);
     __m128i X;
     for (i = 0; i < (long)len - 3; i += 4)
     {
@@ -2574,7 +2664,7 @@ static inline __attribute__((unused)) void mul_float_sse(float* dst, const float
 static inline __attribute__((unused)) void mul_double_sse(double* dst, const double* src, const size_t len, const double v)
 {
     int i = 0;
-    __m128 V = _mm_set1_ps(v);
+    __m128 V = _mm_set1_pd(v);
     __m128 X;
     for (i = 0; i < (long)len - 1; i += 2)
     {
@@ -2741,7 +2831,7 @@ static inline __attribute__((unused)) void div_float_sse(float* dst, const float
 static inline __attribute__((unused)) void div_double_sse(double* dst, const double* src, const size_t len, const double v)
 {
     int i = 0;
-    __m128 V = _mm_set1_ps(v);
+    __m128 V = _mm_set1_pd(v);
     __m128 X;
     for (i = 0; i < (long)len - 1; i += 2)
     {
