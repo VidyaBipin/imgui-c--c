@@ -478,7 +478,7 @@ bool Application_Frame(void* handle, bool app_will_quit)
     if (example->show_demo_window)
         ImGui::ShowDemoWindow(&example->show_demo_window);
 
-    // Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+    // Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
     {
         static float f = 0.0f;
         static int counter = 0;
