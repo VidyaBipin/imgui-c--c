@@ -93,7 +93,19 @@ ImGui::DestroyContext();
 
 You should be good to go!
 
-If you want to test ImPlot quickly, consider trying [mahi-gui](https://github.com/mahilab/mahi-gui), which bundles ImGui, ImPlot, and several other packages for you.
+## Installing ImPlot using vcpkg
+
+You can download and install ImPlot using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
+
+```bash
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+./bootstrap-vcpkg.sh
+./vcpkg integrate install
+./vcpkg install implot
+```
+
+The ImPlot port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
 
 ## Extremely Important Note
 
