@@ -1173,6 +1173,7 @@ void ed::EditorContext::Begin(const char* id, const ImVec2& size)
     m_NavigateAction.SetWindow(m_Canvas.ViewRect().Min, m_Canvas.ViewRect().GetSize());
 
     // Handle canvas size change. Scale to Y axis, center on X.
+    /*
     if (!ImRect_IsEmpty(previousVisibleRect) && previousSize != canvasSize)
     {
         m_NavigateAction.FinishNavigation();
@@ -1186,6 +1187,41 @@ void ed::EditorContext::Begin(const char* id, const ImVec2& size)
 
         previousVisibleRect.Min.x = centerX - 0.5f * width;
         previousVisibleRect.Max.x = centerX + 0.5f * width;
+
+        m_NavigateAction.NavigateTo(previousVisibleRect, Detail::NavigateAction::ZoomMode::Exact, 0.0f);
+    }
+    */
+    if (!ImRect_IsEmpty(previousVisibleRect) && previousSize != canvasSize)
+    {
+        m_NavigateAction.FinishNavigation();
+
+        auto centerX            = (previousVisibleRect.Max.x + previousVisibleRect.Min.x) * 0.5f;
+        auto centerY            = (previousVisibleRect.Max.y + previousVisibleRect.Min.y) * 0.5f;
+        auto currentVisibleRect = m_Canvas.ViewRect();
+        auto currentAspectRatio = currentVisibleRect.GetHeight() ? (currentVisibleRect.GetWidth() / currentVisibleRect.GetHeight()) : 0.0f;
+        auto width              = previousVisibleRect.GetWidth();
+        auto height             = previousVisibleRect.GetHeight();
+
+        if (m_Config.CanvasSizeMode == ax::NodeEditor::CanvasSizeMode::FitVerticalView)
+        {
+            height  = previousVisibleRect.GetHeight();
+            width   = height * currentAspectRatio;
+        }
+        else if (m_Config.CanvasSizeMode == ax::NodeEditor::CanvasSizeMode::FitHorizontalView)
+        {
+            width   = previousVisibleRect.GetWidth();
+            height  = width / currentAspectRatio;
+        }
+        else if (m_Config.CanvasSizeMode == ax::NodeEditor::CanvasSizeMode::CenterOnly)
+        {
+            width  = currentVisibleRect.GetWidth();
+            height = currentVisibleRect.GetHeight();
+        }
+
+        previousVisibleRect.Min.x = centerX - 0.5f * width;
+        previousVisibleRect.Max.x = centerX + 0.5f * width;
+        previousVisibleRect.Min.y = centerY - 0.5f * height;
+        previousVisibleRect.Max.y = centerY + 0.5f * height;
 
         m_NavigateAction.NavigateTo(previousVisibleRect, Detail::NavigateAction::ZoomMode::Exact, 0.0f);
     }

@@ -454,6 +454,8 @@ IMGUI_API size_t memory_usage();
 // return maximum memory resident set size used (in bytes)
 IMGUI_API size_t memory_max_usage();
 
+IMGUI_API std::string MillisecToString(int64_t millisec, int show_millisec = 0);
+
 class IMGUI_API Deserializer {
     char* f_data;
     size_t f_size;

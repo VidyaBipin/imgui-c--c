@@ -2239,6 +2239,44 @@ size_t memory_max_usage()
 #endif
 }
 
+std::string MillisecToString(int64_t millisec, int show_millisec)
+{
+    std::ostringstream oss;
+    if (millisec < 0)
+    {
+        oss << "-";
+        millisec = -millisec;
+    }
+    uint64_t t = (uint64_t) millisec;
+    uint32_t milli = (uint32_t)(t%1000); t /= 1000;
+    uint32_t sec = (uint32_t)(t%60); t /= 60;
+    uint32_t min = (uint32_t)(t%60); t /= 60;
+    uint32_t hour = (uint32_t)t;
+    if (hour > 0)
+    {
+        oss << std::setfill('0') << std::setw(2) << hour << ':'
+            << std::setw(2) << min << ':'
+            << std::setw(2) << sec;
+        if (show_millisec == 3)
+            oss << '.' << std::setw(3) << milli;
+        else if (show_millisec == 2)
+            oss << '.' << std::setw(2) << milli / 10;
+        else if (show_millisec == 1)
+            oss << '.' << std::setw(1) << milli / 100;
+    }
+    else
+    {
+        oss << std::setfill('0') << std::setw(2) << min << ':'
+            << std::setw(2) << sec;
+        if (show_millisec == 3)
+            oss << '.' << std::setw(3) << milli;
+        else if (show_millisec == 2)
+            oss << '.' << std::setw(2) << milli / 10;
+        else if (show_millisec == 1)
+            oss << '.' << std::setw(1) << milli / 100;
+    }
+    return oss.str();
+}
 } //namespace ImGuiHelper
 
 namespace base64 

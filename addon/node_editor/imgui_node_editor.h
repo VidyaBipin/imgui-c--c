@@ -31,6 +31,12 @@ struct value;
 namespace ax {
 namespace NodeEditor {
 
+enum class CanvasSizeMode
+{
+    FitVerticalView,        // Previous view will be scaled to fit new view on Y axis
+    FitHorizontalView,      // Previous view will be scaled to fit new view on X axis
+    CenterOnly,             // Previous view will be centered on new view
+};
 
 //------------------------------------------------------------------------------
 struct NodeId;
@@ -112,6 +118,8 @@ using ConfigSession          = void   (*)(void* userPointer);
 
 struct Config
 {
+    using CanvasSizeModeAlias = ax::NodeEditor::CanvasSizeMode;
+
     const char*                 SettingsFile;
     ConfigSession               BeginSaveSession;
     ConfigSession               EndSaveSession;
@@ -123,6 +131,7 @@ struct Config
     ConfigLoadSettingsJson      LoadSettingsJson;
     ConfigSaveNodeSettingsJson  SaveNodeSettingsJson;
     ConfigLoadNodeSettingsJson  LoadNodeSettingsJson;
+    CanvasSizeModeAlias         CanvasSizeMode;
     void*                       UserPointer;
     int                         DragButtonIndex;        // Mouse button index drag action will react to (0-left, 1-right, 2-middle)
     int                         SelectButtonIndex;      // Mouse button index select action will react to (0-left, 1-right, 2-middle)
@@ -143,6 +152,7 @@ struct Config
         , LoadSettingsJson(nullptr)
         , SaveNodeSettingsJson(nullptr)
         , LoadNodeSettingsJson(nullptr)
+        , CanvasSizeMode(CanvasSizeModeAlias::FitVerticalView)
         , UserPointer(nullptr)
         , DragButtonIndex(0)
         , SelectButtonIndex(0)

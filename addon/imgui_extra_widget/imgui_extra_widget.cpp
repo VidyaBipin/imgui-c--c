@@ -6677,7 +6677,7 @@ int ImGui::ImCurveEdit::DrawPoint(ImDrawList* draw_list, ImVec2 pos, const ImVec
     return ret;
 }
 
-bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned int id, unsigned int flags, const ImRect* clippingRect, bool * changed , ImVector<editPoint>* selectedPoints, float cursor_pos)
+bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned int id, float& cursor_pos, unsigned int flags, const ImRect* clippingRect, bool * changed , ImVector<editPoint>* selectedPoints)
 {
     static bool selectingQuad = false;
     static ImVec2 quadSelection;
@@ -6686,9 +6686,11 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
     static bool scrollingV = false;
     static std::set<editPoint> selection;
     static bool overSelectedPoint = false;
-
+    const float timeline_height = 30.f;
     bool hold = false;
     bool curve_changed = false;
+    bool draw_timeline = flags & CURVE_EDIT_FLAG_DRAW_TIMELINE;
+    static bool MovingCurrentTime = false;
 
     ImGuiIO& io = ImGui::GetIO();
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
@@ -6696,16 +6698,92 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
     ImGui::PushStyleColor(ImGuiCol_FrameBg, delegate.GetBackgroundColor());
     ImGui::BeginChildFrame(id, size);
     delegate.focused = ImGui::IsWindowFocused();
+    ImVec2 window_pos = ImGui::GetCursorScreenPos();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     if (clippingRect)
         draw_list->PushClipRect(clippingRect->Min, clippingRect->Max, true);
     
-    ImVec2 edit_size = size - ImVec2(0, 4);
-    const ImVec2 offset = ImGui::GetCursorScreenPos() + ImVec2(0.f, edit_size.y + 2);
+    ImVec2 edit_size = size - ImVec2(0, draw_timeline ? timeline_height + 4 : 4);
+    const ImVec2 offset = window_pos + ImVec2(0.f, draw_timeline ? timeline_height + edit_size.y + 2 : edit_size.y + 2);
     const ImVec2 ssize(edit_size.x, -edit_size.y);
     const ImRect container(offset + ImVec2(0.f, ssize.y), offset + ImVec2(ssize.x, 0.f));
     ImVec2& vmin = delegate.GetMin();
     ImVec2& vmax = delegate.GetMax();
+
+    // draw timeline and mark
+    if (draw_timeline)
+    {
+        float duration = vmax.x - vmin.x;
+        float msPixelWidth = size.x / (duration + FLT_EPSILON);
+        ImVec2 headerSize(size.x, (float)timeline_height);
+        ImGui::InvisibleButton("CurveTimelineBar", headerSize);
+        draw_list->AddRectFilled(window_pos, window_pos + headerSize, IM_COL32( 33,  33,  38, 255), 0);
+        ImRect movRect(window_pos, window_pos + headerSize);
+        if (!MovingCurrentTime && movRect.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        {
+            MovingCurrentTime = true;
+        }
+        if (MovingCurrentTime && duration > 0)
+        {
+            auto oldPos = cursor_pos;
+            auto newPos = (int64_t)((io.MousePos.x - movRect.Min.x) / msPixelWidth) + vmin.x;
+            if (newPos < vmin.x)
+                newPos = vmin.x;
+            if (newPos >= vmax.x)
+                newPos = vmax.x;
+            cursor_pos = newPos;
+        }
+        if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        {
+            MovingCurrentTime = false;
+        }
+        
+        int64_t modTimeCount = 10;
+        int timeStep = 1;
+        while ((modTimeCount * msPixelWidth) < 100)
+        {
+            modTimeCount *= 10;
+            timeStep *= 10;
+        };
+        int halfModTime = modTimeCount / 2;
+        auto drawLine = [&](int64_t i, int regionHeight)
+        {
+            bool baseIndex = ((i % modTimeCount) == 0) || (i == 0 || i == duration);
+            bool halfIndex = (i % halfModTime) == 0;
+            int px = (int)window_pos.x + int(i * msPixelWidth);
+            int timeStart = baseIndex ? 4 : (halfIndex ? 10 : 14);
+            int timeEnd = baseIndex ? regionHeight : timeline_height;
+            if (px <= (size.x + window_pos.x) && px >= window_pos.x)
+            {
+                draw_list->AddLine(ImVec2((float)px, window_pos.y + (float)timeStart), ImVec2((float)px, window_pos.y + (float)timeEnd - 1), halfIndex ? IM_COL32(255, 255, 255, 255) : IM_COL32(128, 128, 128, 255), halfIndex ? 2 : 1);
+            }
+            if (baseIndex && px >= window_pos.x)
+            {
+                std::string time_str = ImGuiHelper::MillisecToString(i + vmin.x, 2);
+                ImGui::SetWindowFontScale(0.8);
+                draw_list->AddText(ImVec2((float)px + 3.f, window_pos.y), IM_COL32(224, 224, 224, 255), time_str.c_str());
+                ImGui::SetWindowFontScale(1.0);
+            }
+        };
+        for (auto i = 0; i < duration; i+= timeStep)
+        {
+            drawLine(i, timeline_height);
+        }
+        drawLine(0, timeline_height);
+        drawLine(duration, timeline_height);
+        // cursor Arrow
+        const float arrowWidth = draw_list->_Data->FontSize;
+        float arrowOffset = window_pos.x + (cursor_pos - vmin.x) * msPixelWidth - arrowWidth * 0.5f;
+        ImGui::RenderArrow(draw_list, ImVec2(arrowOffset, window_pos.y), IM_COL32(0, 255, 0, 224), ImGuiDir_Down);
+        ImGui::SetWindowFontScale(0.8);
+        auto time_str = ImGuiHelper::MillisecToString(cursor_pos, 2);
+        ImVec2 str_size = ImGui::CalcTextSize(time_str.c_str(), nullptr, true);
+        float strOffset = window_pos.x + (cursor_pos - vmin.x) * msPixelWidth - str_size.x * 0.5f;
+        ImVec2 str_pos = ImVec2(strOffset, window_pos.y + 10);
+        draw_list->AddRectFilled(str_pos + ImVec2(-3, 0), str_pos + str_size + ImVec2(3, 3), IM_COL32(  0, 128,   0, 144), 2.0, ImDrawFlags_RoundCornersAll);
+        draw_list->AddText(str_pos, IM_COL32(  0, 255,   0, 255), time_str.c_str());
+        ImGui::SetWindowFontScale(1.0);
+    }
 
     // handle zoom and VScroll
     if (flags & CURVE_EDIT_FLAG_SCROLL_V)

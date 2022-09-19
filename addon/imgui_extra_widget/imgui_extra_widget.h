@@ -537,6 +537,7 @@ struct IMGUI_API ImCurveEdit
 #define CURVE_EDIT_FLAG_MOVE_CURVE      (1<<2)
 #define CURVE_EDIT_FLAG_KEEP_BEGIN_END  (1<<3)
 #define CURVE_EDIT_FLAG_DOCK_BEGIN_END  (1<<4)
+#define CURVE_EDIT_FLAG_DRAW_TIMELINE   (1<<5)
 
     enum CurveType
     {
@@ -611,6 +612,7 @@ struct IMGUI_API ImCurveEdit
     struct Delegate
     {
         bool focused = false;
+        
         virtual size_t GetCurveCount() = 0;
         virtual bool IsVisible(size_t /*curveIndex*/) { return true; }
         virtual CurveType GetCurveType(size_t /*curveIndex*/) const { return Linear; }
@@ -660,7 +662,7 @@ public:
     static float smoothstep(float edge0, float edge1, float t, CurveType type);
     static float distance(float x1, float y1, float x2, float y2);
     static float distance(float x, float y, float x1, float y1, float x2, float y2);
-    static bool Edit(Delegate& delegate, const ImVec2& size, unsigned int id, unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, bool * changed = nullptr, ImVector<editPoint>* selectedPoints = NULL, float cursor_pos = -1.f);
+    static bool Edit(Delegate& delegate, const ImVec2& size, unsigned int id, float& cursor_pos, unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, bool * changed = nullptr, ImVector<editPoint>* selectedPoints = NULL);
 };
 
 struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
