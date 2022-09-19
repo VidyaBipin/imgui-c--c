@@ -15,6 +15,7 @@
 #include <HotKey.h>
 #include <TextEditor.h>
 #include <ImGuiTabWindow.h>
+#include <imgui_node_editor.h>
 #if IMGUI_VULKAN_SHADER
 #include <ImVulkanShader.h>
 #endif
@@ -221,6 +222,7 @@ public:
     bool show_stft_window = false;
     bool show_text_editor_window = false;
     bool show_tab_window = false;
+    bool show_node_editor_window = false;
 
 public:
     void DrawLineDemo();
@@ -510,6 +512,7 @@ bool Application_Frame(void* handle, bool app_will_quit)
         ImGui::Checkbox("Show ImMat Warp Matrix", &example->show_mat_warp_matrix);
         ImGui::Checkbox("Show Text Edit Window", &example->show_text_editor_window);
         ImGui::Checkbox("Show Tab Window", &example->show_tab_window);
+        ImGui::Checkbox("Show Node Editor Window", &example->show_node_editor_window);
 
 #if IMGUI_VULKAN_SHADER
         ImGui::Checkbox("Show Vulkan Shader Test Window", &example->show_shader_window);
@@ -672,6 +675,17 @@ bool Application_Frame(void* handle, bool app_will_quit)
         if (ImGui::Begin("Example: TabWindow", &example->show_tab_window, ImGuiWindowFlags_NoScrollbar))
         {
             ImGui::ShowAddonsTabWindow();   // see its code for further info         
+        }
+        ImGui::End();
+    }
+
+    // Show Node Editor Window
+    if (example->show_node_editor_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(1024,1024), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Example: Node Editor", &example->show_node_editor_window, ImGuiWindowFlags_NoScrollbar))
+        {
+            ImGui::ShowNodeEditorWindow();   // see its code for further info         
         }
         ImGui::End();
     }

@@ -584,6 +584,10 @@ struct PinId final: Details::SafePointerType<PinId>
 } // namespace Editor
 } // namespace ax
 
-
+#if IMGUI_BUILD_EXAMPLE
+namespace ImGui {
+IMGUI_API void ShowNodeEditorWindow();
+} // namespace ImGui
+#endif
 //------------------------------------------------------------------------------
 # endif // __IMGUI_NODE_EDITOR_H__
