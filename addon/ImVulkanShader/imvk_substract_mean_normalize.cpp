@@ -79,35 +79,27 @@ void Substract_Mean_Normalize_vulkan::forward(const ImMat& bottom_blob, ImMat& t
     }
     auto color_format = top_blob.color_format;
     int channels = IM_ISALPHA(color_format) ? 4 : IM_ISRGB(color_format) ? 3 : IM_ISMONO(color_format) ? 1 : 4;
-    top_blob.create_type(bottom_blob.w, bottom_blob.h, channels, top_blob.type);
-    top_blob.color_format = color_format;
+    VkMat dst_gpu;
+    dst_gpu.create_type(bottom_blob.w, bottom_blob.h, channels, top_blob.type, opt.blob_vkallocator);
+    dst_gpu.color_format = color_format;
 
-    VkMat out_gpu;
-    out_gpu.create_like(top_blob, opt.blob_vkallocator);
-    VkMat in_gpu;
-    cmd->record_clone(bottom_blob, in_gpu, opt);
+    VkMat src_gpu;
+    if (bottom_blob.device == IM_DD_VULKAN)
+    {
+        src_gpu = bottom_blob;
+    }
+    else if (bottom_blob.device == IM_DD_CPU)
+    {
+        cmd->record_clone(bottom_blob, src_gpu, opt);
+    }
 
-    upload_param(in_gpu, out_gpu, mean_vals, norm_vals);
+    upload_param(src_gpu, dst_gpu, mean_vals, norm_vals);
 
     // download
-    cmd->record_clone(out_gpu, top_blob, opt);
-    cmd->submit_and_wait();
-    cmd->reset();
-}
-
-void Substract_Mean_Normalize_vulkan::forward(const VkMat& bottom_blob, VkMat& top_blob, std::vector<float> mean_vals, std::vector<float> norm_vals)
-{
-    if (!vkdev || !pipe || !cmd)
-    {
-        return;
-    }
-    auto color_format = top_blob.color_format;
-    int channels = IM_ISALPHA(color_format) ? 4 : IM_ISRGB(color_format) ? 3 : IM_ISMONO(color_format) ? 1 : 4;
-    top_blob.create_type(bottom_blob.w, bottom_blob.h, channels, top_blob.type, opt.blob_vkallocator);
-    top_blob.color_format = color_format;
-    
-    upload_param(bottom_blob, top_blob, mean_vals, norm_vals);
-
+    if (top_blob.device == IM_DD_CPU)
+        cmd->record_clone(dst_gpu, top_blob, opt);
+    else if (top_blob.device == IM_DD_VULKAN)
+        top_blob = dst_gpu;
     cmd->submit_and_wait();
     cmd->reset();
 }

@@ -12,7 +12,6 @@ public:
     ~Substract_Mean_Normalize_vulkan();
 
     void forward(const ImMat& bottom_blob, ImMat& top_blob, std::vector<float> mean_vals, std::vector<float> norm_vals);
-    void forward(const VkMat& bottom_blob, VkMat& top_blob, std::vector<float> mean_vals, std::vector<float> norm_vals);
 
 public:
     const VulkanDevice* vkdev   {nullptr};

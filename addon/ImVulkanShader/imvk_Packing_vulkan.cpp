@@ -295,36 +295,43 @@ int Packing_vulkan::forward(const VkMat& bottom_blob, VkMat& top_blob, VkCompute
     }
 
     size_t out_elemsize = out_elempack;
+    ImDataType type = bottom_blob.type;
     if (cast_type_to == 0)
     {
         if (opt.use_fp16_storage)
         {
             out_elemsize = out_elempack * 2u;
+            type = IM_DT_FLOAT16;
         }
         else if (opt.use_fp16_packed)
         {
             if (out_elempack == 8) out_elemsize = 8 * 2u;
             if (out_elempack == 4) out_elemsize = 4 * 2u;
             if (out_elempack == 1) out_elemsize = 4u;
+            type = IM_DT_FLOAT16;
         }
         else
         {
             out_elemsize = out_elempack * 4u;
+            type = IM_DT_FLOAT32;
         }
     }
     else if (cast_type_to == 1)
     {
         out_elemsize = out_elempack * 4u;
+        type = IM_DT_FLOAT32;
     }
     else if (cast_type_to == 2)
     {
         if (out_elempack == 8) out_elemsize = 8 * 2u;
         if (out_elempack == 4) out_elemsize = 4 * 2u;
         if (out_elempack == 1) out_elemsize = 4u;
+        type = IM_DT_FLOAT16;
     }
     else // if (cast_type_to == 3)
     {
         out_elemsize = out_elempack * 2u;
+        type = IM_DT_FLOAT16;
     }
 
     if (dims == 1)
@@ -364,7 +371,7 @@ int Packing_vulkan::forward(const VkMat& bottom_blob, VkMat& top_blob, VkCompute
             return -100;
     }
 
-    top_blob.type = bottom_blob.type;
+    top_blob.type = type;
     top_blob.color_space = bottom_blob.color_space;
     top_blob.color_format = bottom_blob.color_format;
     top_blob.color_range = bottom_blob.color_range;
@@ -467,36 +474,43 @@ int Packing_vulkan::forward(const VkImageMat& bottom_blob, VkImageMat& top_blob,
     }
 
     size_t out_elemsize = out_elempack;
+    ImDataType type = bottom_blob.type;
     if (cast_type_to == 0)
     {
         if (opt.use_fp16_storage)
         {
             out_elemsize = out_elempack * 2u;
+            type = IM_DT_FLOAT16;
         }
         else if (opt.use_fp16_packed)
         {
             if (out_elempack == 8) out_elemsize = 8 * 2u;
             if (out_elempack == 4) out_elemsize = 4 * 2u;
             if (out_elempack == 1) out_elemsize = 4u;
+            type = IM_DT_FLOAT16;
         }
         else
         {
             out_elemsize = out_elempack * 4u;
+            type = IM_DT_FLOAT32;
         }
     }
     else if (cast_type_to == 1)
     {
         out_elemsize = out_elempack * 4u;
+        type = IM_DT_FLOAT32;
     }
     else if (cast_type_to == 2)
     {
         if (out_elempack == 8) out_elemsize = 8 * 2u;
         if (out_elempack == 4) out_elemsize = 4 * 2u;
         if (out_elempack == 1) out_elemsize = 4u;
+        type = IM_DT_FLOAT16;
     }
     else // if (cast_type_to == 3)
     {
         out_elemsize = out_elempack * 2u;
+        type = IM_DT_FLOAT16;
     }
 
     if (dims == 1)
@@ -526,7 +540,7 @@ int Packing_vulkan::forward(const VkImageMat& bottom_blob, VkImageMat& top_blob,
             return -100;
     }
 
-    top_blob.type = bottom_blob.type;
+    top_blob.type = type;
     top_blob.color_space = bottom_blob.color_space;
     top_blob.color_format = bottom_blob.color_format;
     top_blob.color_range = bottom_blob.color_range;
@@ -599,36 +613,43 @@ int Packing_vulkan::forward(const VkMat& bottom_blob, VkImageMat& top_blob, VkCo
     int dims = bottom_blob.dims;
 
     size_t out_elemsize = out_elempack;
+    ImDataType type = bottom_blob.type;
     if (cast_type_to == 0)
     {
         if (opt.use_fp16_storage)
         {
             out_elemsize = out_elempack * 2u;
+            type = IM_DT_FLOAT16;
         }
         else if (opt.use_fp16_packed)
         {
             if (out_elempack == 8) out_elemsize = 8 * 2u;
             if (out_elempack == 4) out_elemsize = 4 * 2u;
             if (out_elempack == 1) out_elemsize = 4u;
+            type = IM_DT_FLOAT16;
         }
         else
         {
             out_elemsize = out_elempack * 4u;
+            type = IM_DT_FLOAT32;
         }
     }
     else if (cast_type_to == 1)
     {
         out_elemsize = out_elempack * 4u;
+        type = IM_DT_FLOAT32;
     }
     else if (cast_type_to == 2)
     {
         if (out_elempack == 8) out_elemsize = 8 * 2u;
         if (out_elempack == 4) out_elemsize = 4 * 2u;
         if (out_elempack == 1) out_elemsize = 4u;
+        type = IM_DT_FLOAT16;
     }
     else // if (cast_type_to == 3)
     {
         out_elemsize = out_elempack * 2u;
+        type = IM_DT_FLOAT16;
     }
 
     if (dims == 1)
@@ -658,7 +679,7 @@ int Packing_vulkan::forward(const VkMat& bottom_blob, VkImageMat& top_blob, VkCo
             return -100;
     }
 
-    top_blob.type = bottom_blob.type;
+    top_blob.type = type;
     top_blob.color_space = bottom_blob.color_space;
     top_blob.color_format = bottom_blob.color_format;
     top_blob.color_range = bottom_blob.color_range;
@@ -731,36 +752,43 @@ int Packing_vulkan::forward(const VkImageMat& bottom_blob, VkMat& top_blob, VkCo
     int dims = bottom_blob.dims;
 
     size_t out_elemsize = out_elempack;
+    ImDataType type = bottom_blob.type;
     if (cast_type_to == 0)
     {
         if (opt.use_fp16_storage)
         {
             out_elemsize = out_elempack * 2u;
+            type = IM_DT_FLOAT16;
         }
         else if (opt.use_fp16_packed)
         {
             if (out_elempack == 8) out_elemsize = 8 * 2u;
             if (out_elempack == 4) out_elemsize = 4 * 2u;
             if (out_elempack == 1) out_elemsize = 4u;
+            type = IM_DT_FLOAT16;
         }
         else
         {
             out_elemsize = out_elempack * 4u;
+            type = IM_DT_FLOAT32;
         }
     }
     else if (cast_type_to == 1)
     {
         out_elemsize = out_elempack * 4u;
+        type = IM_DT_FLOAT32;
     }
     else if (cast_type_to == 2)
     {
         if (out_elempack == 8) out_elemsize = 8 * 2u;
         if (out_elempack == 4) out_elemsize = 4 * 2u;
         if (out_elempack == 1) out_elemsize = 4u;
+        type = IM_DT_FLOAT16;
     }
     else // if (cast_type_to == 3)
     {
         out_elemsize = out_elempack * 2u;
+        type = IM_DT_FLOAT16;
     }
 
     if (dims == 1)
@@ -790,7 +818,7 @@ int Packing_vulkan::forward(const VkImageMat& bottom_blob, VkMat& top_blob, VkCo
             return -100;
     }
 
-    top_blob.type = bottom_blob.type;
+    top_blob.type = type;
     top_blob.color_space = bottom_blob.color_space;
     top_blob.color_format = bottom_blob.color_format;
     top_blob.color_range = bottom_blob.color_range;
