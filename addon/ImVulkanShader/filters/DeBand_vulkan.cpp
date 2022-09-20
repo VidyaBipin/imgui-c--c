@@ -16,9 +16,10 @@ DeBand_vulkan::DeBand_vulkan(int width, int height, int channels, int gpu)
     vkdev = get_gpu_device(gpu);
     opt.blob_vkallocator = vkdev->acquire_blob_allocator();
     opt.staging_vkallocator = vkdev->acquire_staging_allocator();
-    opt.use_image_storage = false;
+#ifdef VULKAN_SHADER_FP16
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
+#endif
     cmd = new VkCompute(vkdev);
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;

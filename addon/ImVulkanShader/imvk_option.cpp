@@ -4,13 +4,13 @@ namespace ImGui
 {
 Option::Option()
 {
-    blob_allocator = 0;
-    workspace_allocator = 0;
+    blob_allocator = nullptr;
+    workspace_allocator = nullptr;
 
-    blob_vkallocator = 0;
-    workspace_vkallocator = 0;
-    staging_vkallocator = 0;
-    pipeline_cache = 0;
+    blob_vkallocator = nullptr;
+    workspace_vkallocator = nullptr;
+    staging_vkallocator = nullptr;
+    pipeline_cache = nullptr;
 
     use_bf16_storage = false;
 

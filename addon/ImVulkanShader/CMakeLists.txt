@@ -27,6 +27,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 #endif(APPLE)
 
 option(VKSHADER_VULKAN_BENCHMARK      "Enable Vulkan Shader Benchmark" OFF)
+option(VKSHADER_VULKAN_FP16           "Enable Vulkan Shader support 16bits float" OFF)
 option(VKSHADER_STATIC                "Build Vulkan Shader as static library" OFF)
 
 find_package(PkgConfig)
@@ -121,7 +122,13 @@ endif()
 
 if(VKSHADER_VULKAN_BENCHMARK)
     add_definitions(-DVULKAN_SHADER_BENCHMARK)
+    message(STATUS "VkShader Support benchmark")
 endif(VKSHADER_VULKAN_BENCHMARK)
+
+if(VKSHADER_VULKAN_FP16)
+    add_definitions(-DVULKAN_SHADER_FP16)
+    message(STATUS "VkShader Support 16bits float")
+endif(VKSHADER_VULKAN_FP16)
 
 set(VKSHADER_SRCS
     imvk_option.cpp
@@ -327,7 +334,7 @@ add_library(
 
 set(VKSHADER_VERSION_MAJOR 1)
 set(VKSHADER_VERSION_MINOR 4)
-set(VKSHADER_VERSION_PATCH 0)
+set(VKSHADER_VERSION_PATCH 1)
 set(VKSHADER_VERSION_STRING ${VKSHADER_VERSION_MAJOR}.${VKSHADER_VERSION_MINOR}.${VKSHADER_VERSION_PATCH})
 
 if(NOT VKSHADER_STATIC)

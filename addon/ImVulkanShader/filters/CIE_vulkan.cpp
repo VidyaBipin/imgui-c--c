@@ -1045,8 +1045,10 @@ CIE_vulkan::CIE_vulkan(int gpu)
     vkdev = ImGui::get_gpu_device(gpu);
     opt.blob_vkallocator = vkdev->acquire_blob_allocator();
     opt.staging_vkallocator = vkdev->acquire_staging_allocator();
+#ifdef VULKAN_SHADER_FP16
     opt.use_image_storage = false;
     opt.use_fp16_arithmetic = false;
+#endif
     cmd = new ImGui::VkCompute(vkdev);
 
     std::vector<ImGui::vk_specialization_type> specializations(0);
