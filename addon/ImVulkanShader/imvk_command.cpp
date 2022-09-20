@@ -1868,7 +1868,7 @@ void VkCompute::record_write_timestamp(uint32_t query)
 #endif // VULKAN_SHADER_BENCHMARK
 
 
-int VkCompute::submit_and_wait()
+int VkCompute::submit_and_wait(uint64_t timeout)
 {
     if (!vkdev->info.support_VK_KHR_push_descriptor())
     {
@@ -2006,7 +2006,7 @@ int VkCompute::submit_and_wait()
 
     // wait
     {
-        VkResult ret = vkWaitForFences(vkdev->vkdevice(), 1, &d->compute_command_fence, VK_TRUE, (uint64_t)-1);
+        VkResult ret = vkWaitForFences(vkdev->vkdevice(), 1, &d->compute_command_fence, VK_TRUE, timeout);
         if (ret != VK_SUCCESS)
         {
             fprintf(stderr, "vkWaitForFences failed %d", ret);
@@ -2971,7 +2971,7 @@ void VkTransfer::record_upload(const ImMat& src, VkImageMat& dst, const Option& 
     d->upload_staging_buffers.push_back(dst_staging);
 }
 
-int VkTransfer::submit_and_wait()
+int VkTransfer::submit_and_wait(uint64_t timeout)
 {
     // end command buffer
     {
@@ -3073,7 +3073,7 @@ int VkTransfer::submit_and_wait()
     // wait
     if (vkdev->info.unified_compute_transfer_queue())
     {
-        VkResult ret = vkWaitForFences(vkdev->vkdevice(), 1, &d->compute_command_fence, VK_TRUE, (uint64_t)-1);
+        VkResult ret = vkWaitForFences(vkdev->vkdevice(), 1, &d->compute_command_fence, VK_TRUE, timeout);
         if (ret != VK_SUCCESS)
         {
             fprintf(stderr, "vkWaitForFences failed %d", ret);
@@ -3084,7 +3084,7 @@ int VkTransfer::submit_and_wait()
     {
         VkFence fences[2] = {d->upload_command_fence, d->compute_command_fence};
 
-        VkResult ret = vkWaitForFences(vkdev->vkdevice(), 2, fences, VK_TRUE, (uint64_t)-1);
+        VkResult ret = vkWaitForFences(vkdev->vkdevice(), 2, fences, VK_TRUE, timeout);
         if (ret != VK_SUCCESS)
         {
             fprintf(stderr, "vkWaitForFences failed %d", ret);

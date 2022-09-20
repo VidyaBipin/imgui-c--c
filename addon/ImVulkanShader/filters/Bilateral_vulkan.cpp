@@ -95,7 +95,7 @@ void Bilateral_vulkan::filter(const ImMat& src, ImMat& dst, int ksz, float sigma
         cmd->record_clone(dst_gpu, dst, opt);
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
-    cmd->submit_and_wait();
+    cmd->submit_and_wait(100);
     cmd->reset();
 }
 } //namespace ImGui 

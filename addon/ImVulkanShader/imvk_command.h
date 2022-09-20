@@ -55,7 +55,7 @@ public:
     void record_write_timestamp(uint32_t query);
 #endif // VULKAN_SHADER_BENCHMARK
 
-    int submit_and_wait();
+    int submit_and_wait(uint64_t timeout = UINT64_MAX);
 
     int reset();
 
@@ -90,7 +90,7 @@ public:
 
     void record_upload(const ImMat& src, VkImageMat& dst, const Option& opt);
 
-    int submit_and_wait();
+    int submit_and_wait(uint64_t timeout = UINT64_MAX);
 
 protected:
     const VulkanDevice* vkdev;
