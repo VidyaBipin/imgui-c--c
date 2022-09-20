@@ -26,7 +26,6 @@ DeBand_vulkan::DeBand_vulkan(int width, int height, int channels, int gpu)
     if (compile_spirv_module(DeBand_data, opt, spirv_data) == 0)
     {
         pipe = new Pipeline(vkdev);
-        pipe->set_optimal_local_size_xyz(16, 16, 1);
         pipe->create(spirv_data.data(), spirv_data.size() * 4, specializations);
     }
 

@@ -19,7 +19,6 @@ Guided_vulkan::Guided_vulkan(int gpu)
     if (compile_spirv_module(Guided_data, opt, spirv_data) == 0)
     {
         pipe = new Pipeline(vkdev);
-        pipe->set_optimal_local_size_xyz(16, 16, 1);
         pipe->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }
@@ -27,7 +26,6 @@ Guided_vulkan::Guided_vulkan(int gpu)
     if (compile_spirv_module(ToMatting_data, opt, spirv_data) == 0)
     {
         pipe_to_matting = new Pipeline(vkdev);
-        pipe_to_matting->set_optimal_local_size_xyz(16, 16, 1);
         pipe_to_matting->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }
@@ -35,7 +33,6 @@ Guided_vulkan::Guided_vulkan(int gpu)
     if (compile_spirv_module(Matting_data, opt, spirv_data) == 0)
     {
         pipe_matting = new Pipeline(vkdev);
-        pipe_matting->set_optimal_local_size_xyz(16, 16, 1);
         pipe_matting->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }

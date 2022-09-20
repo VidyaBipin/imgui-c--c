@@ -226,7 +226,6 @@ int LUT3D_vulkan::init(int interpolation, int gpu)
     if (compile_spirv_module(LUT3D_data, opt, spirv_data) == 0)
     {
         pipeline_lut3d = new Pipeline(vkdev);
-        pipeline_lut3d->set_optimal_local_size_xyz(16, 16, 1);
         pipeline_lut3d->create(spirv_data.data(), spirv_data.size() * 4, specializations);
     }
 

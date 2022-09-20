@@ -21,7 +21,6 @@ ColorConvert_vulkan::ColorConvert_vulkan(int gpu)
     if (compile_spirv_module(YUV2RGB_data, opt, spirv_data) == 0)
     {
         pipeline_yuv_rgb = new Pipeline(vkdev);
-        pipeline_yuv_rgb->set_optimal_local_size_xyz(16, 16, 1);
         pipeline_yuv_rgb->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }
@@ -29,7 +28,6 @@ ColorConvert_vulkan::ColorConvert_vulkan(int gpu)
     if (compile_spirv_module(RGB2YUV_data, opt, spirv_data) == 0)
     {
         pipeline_rgb_yuv = new Pipeline(vkdev);
-        pipeline_rgb_yuv->set_optimal_local_size_xyz(16, 16, 1);
         pipeline_rgb_yuv->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }
@@ -37,7 +35,6 @@ ColorConvert_vulkan::ColorConvert_vulkan(int gpu)
     if (compile_spirv_module(GRAY2RGB_data, opt, spirv_data) == 0)
     {
         pipeline_gray_rgb = new Pipeline(vkdev);
-        pipeline_gray_rgb->set_optimal_local_size_xyz(16, 16, 1);
         pipeline_gray_rgb->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }
@@ -45,7 +42,6 @@ ColorConvert_vulkan::ColorConvert_vulkan(int gpu)
     if (compile_spirv_module(Conv_data, opt, spirv_data) == 0)
     {
         pipeline_conv = new Pipeline(vkdev);
-        pipeline_conv->set_optimal_local_size_xyz(16, 16, 1);
         pipeline_conv->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }

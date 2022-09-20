@@ -20,7 +20,6 @@ AlphaBlending_vulkan::AlphaBlending_vulkan(int gpu)
     if (compile_spirv_module(AlphaBlending_data, opt, spirv_data) == 0)
     {
         pipe = new Pipeline(vkdev);
-        pipe->set_optimal_local_size_xyz(16, 16, 1);
         pipe->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }
@@ -28,7 +27,6 @@ AlphaBlending_vulkan::AlphaBlending_vulkan(int gpu)
     if (compile_spirv_module(AlphaBlending_alpha_data, opt, spirv_data) == 0)
     {
         pipe_alpha = new Pipeline(vkdev);
-        pipe_alpha->set_optimal_local_size_xyz(16, 16, 1);
         pipe_alpha->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }

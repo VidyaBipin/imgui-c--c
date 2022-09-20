@@ -31,8 +31,8 @@ Pipeline::Pipeline(const VulkanDevice* _vkdev)
     d->pipeline = 0;
     d->descriptor_update_template = 0;
 
-    d->local_size_x = 1;
-    d->local_size_y = 1;
+    d->local_size_x = 16;
+    d->local_size_y = 16;
     d->local_size_z = 1;
 }
 
