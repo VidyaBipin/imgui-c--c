@@ -1609,11 +1609,11 @@ inline void ImMat::fill(float _v)
     int size = (int)total(), i = 0;
     float* ptr = (float*)data;
 #if __AVX__
-    __m256i V = _mm256_set1_ps(_v);
-    for (i = 0; i < size - 7; i += 8) _mm256_storeu_si256((__m256i *)(ptr + i), V);
+    __m256 V = _mm256_set1_ps(_v);
+    for (i = 0; i < size - 7; i += 8) _mm256_storeu_ps(ptr + i, V);
 #elif __SSE__
-    __m128i V = _mm_set1_ps(_v);
-    for (i = 0; i < size - 3; i += 4) _mm_storeu_si128((__m128i *)(ptr + i), V);
+    __m128 V = _mm_set1_ps(_v);
+    for (i = 0; i < size - 3; i += 4) _mm_storeu_ps(ptr + i, V);
 #endif
     for (; i < size; ++i) *(ptr + i) = _v;
 }
@@ -1623,11 +1623,11 @@ inline void ImMat::fill(double _v)
     int size = (int)total(), i = 0;
     double* ptr = (double*)data;
 #if __AVX__
-    __m256i V = _mm256_set1_pd(_v);
-    for (i = 0; i < size - 3; i += 4) _mm256_storeu_si256((__m256i *)(ptr + i), V);
+    __m256d V = _mm256_set1_pd(_v);
+    for (i = 0; i < size - 3; i += 4) _mm256_storeu_pd(ptr + i, V);
 #elif __SSE__
-    __m128i V = _mm_set1_pd(_v);
-    for (i = 0; i < size - 1; i += 2) _mm_storeu_si128((__m128i *)(ptr + i), V);
+    __m128d V = _mm_set1_pd(_v);
+    for (i = 0; i < size - 1; i += 2) _mm_storeu_pd(ptr + i, V);
 #endif
     for (; i < size; ++i) *(ptr + i) = _v;
 }
@@ -2135,20 +2135,20 @@ static inline __attribute__((unused)) void add_float_avx(float* dst, const float
     {
         X = _mm256_loadu_ps(src + i); // load chunk of 8 floats
         X = _mm256_add_ps(X, V);
-        _mm256_storeu_ps((float*)(dst + i), X);
+        _mm256_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) + v;
 }
 static inline __attribute__((unused)) void add_double_avx(double* dst, const double* src, const size_t len, const double v)
 {
     int i = 0;
-    __m256 V = _mm256_set1_pd(v);
-    __m256 X;
+    __m256d V = _mm256_set1_pd(v);
+    __m256d X;
     for (i = 0; i < (long)len - 3; i += 4)
     {
         X = _mm256_loadu_pd(src + i); // load chunk of 4 double
         X = _mm256_add_pd(X, V);
-        _mm256_storeu_pd((double*)(dst + i), X);
+        _mm256_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) + v;
 }
@@ -2227,20 +2227,20 @@ static inline __attribute__((unused)) void add_float_sse(float* dst, const float
     {
         X = _mm_loadu_ps(src + i); // load chunk of 4 floats
         X = _mm_add_ps(X, V);
-        _mm_storeu_ps((float*)(dst + i), X);
+        _mm_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) + v;
 }
 static inline __attribute__((unused)) void add_double_sse(double* dst, const double* src, const size_t len, const double v)
 {
     int i = 0;
-    __m128 V = _mm_set1_pd(v);
-    __m128 X;
+    __m128d V = _mm_set1_pd(v);
+    __m128d X;
     for (i = 0; i < (long)len - 1; i += 2)
     {
         X = _mm_loadu_pd(src + i); // load chunk of 2 double
         X = _mm_add_pd(X, V);
-        _mm_storeu_pd((double*)(dst + i), X);
+        _mm_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) + v;
 }
@@ -2366,20 +2366,20 @@ static inline __attribute__((unused)) void sub_float_avx(float* dst, const float
     {
         X = _mm256_loadu_ps(src + i); // load chunk of 8 floats
         X = _mm256_sub_ps(X, V);
-        _mm256_storeu_ps((float*)(dst + i), X);
+        _mm256_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
 }
 static inline __attribute__((unused)) void sub_double_avx(double* dst, const double* src, const size_t len, const double v)
 {
     int i = 0;
-    __m256 V = _mm256_set1_pd(v);
-    __m256 X;
+    __m256d V = _mm256_set1_pd(v);
+    __m256d X;
     for (i = 0; i < (long)len - 3; i += 4)
     {
         X = _mm256_loadu_pd(src + i); // load chunk of 4 double
         X = _mm256_sub_pd(X, V);
-        _mm256_storeu_pd((double*)(dst + i), X);
+        _mm256_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
 }
@@ -2458,20 +2458,20 @@ static inline __attribute__((unused)) void sub_float_sse(float* dst, const float
     {
         X = _mm_loadu_ps(src + i); // load chunk of 4 floats
         X = _mm_sub_ps(X, V);
-        _mm_storeu_ps((float*)(dst + i), X);
+        _mm_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
 }
 static inline __attribute__((unused)) void sub_double_sse(double* dst, const double* src, const size_t len, const double v)
 {
     int i = 0;
-    __m128 V = _mm_set1_pd(v);
-    __m128 X;
+    __m128d V = _mm_set1_pd(v);
+    __m128d X;
     for (i = 0; i < (long)len - 1; i += 2)
     {
         X = _mm_loadu_pd(src + i); // load chunk of 2 double
         X = _mm_sub_pd(X, V);
-        _mm_storeu_pd((double*)(dst + i), X);
+        _mm_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
 }
@@ -2581,20 +2581,20 @@ static inline __attribute__((unused)) void mul_float_avx(float* dst, const float
     {
         X = _mm256_loadu_ps(src + i); // load chunk of 8 floats
         X = _mm256_mul_ps(X, V);
-        _mm256_storeu_ps((float*)(dst + i), X);
+        _mm256_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
 static inline __attribute__((unused)) void mul_double_avx(double* dst, const double* src, const size_t len, const double v)
 {
     int i = 0;
-    __m256 V = _mm256_set1_pd(v);
-    __m256 X;
+    __m256d V = _mm256_set1_pd(v);
+    __m256d X;
     for (i = 0; i < (long)len - 3; i += 4)
     {
         X = _mm256_loadu_pd(src + i); // load chunk of 4 double
         X = _mm256_mul_pd(X, V);
-        _mm256_storeu_pd((double*)(dst + i), X);
+        _mm256_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
@@ -2657,20 +2657,20 @@ static inline __attribute__((unused)) void mul_float_sse(float* dst, const float
     {
         X = _mm_loadu_ps(src + i); // load chunk of 4 floats
         X = _mm_mul_ps(X, V);
-        _mm_storeu_ps((float*)(dst + i), X);
+        _mm_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
 static inline __attribute__((unused)) void mul_double_sse(double* dst, const double* src, const size_t len, const double v)
 {
     int i = 0;
-    __m128 V = _mm_set1_pd(v);
-    __m128 X;
+    __m128d V = _mm_set1_pd(v);
+    __m128d X;
     for (i = 0; i < (long)len - 1; i += 2)
     {
         X = _mm_loadu_pd(src + i); // load chunk of 2 double
         X = _mm_mul_pd(X, V);
-        _mm_storeu_pd((double*)(dst + i), X);
+        _mm_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
@@ -2764,20 +2764,20 @@ static inline __attribute__((unused)) void div_float_avx(float* dst, const float
     {
         X = _mm256_loadu_ps(src + i); // load chunk of 8 floats
         X = _mm256_div_ps(X, V);
-        _mm256_storeu_ps((float*)(dst + i), X);
+        _mm256_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) / v;
 }
 static inline __attribute__((unused)) void div_double_avx(double* dst, const double* src, const size_t len, const double v)
 {
     int i = 0;
-    __m256 V = _mm256_set1_pd(v);
-    __m256 X;
+    __m256d V = _mm256_set1_pd(v);
+    __m256d X;
     for (i = 0; i < (long)len - 3; i += 4)
     {
         X = _mm256_loadu_pd(src + i); // load chunk of 4 double
         X = _mm256_div_pd(X, V);
-        _mm256_storeu_pd((double*)(dst + i), X);
+        _mm256_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) / v;
 }
@@ -2824,20 +2824,20 @@ static inline __attribute__((unused)) void div_float_sse(float* dst, const float
     {
         X = _mm_loadu_ps(src + i); // load chunk of 4 floats
         X = _mm_div_ps(X, V);
-        _mm_storeu_ps((float*)(dst + i), X);
+        _mm_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) / v;
 }
 static inline __attribute__((unused)) void div_double_sse(double* dst, const double* src, const size_t len, const double v)
 {
     int i = 0;
-    __m128 V = _mm_set1_pd(v);
-    __m128 X;
+    __m128d V = _mm_set1_pd(v);
+    __m128d X;
     for (i = 0; i < (long)len - 1; i += 2)
     {
         X = _mm_loadu_pd(src + i); // load chunk of 2 double
         X = _mm_div_pd(X, V);
-        _mm_storeu_pd((double*)(dst + i), X);
+        _mm_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) / v;
 }
@@ -2963,20 +2963,20 @@ static inline __attribute__((unused)) void madd_float_avx(float* dst, const floa
         X = _mm256_loadu_ps(src1 + i); // load chunk of 8 floats
         Y = _mm256_loadu_ps(src2 + i); // load chunk of 8 floats
         X = _mm256_add_ps(X, Y);
-        _mm256_storeu_ps((float*)(dst + i), X);
+        _mm256_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
 }
 static inline __attribute__((unused)) void madd_double_avx(double* dst, const double* src1, const double* src2, const size_t len)
 {
     int i = 0;
-    __m256 X, Y;
+    __m256d X, Y;
     for (i = 0; i < (long)len - 3; i += 4)
     {
         X = _mm256_loadu_pd(src1 + i); // load chunk of 4 double
         Y = _mm256_loadu_pd(src2 + i); // load chunk of 4 double
         X = _mm256_add_pd(X, Y);
-        _mm256_storeu_pd((double*)(dst + i), X);
+        _mm256_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
 }
@@ -3055,20 +3055,20 @@ static inline __attribute__((unused)) void madd_float_sse(float* dst, const floa
         X = _mm_loadu_ps(src1 + i); // load chunk of 4 floats
         Y = _mm_loadu_ps(src2 + i); // load chunk of 4 floats
         X = _mm_add_ps(X, Y);
-        _mm_storeu_ps((float*)(dst + i), X);
+        _mm_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
 }
 static inline __attribute__((unused)) void madd_double_sse(double* dst, const double* src1, const double* src2, const size_t len)
 {
     int i = 0;
-    __m128 X, Y;
+    __m128d X, Y;
     for (i = 0; i < (long)len - 1; i += 2)
     {
         X = _mm_loadu_pd(src1 + i); // load chunk of 2 double
         Y = _mm_loadu_pd(src2 + i); // load chunk of 2 double
         X = _mm_add_pd(X, Y);
-        _mm_storeu_pd((double*)(dst + i), X);
+        _mm_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
 }
@@ -3194,20 +3194,20 @@ static inline __attribute__((unused)) void msub_float_avx(float* dst, const floa
         X = _mm256_loadu_ps(src1 + i); // load chunk of 8 floats
         Y = _mm256_loadu_ps(src2 + i); // load chunk of 8 floats
         X = _mm256_sub_ps(X, Y);
-        _mm256_storeu_ps((float*)(dst + i), X);
+        _mm256_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
 }
 static inline __attribute__((unused)) void msub_double_avx(double* dst, const double* src1, const double* src2, const size_t len)
 {
     int i = 0;
-    __m256 X, Y;
+    __m256d X, Y;
     for (i = 0; i < (long)len - 3; i += 4)
     {
         X = _mm256_loadu_pd(src1 + i); // load chunk of 4 double
         Y = _mm256_loadu_pd(src2 + i); // load chunk of 4 double
         X = _mm256_sub_pd(X, Y);
-        _mm256_storeu_pd((double*)(dst + i), X);
+        _mm256_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
 }
@@ -3286,20 +3286,20 @@ static inline __attribute__((unused)) void msub_float_sse(float* dst, const floa
         X = _mm_loadu_ps(src1 + i); // load chunk of 4 floats
         Y = _mm_loadu_ps(src2 + i); // load chunk of 4 floats
         X = _mm_sub_ps(X, Y);
-        _mm_storeu_ps((float*)(dst + i), X);
+        _mm_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
 }
 static inline __attribute__((unused)) void msub_double_sse(double* dst, const double* src1, const double* src2, const size_t len)
 {
     int i = 0;
-    __m128 X, Y;
+    __m128d X, Y;
     for (i = 0; i < (long)len - 1; i += 2)
     {
         X = _mm_loadu_pd(src1 + i); // load chunk of 2 double
         Y = _mm_loadu_pd(src2 + i); // load chunk of 2 double
         X = _mm_sub_pd(X, Y);
-        _mm_storeu_pd((double*)(dst + i), X);
+        _mm_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
 }
@@ -3393,20 +3393,20 @@ static inline __attribute__((unused)) void mdiv_float_avx(float* dst, const floa
         X = _mm256_loadu_ps(src1 + i); // load chunk of 8 floats
         Y = _mm256_loadu_ps(src2 + i); // load chunk of 8 floats
         X = _mm256_div_ps(X, Y);
-        _mm256_storeu_ps((float*)(dst + i), X);
+        _mm256_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
 }
 static inline __attribute__((unused)) void mdiv_double_avx(double* dst, const double* src1, const double* src2, const size_t len)
 {
     int i = 0;
-    __m256 X, Y;
+    __m256d X, Y;
     for (i = 0; i < (long)len - 3; i += 4)
     {
         X = _mm256_loadu_pd(src1 + i); // load chunk of 4 double
         Y = _mm256_loadu_pd(src2 + i); // load chunk of 4 double
         X = _mm256_div_pd(X, Y);
-        _mm256_storeu_pd((double*)(dst + i), X);
+        _mm256_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
 }
@@ -3453,20 +3453,20 @@ static inline __attribute__((unused)) void mdiv_float_sse(float* dst, const floa
         X = _mm_loadu_ps(src1 + i); // load chunk of 4 floats
         X = _mm_loadu_ps(src2 + i); // load chunk of 4 floats
         X = _mm_div_ps(X, Y);
-        _mm_storeu_ps((float*)(dst + i), X);
+        _mm_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
 }
 static inline __attribute__((unused)) void mdiv_double_sse(double* dst, const double* src1, const double* src2, const size_t len)
 {
     int i = 0;
-    __m128 X, Y;
+    __m128d X, Y;
     for (i = 0; i < (long)len - 1; i += 2)
     {
         X = _mm_loadu_pd(src1 + i); // load chunk of 2 double
         Y = _mm_loadu_pd(src2 + i); // load chunk of 2 double
         X = _mm_div_pd(X, Y);
-        _mm_storeu_pd((double*)(dst + i), X);
+        _mm_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
 }
@@ -3576,20 +3576,20 @@ static inline __attribute__((unused)) void mmul_float_avx(float* dst, const floa
         X = _mm256_loadu_ps(src1 + i); // load chunk of 8 floats
         Y = _mm256_loadu_ps(src2 + i); // load chunk of 8 floats
         X = _mm256_mul_ps(X, Y);
-        _mm256_storeu_ps((float*)(dst + i), X);
+        _mm256_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
 }
 static inline __attribute__((unused)) void mmul_double_avx(double* dst, const double* src1, const double* src2, const size_t len)
 {
     int i = 0;
-    __m256 X, Y;
+    __m256d X, Y;
     for (i = 0; i < (long)len - 3; i += 4)
     {
         X = _mm256_loadu_pd(src1 + i); // load chunk of 4 double
         Y = _mm256_loadu_pd(src2 + i); // load chunk of 4 double
         X = _mm256_mul_pd(X, Y);
-        _mm256_storeu_pd((double*)(dst + i), X);
+        _mm256_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
 }
@@ -3652,20 +3652,20 @@ static inline __attribute__((unused)) void mmul_float_sse(float* dst, const floa
         X = _mm_loadu_ps(src1 + i); // load chunk of 4 floats
         Y = _mm_loadu_ps(src2 + i); // load chunk of 4 floats
         X = _mm_mul_ps(X, Y);
-        _mm_storeu_ps((float*)(dst + i), X);
+        _mm_storeu_ps(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
 }
 static inline __attribute__((unused)) void mmul_double_sse(double* dst, const double* src1, const double* src2, const size_t len)
 {
     int i = 0;
-    __m128 X, Y;
+    __m128d X, Y;
     for (i = 0; i < (long)len - 1; i += 2)
     {
         X = _mm_loadu_pd(src1 + i); // load chunk of 2 double
         Y = _mm_loadu_pd(src2 + i); // load chunk of 2 double
         X = _mm_mul_pd(X, Y);
-        _mm_storeu_pd((double*)(dst + i), X);
+        _mm_storeu_pd(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
 }
