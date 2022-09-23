@@ -39,8 +39,8 @@ public:
     Pipeline * pipe_blur_row    {nullptr};
 #else
     Pipeline * pipe_blur        {nullptr};
-    Pipeline * pipe_sharpen     {nullptr};
 #endif
+    Pipeline * pipe_sharpen     {nullptr};
     Pipeline * pipe_despill     {nullptr};
     VkCompute * cmd             {nullptr};
     Option opt;
