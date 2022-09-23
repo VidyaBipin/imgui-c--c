@@ -220,7 +220,7 @@ int LUT3D_vulkan::init(int interpolation, int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "LUT3D");
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
 
@@ -398,11 +398,12 @@ void LUT3D_vulkan::upload_param(const VkMat& src, VkMat& dst)
     cmd->record_pipeline(pipeline_lut3d, bindings, constants, dst);
 }
 
-void LUT3D_vulkan::filter(const ImMat& src, ImMat& dst)
+double LUT3D_vulkan::filter(const ImMat& src, ImMat& dst)
 {
+    double ret = 0.0;
     if (!vkdev || !pipeline_lut3d || lut_gpu.empty() || !cmd)
     {
-        return;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -418,7 +419,15 @@ void LUT3D_vulkan::filter(const ImMat& src, ImMat& dst)
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -426,6 +435,10 @@ void LUT3D_vulkan::filter(const ImMat& src, ImMat& dst)
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } //namespace ImGui 

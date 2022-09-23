@@ -43,7 +43,7 @@ DeInterlace_vulkan::DeInterlace_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "DeInterlace");
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
 
@@ -99,11 +99,12 @@ void DeInterlace_vulkan::upload_param(const VkMat& src, VkMat& dst)
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-void DeInterlace_vulkan::filter(const ImMat& src, ImMat& dst)
+double DeInterlace_vulkan::filter(const ImMat& src, ImMat& dst)
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
     {
-        return;
+        return ret;
     }
     VkMat dst_gpu;
     dst_gpu.create_type(src.w, src.h, 4, dst.type, opt.blob_vkallocator);
@@ -118,7 +119,15 @@ void DeInterlace_vulkan::filter(const ImMat& src, ImMat& dst)
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -126,6 +135,10 @@ void DeInterlace_vulkan::filter(const ImMat& src, ImMat& dst)
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } // namespace ImGui 

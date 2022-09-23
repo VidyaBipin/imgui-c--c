@@ -14,7 +14,7 @@ ChromaKey_vulkan::ChromaKey_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "ChromaKey");
 
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
@@ -293,18 +293,19 @@ void ChromaKey_vulkan::upload_param(const VkMat& src, VkMat& dst,
     cmd->record_pipeline(pipe_despill, despill_bindings, despill_constants, dst);
 }
 
-void ChromaKey_vulkan::filter(const ImMat& src, ImMat& dst,
+double ChromaKey_vulkan::filter(const ImMat& src, ImMat& dst,
                             float lumaMask, ImPixel chromaColor,
                             float alphaCutoffMin, float alphaScale, float alphaExponent,
                             int output_type)
 {
+    double ret = 0.0;
 #if FILTER_2DS_BLUR
     if (!vkdev || !pipe || !pipe_blur_column || !pipe_blur_row || !cmd)
 #else
     if (!vkdev || !pipe || !pipe_blur || !cmd)
 #endif
     {
-        return;
+        return ret;
     }
     
     VkMat dst_gpu;
@@ -320,7 +321,15 @@ void ChromaKey_vulkan::filter(const ImMat& src, ImMat& dst,
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, lumaMask, chromaColor, alphaCutoffMin, alphaScale, alphaExponent, output_type);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -328,6 +337,10 @@ void ChromaKey_vulkan::filter(const ImMat& src, ImMat& dst,
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } //namespace ImGui 

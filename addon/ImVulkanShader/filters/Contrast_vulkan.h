@@ -11,7 +11,7 @@ public:
     Contrast_vulkan(int gpu = -1);
     ~Contrast_vulkan();
 
-    virtual void filter(const ImMat& src, ImMat& dst, float contrast) const;
+    double filter(const ImMat& src, ImMat& dst, float contrast) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

@@ -11,7 +11,7 @@ public:
     Flip_vulkan(int gpu = -1);
     ~Flip_vulkan();
 
-    virtual void flip(const ImMat& src, ImMat& dst, bool bFlipX, bool bFlipY) const;
+    double flip(const ImMat& src, ImMat& dst, bool bFlipX, bool bFlipY) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

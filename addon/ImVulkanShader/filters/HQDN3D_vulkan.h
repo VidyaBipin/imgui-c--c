@@ -12,7 +12,7 @@ public:
     ~HQDN3D_vulkan();
     void SetParam(float lum_spac, float chrom_spac, float lum_tmp, float chrom_tmp);
     
-    void filter(const ImMat& src, ImMat& dst);
+    double filter(const ImMat& src, ImMat& dst);
 
 private:
     VulkanDevice* vkdev {nullptr};

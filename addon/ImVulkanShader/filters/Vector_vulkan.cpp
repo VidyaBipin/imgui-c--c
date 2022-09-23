@@ -13,7 +13,7 @@ Vector_vulkan::Vector_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = false;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "Vector");
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
     if (compile_spirv_module(Vector_data, opt, spirv_data) == 0)
@@ -107,11 +107,12 @@ void Vector_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, flo
     cmd->record_pipeline(pipe_merge, bindings_merge, constants_merge, dst);
 }
 
-void Vector_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, float intensity)
+double Vector_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, float intensity)
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !pipe_zero || !pipe_merge || !cmd)
     {
-        return;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -127,7 +128,15 @@ void Vector_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, float inte
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, intensity);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -135,6 +144,10 @@ void Vector_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, float inte
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } // namespace ImGui

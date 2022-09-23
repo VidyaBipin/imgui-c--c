@@ -13,7 +13,7 @@ Crop_vulkan::Crop_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "Crop");
 
     std::vector<vk_specialization_type> specializations(0);
 
@@ -66,11 +66,12 @@ void Crop_vulkan::upload_param(const VkMat& src, VkMat& dst, int _x, int _y, int
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-void Crop_vulkan::crop(const ImMat& src, ImMat& dst, int _x, int _y, int _w, int _h) const
+double Crop_vulkan::crop(const ImMat& src, ImMat& dst, int _x, int _y, int _w, int _h) const
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
     {
-        return;
+        return ret;
     }
     VkMat dst_gpu;
     dst_gpu.create_type(_w, _h, 4, dst.type, opt.blob_vkallocator);
@@ -85,7 +86,15 @@ void Crop_vulkan::crop(const ImMat& src, ImMat& dst, int _x, int _y, int _w, int
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, _x, _y, _w, _h);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -93,6 +102,10 @@ void Crop_vulkan::crop(const ImMat& src, ImMat& dst, int _x, int _y, int _w, int
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } //namespace ImGui 

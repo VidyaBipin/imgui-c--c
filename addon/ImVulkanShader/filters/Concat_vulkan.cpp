@@ -13,7 +13,7 @@ Concat_vulkan::Concat_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "Concat");
 
     std::vector<vk_specialization_type> specializations(0);
 
@@ -76,25 +76,26 @@ void Concat_vulkan::upload_param(const VkMat& src0, const VkMat& src1, VkMat& ds
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-void Concat_vulkan::concat(const ImMat& src0, const ImMat& src1, ImMat& dst, int direction) const
+double Concat_vulkan::concat(const ImMat& src0, const ImMat& src1, ImMat& dst, int direction) const
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
     {
-        return;
+        return ret;
     }
 
     int dst_width, dst_height;
     if (direction == CONCAT_HORIZONTAL)
     {
         if (src0.h != src1.h)
-            return;
+            return ret;
         dst_width = src0.w + src1.w;
         dst_height = src0.h;
     }
     else
     {
         if (src0.w != src1.w)
-            return;
+            return ret;
         dst_width = src0.w;
         dst_height = src0.h + src1.h;
     }
@@ -121,7 +122,15 @@ void Concat_vulkan::concat(const ImMat& src0, const ImMat& src1, ImMat& dst, int
         cmd->record_clone(src1, src1_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src0_gpu, src1_gpu, dst_gpu, direction);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -129,6 +138,10 @@ void Concat_vulkan::concat(const ImMat& src0, const ImMat& src1, ImMat& dst, int
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } //namespace ImGui 

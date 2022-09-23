@@ -1592,7 +1592,7 @@ class VkDummyCompute : public VkCompute
 {
 public:
     VkDummyCompute(const VulkanDevice* _vkdev)
-        : VkCompute(_vkdev)
+        : VkCompute(_vkdev, "DummyCompute")
     {
     }
 

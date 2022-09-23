@@ -13,7 +13,7 @@ warpPerspective_vulkan::warpPerspective_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "warpPerspective");
 
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
@@ -76,11 +76,12 @@ void warpPerspective_vulkan::upload_param(const VkMat& src, VkMat& dst, const Vk
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-void warpPerspective_vulkan::filter(const ImMat& src, ImMat& dst, const ImMat& M, ImInterpolateMode type, ImPixel border_col, ImPixel crop) const
+double warpPerspective_vulkan::filter(const ImMat& src, ImMat& dst, const ImMat& M, ImInterpolateMode type, ImPixel border_col, ImPixel crop) const
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
     {
-        return;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -106,7 +107,15 @@ void warpPerspective_vulkan::filter(const ImMat& src, ImMat& dst, const ImMat& M
         cmd->record_clone(M, m_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, m_gpu, type, border_col, crop);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -114,6 +123,10 @@ void warpPerspective_vulkan::filter(const ImMat& src, ImMat& dst, const ImMat& M
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } //namespace ImGui 

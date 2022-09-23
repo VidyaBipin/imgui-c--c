@@ -10,7 +10,7 @@ public:
     Resize_vulkan(int gpu = -1);
     ~Resize_vulkan();
 
-    virtual void Resize(const ImMat& src, ImMat& dst, float fx, float fy = 0.f, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC) const;
+    double Resize(const ImMat& src, ImMat& dst, float fx, float fy = 0.f, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC) const;
 
 public:
     const VulkanDevice* vkdev;

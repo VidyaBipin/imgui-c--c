@@ -11,7 +11,7 @@ public:
     CopyTo_vulkan(int gpu = -1);
     ~CopyTo_vulkan();
 
-    virtual void copyTo(const ImMat& src, ImMat& dst, int x, int y, float alpha = 1.f) const;
+    double copyTo(const ImMat& src, ImMat& dst, int x, int y, float alpha = 1.f) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

@@ -11,7 +11,7 @@ public:
     Brightness_vulkan(int gpu = -1);
     ~Brightness_vulkan();
 
-    virtual void filter(const ImMat& src, ImMat& dst, float brightness) const;
+    double filter(const ImMat& src, ImMat& dst, float brightness) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

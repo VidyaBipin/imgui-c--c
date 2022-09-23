@@ -11,7 +11,7 @@ public:
     Waveform_vulkan(int gpu = 0);
     ~Waveform_vulkan();
 
-    void scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int level = 256, float fintensity = 0.1, bool separate = false);
+    double scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int level = 256, float fintensity = 0.1, bool separate = false);
 
 private:
     ImGui::VulkanDevice* vkdev      {nullptr};

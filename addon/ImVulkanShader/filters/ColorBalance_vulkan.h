@@ -13,7 +13,7 @@ public:
     ColorBalance_vulkan(int gpu = -1);
     ~ColorBalance_vulkan();
 
-    virtual void filter(const ImMat& src, ImMat& dst, ImVec4& shadows, ImVec4& midtones, ImVec4& highlights, bool preserve_lightness = false) const;
+    double filter(const ImMat& src, ImMat& dst, ImVec4& shadows, ImVec4& midtones, ImVec4& highlights, bool preserve_lightness = false) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

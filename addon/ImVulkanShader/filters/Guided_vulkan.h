@@ -10,7 +10,8 @@ class VKSHADER_API Guided_vulkan
 public:
     Guided_vulkan(int gpu = 0);
     ~Guided_vulkan();
-    void filter(const ImMat& src, ImMat& dst, int r, float eps);
+    double filter(const ImMat& src, ImMat& dst, int r, float eps);
+
 private:
     VulkanDevice* vkdev {nullptr};
     Option opt;

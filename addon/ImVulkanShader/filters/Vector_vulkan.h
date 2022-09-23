@@ -10,7 +10,7 @@ public:
     Vector_vulkan(int gpu = 0);
     ~Vector_vulkan();
 
-    void scope(const ImGui::ImMat& src, ImGui::ImMat& dst, float intensity = 0.01);
+    double scope(const ImGui::ImMat& src, ImGui::ImMat& dst, float intensity = 0.01);
 
 private:
     ImGui::VulkanDevice* vkdev      {nullptr};

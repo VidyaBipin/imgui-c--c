@@ -12,14 +12,14 @@ static void check_vk_result(VkResult err)
         abort();
 }
 
-void ImMatToImVulkanMat(const ImMat &src, VkMat &dst)
+void ImVulkanImMatToVkMat(const ImMat &src, VkMat &dst)
 {
     Option opt;
     const VkAllocator* allocator = (VkAllocator*)src.allocator;
     const VulkanDevice* vkdev = allocator->vkdev;
     opt.blob_vkallocator = vkdev->acquire_blob_allocator();
     opt.staging_vkallocator = vkdev->acquire_staging_allocator();
-    VkCompute cmd(vkdev);
+    VkCompute cmd(vkdev, "ImMatToVkMat");
     cmd.record_clone(src, dst, opt);
     cmd.submit_and_wait();
     vkdev->reclaim_blob_allocator(opt.blob_vkallocator);
@@ -33,7 +33,7 @@ void ImVulkanVkMatToImMat(const VkMat &src, ImMat &dst)
     const VulkanDevice* vkdev = allocator->vkdev;
     opt.blob_vkallocator = vkdev->acquire_blob_allocator();
     opt.staging_vkallocator = vkdev->acquire_staging_allocator();
-    VkCompute cmd(vkdev);
+    VkCompute cmd(vkdev, "VkMatToImMat");
     cmd.record_clone(src, dst, opt);
     cmd.submit_and_wait();
     vkdev->reclaim_blob_allocator(opt.blob_vkallocator);
@@ -47,7 +47,7 @@ void ImVulkanVkMatToVkImageMat(const VkMat &src, VkImageMat &dst)
     const VulkanDevice* vkdev = allocator->vkdev;
     opt.blob_vkallocator = vkdev->acquire_blob_allocator();
     opt.staging_vkallocator = vkdev->acquire_staging_allocator();
-    VkCompute cmd(vkdev);
+    VkCompute cmd(vkdev, "VkMatToVkImageMat");
     cmd.record_upload(src, dst, opt);
     cmd.submit_and_wait();
     vkdev->reclaim_blob_allocator(opt.blob_vkallocator);
@@ -134,7 +134,7 @@ float ImVulkanPeak(VulkanDevice* vkdev, int loop, int count_mb, int cmd_loop, in
         }
 
         // encode command
-        VkCompute cmd(vkdev);
+        VkCompute cmd(vkdev, "ImVulkanPeak");
         for (int i = 0; i < cmd_loop; i++)
         {
             {

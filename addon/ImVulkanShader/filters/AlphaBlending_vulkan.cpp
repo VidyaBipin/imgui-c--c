@@ -13,7 +13,7 @@ AlphaBlending_vulkan::AlphaBlending_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "AlphaBlending");
 
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
@@ -84,19 +84,20 @@ void AlphaBlending_vulkan::upload_param(const VkMat& src1, const VkMat& src2, Vk
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-void AlphaBlending_vulkan::blend(const ImMat& src1, const ImMat& src2, ImMat& dst, int x, int y) const
+double AlphaBlending_vulkan::blend(const ImMat& src1, const ImMat& src2, ImMat& dst, int x, int y) const
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
     {
-        return;
+        return ret;
     }
 
     // TODO::Dicky need check dims?
     //if (src1.dims != src2.dims || src1.color_space != src2.color_space || src1.color_range != src2.color_range)
-    //    return;
+    //    return ret;
 
     if (x >= src2.w || y >= src2.h || x <= -src1.w || y <= -src1.h)
-        return;
+        return ret;
 
     VkMat dst_gpu;
     dst_gpu.create_type(src2.w, src2.h, 4, dst.type, opt.blob_vkallocator);
@@ -121,7 +122,15 @@ void AlphaBlending_vulkan::blend(const ImMat& src1, const ImMat& src2, ImMat& ds
         cmd->record_clone(src2, src2_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src1_gpu, src2_gpu, dst_gpu, x, y);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -129,7 +138,11 @@ void AlphaBlending_vulkan::blend(const ImMat& src1, const ImMat& src2, ImMat& ds
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 
 void AlphaBlending_vulkan::upload_param(const VkMat& src1, const VkMat& src2, VkMat& dst, float alpha, int x, int y) const
@@ -172,19 +185,20 @@ void AlphaBlending_vulkan::upload_param(const VkMat& src1, const VkMat& src2, Vk
     cmd->record_pipeline(pipe_alpha, bindings, constants, dst);
 }
 
-void AlphaBlending_vulkan::blend(const ImMat& src1, const ImMat& src2, ImMat& dst, float alpha, int x, int y) const
+double AlphaBlending_vulkan::blend(const ImMat& src1, const ImMat& src2, ImMat& dst, float alpha, int x, int y) const
 {
+    double ret = 0.0;
     if (!vkdev || !pipe_alpha || !cmd)
     {
-        return;
+        return ret;
     }
 
     // TODO::Dicky need check dims?
     //if (src1.dims != src2.dims || src1.color_space != src2.color_space || src1.color_range != src2.color_range)
-    //    return;
+    //    return ret;
 
     if (x >= src2.w || y >= src2.h || x <= -src1.w || y <= -src1.h)
-        return;
+        return ret;
 
     VkMat dst_gpu;
     dst_gpu.create_type(src2.w, src2.h, 4, dst.type, opt.blob_vkallocator);
@@ -209,7 +223,15 @@ void AlphaBlending_vulkan::blend(const ImMat& src1, const ImMat& src2, ImMat& ds
         cmd->record_clone(src2, src2_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src1_gpu, src2_gpu, dst_gpu, alpha, x, y);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -217,7 +239,11 @@ void AlphaBlending_vulkan::blend(const ImMat& src1, const ImMat& src2, ImMat& ds
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 
 } //namespace ImGui 

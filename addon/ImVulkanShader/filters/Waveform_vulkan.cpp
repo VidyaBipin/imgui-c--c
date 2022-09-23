@@ -13,7 +13,7 @@ Waveform_vulkan::Waveform_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = false;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "Waveform");
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
     if (compile_spirv_module(Waveform_data, opt, spirv_data) == 0)
@@ -100,11 +100,12 @@ void Waveform_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, f
     cmd->record_pipeline(pipe_conv, conv_bindings, conv_constants, dst);
 }
 
-void Waveform_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int level, float fintensity, bool separate)
+double Waveform_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int level, float fintensity, bool separate)
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !pipe_zero || !pipe_conv || !cmd)
     {
-        return;
+        return ret;
     }
     VkMat dst_gpu;
     dst_gpu.create_type(src.w, level, 4, IM_DT_INT8, opt.blob_vkallocator);
@@ -119,7 +120,15 @@ void Waveform_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int leve
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, fintensity, separate);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -127,6 +136,10 @@ void Waveform_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int leve
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } // namespace ImGui

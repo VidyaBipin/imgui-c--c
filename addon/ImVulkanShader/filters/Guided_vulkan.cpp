@@ -13,7 +13,7 @@ Guided_vulkan::Guided_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "Guided");
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
 
@@ -164,11 +164,12 @@ void Guided_vulkan::upload_param(const VkMat& src, VkMat& dst, int r, float eps)
     cmd->record_pipeline(pipe_matting, matting_bindings, matting_constants, dst);
 }
 
-void Guided_vulkan::filter(const ImMat& src, ImMat& dst, int r, float eps)
+double Guided_vulkan::filter(const ImMat& src, ImMat& dst, int r, float eps)
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
     {
-        return;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -184,7 +185,15 @@ void Guided_vulkan::filter(const ImMat& src, ImMat& dst, int r, float eps)
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, r, eps);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -192,6 +201,10 @@ void Guided_vulkan::filter(const ImMat& src, ImMat& dst, int r, float eps)
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } // namespace ImGui

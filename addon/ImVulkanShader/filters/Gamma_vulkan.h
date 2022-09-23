@@ -11,7 +11,7 @@ public:
     Gamma_vulkan(int gpu = -1);
     ~Gamma_vulkan();
 
-    virtual void filter(const ImMat& src, ImMat& dst, float gamma) const;
+    double filter(const ImMat& src, ImMat& dst, float gamma) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

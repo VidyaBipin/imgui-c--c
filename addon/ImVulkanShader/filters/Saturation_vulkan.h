@@ -11,7 +11,7 @@ public:
     Saturation_vulkan(int gpu = -1);
     ~Saturation_vulkan();
 
-    virtual void filter(const ImMat& src, ImMat& dst, float saturation) const;
+    double filter(const ImMat& src, ImMat& dst, float saturation) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

@@ -11,7 +11,7 @@ class VkComputePrivate;
 class VKSHADER_API VkCompute
 {
 public:
-    explicit VkCompute(const VulkanDevice* vkdev);
+    explicit VkCompute(const VulkanDevice* vkdev, std::string name);
     virtual ~VkCompute();
 
 public:
@@ -53,6 +53,10 @@ public:
 
 #ifdef VULKAN_SHADER_BENCHMARK
     void record_write_timestamp(uint32_t query);
+    void benchmark_start();
+    void benchmark_end();
+    double benchmark();
+    void benchmark_print();
 #endif // VULKAN_SHADER_BENCHMARK
 
     int submit_and_wait(uint64_t timeout = UINT64_MAX);
@@ -69,6 +73,7 @@ public:
 
 protected:
     const VulkanDevice* vkdev;
+    std::string m_Name;
 
     void barrier_readwrite(const VkMat& binding);
     void barrier_readwrite(const VkImageMat& binding);

@@ -13,7 +13,7 @@ Flip_vulkan::Flip_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "Flip");
 
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
@@ -67,11 +67,12 @@ void Flip_vulkan::upload_param(const VkMat& src, VkMat& dst, bool bFlipX, bool b
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-void Flip_vulkan::flip(const ImMat& src, ImMat& dst, bool bFlipX, bool bFlipY) const
+double Flip_vulkan::flip(const ImMat& src, ImMat& dst, bool bFlipX, bool bFlipY) const
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
     {
-        return;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -87,7 +88,15 @@ void Flip_vulkan::flip(const ImMat& src, ImMat& dst, bool bFlipX, bool bFlipY) c
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, bFlipX, bFlipY);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -95,6 +104,10 @@ void Flip_vulkan::flip(const ImMat& src, ImMat& dst, bool bFlipX, bool bFlipY) c
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } //namespace ImGui 

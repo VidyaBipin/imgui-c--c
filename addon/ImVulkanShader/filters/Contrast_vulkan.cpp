@@ -13,7 +13,7 @@ Contrast_vulkan::Contrast_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "Contrast");
 
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
@@ -65,11 +65,12 @@ void Contrast_vulkan::upload_param(const VkMat& src, VkMat& dst, float contrast)
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-void Contrast_vulkan::filter(const ImMat& src, ImMat& dst, float contrast) const
+double Contrast_vulkan::filter(const ImMat& src, ImMat& dst, float contrast) const
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
     {
-        return;
+        return ret;
     }
     VkMat dst_gpu;
     dst_gpu.create_type(src.w, src.h, 4, dst.type, opt.blob_vkallocator);
@@ -84,7 +85,15 @@ void Contrast_vulkan::filter(const ImMat& src, ImMat& dst, float contrast) const
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, contrast);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -92,6 +101,10 @@ void Contrast_vulkan::filter(const ImMat& src, ImMat& dst, float contrast) const
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } //namespace ImGui 

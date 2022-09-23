@@ -11,7 +11,7 @@ public:
     Hue_vulkan(int gpu = -1);
     ~Hue_vulkan();
 
-    virtual void filter(const ImMat& src, ImMat& dst, float hue) const;
+    double filter(const ImMat& src, ImMat& dst, float hue) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

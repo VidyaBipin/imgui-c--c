@@ -15,7 +15,7 @@ ColorConvert_vulkan::ColorConvert_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = false;   // fp16 has accuracy issue for int16 convert
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "ColorConvert");
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
 
@@ -340,11 +340,12 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_YUV, VkMat& dst, ImColorF
     cmd->record_pipeline(pipeline_yuv_rgb, bindings, constants, dst);
 }
 
-void ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int video_depth, int video_shift) const
+double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int video_depth, int video_shift) const
 {
+    double ret = 0.0;
     if (!vkdev || !pipeline_yuv_rgb || !cmd)
     {
-        return;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -360,7 +361,15 @@ void ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImColorF
         cmd->record_clone(im_YUV, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, color_format, color_space, color_range, video_depth, video_shift);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (im_RGB.device == IM_DD_CPU)
@@ -368,7 +377,11 @@ void ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImColorF
     else if (im_RGB.device == IM_DD_VULKAN)
         im_RGB = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 
 // RGBA to YUV functions
@@ -406,11 +419,12 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_RGB, VkMat& dst, ImColorF
     cmd->record_pipeline(pipeline_rgb_yuv, bindings, constants, dst);
 }
 
-void ColorConvert_vulkan::RGBA2YUV(const ImMat& im_RGB, ImMat & im_YUV, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int video_shift) const
+double ColorConvert_vulkan::RGBA2YUV(const ImMat& im_RGB, ImMat & im_YUV, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int video_shift) const
 {
+    double ret = 0.0;
     if (!vkdev || !pipeline_rgb_yuv || !cmd)
     {
-        return;
+        return ret;
     }
     VkMat dst_gpu;
     dst_gpu.create_type(im_RGB.w, im_RGB.h, 4, im_YUV.type, opt.blob_vkallocator);
@@ -425,7 +439,15 @@ void ColorConvert_vulkan::RGBA2YUV(const ImMat& im_RGB, ImMat & im_YUV, ImColorF
         cmd->record_clone(im_RGB, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, color_format, color_space, color_range, video_shift);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (im_YUV.device == IM_DD_CPU)
@@ -433,7 +455,11 @@ void ColorConvert_vulkan::RGBA2YUV(const ImMat& im_RGB, ImMat & im_YUV, ImColorF
     else if (im_YUV.device == IM_DD_VULKAN)
         im_YUV = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 
 // Gray to RGBA functions
@@ -465,11 +491,12 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im, VkMat& dst, ImColorSpace
     cmd->record_pipeline(pipeline_gray_rgb, bindings, constants, dst);
 }
 
-void ColorConvert_vulkan::GRAY2RGBA(const ImMat& im, ImMat & im_RGB, ImColorSpace color_space, ImColorRange color_range, int video_depth, int video_shift) const
+double ColorConvert_vulkan::GRAY2RGBA(const ImMat& im, ImMat & im_RGB, ImColorSpace color_space, ImColorRange color_range, int video_depth, int video_shift) const
 {
+    double ret = 0.0;
     if (!vkdev || !pipeline_gray_rgb || !cmd)
     {
-        return;
+        return ret;
     }
     VkMat dst_gpu;
     dst_gpu.create_type(im.w, im.h, 4, im_RGB.type, opt.blob_vkallocator);
@@ -484,7 +511,15 @@ void ColorConvert_vulkan::GRAY2RGBA(const ImMat& im, ImMat & im_RGB, ImColorSpac
         cmd->record_clone(im, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, color_space, color_range, video_depth, video_shift);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (im_RGB.device == IM_DD_CPU)
@@ -492,7 +527,11 @@ void ColorConvert_vulkan::GRAY2RGBA(const ImMat& im, ImMat & im_RGB, ImColorSpac
     else if (im_RGB.device == IM_DD_VULKAN)
         im_RGB = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 
 // Conv Functions
@@ -523,11 +562,12 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im, VkMat& dst) const
     cmd->record_pipeline(pipeline_conv, bindings, constants, dst);
 }
 
-void ColorConvert_vulkan::Conv(const ImMat& im, ImMat & om) const
+double ColorConvert_vulkan::Conv(const ImMat& im, ImMat & om) const
 {
+    double ret = 0.0;
     if (!vkdev || !pipeline_conv || !cmd)
     {
-        return;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -543,7 +583,15 @@ void ColorConvert_vulkan::Conv(const ImMat& im, ImMat & om) const
         cmd->record_clone(im, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (om.device == IM_DD_CPU)
@@ -551,6 +599,10 @@ void ColorConvert_vulkan::Conv(const ImMat& im, ImMat & om) const
     else if (om.device == IM_DD_VULKAN)
         om = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } // namespace ImGui 

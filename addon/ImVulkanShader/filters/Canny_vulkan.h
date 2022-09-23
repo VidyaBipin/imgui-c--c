@@ -11,7 +11,7 @@ public:
     Canny_vulkan(int gpu = 0);
     ~Canny_vulkan();
     
-    void filter(const ImMat& src, ImMat& dst, int _blurRadius, float minThreshold, float maxThreshold);
+    double filter(const ImMat& src, ImMat& dst, int _blurRadius, float minThreshold, float maxThreshold);
 
 private:
     VulkanDevice* vkdev      {nullptr};

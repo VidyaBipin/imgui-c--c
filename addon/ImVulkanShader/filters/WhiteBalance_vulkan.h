@@ -11,7 +11,7 @@ public:
     WhiteBalance_vulkan(int gpu = -1);
     ~WhiteBalance_vulkan();
 
-    virtual void filter(const ImMat& src, ImMat& dst, float temperature) const;
+    double filter(const ImMat& src, ImMat& dst, float temperature) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

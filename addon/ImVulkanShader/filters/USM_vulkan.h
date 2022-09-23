@@ -11,7 +11,7 @@ public:
     USM_vulkan(int gpu = 0);
     ~USM_vulkan();
 
-    void filter(const ImMat& src, ImMat& dst, float _sigma, float amount, float threshold);
+    double filter(const ImMat& src, ImMat& dst, float _sigma, float amount, float threshold);
 
 private:
     VulkanDevice* vkdev      {nullptr};

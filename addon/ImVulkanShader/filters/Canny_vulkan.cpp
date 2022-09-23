@@ -14,7 +14,7 @@ Canny_vulkan::Canny_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "Canny");
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
 
@@ -262,11 +262,12 @@ void Canny_vulkan::upload_param(const VkMat& src, VkMat& dst, int _blurRadius, f
     cmd->record_pipeline(pipe, canny_bindings, canny_constants, dst);
 }
 
-void Canny_vulkan::filter(const ImMat& src, ImMat& dst, int _blurRadius, float minThreshold, float maxThreshold)
+double Canny_vulkan::filter(const ImMat& src, ImMat& dst, int _blurRadius, float minThreshold, float maxThreshold)
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !pipe_dsobel || !pipe_nms || !pipe_column || !pipe_row || !cmd)
     {
-        return;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -282,7 +283,15 @@ void Canny_vulkan::filter(const ImMat& src, ImMat& dst, int _blurRadius, float m
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, _blurRadius, minThreshold, maxThreshold);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -290,6 +299,10 @@ void Canny_vulkan::filter(const ImMat& src, ImMat& dst, int _blurRadius, float m
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } // namespace ImGui

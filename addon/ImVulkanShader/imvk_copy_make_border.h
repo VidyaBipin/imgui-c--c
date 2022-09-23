@@ -11,7 +11,7 @@ public:
     Copy_Make_Border_vulkan(int gpu = -1);
     ~Copy_Make_Border_vulkan();
 
-    void forward(const ImMat& bottom_blob, ImMat& top_blob, int top, int bottom, int left, int right, float value);
+    double forward(const ImMat& bottom_blob, ImMat& top_blob, int top, int bottom, int left, int right, float value);
 
 public:
     const VulkanDevice* vkdev   {nullptr};

@@ -13,7 +13,7 @@ Vibrance_vulkan::Vibrance_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "Vibrance");
 
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
@@ -65,11 +65,12 @@ void Vibrance_vulkan::upload_param(const VkMat& src, VkMat& dst, float vibrance)
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-void Vibrance_vulkan::filter(const ImMat& src, ImMat& dst, float vibrance) const
+double Vibrance_vulkan::filter(const ImMat& src, ImMat& dst, float vibrance) const
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
     {
-        return;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -85,7 +86,15 @@ void Vibrance_vulkan::filter(const ImMat& src, ImMat& dst, float vibrance) const
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, vibrance);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -93,6 +102,10 @@ void Vibrance_vulkan::filter(const ImMat& src, ImMat& dst, float vibrance) const
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } //namespace ImGui 

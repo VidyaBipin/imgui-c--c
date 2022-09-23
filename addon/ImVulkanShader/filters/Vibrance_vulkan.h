@@ -11,7 +11,7 @@ public:
     Vibrance_vulkan(int gpu = -1);
     ~Vibrance_vulkan();
 
-    virtual void filter(const ImMat& src, ImMat& dst, float vibrance) const;
+    double filter(const ImMat& src, ImMat& dst, float vibrance) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

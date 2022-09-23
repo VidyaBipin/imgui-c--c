@@ -13,7 +13,7 @@ CopyTo_vulkan::CopyTo_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "CopyTo");
 
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
@@ -68,25 +68,26 @@ void CopyTo_vulkan::upload_param(const VkMat& src, VkMat& dst, int x, int y, flo
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-void CopyTo_vulkan::copyTo(const ImMat& src, ImMat& dst, int x, int y, float alpha) const
+double CopyTo_vulkan::copyTo(const ImMat& src, ImMat& dst, int x, int y, float alpha) const
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
     {
-        return;
+        return ret;
     }
 
     //if (src.dims != dst.dims || src.color_space != dst.color_space || src.color_range != dst.color_range)
-    //    return;
+    //    return ret;
 
     if (!dst.empty())
     {
         if (x >= dst.w || y >= dst.h || x <= -dst.w || y <= -dst.h)
-            return;
+            return ret;
     }
     else
     {
         if (x >= src.w || y >= src.h || x <= -src.w || y <= -src.h)
-            return;
+            return ret;
     }
 
     VkMat dst_gpu;
@@ -114,7 +115,15 @@ void CopyTo_vulkan::copyTo(const ImMat& src, ImMat& dst, int x, int y, float alp
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, x, y, alpha);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -122,6 +131,10 @@ void CopyTo_vulkan::copyTo(const ImMat& src, ImMat& dst, int x, int y, float alp
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } //namespace ImGui 

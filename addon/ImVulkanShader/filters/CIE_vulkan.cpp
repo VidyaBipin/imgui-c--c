@@ -1042,47 +1042,47 @@ CIE_vulkan::CIE_vulkan(int gpu)
     backgroud.create(size, size, 4, 1u, 4);
     draw_backbroud();
 
-    vkdev = ImGui::get_gpu_device(gpu);
+    vkdev = get_gpu_device(gpu);
     opt.blob_vkallocator = vkdev->acquire_blob_allocator();
     opt.staging_vkallocator = vkdev->acquire_staging_allocator();
 #ifdef VULKAN_SHADER_FP16
     opt.use_image_storage = false;
     opt.use_fp16_arithmetic = false;
 #endif
-    cmd = new ImGui::VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "CIE");
 
-    std::vector<ImGui::vk_specialization_type> specializations(0);
+    std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
     
-    if (ImGui::compile_spirv_module(CIE_set_data, opt, spirv_data) == 0)
+    if (compile_spirv_module(CIE_set_data, opt, spirv_data) == 0)
     {
-        pipe_set = new ImGui::Pipeline(vkdev);
+        pipe_set = new Pipeline(vkdev);
         pipe_set->set_optimal_local_size_xyz(8, 8, 1);
         pipe_set->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }
 
-    if (ImGui::compile_spirv_module(CIE_data, opt, spirv_data) == 0)
+    if (compile_spirv_module(CIE_data, opt, spirv_data) == 0)
     {
-        pipe = new ImGui::Pipeline(vkdev);
+        pipe = new Pipeline(vkdev);
         pipe->set_optimal_local_size_xyz(1, 256, 1);
         pipe->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }
 
-    if (ImGui::compile_spirv_module(CIE_merge_data, opt, spirv_data) == 0)
+    if (compile_spirv_module(CIE_merge_data, opt, spirv_data) == 0)
     {
-        pipe_merge = new ImGui::Pipeline(vkdev);
+        pipe_merge = new Pipeline(vkdev);
         pipe_merge->set_optimal_local_size_xyz(8, 8, 1);
         pipe_merge->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }
 
-    ImGui::VkTransfer tran_xyz_matrix(vkdev);
+    VkTransfer tran_xyz_matrix(vkdev);
     tran_xyz_matrix.record_upload(xyz_matrix, xyz_matrix_gpu, opt, false);
     tran_xyz_matrix.submit_and_wait();
 
-    ImGui::VkTransfer tran_background(vkdev);
+    VkTransfer tran_background(vkdev);
     tran_background.record_upload(backgroud, backgroud_gpu, opt, false);
     tran_background.submit_and_wait();
 
@@ -1148,11 +1148,11 @@ void CIE_vulkan::SetParam(int _color_system, int _cie, int _size, int _gamuts, f
         backgroud.create(size, size, 4, 1u, 4);
         draw_backbroud();
 
-        ImGui::VkTransfer tran_xyz_matrix(vkdev);
+        VkTransfer tran_xyz_matrix(vkdev);
         tran_xyz_matrix.record_upload(xyz_matrix, xyz_matrix_gpu, opt, false);
         tran_xyz_matrix.submit_and_wait();
 
-        ImGui::VkTransfer tran_background(vkdev);
+        VkTransfer tran_background(vkdev);
         tran_background.record_upload(backgroud, backgroud_gpu, opt, false);
         tran_background.submit_and_wait();
 
@@ -1183,23 +1183,23 @@ void CIE_vulkan::draw_backbroud()
     }
 }
 
-void CIE_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, float intensity, bool show_color)
+void CIE_vulkan::upload_param(const VkMat& src, VkMat& dst, float intensity, bool show_color)
 {
-    std::vector<ImGui::VkMat> bindings_set(1);
+    std::vector<VkMat> bindings_set(1);
     bindings_set[0] = buffer;
-    std::vector<ImGui::vk_constant_type> constants_set(2);
+    std::vector<vk_constant_type> constants_set(2);
     constants_set[0].i = buffer.w;
     constants_set[1].i = buffer.h;
     cmd->record_pipeline(pipe_set, bindings_set, constants_set, buffer);
 
-    std::vector<ImGui::VkMat> bindings(6);
+    std::vector<VkMat> bindings(6);
     if      (src.type == IM_DT_INT8)     bindings[0] = src;
     else if (src.type == IM_DT_INT16)    bindings[1] = src;
     else if (src.type == IM_DT_FLOAT16)  bindings[2] = src;
     else if (src.type == IM_DT_FLOAT32)  bindings[3] = src;
     bindings[4] = buffer;
     bindings[5] = xyz_matrix_gpu;
-    std::vector<ImGui::vk_constant_type> constants(9);
+    std::vector<vk_constant_type> constants(9);
     constants[0].i = src.w;
     constants[1].i = src.h;
     constants[2].i = src.c;
@@ -1211,7 +1211,7 @@ void CIE_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, float 
     constants[8].i = cie;
     cmd->record_pipeline(pipe, bindings, constants, buffer);
 
-    std::vector<ImGui::VkMat> bindings_merge(9);
+    std::vector<VkMat> bindings_merge(9);
     if      (dst.type == IM_DT_INT8)     bindings_merge[0] = dst;
     else if (dst.type == IM_DT_INT16)    bindings_merge[1] = dst;
     else if (dst.type == IM_DT_FLOAT16)  bindings_merge[2] = dst;
@@ -1223,7 +1223,7 @@ void CIE_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, float 
     else if (backgroud_gpu.type == IM_DT_FLOAT32)  bindings_merge[7] = backgroud_gpu;
 
     bindings_merge[8] = buffer;
-    std::vector<ImGui::vk_constant_type> constants_merge(12);
+    std::vector<vk_constant_type> constants_merge(12);
     constants_merge[0].i = backgroud_gpu.w;
     constants_merge[1].i = backgroud_gpu.h;
     constants_merge[2].i = backgroud_gpu.c;
@@ -1239,11 +1239,12 @@ void CIE_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, float 
     cmd->record_pipeline(pipe_merge, bindings_merge, constants_merge, dst);
 }
 
-void CIE_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, float intensity, bool show_color)
+double CIE_vulkan::scope(const ImMat& src, ImMat& dst, float intensity, bool show_color)
 {
+    double ret = 0.0;
     if (!vkdev || !pipe_set || !pipe || !pipe_merge || !cmd)
     {
-        return;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -1259,7 +1260,15 @@ void CIE_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, float intensi
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, intensity, show_color);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -1267,7 +1276,11 @@ void CIE_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, float intensi
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 
 } // namespace ImGui

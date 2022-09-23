@@ -12,7 +12,7 @@ public:
     ~DeBand_vulkan();
     void SetParam(int _range, float _direction);
     
-    void filter(const ImMat& src, ImMat& dst, float threshold, bool blur);
+    double filter(const ImMat& src, ImMat& dst, float threshold, bool blur);
 
 private:
     VulkanDevice* vkdev {nullptr};

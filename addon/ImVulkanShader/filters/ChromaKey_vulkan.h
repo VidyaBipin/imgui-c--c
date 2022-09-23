@@ -26,7 +26,7 @@ public:
     // 比较后的alpha指数增亮
     // alphaExponent {0.1f}
 
-    void filter(const ImMat& src, ImMat& dst,
+    double filter(const ImMat& src, ImMat& dst,
                 float lumaMask, ImPixel chromaColor,
                 float alphaCutoffMin, float alphaScale, float alphaExponent,
                 int output_type);

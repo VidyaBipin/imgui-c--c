@@ -11,7 +11,7 @@ public:
     ColorInvert_vulkan(int gpu = -1);
     ~ColorInvert_vulkan();
 
-    virtual void filter(const ImMat& src, ImMat& dst) const;
+    double filter(const ImMat& src, ImMat& dst) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

@@ -13,7 +13,7 @@ Histogram_vulkan::Histogram_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = false;
     #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "Histogram");
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
     if (compile_spirv_module(Histogram_data, opt, spirv_data) == 0)
@@ -97,11 +97,12 @@ void Histogram_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, 
     cmd->record_pipeline(pipe_conv, conv_bindings, conv_constants, dst);
 }
 
-void Histogram_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int level, float scale, bool log_view)
+double Histogram_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int level, float scale, bool log_view)
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !pipe_zero || !pipe_conv || !cmd)
     {
-        return;
+        return ret;
     }
     VkMat dst_gpu;
     dst_gpu.create_type(level, 1, 4, IM_DT_FLOAT32, opt.blob_vkallocator);
@@ -116,7 +117,15 @@ void Histogram_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int lev
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, scale, log_view);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -124,6 +133,10 @@ void Histogram_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int lev
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } // namespace ImGui

@@ -11,7 +11,7 @@ public:
     Substract_Mean_Normalize_vulkan(int gpu = -1);
     ~Substract_Mean_Normalize_vulkan();
 
-    void forward(const ImMat& bottom_blob, ImMat& top_blob, std::vector<float> mean_vals, std::vector<float> norm_vals);
+    double forward(const ImMat& bottom_blob, ImMat& top_blob, std::vector<float> mean_vals, std::vector<float> norm_vals);
 
 public:
     const VulkanDevice* vkdev   {nullptr};

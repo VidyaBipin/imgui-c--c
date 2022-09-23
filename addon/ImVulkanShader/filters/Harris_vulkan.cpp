@@ -14,7 +14,7 @@ Harris_vulkan::Harris_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "Harris");
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
 
@@ -260,11 +260,12 @@ void Harris_vulkan::upload_param(const VkMat& src, VkMat& dst, int _blurRadius, 
     cmd->record_pipeline(pipe_nms, nms_bindings, nms_constants, dst);
 }
 
-void Harris_vulkan::filter(const ImMat& src, ImMat& dst, int _blurRadius, float edgeStrength, float threshold, float harris, float sensitivity)
+double Harris_vulkan::filter(const ImMat& src, ImMat& dst, int _blurRadius, float edgeStrength, float threshold, float harris, float sensitivity)
 {
+    double ret = 0.0;
     if (!vkdev || !pipe_harris || !cmd)
     {
-        return;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -280,7 +281,15 @@ void Harris_vulkan::filter(const ImMat& src, ImMat& dst, int _blurRadius, float 
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, _blurRadius, edgeStrength, threshold, harris, sensitivity);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -288,6 +297,10 @@ void Harris_vulkan::filter(const ImMat& src, ImMat& dst, int _blurRadius, float 
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } // namespace ImGui

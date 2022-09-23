@@ -11,7 +11,7 @@ public:
     Exposure_vulkan(int gpu = -1);
     ~Exposure_vulkan();
 
-    virtual void filter(const ImMat& src, ImMat& dst, float exposure) const;
+    double filter(const ImMat& src, ImMat& dst, float exposure) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

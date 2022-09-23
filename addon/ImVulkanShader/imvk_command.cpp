@@ -7,7 +7,7 @@ namespace ImGui
 class VkComputePrivate
 {
 public:
-    VkComputePrivate(const VulkanDevice* _vkdev);
+    VkComputePrivate(const VulkanDevice* _vkdev, std::string name);
     ~VkComputePrivate();
 
     int init();
@@ -15,6 +15,7 @@ public:
     int end_command_buffer();
 
     const VulkanDevice* vkdev;
+    std::string m_Name;
 
     VkCommandPool compute_command_pool;
 
@@ -172,8 +173,8 @@ public:
 #endif // VULKAN_SHADER_BENCHMARK
 };
 
-VkComputePrivate::VkComputePrivate(const VulkanDevice* _vkdev)
-    : vkdev(_vkdev)
+VkComputePrivate::VkComputePrivate(const VulkanDevice* _vkdev, std::string name)
+    : vkdev(_vkdev), m_Name(name)
 {
     compute_command_pool = 0;
     compute_command_buffer = 0;
@@ -327,9 +328,12 @@ int VkComputePrivate::end_command_buffer()
     return 0;
 }
 
-VkCompute::VkCompute(const VulkanDevice* _vkdev)
-    : vkdev(_vkdev), d(new VkComputePrivate(_vkdev))
+VkCompute::VkCompute(const VulkanDevice* _vkdev, std::string name)
+    : vkdev(_vkdev), m_Name(name), d(new VkComputePrivate(_vkdev, name))
 {
+#ifdef VULKAN_SHADER_BENCHMARK
+    create_query_pool(2);
+#endif
 }
 
 VkCompute::~VkCompute()
@@ -1863,6 +1867,43 @@ void VkCompute::record_write_timestamp(uint32_t query)
         r.command_buffer = d->compute_command_buffer;
         r.write_timestamp.query = query;
         d->delayed_records.push_back(r);
+    }
+}
+
+void VkCompute::benchmark_start()
+{
+    record_write_timestamp(0);
+}
+
+void VkCompute::benchmark_end()
+{
+    record_write_timestamp(1);
+}
+
+double VkCompute::benchmark()
+{
+    double duration_ms = 0.0;
+    std::vector<uint64_t> results(2);
+    get_query_pool_results(0, 2, results);
+    uint64_t start = results[0];
+    uint64_t end = results[1];
+    if (start != 0 && end != 0)
+    {
+        duration_ms = (end - start) * vkdev->info.timestamp_period() / 1000000.f;
+    }
+    return duration_ms;
+}
+
+void VkCompute::benchmark_print()
+{
+    std::vector<uint64_t> results(2);
+    get_query_pool_results(0, 2, results);
+    uint64_t start = results[0];
+    uint64_t end = results[1];
+    if (start != 0 && end != 0)
+    {
+        double duration_ms = (end - start) * vkdev->info.timestamp_period() / 1000000.f;
+        fprintf(stderr, "[Benchmark] - %s %8.3lfms\n", m_Name.c_str(), duration_ms);
     }
 }
 #endif // VULKAN_SHADER_BENCHMARK

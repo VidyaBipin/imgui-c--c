@@ -13,7 +13,7 @@ Copy_Make_Border_vulkan::Copy_Make_Border_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "Copy_Make_Border");
 
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
@@ -71,11 +71,12 @@ void Copy_Make_Border_vulkan::upload_param(const VkMat& src, VkMat& dst, int top
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-void Copy_Make_Border_vulkan::forward(const ImMat& bottom_blob, ImMat& top_blob, int top, int bottom, int left, int right, float value)
+double Copy_Make_Border_vulkan::forward(const ImMat& bottom_blob, ImMat& top_blob, int top, int bottom, int left, int right, float value)
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
     {
-        return;
+        return ret;
     }
 
     auto color_format = top_blob.color_format;
@@ -94,7 +95,15 @@ void Copy_Make_Border_vulkan::forward(const ImMat& bottom_blob, ImMat& top_blob,
         cmd->record_clone(bottom_blob, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, top, bottom, left, right, value);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (top_blob.device == IM_DD_CPU)
@@ -102,6 +111,10 @@ void Copy_Make_Border_vulkan::forward(const ImMat& bottom_blob, ImMat& top_blob,
     else if (top_blob.device == IM_DD_VULKAN)
         top_blob = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } // namespace ImGui

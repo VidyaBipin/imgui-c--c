@@ -24,7 +24,7 @@ HQDN3D_vulkan::HQDN3D_vulkan(int width, int height, int channels, int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "HQDN3D");
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
 
@@ -159,11 +159,12 @@ void HQDN3D_vulkan::upload_param(const VkMat& src, VkMat& dst)
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-void HQDN3D_vulkan::filter(const ImMat& src, ImMat& dst)
+double HQDN3D_vulkan::filter(const ImMat& src, ImMat& dst)
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
     {
-        return;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -179,7 +180,15 @@ void HQDN3D_vulkan::filter(const ImMat& src, ImMat& dst)
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -187,6 +196,10 @@ void HQDN3D_vulkan::filter(const ImMat& src, ImMat& dst)
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } // namespace ImGui

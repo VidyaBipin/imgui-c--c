@@ -12,7 +12,7 @@ public:
     ~ALM_vulkan();
     void SetParam(float _strength, float _bias = 0.7, float _gamma = 2.2);
     
-    void filter(const ImMat& src, ImMat& dst);
+    double filter(const ImMat& src, ImMat& dst);
 
 private:
     VulkanDevice* vkdev {nullptr};

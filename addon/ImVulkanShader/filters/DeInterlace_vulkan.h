@@ -11,7 +11,7 @@ public:
     DeInterlace_vulkan(int gpu = 0);
     ~DeInterlace_vulkan();
 
-    void filter(const ImMat& src, ImMat& dst);
+    double filter(const ImMat& src, ImMat& dst);
 
 private:
     VulkanDevice* vkdev {nullptr};

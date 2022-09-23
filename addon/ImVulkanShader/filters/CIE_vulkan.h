@@ -36,7 +36,7 @@ public:
 
     void SetParam(int _color_system, int _cie, int _size, int _gamuts, float _contrast, bool _correct_gamma);
 
-    void scope(const ImGui::ImMat& src, ImGui::ImMat& dst, float intensity = 0.01, bool show_color = true);
+    double scope(const ImMat& src, ImMat& dst, float intensity = 0.01, bool show_color = true);
 
 public:
     void GetWhitePoint(ColorsSystems cs, float w, float h, float* x, float* y);
@@ -70,6 +70,6 @@ private:
 
 private:
     void draw_backbroud();
-    void upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, float intensity, bool show_color);
+    void upload_param(const VkMat& src, VkMat& dst, float intensity, bool show_color);
 };
 } // namespace ImGui

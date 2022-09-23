@@ -11,7 +11,7 @@ public:
     Filter2DS_vulkan(int gpu = -1);
     ~Filter2DS_vulkan();
 
-    virtual void filter(const ImMat& src, ImMat& dst) const;
+    double filter(const ImMat& src, ImMat& dst) const;
 
 public:
     ImMat kernel;

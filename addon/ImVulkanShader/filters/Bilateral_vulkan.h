@@ -11,7 +11,7 @@ public:
     Bilateral_vulkan(int gpu = -1);
     ~Bilateral_vulkan();
 
-    void filter(const ImMat& src, ImMat& dst, int ksz, float sigma_spatial, float sigma_color);
+    double filter(const ImMat& src, ImMat& dst, int ksz, float sigma_spatial, float sigma_color);
 
 public:
     const VulkanDevice* vkdev {nullptr};

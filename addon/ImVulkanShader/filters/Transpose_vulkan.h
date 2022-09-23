@@ -11,7 +11,7 @@ public:
     Transpose_vulkan(int gpu = -1);
     ~Transpose_vulkan();
 
-    virtual void transpose(const ImMat& src, ImMat& dst, bool bFlipX, bool bFlipY) const;
+    double transpose(const ImMat& src, ImMat& dst, bool bFlipX, bool bFlipY) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

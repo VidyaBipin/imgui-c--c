@@ -11,7 +11,7 @@ public:
     CAS_vulkan(int gpu = 0);
     ~CAS_vulkan();
 
-    void filter(const ImMat& src, ImMat& dst, float strength);
+    double filter(const ImMat& src, ImMat& dst, float strength);
 
 private:
     VulkanDevice* vkdev {nullptr};

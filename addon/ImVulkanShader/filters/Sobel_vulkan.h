@@ -13,7 +13,7 @@ public:
     ~Sobel_vulkan();
     void SetParam(float _edgeStrength);
 
-    void filter(const ImMat& src, ImMat& dst, float edgeStrength);
+    double filter(const ImMat& src, ImMat& dst, float edgeStrength);
 
 private:
     const VulkanDevice* vkdev   {nullptr};

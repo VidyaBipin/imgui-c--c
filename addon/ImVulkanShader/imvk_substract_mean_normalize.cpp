@@ -13,7 +13,7 @@ Substract_Mean_Normalize_vulkan::Substract_Mean_Normalize_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "Substract_Mean_Normalize");
 
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
@@ -71,11 +71,12 @@ void Substract_Mean_Normalize_vulkan::upload_param(const VkMat& src, VkMat& dst,
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-void Substract_Mean_Normalize_vulkan::forward(const ImMat& bottom_blob, ImMat& top_blob, std::vector<float> mean_vals, std::vector<float> norm_vals)
+double  Substract_Mean_Normalize_vulkan::forward(const ImMat& bottom_blob, ImMat& top_blob, std::vector<float> mean_vals, std::vector<float> norm_vals)
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
     {
-        return;
+        return ret;
     }
     auto color_format = top_blob.color_format;
     int channels = IM_ISALPHA(color_format) ? 4 : IM_ISRGB(color_format) ? 3 : IM_ISMONO(color_format) ? 1 : 4;
@@ -93,7 +94,15 @@ void Substract_Mean_Normalize_vulkan::forward(const ImMat& bottom_blob, ImMat& t
         cmd->record_clone(bottom_blob, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, mean_vals, norm_vals);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (top_blob.device == IM_DD_CPU)
@@ -101,6 +110,10 @@ void Substract_Mean_Normalize_vulkan::forward(const ImMat& bottom_blob, ImMat& t
     else if (top_blob.device == IM_DD_VULKAN)
         top_blob = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } // namespace ImGui

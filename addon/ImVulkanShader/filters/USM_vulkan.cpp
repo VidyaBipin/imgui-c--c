@@ -14,7 +14,7 @@ USM_vulkan::USM_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev);
+    cmd = new VkCompute(vkdev, "USM");
     
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
@@ -194,11 +194,12 @@ void USM_vulkan::upload_param(const VkMat& src, VkMat& dst, float _sigma, float 
     cmd->record_pipeline(pipe, usm_bindings, usm_constants, dst);
 }
 
-void USM_vulkan::filter(const ImMat& src, ImMat& dst, float sigma, float amount, float threshold)
+double USM_vulkan::filter(const ImMat& src, ImMat& dst, float sigma, float amount, float threshold)
 {
+    double ret = 0.0;
     if (!vkdev || !pipe || !pipe_column || !pipe_row || !cmd)
     {
-        return;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -214,7 +215,15 @@ void USM_vulkan::filter(const ImMat& src, ImMat& dst, float sigma, float amount,
         cmd->record_clone(src, src_gpu, opt);
     }
 
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
     upload_param(src_gpu, dst_gpu, sigma, amount, threshold);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
 
     // download
     if (dst.device == IM_DD_CPU)
@@ -222,6 +231,10 @@ void USM_vulkan::filter(const ImMat& src, ImMat& dst, float sigma, float amount,
     else if (dst.device == IM_DD_VULKAN)
         dst = dst_gpu;
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
+    return ret;
 }
 } // namespace ImGui

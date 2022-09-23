@@ -27,7 +27,7 @@ public:
     LUT3D_vulkan(std::string lut_path, int interpolation = IM_INTERPOLATE_TRILINEAR, int gpu = 0);
     ~LUT3D_vulkan();
 
-    void filter(const ImMat& src, ImMat& dst);
+    double filter(const ImMat& src, ImMat& dst);
 
     void write_header_file(std::string filename);
     
