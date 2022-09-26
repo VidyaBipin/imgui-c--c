@@ -213,7 +213,7 @@ namespace ImHotKey
 
         for (int i = 0; i < 512; i++)
         {
-            if (ImGui::IsKeyPressed(i, false))
+            if (ImGui::IsKeyPressed((ImGuiKey)i, false))
             {
                 int imKey;
 #ifdef SDL_h_
@@ -331,7 +331,7 @@ namespace ImHotKey
         int scanCodeCount = 0;
         for (int i = 0; i < 512; i++)
         {
-            if (ImGui::IsKeyDown(i))
+            if (ImGui::IsKeyDown((ImGuiKey)i))
             {
                 int imKey;
 #ifdef SDL_h_
