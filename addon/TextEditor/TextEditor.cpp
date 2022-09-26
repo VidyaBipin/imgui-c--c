@@ -118,7 +118,7 @@ std::string TextEditor::GetText(const Coordinates & aStart, const Coordinates & 
 		}
 	}
     // NOTE: added this so it doesn't append an extra new line at the end
-    result.pop_back();
+    //result.pop_back();
 	return result;
 }
 

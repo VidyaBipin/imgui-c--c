@@ -1,3 +1,4 @@
+#define BILATERAL_DEFECT
 #include "Bilateral_vulkan.h"
 #include "Bilateral_shader.h"
 #include "ImVulkanShader.h"
@@ -63,8 +64,13 @@ void Bilateral_vulkan::upload_param(const VkMat& src, VkMat& dst, int ksz, float
     constants[8].i = dst.color_format;
     constants[9].i = dst.type;
     constants[10].i = ksz;
+#ifdef BILATERAL_DEFECT
+    constants[11].f = sqrt(sigma_spatial) / 5.0;//-0.5f / (sigma_spatial * sigma_spatial);
+    constants[12].f = sqrt(sigma_color);//-0.5f / (sigma_color * sigma_color);
+#else
     constants[11].f = -0.5f / (sigma_spatial * sigma_spatial);
     constants[12].f = -0.5f / (sigma_color * sigma_color);
+#endif
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 

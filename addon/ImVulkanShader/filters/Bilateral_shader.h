@@ -23,6 +23,7 @@ layout (push_constant) uniform parameter \n\
 } p; \
 "
 
+#ifndef BILATERAL_DEFECT
 #define SHADER_MAIN \
 " \n\
 void main() \n\
@@ -59,6 +60,78 @@ void main() \n\
     store_rgba(sfpvec4(sfpvec3(sum1/sum2), center.a), uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
+#else
+#define SHADER_MAIN \
+" \n\
+void main() \n\
+{ \n\
+    ivec2 uv = ivec2(gl_GlobalInvocationID.xy); \n\
+    if (uv.x >= p.out_w || uv.y >= p.out_h) \n\
+        return; \n\
+    sfp gaussianWeightTotal; \n\
+    sfpvec3 sum; \n\
+    sfpvec3 sampleColor; \n\
+    sfp distanceFromCentralColor; \n\
+    sfp gaussianWeight; \n\
+    sfpvec4 centralColor = load_rgba(uv.x, uv.y, p.w, p.cstep, p.in_format, p.in_type); \n\
+    gaussianWeightTotal = sfp(0.18f); \n\
+    sum = centralColor.rgb * sfp(0.18f); \n\
+    int sigma_spatial = int(p.ksz * p.sigma_spatial2_inv_half); \n\
+    sfp sigma_color = - sfp(p.sigma_color2_inv_half); \n\
+    \n\
+    sampleColor = load_rgba(uv.x - sigma_spatial, uv.y - sigma_spatial, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
+    distanceFromCentralColor = min(distance(centralColor.rgb, sampleColor) * sigma_color, sfp(1.0f)); \n\
+    gaussianWeight = sfp(0.05) * (sfp(1.0f) - distanceFromCentralColor); \n\
+    gaussianWeightTotal += gaussianWeight; \n\
+    sum += sampleColor * gaussianWeight; \n\
+    \n\
+    sampleColor = load_rgba(uv.x, uv.y - sigma_spatial, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
+    distanceFromCentralColor = min(distance(centralColor.rgb, sampleColor) * sigma_color, sfp(1.0f)); \n\
+    gaussianWeight = sfp(0.09) * (sfp(1.0f) - distanceFromCentralColor); \n\
+    gaussianWeightTotal += gaussianWeight; \n\
+    sum += sampleColor * gaussianWeight; \n\
+    \n\
+    sampleColor = load_rgba(uv.x + sigma_spatial, uv.y - sigma_spatial, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
+    distanceFromCentralColor = min(distance(centralColor.rgb, sampleColor) * sigma_color, sfp(1.0f)); \n\
+    gaussianWeight = sfp(0.12) * (sfp(1.0f) - distanceFromCentralColor); \n\
+    gaussianWeightTotal += gaussianWeight; \n\
+    sum += sampleColor * gaussianWeight; \n\
+    \n\
+    sampleColor = load_rgba(uv.x - sigma_spatial, uv.y, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
+    distanceFromCentralColor = min(distance(centralColor.rgb, sampleColor) * sigma_color, sfp(1.0f)); \n\
+    gaussianWeight = sfp(0.15) * (sfp(1.0f) - distanceFromCentralColor); \n\
+    gaussianWeightTotal += gaussianWeight; \n\
+    sum += sampleColor * gaussianWeight; \n\
+    \n\
+    sampleColor = load_rgba(uv.x + sigma_spatial, uv.y, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
+    distanceFromCentralColor = min(distance(centralColor.rgb, sampleColor) * sigma_color, sfp(1.0f)); \n\
+    gaussianWeight = sfp(0.15) * (sfp(1.0f) - distanceFromCentralColor); \n\
+    gaussianWeightTotal += gaussianWeight; \n\
+    sum += sampleColor * gaussianWeight; \n\
+    \n\
+    sampleColor = load_rgba(uv.x - sigma_spatial, uv.y + sigma_spatial, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
+    distanceFromCentralColor = min(distance(centralColor.rgb, sampleColor) * sigma_color, sfp(1.0f)); \n\
+    gaussianWeight = sfp(0.12) * (sfp(1.0f) - distanceFromCentralColor); \n\
+    gaussianWeightTotal += gaussianWeight; \n\
+    sum += sampleColor * gaussianWeight; \n\
+    \n\
+    sampleColor = load_rgba(uv.x, uv.y + sigma_spatial, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
+    distanceFromCentralColor = min(distance(centralColor.rgb, sampleColor) * sigma_color, sfp(1.0f)); \n\
+    gaussianWeight = sfp(0.09) * (sfp(1.0f) - distanceFromCentralColor); \n\
+    gaussianWeightTotal += gaussianWeight; \n\
+    sum += sampleColor * gaussianWeight; \n\
+    \n\
+    sampleColor = load_rgba(uv.x + sigma_spatial, uv.y + sigma_spatial, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
+    distanceFromCentralColor = min(distance(centralColor.rgb, sampleColor) * sigma_color, sfp(1.0f)); \n\
+    gaussianWeight = sfp(0.05) * (sfp(1.0f) - distanceFromCentralColor); \n\
+    gaussianWeightTotal += gaussianWeight; \n\
+    sum += sampleColor * gaussianWeight; \n\
+    \n\
+    sfpvec3 result = sum / gaussianWeightTotal; \n\
+    store_rgba(sfpvec4(result, centralColor.a), uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+} \
+"
+#endif
 
 static const char Filter_data[] = 
 SHADER_HEADER
