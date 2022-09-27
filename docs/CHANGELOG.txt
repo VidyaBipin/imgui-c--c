@@ -215,6 +215,8 @@ Other Changes:
 - Demo: Added more explicit "Center window" mode to "Overlay example". (#5618)
 - Examples: Added all SDL examples to default VS solution.
 - Backends: GLFW: Honor GLFW_CURSOR_DISABLED by not setting mouse position. (#5625) [@scorpion-26]
+- Backends: SDL: Disable SDL 2.0.22 new "auto capture" which prevents drag and drop across windows
+  (e.g. for multi-viewport support) and don't capture mouse when drag and dropping. (#5710)
 - Backends: Metal: Use __bridge for ARC based systems. (#5403) [@stack]
 - Backends: Metal: Add dispatch synchronization. (#5447) [@luigifcruz]
 - Backends: Metal: Update deprecated property 'sampleCount'->'rasterSampleCount'. (#5603) [@dcvz]
@@ -222,6 +224,7 @@ Other Changes:
 
 Docking+Viewports Branch:
 
+- Docking: Fixed incorrect focus highlight on docking node when focusing a menu. (#5702)
 - Docking, Nav: Fixed using gamepad/keyboard navigation not being able enter menu layer when
   it only contained the standard Collapse/Close buttons and no actual menu. (#5463, #4792)
 - Docking: Fixed regression introduced in v1.87 when docked window content not rendered
