@@ -5509,6 +5509,15 @@ size_t ImGui::InternationalizedText(const char* text_begin, const char* text_end
             auto pos = key.find_first_of(" ");
             if (pos == std::string::npos)
                 return 0;
+            // check before space is only a icon
+            auto headkey = key.substr(0, pos-1);
+            auto length = headkey.length();
+            if (length != 2)
+                return 0;
+            uint16_t char_data = *(uint16_t *)headkey.data();
+            char_data = (char_data << 8) | (char_data >> 8);
+            if (char_data < 0xe000)
+                return 0;
             auto subkey = key.substr(pos+1);
             name_prefix = key.substr(0, pos + 1);
             name = map[subkey];
