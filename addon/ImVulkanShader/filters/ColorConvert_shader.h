@@ -626,7 +626,11 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
-    sfpvec4 rgba = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba; \n\
+    if (p.in_format == CF_BGR || p.in_format == CF_RGB) \n\
+        rgba = sfpvec4(load_rgb(gx, gy, p.w, p.cstep, p.in_format, p.in_type), sfp(1.0f)); \n\
+    else \n\
+        rgba = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
     store_rgba(rgba, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
@@ -636,6 +640,7 @@ SHADER_HEADER
 SHADER_INPUT_OUTPUT_DATA
 SHADER_PARAM_CONV
 SHADER_LOAD_RGBA
+SHADER_LOAD_RGB
 SHADER_STORE_RGBA
 SHADER_CONV_MAIN
 ;

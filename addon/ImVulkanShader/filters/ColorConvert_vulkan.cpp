@@ -83,7 +83,8 @@ bool ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMat,
         // TODO: add other rgb format support
         // only support input format ABGR/ARGB/RGBA/BGRA.
         if (srcMat.color_format != IM_CF_ABGR && srcMat.color_format != IM_CF_ARGB &&
-            dstMat.color_format != IM_CF_RGBA && dstMat.color_format != IM_CF_BGRA)
+            dstMat.color_format != IM_CF_RGBA && dstMat.color_format != IM_CF_BGRA &&
+            dstClrCatg != 1)
         {
             mErrMsg = "Only support rgb input format ABGR/ARGB/RGBA/BGRA!";
             return false;
