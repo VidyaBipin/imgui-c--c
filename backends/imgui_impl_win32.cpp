@@ -38,6 +38,7 @@ typedef DWORD (WINAPI *PFN_XInputGetState)(DWORD, XINPUT_STATE*);
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
 //  2022-XX-XX: Platform: Added support for multiple windows via the ImGuiPlatformIO interface.
+//  2022-09-28: Inputs: Convert WM_CHAR values with MultiByteToWideChar() when window class was registered as MBCS (not Unicode).
 //  2022-09-26: Inputs: Renamed ImGuiKey_ModXXX introduced in 1.87 to ImGuiMod_XXX (old names still supported).
 //  2022-01-26: Inputs: replaced short-lived io.AddKeyModsEvent() (added two weeks ago) with io.AddKeyEvent() using ImGuiKey_ModXXX flags. Sorry for the confusion.
 //  2021-01-20: Inputs: calling new io.AddKeyAnalogEvent() for gamepad support, instead of writing directly to io.NavInputs[].
@@ -697,29 +698,19 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARA
         io.AddFocusEvent(msg == WM_SETFOCUS);
         return 0;
     case WM_CHAR:
-        // You can also use ToAscii()+GetKeyboardState() to retrieve characters.
-        if (wParam > 0 && wParam < 0x10000)
-            io.AddInputCharacterUTF16((unsigned short)wParam);
-        return 0;
-    // add By Dicky
-    case WM_IME_CHAR:
+        if (::IsWindowUnicode(hwnd))
         {
-            // Character is encoded as MBCS.
-            char* narrow = (char*)&wParam;
-            // The byte order is reversed, so swap it.
-            // This code only works on little endian system.
-            char tmp = narrow[0];
-            narrow[0] = narrow[1];
-            narrow[1] = tmp;
-
-            // Convert to UTF-16.
-            wchar_t widen;
-            MultiByteToWideChar(CP_ACP, 0, narrow, 2, &widen, 1);
-
-            io.AddInputCharacterUTF16(widen);
-            return 1; // Skip WM_CHAR
+            // You can also use ToAscii()+GetKeyboardState() to retrieve characters.
+            if (wParam > 0 && wParam < 0x10000)
+                io.AddInputCharacterUTF16((unsigned short)wParam);
         }
-    // add By Dicky end
+        else
+        {
+            wchar_t wch = 0;
+            ::MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char*)&wParam, 1, &wch, 1);
+            io.AddInputCharacter(wch);
+        }
+        return 0;
     case WM_SETCURSOR:
         // This is required to restore cursor when transitioning from e.g resize borders to client area.
         if (LOWORD(lParam) == HTCLIENT && ImGui_ImplWin32_UpdateMouseCursor())
