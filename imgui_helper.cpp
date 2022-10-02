@@ -684,6 +684,17 @@ void ImMatToTexture(ImGui::ImMat mat, ImTextureID& texture)
 {
     if (mat.empty())
         return;
+    if (texture)
+    {
+        int image_width = ImGui::ImGetTextureWidth(texture);
+        int image_height = ImGui::ImGetTextureHeight(texture);
+        if (mat.w != image_width || mat.h != image_height)
+        {
+            // mat changed
+            ImGui::ImDestroyTexture(texture);
+            texture = nullptr;
+        }
+    }
     if (mat.device == ImDataDevice::IM_DD_CPU)
     {
         ImGui::ImGenerateOrUpdateTexture(texture, mat.w, mat.h, mat.c, (const unsigned char *)mat.data);
