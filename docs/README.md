@@ -22,6 +22,8 @@ Add following addon collection also：
   ![CurveEdit view Image](images/CurveEdit.jpg)
 * ImSpinner(https://github.com/dalerank/imspinner)
   ![ImSpinner view Image](images/ImSpinner.gif)
+* Pie Menu(https://gist.github.com/thennequin/64b4b996ec990c6ddc13a48c6a0ba68c)
+  ![Pie menu widget](images/pie.jpg)
 
 * Bezier Widget
   ![Bezier view Image](images/Bezier.jpg)

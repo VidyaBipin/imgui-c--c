@@ -426,6 +426,51 @@ void ShowExtraWidgetDemoWindow()
         // End
         ImGui::TreePop();
     }
+    if (ImGui::TreeNode("Pie Menu"))
+    {
+        // trigger logic and output
+        const int pieMenuMouseButtonTrigger = ImGuiMouseButton_Left;    // Tweakable
+        ImGui::Text("click this text for a Pie Menu!");
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s","Based on code posted by @thennequin here:\nhttps://gist.github.com/thennequin/64b4b996ec990c6ddc13a48c6a0ba68c");
+        const bool pieMenuTriggered = ImGui::IsItemHovered() && ImGui::IsMouseClicked(pieMenuMouseButtonTrigger);
+        if (pieMenuTriggered)   ImGui::OpenPopup("PieMenu");
+
+        // example usage
+        static const char* pieSelected = NULL;  // used to display output
+        if (ImGui::Pie::BeginPopup("PieMenu", pieMenuMouseButtonTrigger))    {
+            pieSelected = "";
+            if (ImGui::Pie::MenuItem("Test1")) {pieSelected="Test1";}
+            if (ImGui::Pie::MenuItem("Test2")) {pieSelected="Test2";}
+            if (ImGui::Pie::MenuItem("Test3")) {pieSelected="Test3";}
+            if (ImGui::Pie::BeginMenu("Sub"))    {
+                if (ImGui::Pie::BeginMenu("Sub sub\nmenu")) {
+                    if (ImGui::Pie::MenuItem("SubSub")) {pieSelected="SubSub";}
+                    if (ImGui::Pie::MenuItem("SubSub2")) {pieSelected="SubSub2";}
+                    ImGui::Pie::EndMenu();
+                }
+                if (ImGui::Pie::MenuItem("TestSub")) {pieSelected="TestSub";}
+                if (ImGui::Pie::MenuItem("TestSub2")) {pieSelected="TestSub2";}
+                ImGui::Pie::EndMenu();
+            }
+            if (ImGui::Pie::BeginMenu("Sub2"))   {
+                if (ImGui::Pie::MenuItem("TestSub")) {pieSelected="TestSub";}
+                if (ImGui::Pie::BeginMenu("Sub sub\nmenu"))  {
+                    if (ImGui::Pie::MenuItem("SubSub")) {pieSelected="SubSub";}
+                    if (ImGui::Pie::MenuItem("SubSub2")) {pieSelected="SubSub2";}
+                    ImGui::Pie::EndMenu();
+                }
+                if (ImGui::Pie::MenuItem("TestSub2")) {pieSelected="TestSub2";}
+                ImGui::Pie::EndMenu();
+            }
+            ImGui::Pie::EndPopup();
+        }
+        if (pieSelected)    {
+            //ImGui::SameLine();
+            ImGui::Text("Last selected pie menu item: %s",strlen(pieSelected)==0?"NONE":pieSelected);
+        }
+
+        ImGui::TreePop();
+    }
 	if (ImGui::TreeNode("Color Bands"))
 	{
         ImGui::PushItemWidth(300);
