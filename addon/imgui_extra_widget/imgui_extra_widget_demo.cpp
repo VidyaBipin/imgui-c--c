@@ -139,8 +139,6 @@ void ShowExtraWidgetDemoWindow()
         {
             // choice OK here
         }
-
-
         ImGui::TreePop();
     }
     if (ImGui::TreeNode("Line leader"))
@@ -385,7 +383,6 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SameLine();
         ImGui::SpinnerArcRotation("SpinnerArcRotation", 13, 5, ImColor(255, 255, 255), 3 * velocity, 4);
 
-
         // Next line
         ImGui::SpinnerArcFade("SpinnerArcFade", 13, 5, ImColor(255, 255, 255), 3 * velocity, 4);
 
@@ -395,20 +392,17 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SameLine();
         ImGui::SpinnerTopup("SpinnerTopup", 16, 12, ImColor(255, 0, 0), ImColor(80, 80, 80), ImColor(255, 255, 255), 1 * velocity);
 
-
         ImGui::SameLine(); 
         ImGui::SpinnerFadePulsar("SpinnerFadePulsar", 16, ImColor(255, 255, 255), 1.5f * velocity, 1);
 
         ImGui::SameLine(); 
         ImGui::SpinnerFadePulsar("SpinnerFadePulsar2", 16, ImColor(255, 255, 255), 0.9f * velocity, 2);
 
-
         ImGui::SameLine(); 
         ImGui::SpinnerPulsar("SpinnerPulsar", 16, 2, ImColor(255, 255, 255), 1 * velocity, false);
 
         ImGui::SameLine(); 
         ImGui::SpinnerDoubleFadePulsar("SpinnerDoubleFadePulsar", 16, 2, ImColor(255, 255, 255), 2 * velocity);
-
 
         ImGui::SameLine(); 
         ImGui::SpinnerFilledArcFade("SpinnerFilledArcFade", 16, ImColor(255, 255, 255), 4 * velocity, 4);
@@ -418,7 +412,6 @@ void ShowExtraWidgetDemoWindow()
 
         ImGui::SameLine(); 
         ImGui::SpinnerFilledArcFade("SpinnerFilledArcFade6", 16, ImColor(255, 255, 255), 8 * velocity, 12);
-
 
         ImGui::SameLine(); 
         ImGui::SpinnerFilledArcColor("SpinnerFilledArcColor", 16, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f, 4);
@@ -467,6 +460,26 @@ void ShowExtraWidgetDemoWindow()
         if (pieSelected)    {
             //ImGui::SameLine();
             ImGui::Text("Last selected pie menu item: %s",strlen(pieSelected)==0?"NONE":pieSelected);
+        }
+
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNode("Msg Box"))
+    {
+        static bool show_msgbox_window = false;
+        static const char* buttons[] = { "Quit", "Cancel", NULL };
+        static MsgBox msgbox;
+        msgbox.Init("Message?", ICON_MD_WARNING, "Are you really really sure you want to open a message box?", buttons, false);
+        ImGui::Checkbox("Open MsgBox", &show_msgbox_window);
+        if (show_msgbox_window)
+            ImGui::OpenPopup("Message?");
+        int selected = msgbox.Draw();
+        switch (selected)
+        {
+            case 0: break;// No button pressed
+            case 1: show_msgbox_window = false; break;// First button pressed and so forth
+            case 2: show_msgbox_window = false; break;// Second button pressed, and so forth...
+            default: break;
         }
 
         ImGui::TreePop();

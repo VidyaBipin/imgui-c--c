@@ -54,6 +54,7 @@ Add following addon collection also：
   
 
 - Add multi-language(text internationalized with language ini file) support
+- Add msgbox widget
 - Add many Vertical Text Helper API
 - Add many Extensions to ImDrawList
 - Add VkShader for vulkan compute(Tanlu team).
