@@ -30,6 +30,55 @@ static const ImU64          IM_U64_MAX = ULLONG_MAX; // (0xFFFFFFFFFFFFFFFFull);
 static const ImU64          IM_U64_MAX = (2ULL * 9223372036854775807LL + 1);
 #endif
 
+inline static tm GetCurrentDate() {
+    time_t now;time(&now);
+    return *localtime(&now);
+}
+// Tip: we modify tm (its fields can even be negative!) and then we call this method to retrieve a valid date
+inline static void RecalculateDateDependentFields(tm& date)    {
+    date.tm_isdst=-1;   // This tries to detect day time savings too
+    time_t tmp = mktime(&date);
+    date=*localtime(&tmp);
+}
+inline static tm GetDateZero() {
+    tm date;
+    memset(&date,0,sizeof(tm));     // Mandatory for emscripten. Please do not remove!
+    date.tm_isdst=-1;
+    date.tm_sec=0;		//	 Seconds.	[0-60] (1 leap second)
+    date.tm_min=0;		//	 Minutes.	[0-59]
+    date.tm_hour=0;		//	 Hours.	[0-23]
+    date.tm_mday=0;		//	 Day.		[1-31]
+    date.tm_mon=0;		//	 Month.	[0-11]
+    date.tm_year=0;		//	 Year	- 1900.
+    date.tm_wday=0;     //	 Day of week.	[0-6]
+    date.tm_yday=0;		//	 Days in year.[0-365]
+    return date;
+}
+inline static void UpdateDate(struct tm& date)
+{
+    date.tm_isdst = -1;   // This tries to detect day time savings too
+    time_t tmp = mktime(&date);
+    date = *localtime(&tmp);
+}
+inline static int DaysInMonth(struct tm& date)
+{
+    const static int num_days_per_month[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+    int days_in_month = num_days_per_month[date.tm_mon];
+    if (days_in_month == 28)
+    {
+        const int year = 1900+date.tm_year;
+        const bool bis = ((year%4)==0) && ((year%100)!=0 || (year%400)==0);
+        if (bis) days_in_month = 29;
+    }
+    return days_in_month;
+}
+
+inline static bool SameMonth(struct tm& d1, struct tm& d2)
+{
+    return d1.tm_mon == d2.tm_mon && d1.tm_year == d2.tm_year;
+}
+
+
 template<typename TYPE>
 static const char* ImAtoi(const char* src, TYPE* output)
 {
@@ -1409,6 +1458,492 @@ float ImGui::ProgressBar(const char *optionalPrefixText, float value, const floa
     return valueFraction;
 }
 
+//-------------------------------------------------------------------------
+bool ImGui::SpinScaler(const char* label, ImGuiDataType data_type, void* data_ptr, const void* step, const void* step_fast, const char* format, ImGuiInputTextFlags flags)
+{
+	ImGuiWindow* window = GetCurrentWindow();
+	if (window->SkipItems)
+		return false;
+
+	ImGuiContext& g = *GImGui;
+	ImGuiStyle& style = g.Style;
+
+	if (format == NULL)
+		format = DataTypeGetInfo(data_type)->PrintFmt;
+
+	char buf[64];
+	DataTypeFormatString(buf, IM_ARRAYSIZE(buf), data_type, data_ptr, format);
+
+	bool value_changed = false;
+	if ((flags & (ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsScientific)) == 0)
+		flags |= ImGuiInputTextFlags_CharsDecimal;
+	flags |= ImGuiInputTextFlags_AutoSelectAll;
+	flags |= ImGuiInputTextFlags_NoMarkEdited;  // We call MarkItemEdited() ourselve by comparing the actual data rather than the string.
+
+	if (step != NULL)
+	{
+		const float button_size = GetFrameHeight();
+
+		BeginGroup(); // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
+		PushID(label);
+		SetNextItemWidth(ImMax(1.0f, CalcItemWidth() - (button_size + style.ItemInnerSpacing.x) * 2));
+		if (InputText("", buf, IM_ARRAYSIZE(buf), flags)) // PushId(label) + "" gives us the expected ID from outside point of view
+			//value_changed = DataTypeApplyOpFromText(buf, g.InputTextState.InitialTextA.Data, data_type, data_ptr, format);
+            value_changed = DataTypeApplyFromText(buf, data_type, data_ptr, format);
+
+		// Step buttons
+		const ImVec2 backup_frame_padding = style.FramePadding;
+		style.FramePadding.x = style.FramePadding.y;
+		ImGuiButtonFlags button_flags = ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups;
+		if (flags & ImGuiInputTextFlags_ReadOnly)
+			button_flags |= ImGuiItemFlags_Disabled;
+		SameLine(0, style.ItemInnerSpacing.x);
+
+        // start diffs
+		float frame_height = GetFrameHeight();
+		float arrow_size = std::floor(frame_height * .45f);
+		float arrow_spacing = frame_height - 2.0f * arrow_size;
+
+		BeginGroup();
+		PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{g.Style.ItemSpacing.x, arrow_spacing});
+
+		// save/change font size to draw arrow buttons correctly
+		float org_font_size = GetDrawListSharedData()->FontSize;
+		GetDrawListSharedData()->FontSize = arrow_size;
+
+		if (ArrowButtonEx("+", ImGuiDir_Up, ImVec2(arrow_size, arrow_size), button_flags))
+		{
+			DataTypeApplyOp(data_type, '+', data_ptr, data_ptr, g.IO.KeyCtrl && step_fast ? step_fast : step);
+			value_changed = true;
+		}
+
+		if (ArrowButtonEx("-", ImGuiDir_Down, ImVec2(arrow_size, arrow_size), button_flags))
+		{
+			DataTypeApplyOp(data_type, '-', data_ptr, data_ptr, g.IO.KeyCtrl && step_fast ? step_fast : step);
+			value_changed = true;
+		}
+
+		// restore font size
+		GetDrawListSharedData()->FontSize = org_font_size;
+
+		PopStyleVar(1);
+		EndGroup();
+        // end diffs
+
+		const char* label_end = FindRenderedTextEnd(label);
+		if (label != label_end)
+		{
+			SameLine(0, style.ItemInnerSpacing.x);
+			TextEx(label, label_end);
+		}
+		style.FramePadding = backup_frame_padding;
+
+		PopID();
+		EndGroup();
+	}
+	else
+	{
+		if (InputText(label, buf, IM_ARRAYSIZE(buf), flags))
+			//value_changed = DataTypeApplyOpFromText(buf, g.InputTextState.InitialTextA.Data, data_type, data_ptr, format);
+            value_changed = DataTypeApplyFromText(buf, data_type, data_ptr, format);
+	}
+	if (value_changed)
+		MarkItemEdited(g.LastItemData.ID);
+
+	return value_changed;
+}
+
+bool ImGui::SpinInt(const char* label, int* v, int step, int step_fast, ImGuiInputTextFlags flags)
+{
+	// Hexadecimal input provided as a convenience but the flag name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
+	const char* format = (flags & ImGuiInputTextFlags_CharsHexadecimal) ? "%08X" : "%d";
+	return SpinScaler(label, ImGuiDataType_S32, (void*)v, (void*)(step>0 ? &step : NULL), (void*)(step_fast>0 ? &step_fast : NULL), format, flags);
+}
+
+bool ImGui::SpinFloat(const char* label, float* v, float step, float step_fast, const char* format, ImGuiInputTextFlags flags)
+{
+	flags |= ImGuiInputTextFlags_CharsScientific;
+	return SpinScaler(label, ImGuiDataType_Float, (void*)v, (void*)(step>0.0f ? &step : NULL), (void*)(step_fast>0.0f ? &step_fast : NULL), format, flags);
+}
+
+bool ImGui::SpinDouble(const char* label, double* v, double step, double step_fast, const char* format, ImGuiInputTextFlags flags)
+{
+	flags |= ImGuiInputTextFlags_CharsScientific;
+	return SpinScaler(label, ImGuiDataType_Double, (void*)v, (void*)(step>0.0 ? &step : NULL), (void*)(step_fast>0.0 ? &step_fast : NULL), format, flags);
+}
+
+// ImGui Date Chooser widget
+bool ImGui::InputDate(const char* label, struct tm& date, const char* format, bool sunday_first, bool close_on_leave, const char* left_button, const char* right_button, const char* today_button)
+{
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    ImGuiContext& g = *GImGui;
+    ImGuiStyle& style = g.Style;
+    static ImGuiID last_open_combo_id = 0;
+    static const int name_buf_size = 64;
+    static char day_names[7][name_buf_size] = {""};
+    static char month_names[12][name_buf_size] = {""};
+    static int max_month_width_index = -1;
+
+    // Initialize day/months names
+    if (max_month_width_index == -1)
+    {
+        struct tm tmp = GetDateZero();
+        for (int i=0;i<7;i++)
+        {
+            tmp.tm_wday = i;
+            char* day_name = &day_names[i][0];
+            strftime(day_name, name_buf_size, "%A", &tmp);
+            // Warning: This part won't work for multibyte UTF-8 chars:
+            // We want to keep the first letter only here, and we want it to be uppercase (because some locales provide it lowercase)
+            if (strlen(day_name) == 0)
+            {
+                static const char fallbacks[7] = {'S','M','T','W','T','F','S'};
+                day_name[0] = fallbacks[i];
+                day_name[1] = '\0';
+            }
+            else 
+            {
+                day_name[0] = toupper(day_name[0]);
+                day_name[1] = '\0';
+            }
+        }
+        float max_month_width = 0;
+        for (int i = 0; i < 12; i++)
+        {
+            tmp.tm_mon = i;
+            char* month_name = &month_names[i][0];
+            strftime(month_name, name_buf_size, "%B", &tmp);
+            if (strlen(month_name) == 0)
+            {
+                static const char* fallbacks[12] = {"January","February","March","April","May","June","July","August","September","October","November","December"};
+                strcpy(month_name, fallbacks[i]);
+            }
+            else month_name[0] = toupper(month_name[0]);
+            float mw = CalcTextSize(month_name).x;
+            if (max_month_width < mw)
+            {
+                max_month_width = mw;
+                max_month_width_index = i;
+            }
+        }
+    }
+
+    // Const values from inputs
+    const char* arrow_left = left_button ? left_button : "<";
+    const char* arrow_right = right_button ? right_button : ">";
+    const char* today = today_button ? today_button : "o"; // "⦿";
+    char currentText[128];
+    strftime(currentText, sizeof(currentText), format, &date);
+
+    // Const values for layout
+    const float arrow_left_width  = CalcTextSize(arrow_left).x;
+    const float arrow_right_width = CalcTextSize(arrow_right).x;
+    const ImVec2 space = GetStyle().ItemSpacing;
+    const float month_width = arrow_left_width + CalcTextSize(month_names[max_month_width_index]).x + arrow_right_width + 2*space.x;
+
+    // Use a fixed popup size to avoid any layout stretching policy
+    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+    const float year_width = arrow_left_width + CalcTextSize("9990").x + arrow_right_width + 2*space.x;
+    const float calendar_width = month_width + year_width + CalcTextSize(today).x + 3*space.x + 30.f;
+    const float textbox_width = label_size.x + CalcTextSize(currentText).x;
+    const float w = calendar_width > textbox_width ? calendar_width : textbox_width;
+    const float h = 8 * label_size.y + 7 * space.y + 2 * style.FramePadding.y + 30;
+    SetNextWindowSize(ImVec2(w, h));
+    SetNextWindowSizeConstraints(ImVec2(w, h), ImVec2(w, h));
+
+    bool value_changed = false;
+    if (!BeginCombo(label, currentText, 0))
+        return value_changed;
+
+    const ImGuiID id = window->GetID(label);
+    static struct tm d = GetDateZero();
+    if (last_open_combo_id != id)
+    {
+        last_open_combo_id = id;
+        d = date.tm_mday == 0 ? GetCurrentDate() : date;
+        d.tm_mday = 1; // move at 1st day of the month: mandatory for the algo
+        UpdateDate(d); // now d.tm_wday is correct
+    }
+
+    PushStyleVar(ImGuiStyleVar_WindowPadding, style.FramePadding);
+    Spacing();
+
+    static const ImVec4 transparent(1,1,1,0);
+    PushStyleColor(ImGuiCol_Button,transparent);
+
+    PushID(label);
+    int cid = 0;
+
+    // Month selector
+    PushID(cid++);
+    if (SmallButton(arrow_left))
+    {
+        d.tm_mon -= 1;
+        UpdateDate(d);
+    }
+    SameLine();
+    Text("%s", month_names[d.tm_mon]);
+    SameLine(month_width + ImGui::GetStyle().WindowPadding.x);
+    if (SmallButton(arrow_right))
+    {
+        d.tm_mon += 1;
+        UpdateDate(d);
+    }
+    PopID();
+
+    SameLine(ImGui::GetWindowWidth() - month_width - 2*ImGui::GetStyle().WindowPadding.x);
+
+    // Year selector
+    PushID(cid++);
+    if (SmallButton(arrow_left))
+    {
+        d.tm_year -= 1;
+        if(d.tm_year < 0)
+            d.tm_year = 0;
+        UpdateDate(d);
+    }
+    SameLine();
+    Text("%d", 1900+d.tm_year);
+    SameLine();
+    if (SmallButton(arrow_right))
+    {
+        d.tm_year += 1;
+        UpdateDate(d);
+    }
+    PopID();
+
+    SameLine();
+
+    // Today selector
+    PushID(cid++);
+    if (SmallButton(today))
+    {
+        d = GetCurrentDate();
+        d.tm_mday = 1;
+        UpdateDate(d);
+    }
+    PopID();
+
+    Spacing();
+
+    PushStyleColor(ImGuiCol_ButtonHovered,style.Colors[ImGuiCol_HeaderHovered]);
+    PushStyleColor(ImGuiCol_ButtonActive,style.Colors[ImGuiCol_HeaderActive]);
+
+    Separator();
+
+    bool date_clicked = false;
+
+    IM_ASSERT(d.tm_mday == 1);    // Otherwise the algo does not work
+    // Display items
+    char cur_day_str[4] = "";
+    int days_in_month = DaysInMonth(d);
+    struct tm cur_date = GetCurrentDate();
+    PushID(cid++);
+    for (int dwi = 0; dwi < 7; dwi++)
+    {
+        int dw = sunday_first ? dwi : (dwi+1)%7;
+        bool sunday = dw == 0;
+
+        BeginGroup(); // one column per day
+        // -- Day name
+        if (sunday) // style sundays in red
+        {
+            const ImVec4& tc = style.Colors[ImGuiCol_Text];
+            const float l = (tc.x+tc.y+tc.z)*0.33334f;
+            PushStyleColor(ImGuiCol_Text,ImVec4(l*2.f>1?1:l*2.f,l*.5f,l*.5f,tc.w));
+        }
+        Text(" %s",day_names[dw]);
+        Spacing();
+        // -- Day numbers
+        int cur_day = dw-d.tm_wday; // tm_wday is in [0,6]. For this to work here d must point to the 1st day of the month: i.e.: d.tm_mday = 1;
+        for (int row = 0; row < 6; row++)
+        {
+            int cday = cur_day + 7*row;
+            if (cday >= 0 && cday<days_in_month)
+            {
+                PushID(cid+7*row+dwi);
+                if (!sunday_first && (dw > 0 && d.tm_wday == 0 && row == 0)) // 1st == synday case
+                    TextUnformatted(" ");
+                if (cday <9 ) sprintf(cur_day_str," %.1d",(unsigned char)cday+1);
+                else sprintf(cur_day_str,"%.2d",(unsigned char)cday+1);
+
+                // Highligth input date and today
+                bool is_today = cday+1 == cur_date.tm_mday && SameMonth(cur_date, d);
+                bool is_input_date = cday+1 == date.tm_mday && SameMonth(date, d);
+                if (is_input_date)
+                    PushStyleColor(ImGuiCol_Button,style.Colors[ImGuiCol_HeaderActive]);
+                else if (is_today)
+                    PushStyleColor(ImGuiCol_Button,style.Colors[ImGuiCol_TableHeaderBg]);
+
+                // Day number as a button
+                if (SmallButton(cur_day_str))
+                {
+                    date_clicked = true;
+                    struct tm date_out = d;
+                    date_out.tm_mday = cday+1;
+                    UpdateDate(date_out);
+                    if (difftime(mktime(&date_out), mktime(&date)) != 0)
+                    {
+                        date = date_out;
+                        value_changed = true;
+                    }
+                }
+                if (is_today || is_input_date)
+                    PopStyleColor();
+                PopID();
+            } else if ((sunday_first || !sunday) && cday<days_in_month)
+                TextUnformatted(" ");
+        }
+        if (sunday) // sundays
+            PopStyleColor();
+        EndGroup();
+
+        // horizontal space between columns
+        if (dwi!=6)
+            SameLine(ImGui::GetWindowWidth()-(6-dwi)*(ImGui::GetWindowWidth()/7.f));
+    }
+    PopID();
+
+    PopID(); // ImGui::PushID(label)
+
+    PopStyleColor(2);
+    PopStyleColor();
+    PopStyleVar();
+
+    bool close_combo = date_clicked;
+    if (close_on_leave && !close_combo) {
+        const float distance = g.FontSize*1.75f;
+        ImVec2 pos = GetWindowPos();
+        pos.x -= distance; pos.y -= distance;
+        ImVec2 size = GetWindowSize();
+        size.x += 2.f*distance; size.y += 2.f*distance;
+        const ImVec2& mouse_pos = GetIO().MousePos;
+        if (mouse_pos.x<pos.x || mouse_pos.y<pos.y || mouse_pos.x>pos.x+size.x || mouse_pos.y>pos.y+size.y) {
+            close_combo = true;
+        }
+    }
+    if (close_combo)
+        CloseCurrentPopup();
+
+    EndCombo();
+
+    return value_changed;
+}
+
+bool ImGui::InputTime(const char* label, struct tm& date, bool with_seconds, bool close_on_leave)
+{
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    bool value_changed = false;
+    PushID(label);
+    PushMultiItemsWidths(with_seconds ? 3 : 2, CalcItemWidth());
+    {
+        PushID(0);
+        value_changed |= DragInt("", &date.tm_hour, 1, 0, 23, "%d", ImGuiSliderFlags_AlwaysClamp);
+        PopID();
+        PopItemWidth();
+        SameLine(0, 0); Text(":"); SameLine(0, 0);
+        PushID(1);
+        value_changed |= DragInt("", &date.tm_min, 1, 0, 59, "%d", ImGuiSliderFlags_AlwaysClamp);
+        PopID();
+        PopItemWidth();
+
+        if (with_seconds)
+        {
+            SameLine(0, 0); Text(":"); SameLine(0, 0);
+            PushID(2);
+            value_changed |= DragInt("", &date.tm_sec, 1, 0, 59, "%d", ImGuiSliderFlags_AlwaysClamp);
+            PopID();
+            PopItemWidth();
+        }
+    }
+    PopID();
+    return value_changed;
+}
+
+bool ImGui::InputDateTime(const char* label, struct tm& date, const char* dateformat, bool sunday_first, bool with_seconds, bool close_on_leave, const char* left_button, const char* right_button, const char* today_button)
+{
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    ImGuiContext& g = *GImGui;
+    const float min_time_width  = (with_seconds?3:2)*CalcTextSize("23").x + (with_seconds?2:1)*CalcTextSize(":").x;
+    const float best_time_width = (with_seconds?0.35:0.25)*CalcItemWidth();
+    const float time_width = best_time_width > min_time_width ? best_time_width : min_time_width;
+    const float date_width = CalcItemWidth() - GetStyle().ItemSpacing.x - time_width - g.Style.FramePadding.x;
+
+    bool value_changed = false;
+    PushID(label);
+
+    PushItemWidth(date_width);
+    PushID(0);
+    value_changed |= InputDate("", date, dateformat, sunday_first, close_on_leave, left_button, right_button, today_button);
+    PopID();
+    PopItemWidth();
+
+    SameLine();
+
+    PushItemWidth(time_width);
+    PushID(1);
+    value_changed |= InputTime("", date, with_seconds, close_on_leave);
+    PopID();
+    PopItemWidth();
+
+    PopID();
+    return value_changed;
+}
+
+//-------------------------------------------------------------------------
+bool ImGui::BufferingBar(const char* label, float value, const ImVec2& size_arg, const float circle_pos, const ImU32& bg_col, const ImU32& fg_col)
+{
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+    
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    const ImGuiID id = window->GetID(label);
+    ImVec2 pos = window->DC.CursorPos;
+    ImVec2 size = size_arg;
+    size.x -= style.FramePadding.x * 2;
+    
+    const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
+    ImGui::ItemSize(bb, style.FramePadding.y);
+    if (!ImGui::ItemAdd(bb, id))
+        return false;
+    
+    // Render
+    const float circleStart = size.x * circle_pos;
+    const float circleEnd = size.x;
+    const float circleWidth = circleEnd - circleStart;
+    
+    window->DrawList->AddRectFilled(bb.Min, ImVec2(pos.x + circleStart, bb.Max.y), bg_col);
+    window->DrawList->AddRectFilled(bb.Min, ImVec2(pos.x + circleStart*value, bb.Max.y), fg_col);
+    
+    const float t = g.Time;
+    const float r = size.y / 2;
+    const float speed = 1.5f;
+    
+    const float a = speed*0;
+    const float b = speed*0.333f;
+    const float c = speed*0.666f;
+    
+    const float o1 = (circleWidth+r) * (t+a - speed * (int)((t+a) / speed)) / speed;
+    const float o2 = (circleWidth+r) * (t+b - speed * (int)((t+b) / speed)) / speed;
+    const float o3 = (circleWidth+r) * (t+c - speed * (int)((t+c) / speed)) / speed;
+    
+    window->DrawList->AddCircleFilled(ImVec2(pos.x + circleEnd - o1, bb.Min.y + r), r, bg_col);
+    window->DrawList->AddCircleFilled(ImVec2(pos.x + circleEnd - o2, bb.Min.y + r), r, bg_col);
+    window->DrawList->AddCircleFilled(ImVec2(pos.x + circleEnd - o3, bb.Min.y + r), r, bg_col);
+    return true;
+}
+
 // Slider 2D and Slider 3D
 static float Dist2(ImVec2 start, ImVec2 end)
 {
@@ -2383,7 +2918,6 @@ bool ImGui::RangeSelectVec2(const char* pLabel, ImVec2* pCurMin, ImVec2* pCurMax
 }
 
 // Bezier Widget
-
 template<int steps>
 static void bezier_table(ImVec2 P[4], ImVec2 results[steps + 1]) {
     static float C[(steps + 1) * 4], *K = 0;

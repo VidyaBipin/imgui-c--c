@@ -9,6 +9,19 @@
 
 namespace ImGui
 {
+static void HelpMarker(const char* desc)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
 void ShowKnobDemoWindow()
 {
     static float val = 0.5, val_default = 0.5;
@@ -207,6 +220,31 @@ void ShowExtraWidgetDemoWindow()
         ImGui::DiamondButton("Diamond filled arrow", true, true);
         ImGui::TreePop();
     }
+    if (ImGui::TreeNode("Date Chooser"))
+    {
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Choose a date(New):");
+        ImGui::SameLine();
+        static tm myDate1 = {};       // IMPORTANT: must be static! (plenty of compiler warnings here if we write: static tm myDate3={0}; Is there any difference?)
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.2f);
+        if (ImGui::InputDate("Date ##MyDate1", myDate1, "%d/%m/%Y")) {
+            // A new date has been chosen
+            //fprintf(stderr,"A new date has been chosen exacty now: \"%.2d-%.2d-%.4d\"\n",myDate3.tm_mday,myDate3.tm_mon+1,myDate3.tm_year+1900);
+        }
+
+        ImGui::Spacing();
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Choose another date with time(New):");
+        ImGui::SameLine();
+        static tm myDate2 = {};       // IMPORTANT: must be static! (plenty of compiler warnings here if we write: static tm myDate4={0}; Is there any difference?)
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x * 0.2f);
+        if (ImGui::InputDateTime("##MyDate2", myDate2, "%d/%m/%Y %H:%M")) {
+            // A new date has been chosen
+            //fprintf(stderr,"A new date has been chosen exacty now: \"%.2d-%.2d-%.4d\"\n",myDate4.tm_mday,myDate4.tm_mon+1,myDate4.tm_year+1900);
+        }
+
+        ImGui::TreePop();
+    }
     if (ImGui::TreeNode("Extended ProgressBar and Indicator"))
     {
         const float time = ((float)(((unsigned int) (ImGui::GetTime() * 1000.f)) % 50000) - 25000.f) / 25000.f;
@@ -240,6 +278,27 @@ void ShowExtraWidgetDemoWindow()
         ImGui::AlignTextToFramePadding();ImGui::TextUnformatted("Test 3:");ImGui::SameLine();ImGui::LoadingIndicatorCircle2("MyLIC23",2.0f);
         ImGui::AlignTextToFramePadding();ImGui::TextUnformatted("Test 4:");ImGui::SameLine();ImGui::LoadingIndicatorCircle2("MyLIC24",4.0f,1.f,&ImGui::GetStyle().Colors[ImGuiCol_Header]);
 
+        ImGui::Separator();
+        static float buffer_val = 0.0f;
+        buffer_val += 0.01;
+        if (buffer_val > 1.0) buffer_val = 0;
+        ImGui::BufferingBar("##buffer_bar", buffer_val, ImVec2(400, 6), 0.75, ImGui::GetColorU32(ImGuiCol_Button), ImGui::GetColorU32(ImGuiCol_ButtonHovered));
+        ImGui::SameLine(); HelpMarker("BufferingBar widget with float value.");
+
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNode("Spin"))
+    {
+        // Spin Test:
+        static int int_v = 10;
+        ImGui::SpinInt("##spin_int", &int_v, 1, 10);
+        ImGui::SameLine(); HelpMarker("Hold key Ctrl to spin fast.");
+        static float float_v = 10.0f;
+        ImGui::SpinFloat("##spin_float", &float_v, 1.f, 10.f);
+        ImGui::SameLine(); HelpMarker("Hold key Ctrl to spin fast.");
+        static double double_v = 10.0;
+        ImGui::SpinDouble("##spin_double", &double_v, 1., 10.);
+        ImGui::SameLine(); HelpMarker("Hold key Ctrl to spin fast.");
         ImGui::TreePop();
     }
     if (ImGui::TreeNode("Extra Spinners"))

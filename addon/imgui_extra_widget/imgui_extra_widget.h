@@ -85,6 +85,20 @@ IMGUI_API float ProgressBar(const char* optionalPrefixText,float value,const flo
 // ProgressBar with 0 as center
 IMGUI_API void ProgressBarPanning(float fraction, const ImVec2& size_arg = ImVec2(-FLT_MIN, 0));
 
+// Buffering ProgressBar
+IMGUI_API bool      BufferingBar(const char* label, float value, const ImVec2& size_arg, const float circle_pos, const ImU32& bg_col, const ImU32& fg_col);
+
+// Spin
+IMGUI_API bool      SpinScaler(const char* label, ImGuiDataType data_type, void* data_ptr, const void* step, const void* step_fast, const char* format, ImGuiInputTextFlags flags);
+IMGUI_API bool      SpinInt(const char* label, int* v, int step = 1, int step_fast = 100, ImGuiInputTextFlags flags = 0);
+IMGUI_API bool      SpinFloat(const char* label, float* v, float step = 0.0f, float step_fast = 0.0f, const char* format = "%.3f", ImGuiInputTextFlags flags = 0);
+IMGUI_API bool      SpinDouble(const char* label, double* v, double step = 0.0, double step_fast = 0.0, const char* format = "%.6f", ImGuiInputTextFlags flags = 0);
+
+// See date formats https://man7.org/linux/man-pages/man1/date.1.html
+IMGUI_API bool InputDate(const char* label, struct tm& date, const char* format = "%d/%m/%Y", bool sunday_first = true, bool close_on_leave = true, const char* left_button = "<", const char* right_button = ">", const char* today_button = "o");
+IMGUI_API bool InputTime(const char* label, struct tm& date, bool with_seconds = false, bool close_on_leave = true);
+IMGUI_API bool InputDateTime(const char* label, struct tm& date, const char* dateformat = "%d/%m/%Y %H:%M", bool sunday_first = true, bool with_seconds = false, bool close_on_leave = true, const char* left_button = "<", const char* right_button = ">", const char* today_button = "o");
+
 // new PlotEx
 IMGUI_API int   PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 frame_size, bool b_tooltops = true, bool b_comband = false);
 IMGUI_API void  PlotLinesEx(const char* label, const float* values, int values_count, int values_offset = 0, const char* overlay_text = NULL, float scale_min = FLT_MAX, float scale_max = FLT_MAX, ImVec2 graph_size = ImVec2(0, 0), int stride = sizeof(float), bool b_tooltips = true, bool b_comband = false);
@@ -109,7 +123,6 @@ IMGUI_API bool RangeSelectVec2(const char* pLabel, ImVec2* pCurMin, ImVec2* pCur
 // Bezier Widget
 IMGUI_API bool  BezierSelect(const char *label, const ImVec2 size, float P[5]);    // P[4] is curve presets(0 - 24)
 IMGUI_API float BezierValue(float dt01, float P[4], int step = 0);
-
 
 // Color Processing
 // func: ImU32(*func)(float const x, float const y)
