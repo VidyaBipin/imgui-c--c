@@ -475,6 +475,10 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SameLine(); 
         ImGui::SpinnerFilledArcColor("SpinnerFilledArcColor", 16, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f, 4);
 
+
+        // Next line
+        ImGui::SpinnerCircleDrop("SpinnerCircleDrop", 16, 1.5f, 4.f, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f, IM_PI);
+
         // End
         ImGui::TreePop();
     }

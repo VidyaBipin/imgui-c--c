@@ -485,7 +485,7 @@ IMGUI_API void SpinnerRainbow(const char *label, float radius, float thickness, 
 IMGUI_API void SpinnerAng(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI);
 IMGUI_API void SpinnerClock(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f);
 IMGUI_API void SpinnerPulsar(const char *label, float radius, float thickness, const ImColor &bg = 0xffffff80, float speed = 2.8f, bool sequence = true);
-IMGUI_API void SpinnerDoubleFadePulsar(const char *label, float radius, float thickness, const ImColor &bg = 0xffffff80, float speed = 2.8f);
+IMGUI_API void SpinnerDoubleFadePulsar(const char *label, float radius, float /*thickness*/, const ImColor &bg = 0xffffff80, float speed = 2.8f);
 IMGUI_API void SpinnerTwinPulsar(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int rings = 2);
 IMGUI_API void SpinnerFadePulsar(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, int rings = 2);
 IMGUI_API void SpinnerDots(const char *label, float *nextdot, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6, float minth = -1.f);
@@ -519,6 +519,7 @@ IMGUI_API void SpinnerIngYang(const char *label, float radius, float thickness, 
 IMGUI_API void SpinnerGooeyBalls(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f);
 IMGUI_API void SpinnerRotateGooeyBalls(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int balls = 1);
 IMGUI_API void SpinnerMoonLine(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xff000000, float speed = 2.8f, float angle = IM_PI);
+IMGUI_API void SpinnerCircleDrop(const char *label, float radius, float thickness, float thickness_drop, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI);
 template<SpinnerTypeT Type, typename... Args>
 void Spinner(const char *label, const Args&... args)
 {

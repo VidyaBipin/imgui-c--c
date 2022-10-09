@@ -5675,7 +5675,7 @@ void ImGui::SpinnerPulsar(const char *label, float radius, float thickness, cons
     window->DrawList->PathStroke(bg, false, thickness);
 }
 
-void ImGui::SpinnerDoubleFadePulsar(const char *label, float radius, float thickness, const ImColor &bg, float speed)
+void ImGui::SpinnerDoubleFadePulsar(const char *label, float radius, float /*thickness*/, const ImColor &bg, float speed)
 {
     SPINNER_HEADER(pos, size, centre);
 
@@ -6514,8 +6514,8 @@ void ImGui::SpinnerFilledArcFade(const char *label, float radius, const ImColor 
         window->DrawList->PathLineTo(centre);
         for (size_t i = 0; i <= num_segments + 1; i++)
         {
-            const float a = arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f - IM_PI / 4.f;
-            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+            const float ar = arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f - IM_PI / 4.f;
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * radius, centre.y + ImSin(ar) * radius));
         }
         window->DrawList->PathFillConvex(c);
     }
@@ -6556,8 +6556,8 @@ void ImGui::SpinnerFilledArcColor(const char *label, float radius, const ImColor
         window->DrawList->PathLineTo(centre);
         for (size_t i = 0; i < num_segments + 1; i++)
         {
-            const float a = arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f;
-            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+            const float ar = arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f;
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * radius, centre.y + ImSin(ar) * radius));
         }
         window->DrawList->PathFillConvex(c);
     }
@@ -6666,6 +6666,9 @@ void ImGui::SpinnerIngYang(const char *label, float radius, float thickness, boo
                                 colorI,
                                 th * i);
     }
+    const float ai_end = startI + (num_segments * angle_offset);
+    ImVec2 circle_i_center{centre.x + ImCos(ai_end) * radius, centre.y + ImSin(ai_end) * radius};
+    window->DrawList->AddCircleFilled(circle_i_center, thickness / 2.f, colorI, num_segments);
 
     const float rv = reverse ? -1.f : 1.f;
     const float yang_radius = (radius - yang_detlta_r);
@@ -6678,6 +6681,9 @@ void ImGui::SpinnerIngYang(const char *label, float radius, float thickness, boo
                                 colorY,
                                 th * i);
     }
+    const float ay_end = startY + IM_PI + (num_segments * angle_offset);
+    ImVec2 circle_y_center{centre.x + ImCos(ay_end * rv) * yang_radius, centre.y + ImSin(ay_end * rv) * yang_radius};
+    window->DrawList->AddCircleFilled(circle_y_center, thickness / 2.f, colorY, num_segments);
 }
 
 void ImGui::SpinnerGooeyBalls(const char *label, float radius, const ImColor &color, float speed)
@@ -6760,6 +6766,42 @@ void ImGui::SpinnerMoonLine(const char *label, float radius, float thickness, co
                                 color,
                                 1.f);
     }
+}
+
+void ImGui::SpinnerCircleDrop(const char *label, float radius, float thickness, float thickness_drop, const ImColor &color, const ImColor &bg, float speed, float angle)
+{
+    SPINNER_HEADER(pos, size, centre);
+
+    // Render
+    window->DrawList->PathClear();
+    const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+    float start = (float)ImGui::GetTime() * speed;
+    const float bg_angle_offset = IM_PI * 2.f / num_segments;
+
+    const float angle_offset = angle / num_segments;
+    const float th = thickness_drop / num_segments;
+    const float drop_radius_th = thickness_drop / num_segments;
+    for (size_t i = 0; i < num_segments; i++)
+    {
+        const float a = start + (i * angle_offset);
+        const float a1 = start + ((i + 1) * angle_offset);
+        const float s_drop_radius = radius - thickness / 2.f - (drop_radius_th * i);
+        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * s_drop_radius, centre.y + ImSin(a) * s_drop_radius),
+                                ImVec2(centre.x + ImCos(a1) * s_drop_radius, centre.y + ImSin(a1) * s_drop_radius),
+                                color,
+                                th * 2.f * i);
+    }
+    const float ai_end = start + (num_segments * angle_offset);
+    const float f_drop_radius = radius - thickness / 2.f - thickness_drop;
+    ImVec2 circle_i_center{centre.x + ImCos(ai_end) * f_drop_radius, centre.y + ImSin(ai_end) * f_drop_radius};
+    window->DrawList->AddCircleFilled(circle_i_center, thickness_drop, color, num_segments);
+
+    for (size_t i = 0; i <= num_segments; i++)
+    {
+        const float a = (i * bg_angle_offset);
+        window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+    }
+    window->DrawList->PathStroke(bg, false, thickness);
 }
 
 // draw leader
