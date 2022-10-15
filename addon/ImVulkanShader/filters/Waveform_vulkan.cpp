@@ -19,7 +19,7 @@ Waveform_vulkan::Waveform_vulkan(int gpu)
     if (compile_spirv_module(Waveform_data, opt, spirv_data) == 0)
     {
         pipe = new Pipeline(vkdev);
-        pipe->set_optimal_local_size_xyz(1, 512, 1);
+        pipe->set_optimal_local_size_xyz(16, 16, 1);
         pipe->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }
@@ -84,7 +84,7 @@ void Waveform_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, f
     constants[8].i = dst_gpu_int32.color_format;
     constants[9].i = dst_gpu_int32.type;
     constants[10].i = separate ? 1 : 0;
-    cmd->record_pipeline(pipe, bindings, constants, dst_gpu_int32);
+    cmd->record_pipeline(pipe, bindings, constants, src);
 
     std::vector<VkMat> conv_bindings(2);
     conv_bindings[0] = dst_gpu_int32;

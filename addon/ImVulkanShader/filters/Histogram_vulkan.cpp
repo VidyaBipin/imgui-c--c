@@ -19,7 +19,7 @@ Histogram_vulkan::Histogram_vulkan(int gpu)
     if (compile_spirv_module(Histogram_data, opt, spirv_data) == 0)
     {
         pipe = new Pipeline(vkdev);
-        pipe->set_optimal_local_size_xyz(1, 512, 1);
+        pipe->set_optimal_local_size_xyz(16, 16, 1);
         pipe->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }
@@ -82,7 +82,7 @@ void Histogram_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, 
     constants[7].i = dst_gpu_int32.cstep;
     constants[8].i = dst_gpu_int32.color_format;
     constants[9].i = dst_gpu_int32.type;
-    cmd->record_pipeline(pipe, bindings, constants, dst_gpu_int32);
+    cmd->record_pipeline(pipe, bindings, constants, src);
 
     std::vector<VkMat> conv_bindings(2);
     conv_bindings[0] = dst_gpu_int32;

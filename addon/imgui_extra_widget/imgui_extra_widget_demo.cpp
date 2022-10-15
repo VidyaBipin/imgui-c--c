@@ -451,33 +451,40 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SameLine();
         ImGui::SpinnerTopup("SpinnerTopup", 16, 12, ImColor(255, 0, 0), ImColor(80, 80, 80), ImColor(255, 255, 255), 1 * velocity);
 
-        ImGui::SameLine(); 
+        ImGui::SameLine();
         ImGui::SpinnerFadePulsar("SpinnerFadePulsar", 16, ImColor(255, 255, 255), 1.5f * velocity, 1);
 
-        ImGui::SameLine(); 
+        ImGui::SameLine();
         ImGui::SpinnerFadePulsar("SpinnerFadePulsar2", 16, ImColor(255, 255, 255), 0.9f * velocity, 2);
 
-        ImGui::SameLine(); 
+        ImGui::SameLine();
         ImGui::SpinnerPulsar("SpinnerPulsar", 16, 2, ImColor(255, 255, 255), 1 * velocity, false);
 
-        ImGui::SameLine(); 
+        ImGui::SameLine();
         ImGui::SpinnerDoubleFadePulsar("SpinnerDoubleFadePulsar", 16, 2, ImColor(255, 255, 255), 2 * velocity);
 
-        ImGui::SameLine(); 
+        ImGui::SameLine();
         ImGui::SpinnerFilledArcFade("SpinnerFilledArcFade", 16, ImColor(255, 255, 255), 4 * velocity, 4);
 
-        ImGui::SameLine(); 
+        ImGui::SameLine();
         ImGui::SpinnerFilledArcFade("SpinnerFilledArcFade6", 16, ImColor(255, 255, 255), 6 * velocity, 6);
 
-        ImGui::SameLine(); 
+        ImGui::SameLine();
         ImGui::SpinnerFilledArcFade("SpinnerFilledArcFade6", 16, ImColor(255, 255, 255), 8 * velocity, 12);
 
-        ImGui::SameLine(); 
-        ImGui::SpinnerFilledArcColor("SpinnerFilledArcColor", 16, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f, 4);
+        ImGui::SameLine();
+        ImGui::SpinnerFilledArcColor("SpinnerFilledArcColor", 16, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f * velocity, 4);
 
 
         // Next line
-        ImGui::SpinnerCircleDrop("SpinnerCircleDrop", 16, 1.5f, 4.f, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f, IM_PI);
+        ImGui::SpinnerCircleDrop("SpinnerCircleDrop", 16, 1.5f, 4.f, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f * velocity, IM_PI);
+
+        ImGui::SameLine();
+        ImGui::SpinnerSurroundedIndicator("SpinnerSurroundedIndicator", 16, 5, ImColor(0, 0, 0), ImColor(255, 255, 255), 7.8f * velocity);
+
+
+        ImGui::SameLine();
+        ImGui::SpinnerTrianglesSeletor("SpinnerTrianglesSeletor", 16, 8, ImColor(0, 0, 0), ImColor(255, 255, 255), 4.8f * velocity, 8);
 
         // End
         ImGui::TreePop();

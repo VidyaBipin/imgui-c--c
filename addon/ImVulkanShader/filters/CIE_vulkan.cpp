@@ -1065,7 +1065,7 @@ CIE_vulkan::CIE_vulkan(int gpu)
     if (compile_spirv_module(CIE_data, opt, spirv_data) == 0)
     {
         pipe = new Pipeline(vkdev);
-        pipe->set_optimal_local_size_xyz(1, 256, 1);
+        pipe->set_optimal_local_size_xyz(16, 16, 1);
         pipe->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }
@@ -1209,7 +1209,7 @@ void CIE_vulkan::upload_param(const VkMat& src, VkMat& dst, float intensity, boo
     constants[6].i = buffer.h;
     constants[7].i = 1;
     constants[8].i = cie;
-    cmd->record_pipeline(pipe, bindings, constants, buffer);
+    cmd->record_pipeline(pipe, bindings, constants, src);
 
     std::vector<VkMat> bindings_merge(9);
     if      (dst.type == IM_DT_INT8)     bindings_merge[0] = dst;

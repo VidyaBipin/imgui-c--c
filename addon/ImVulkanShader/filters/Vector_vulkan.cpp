@@ -19,7 +19,7 @@ Vector_vulkan::Vector_vulkan(int gpu)
     if (compile_spirv_module(Vector_data, opt, spirv_data) == 0)
     {
         pipe = new Pipeline(vkdev);
-        pipe->set_optimal_local_size_xyz(1, 256, 1);
+        pipe->set_optimal_local_size_xyz(16, 16, 1);
         pipe->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }
@@ -83,7 +83,7 @@ void Vector_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, flo
     constants[5].i = buffer_gpu.w;
     constants[6].i = buffer_gpu.h;
     constants[7].i = buffer_gpu.c;
-    cmd->record_pipeline(pipe, bindings, constants, buffer_gpu);
+    cmd->record_pipeline(pipe, bindings, constants, src);
 
     std::vector<ImGui::VkMat> bindings_merge(5);
     if      (dst.type == IM_DT_INT8)     bindings_merge[0] = dst;

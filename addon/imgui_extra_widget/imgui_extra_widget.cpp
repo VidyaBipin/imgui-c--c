@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iomanip>
 #include <set>
+#include <array>
 #include <imgui.h>
 #include <stdio.h>
 
@@ -6216,11 +6217,11 @@ void ImGui::SpinnerIncFullDots(const char *label, float radius, float thickness,
     SPINNER_HEADER(pos, size, centre);
 
     // Render
+    dots = ImMin<size_t>(dots, 32);
     float start = (float)ImGui::GetTime() * speed;
     float astart = ImFmod(start, IM_PI / dots);
     start -= astart;
     const float bg_angle_offset = IM_PI / dots;
-    dots = ImMin<size_t>(dots, 32);
 
     for (size_t i = 0; i < dots * 2; i++)
     {
@@ -6802,6 +6803,83 @@ void ImGui::SpinnerCircleDrop(const char *label, float radius, float thickness, 
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
     }
     window->DrawList->PathStroke(bg, false, thickness);
+}
+
+void ImGui::SpinnerSurroundedIndicator(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bg, float speed) 
+{
+    SPINNER_HEADER(pos, size, centre);
+
+    // Render
+    window->DrawList->PathClear();
+    const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+
+    ImColor c = color;
+    float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
+    c.Value.w = ImMax(0.1f, ImMin(lerp_koeff, 1.f));
+    window->DrawList->AddCircleFilled(centre, thickness, bg, num_segments);
+    window->DrawList->AddCircleFilled(centre, thickness, c, num_segments);
+
+    auto PathArc = [&] {
+        const float bg_angle_offset = IM_PI * 2.f / num_segments;
+        for (size_t i = 0; i <= num_segments; i++) {
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(i * bg_angle_offset) * radius, centre.y + ImSin(i * bg_angle_offset) * radius));
+        }
+    };
+    PathArc();
+    window->DrawList->PathStroke(bg, false, thickness);
+
+    PathArc();
+    lerp_koeff = (ImSin((float)ImGui::GetTime() * speed * 1.6f) + 1.f) * 0.5f;
+    c.Value.w = 1.f - ImMax(0.1f, ImMin(lerp_koeff, 1.f));;
+    window->DrawList->PathStroke(c, false, thickness);
+}
+
+void ImGui::SpinnerTrianglesSeletor(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bg, float speed, size_t bars) 
+{
+    SPINNER_HEADER(pos, size, centre);
+    // Render
+    window->DrawList->PathClear();
+    const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+    ImColor c = color;
+    float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
+    c.Value.w = ImMax(0.1f, ImMin(lerp_koeff, 1.f));
+    float dr = radius - thickness - 3;
+    window->DrawList->AddCircleFilled(centre, dr, bg, num_segments);
+    window->DrawList->AddCircleFilled(centre, dr, c, num_segments);
+    // Render
+    float start = (float)ImGui::GetTime() * speed;
+    float astart = ImFmod(start, IM_PI * 2 / bars);
+    start -= astart;
+    const float angle_offset = IM_PI * 2 / bars;
+    const float angle_offset_t = angle_offset * 0.3f;
+    bars = ImMin<size_t>(bars, 32);
+    const float rmin = radius - thickness;
+    auto get_points = [&] (auto left, auto right) -> std::array<ImVec2, 4> {
+        return {
+            ImVec2(centre.x + ImCos(left) * rmin, centre.y + ImSin(left) * rmin),
+            ImVec2(centre.x + ImCos(left) * radius, centre.y + ImSin(left) * radius),
+            ImVec2(centre.x + ImCos(right) * radius, centre.y + ImSin(right) * radius),
+            ImVec2(centre.x + ImCos(right) * rmin, centre.y + ImSin(right) * rmin)
+        };
+    };
+    for (size_t i = 0; i <= bars; i++)
+    {
+        float left = (i * angle_offset) - angle_offset_t;
+        float right = (i * angle_offset) + angle_offset_t;
+        ImColor rc = bg;
+        rc.Value.w = 0.1f;
+        auto points = get_points(left, right);
+        window->DrawList->AddConvexPolyFilled(points.data(), 4, rc);
+    }
+    for (size_t i = 0; i < bars; i++)
+    {
+        float left = start + (i * angle_offset) - angle_offset_t;
+        float right = start + (i * angle_offset) + angle_offset_t;
+        ImColor rc = bg;
+        rc.Value.w = (i / (float)bars) - 0.5f;
+        auto points = get_points(left, right);
+        window->DrawList->AddConvexPolyFilled(points.data(), 4, rc);
+    }
 }
 
 // draw leader
