@@ -26,16 +26,16 @@ layout (push_constant) uniform parameter \n\
 #define UCS     1 \n\
 #define LUV     2 \n\
 sfpmat3 matrix_mat_r2x = { \n\
-    {convert_matrix_r2x[0], convert_matrix_r2x[3], convert_matrix_r2x[6]}, \n\
-    {convert_matrix_r2x[1], convert_matrix_r2x[4], convert_matrix_r2x[7]}, \n\
-    {convert_matrix_r2x[2], convert_matrix_r2x[5], convert_matrix_r2x[8]}, \n\
-}; \
+    {sfp(convert_matrix_r2x[0]), sfp(convert_matrix_r2x[3]), sfp(convert_matrix_r2x[6])}, \n\
+    {sfp(convert_matrix_r2x[1]), sfp(convert_matrix_r2x[4]), sfp(convert_matrix_r2x[7])}, \n\
+    {sfp(convert_matrix_r2x[2]), sfp(convert_matrix_r2x[5]), sfp(convert_matrix_r2x[8])}, \n\
+}; \n\
 sfpvec3 rgb_to_xyz(sfpvec4 rgba) \n\
 { \n\
     sfpvec3 rgb = rgba.rgb; \n\
     sfpvec3 xyz = rgb * matrix_mat_r2x; \n\
     sfp sum = xyz.x + xyz.y + xyz.z; \n\
-    if (sum == 0) \n\
+    if (sum == sfp(0.f)) \n\
         sum = sfp(1.f); \n\
     xyz.x = xyz.x / sum; \n\
     xyz.y = xyz.y / sum; \n\
@@ -44,15 +44,15 @@ sfpvec3 rgb_to_xyz(sfpvec4 rgba) \n\
 sfpvec2 xy_to_upvp(sfpvec2 xy) \n\
 { \n\
     sfpvec2 upvp = {sfp(0.f), sfp(0.f)}; \n\
-    upvp.x = 4*xy.x / (- 2*xy.x + 12*xy.y + 3); \n\
-    upvp.y = 9*xy.y / (- 2*xy.x + 12*xy.y + 3); \n\
+    upvp.x = sfp(4.f) * xy.x / (- sfp(2.f) * xy.x + sfp(12.f) * xy.y + sfp(3.f)); \n\
+    upvp.y = sfp(9.f) * xy.y / (- sfp(2.f) * xy.x + sfp(12.f) * xy.y + sfp(3.f)); \n\
     return upvp; \n\
 } \n\
 sfpvec2 xy_to_uv(sfpvec2 xy) \n\
 { \n\
     sfpvec2 uv = {sfp(0.f), sfp(0.f)}; \n\
-    uv.x = 4*xy.x / (- 2*xy.x + 12*xy.y + 3); \n\
-    uv.y = 6*xy.y / (- 2*xy.x + 12*xy.y + 3); \n\
+    uv.x = sfp(4.f) * xy.x / (- sfp(2.f) * xy.x + sfp(12.f) * xy.y + sfp(3.f)); \n\
+    uv.y = sfp(6.f) * xy.y / (- sfp(2.f) * xy.x + sfp(12.f) * xy.y + sfp(3.f)); \n\
     return uv; \n\
 } \n\
 void cie(int x, int y) \n\
@@ -73,8 +73,8 @@ void cie(int x, int y) \n\
     { \n\
         fxy = sfpvec2(xyz.x, xyz.y); \n\
     } \n\
-    ixy.x = int((p.outw - 1) * fxy.x); \n\
-    ixy.y = (p.outh - 1) - int(((p.outh - 1) * fxy.y)); \n\
+    ixy.x = int(sfp(p.outw - 1) * fxy.x); \n\
+    ixy.y = (p.outh - 1) - int((sfp(p.outh - 1) * fxy.y)); \n\
     if (ixy.x >= 0 && ixy.x < p.outw && ixy.y >= 0 && ixy.y < p.outh) \n\
     { \n\
         memoryBarrierBuffer(); \n\

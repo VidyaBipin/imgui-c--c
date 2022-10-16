@@ -65,7 +65,7 @@ void main() \n\
     sfpvec4 rgba = load_rgba(gx, gy, p.w, p.cstep, p.format, p.type); \n\
     sfpvec4 hs = rgb_to_hsl(rgba); \n\
     sfpvec2 vector_point = hs_to_point(hs); \n\
-    int length = int(hs.z * 20); \n\
+    int length = int(hs.z * sfp(20.f)); \n\
     ivec2 point; \n\
     point.x = p.outw / 2 + int(vector_point.x * sfp(p.outw / 2)); \n\
     point.y = p.outh / 2 - int(vector_point.y * sfp(p.outh / 2)); \n\

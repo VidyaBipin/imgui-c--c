@@ -1046,8 +1046,8 @@ CIE_vulkan::CIE_vulkan(int gpu)
     opt.blob_vkallocator = vkdev->acquire_blob_allocator();
     opt.staging_vkallocator = vkdev->acquire_staging_allocator();
 #ifdef VULKAN_SHADER_FP16
-    opt.use_image_storage = false;
-    opt.use_fp16_arithmetic = false;
+    opt.use_fp16_arithmetic = true;
+    opt.use_fp16_storage = true;
 #endif
     cmd = new VkCompute(vkdev, "CIE");
 

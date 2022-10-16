@@ -31,13 +31,13 @@ void main() \n\
     int dx = p.separate == 1 ? gx / 3 : gx; \n\
     int ox = p.separate == 1 ? p.out_w / 3 : 0; \n\
     sfpvec4 rgba = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
-    int dyr = int(rgba.r * (p.out_h - 1)); \n\
+    int dyr = int(rgba.r * sfp(p.out_h - 1)); \n\
     ivec4 offset_r = (dyr * p.out_w + dx) * p.out_cstep + ivec4(0, 1, 2, 3); \n\
-    int dyg = int(rgba.g * (p.out_h - 1)); \n\
+    int dyg = int(rgba.g * sfp(p.out_h - 1)); \n\
     ivec4 offset_g = (dyg * p.out_w + dx + ox) * p.out_cstep + ivec4(0, 1, 2, 3); \n\
-    int dyb = int(rgba.b * (p.out_h - 1)); \n\
+    int dyb = int(rgba.b * sfp(p.out_h - 1)); \n\
     ivec4 offset_b = (dyb * p.out_w + dx + ox + ox) * p.out_cstep + ivec4(0, 1, 2, 3); \n\
-    //int dya = int(rgba.a * (p.out_h - 1)); \n\
+    //int dya = int(rgba.a * sfp(p.out_h - 1)); \n\
     //ivec4 offset_a = (dya * p.out_w + dx + ox + ox + ox) * p.out_cstep + ivec4(0, 1, 2, 3); \n\
     memoryBarrierBuffer(); \n\
     atomicAdd(waveform_int32_data[offset_r.r], 1); \n\

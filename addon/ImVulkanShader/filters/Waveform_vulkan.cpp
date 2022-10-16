@@ -11,7 +11,7 @@ Waveform_vulkan::Waveform_vulkan(int gpu)
     opt.staging_vkallocator = vkdev->acquire_staging_allocator();
 #ifdef VULKAN_SHADER_FP16
     opt.use_fp16_arithmetic = true;
-    opt.use_fp16_storage = false;
+    opt.use_fp16_storage = true;
 #endif
     cmd = new VkCompute(vkdev, "Waveform");
     std::vector<vk_specialization_type> specializations(0);
