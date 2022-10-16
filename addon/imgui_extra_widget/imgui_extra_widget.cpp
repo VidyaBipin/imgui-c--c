@@ -6730,43 +6730,32 @@ void ImGui::SpinnerMoonLine(const char *label, float radius, float thickness, co
     const float angle_offset = (angle * 0.5f) / num_segments;
     const float th = thickness / num_segments;
     window->DrawList->AddCircleFilled(centre, radius, bg, num_segments);
-    for (size_t i = 0; i < num_segments; i++)
-    {
-        const float a = start + ((num_segments + i) * angle_offset);
-        const float a1 = start + ((num_segments + i + 1) * angle_offset);
-        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
-                                ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
-                                color,
-                                thickness - th * i);
-    }
-    for (size_t i = 0; i < num_segments; i++)
-    {
-        const float a = start + (i * angle_offset);
-        const float a1 = start + ((i+1) * angle_offset);
-        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
-                                ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
-                                color,
-                                th * i);
-    }
-    for (size_t i = 0; i < num_segments; i++)
-    {
-        const float a = start + ((num_segments + i) * angle_offset);
-        const float a1 = start + ((num_segments + i + 1) * angle_offset);
-        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
-                                ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
-                                color,
-                                thickness - th * i);
-    }
-    const float b_angle_offset = (2.f * IM_PI - angle) / num_segments;
-    for (size_t i = 0; i < num_segments; i++)
-    {
-        const float a = start + num_segments * angle_offset * 2.f + (i * b_angle_offset);
-        const float a1 = start + num_segments * angle_offset * 2.f + ((i + 1) * b_angle_offset);
-        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
-                                ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
-                                color,
-                                1.f);
-    }
+    auto draw_gradient = [&] (auto b, auto e, auto th) {
+        for (size_t i = 0; i < num_segments; i++)
+        {
+            window->DrawList->AddLine(ImVec2(centre.x + ImCos(start + b(i)) * radius, centre.y + ImSin(start + b(i)) * radius),
+                                    ImVec2(centre.x + ImCos(start + e(i)) * radius, centre.y + ImSin(start + e(i)) * radius),
+                                    color,
+                                    th(i));
+        }
+    };
+
+    draw_gradient([&] (auto i) { return (num_segments + i) * angle_offset; },
+                    [&] (auto i) { return (num_segments + i + 1) * angle_offset; },
+                    [&] (auto i) { return thickness - th * i; });
+
+    draw_gradient([&] (auto i) { return (i) * angle_offset; },
+                    [&] (auto i) { return (i + 1) * angle_offset; },
+                    [&] (auto i) { return th * i; });
+
+    draw_gradient([&] (auto i) { return (num_segments + i) * angle_offset; },
+                    [&] (auto i) { return (num_segments + i + 1) * angle_offset; },
+                    [&] (auto i) { return thickness - th * i; });
+
+    const float b_angle_offset = (2.f * IM_PI - angle) / num_segments; 
+    draw_gradient([&] (auto i) { return num_segments * angle_offset * 2.f + (i * b_angle_offset); },
+                    [&] (auto i) { return num_segments * angle_offset * 2.f + ((i + 1) * b_angle_offset); },
+                    [] (auto) { return 1.f; });
 }
 
 void ImGui::SpinnerCircleDrop(const char *label, float radius, float thickness, float thickness_drop, const ImColor &color, const ImColor &bg, float speed, float angle)
@@ -6862,24 +6851,55 @@ void ImGui::SpinnerTrianglesSeletor(const char *label, float radius, float thick
             ImVec2(centre.x + ImCos(right) * rmin, centre.y + ImSin(right) * rmin)
         };
     };
-    for (size_t i = 0; i <= bars; i++)
+    auto draw_sectors = [&] (auto s, auto color_func) {
+        for (size_t i = 0; i <= bars; i++) {
+            float left = s + (i * angle_offset) - angle_offset_t;
+            float right = s + (i * angle_offset) + angle_offset_t;
+            auto points = get_points(left, right);
+            window->DrawList->AddConvexPolyFilled(points.data(), 4, color_func(i));
+        }
+    };
+
+    draw_sectors(0, [&] (auto) { ImColor rc = bg; rc.Value.w = 0.1f; return rc; });
+    draw_sectors(start, [&] (auto i) { ImColor rc = bg; rc.Value.w = (i / (float)bars) - 0.5f; return rc; });
+}
+
+void ImGui::SpinnerFlowingGradient(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bg, float speed, float angle)
+{
+    SPINNER_HEADER(pos, size, centre);
+
+    // Render
+    const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+    float start = (float)ImGui::GetTime()* speed;
+
+    const float angle_offset = (angle * 0.5f) / num_segments;
+    const float bg_angle_offset = (IM_PI * 2.f) / num_segments;
+    const float th = thickness / num_segments;
+
+    for (size_t i = 0; i <= num_segments; i++)
     {
-        float left = (i * angle_offset) - angle_offset_t;
-        float right = (i * angle_offset) + angle_offset_t;
-        ImColor rc = bg;
-        rc.Value.w = 0.1f;
-        auto points = get_points(left, right);
-        window->DrawList->AddConvexPolyFilled(points.data(), 4, rc);
+        const float a = (i * bg_angle_offset);
+        window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
     }
-    for (size_t i = 0; i < bars; i++)
-    {
-        float left = start + (i * angle_offset) - angle_offset_t;
-        float right = start + (i * angle_offset) + angle_offset_t;
-        ImColor rc = bg;
-        rc.Value.w = (i / (float)bars) - 0.5f;
-        auto points = get_points(left, right);
-        window->DrawList->AddConvexPolyFilled(points.data(), 4, rc);
-    }
+    window->DrawList->PathStroke(bg, false, thickness);
+
+    auto draw_gradient = [&] (auto b, auto e, auto c) {
+        for (size_t i = 0; i < num_segments; i++)
+        {
+            window->DrawList->AddLine(ImVec2(centre.x + ImCos(start + b(i)) * radius, centre.y + ImSin(start + b(i)) * radius),
+                                    ImVec2(centre.x + ImCos(start + e(i)) * radius, centre.y + ImSin(start + e(i)) * radius),
+                                    c(i),
+                                    thickness);
+        }
+    };
+
+    draw_gradient([&] (auto i) { return (i) * angle_offset; },
+                    [&] (auto i) { return (i + 1) * angle_offset; },
+                    [&] (auto i) { ImColor rc = color; rc.Value.w = (i / (float)num_segments); return rc; });
+
+    draw_gradient([&] (auto i) { return (num_segments + i) * angle_offset; },
+                    [&] (auto i) { return (num_segments + i + 1) * angle_offset; },
+                    [&] (auto i) { ImColor rc = color; rc.Value.w = 1.f - (i / (float)num_segments); return rc; });
 }
 
 // draw leader
