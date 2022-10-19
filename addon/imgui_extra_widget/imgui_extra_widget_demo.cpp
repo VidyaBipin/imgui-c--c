@@ -489,6 +489,15 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SameLine();
         ImGui::SpinnerFlowingGradient("SpinnerFlowingFradient", 16, 6, ImColor(200, 80, 0), ImColor(80, 80, 80), 5 * velocity, IM_PI * 2.f);
 
+        ImGui::SameLine();
+        ImGui::SpinnerRotateSegments("SpinnerRotateSegments", 16, 4, ImColor(255, 255, 255), 3 * velocity, 4);
+
+        ImGui::SameLine();
+        ImGui::SpinnerRotateSegments("SpinnerRotateSegments2", 16, 3, ImColor(255, 255, 255), 2.4 * velocity, 4, 2);
+
+        ImGui::SameLine();
+        ImGui::SpinnerRotateSegments("SpinnerRotateSegments3", 16, 2, ImColor(255, 255, 255), 2.1 * velocity, 4, 3);
+
         // End
         ImGui::TreePop();
     }

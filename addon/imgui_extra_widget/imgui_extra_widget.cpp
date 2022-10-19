@@ -6902,6 +6902,36 @@ void ImGui::SpinnerFlowingGradient(const char *label, float radius, float thickn
                     [&] (auto i) { ImColor rc = color; rc.Value.w = 1.f - (i / (float)num_segments); return rc; });
 }
 
+void ImGui::SpinnerRotateSegments(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t arcs, size_t layers)
+{
+    SPINNER_HEADER(pos, size, centre);
+
+    // Render
+    const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius) / 2;
+    float start = (float)ImGui::GetTime()* speed;
+
+    float arc_angle = 2.f * IM_PI / (float)arcs;
+    const float angle_offset = arc_angle / num_segments;
+    float r = radius;
+    float reverse = 1.f;
+    for (size_t layer = 0; layer < layers; layer++)
+    {
+        for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
+        {
+            window->DrawList->PathClear();
+            for (size_t i = 2; i <= num_segments - 2; i++)
+            {
+                const float a = start * (1 + 0.1 * layer) + arc_angle * arc_num + (i * angle_offset);
+                window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a * reverse) * r, centre.y + ImSin(a * reverse) * r));
+            }
+            window->DrawList->PathStroke(color, false, thickness);
+        }
+
+        r -= (thickness + 1);
+        reverse *= -1.f;
+    }
+}
+
 // draw leader
 static void draw_badge(ImDrawList* drawList, ImRect bb, int type, bool filled, bool arrow, ImU32 color)
 {
