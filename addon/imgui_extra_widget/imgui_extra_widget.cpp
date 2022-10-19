@@ -1161,8 +1161,8 @@ bool ImGui::ToggleButton(const char* str_id, bool* v)
     ImVec2 p = ImGui::GetCursorScreenPos();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-    float height = ImGui::GetFrameHeight();
-    float width = height * 1.55f;
+    float height = ImGui::GetFrameHeight() * 0.8;
+    float width = height * 1.6f;
     float radius = height * 0.50f;
 
     ImGui::InvisibleButton(str_id, ImVec2(width, height));
@@ -1968,7 +1968,7 @@ static float DistOnSegmentSqr(ImVec2 pos, ImVec2 start, ImVec2 end)
     return dist - to_dist;
 }
 
-bool ImGui::SliderScalar2D(char const* pLabel, float* fValueX, float* fValueY, const float fMinX, const float fMaxX, const float fMinY, const float fMaxY, float const fZoom /*= 1.0f*/)
+bool ImGui::SliderScalar2D(char const* pLabel, float* fValueX, float* fValueY, const float fMinX, const float fMaxX, const float fMinY, const float fMaxY, float const fZoom /*= 1.0f*/, bool bInput /*=true*/)
 {
     IM_ASSERT(fMinX < fMaxX);
     IM_ASSERT(fMinY < fMaxY);
@@ -1979,14 +1979,16 @@ bool ImGui::SliderScalar2D(char const* pLabel, float* fValueX, float* fValueY, c
     float const vSizeFull = (w - vSizeSubstract.x)*fZoom;
     ImVec2 const vSize(vSizeFull, vSizeFull);
 
-    float const fHeightOffset = ImGui::GetTextLineHeight();
+    float const fHeightOffset = bInput ? ImGui::GetTextLineHeight() : 0;
     ImVec2 const vHeightOffset(0.0f, fHeightOffset);
     ImVec2 const FrameSize = ImVec2(w, w) + vHeightOffset * 4;
     ImGui::BeginChild(iID, FrameSize, false, ImGuiWindowFlags_NoMove);
     ImVec2 vPos = ImGui::GetCursorScreenPos() + ImVec2(0, 4);
     ImRect oRect(vPos + vHeightOffset, vPos + vSize + vHeightOffset);
 
-    ImGui::TextUnformatted(pLabel);
+    const char* label_end = ImGui::FindRenderedTextEnd(pLabel);
+    ImGui::TextEx(pLabel, label_end);
+    //ImGui::TextUnformatted(pLabel);
     ImGui::Spacing();
     ImGui::PushID(iID);
 
@@ -2139,22 +2141,25 @@ bool ImGui::SliderScalar2D(char const* pLabel, float* fValueX, float* fValueY, c
 
     ImGui::PopID();
 
-    ImGui::Dummy(ImVec2(0, 4));
-    ImGui::Dummy(vHeightOffset);
-    ImGui::Dummy(vSize);
+    if (bInput)
+    {
+        ImGui::Dummy(ImVec2(0, 4));
+        ImGui::Dummy(vHeightOffset);
+        ImGui::Dummy(vSize);
 
-    char pBufferID[64];
-    ImFormatString(pBufferID, IM_ARRAYSIZE(pBufferID), "Values##%d", *(ImS32 const*)&iID);
-    float const fSpeedX = fDeltaX/128.0f;
-    float const fSpeedY = fDeltaY/128.0f;
+        char pBufferID[64];
+        ImFormatString(pBufferID, IM_ARRAYSIZE(pBufferID), "Values##%d", *(ImS32 const*)&iID);
+        float const fSpeedX = fDeltaX/128.0f;
+        float const fSpeedY = fDeltaY/128.0f;
 
-    char pBufferXID[64];
-    ImFormatString(pBufferXID, IM_ARRAYSIZE(pBufferXID), "X##%d", *(ImS32 const*)&iID);
-    char pBufferYID[64];
-    ImFormatString(pBufferYID, IM_ARRAYSIZE(pBufferYID), "Y##%d", *(ImS32 const*)&iID);
+        char pBufferXID[64];
+        ImFormatString(pBufferXID, IM_ARRAYSIZE(pBufferXID), "X##%d", *(ImS32 const*)&iID);
+        char pBufferYID[64];
+        ImFormatString(pBufferYID, IM_ARRAYSIZE(pBufferYID), "Y##%d", *(ImS32 const*)&iID);
 
-    bModified |= ImGui::DragScalar(pBufferXID, ImGuiDataType_Float, fValueX, fSpeedX, &fMinX, &fMaxX);
-    bModified |= ImGui::DragScalar(pBufferYID, ImGuiDataType_Float, fValueY, fSpeedY, &fMinY, &fMaxY);
+        bModified |= ImGui::DragScalar(pBufferXID, ImGuiDataType_Float, fValueX, fSpeedX, &fMinX, &fMaxX);
+        bModified |= ImGui::DragScalar(pBufferYID, ImGuiDataType_Float, fValueY, fSpeedY, &fMinY, &fMaxY);
+    }
     ImGui::EndChild();
     return bModified;
 }
@@ -2583,9 +2588,9 @@ bool ImGui::DragTimeMS(const char* label, float* p_data, float v_speed, float p_
 }
 
 // RangeSelect
-bool ImGui::InputVec2(char const* pLabel, ImVec2* pValue, ImVec2 const vMinValue, ImVec2 const vMaxValue, float const fScale /*= 1.0f*/)
+bool ImGui::InputVec2(char const* pLabel, ImVec2* pValue, ImVec2 const vMinValue, ImVec2 const vMaxValue, float const fScale /*= 1.0f*/, bool bInput/* = true*/)
 {
-    return ImGui::SliderScalar2D(pLabel, &pValue->x, &pValue->y, vMinValue.x, vMaxValue.x, vMinValue.y, vMaxValue.y, fScale);
+    return ImGui::SliderScalar2D(pLabel, &pValue->x, &pValue->y, vMinValue.x, vMaxValue.x, vMinValue.y, vMaxValue.y, fScale, bInput);
 }
 
 bool ImGui::InputVec3(char const* pLabel, ImVec4* pValue, ImVec4 const vMinValue, ImVec4 const vMaxValue, float const fScale /*= 1.0f*/)
