@@ -590,18 +590,18 @@ bool ImGui::Knob(char const *label, float *p_value, float v_min, float v_max, fl
     float line_height = ImGui::GetTextLineHeight();
     ImGuiIO &io = ImGui::GetIO();
     ImVec2 ItemSize = ImVec2(size, size + line_height * 2 + style.ItemInnerSpacing.y * 2 + 4);
-    std::string ViewID = "###" + std::string(label) + "_KNOB_VIEW_CONTORL_";
-    ImGui::BeginChild(ViewID.c_str(), ItemSize, false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-    bool showLabel = label[0] != '#' && label[1] != '#' && label[0] != '\0';
     float radius = std::fmin(ItemSize.x, ItemSize.y) / 2.0f;
+    bool is_no_limit = isnan(v_min) || isnan(v_max);
     ImVec2 pos = ImGui::GetCursorScreenPos();
     ImVec2 center = ImVec2(pos.x + radius, pos.y + radius);
-    auto textSize = CalcTextSize(label);
-    bool is_no_limit = isnan(v_min) || isnan(v_max);
-    if (showLabel)
+    std::string ViewID = "###" + std::string(label) + "_KNOB_VIEW_CONTORL_";
+    ImGui::BeginChild(ViewID.c_str(), ItemSize, false, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+    const char* label_end = ImGui::FindRenderedTextEnd(label);
+    auto textSize = CalcTextSize(label, label_end);
+    if (textSize.x > 0)
     {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        draw_list->AddText(ImVec2(pos.x + ((ItemSize.x / 2) - (textSize.x / 2)), pos.y + style.ItemInnerSpacing.y), ImGui::GetColorU32(ImGuiCol_Text), label);
+        draw_list->AddText(ImVec2(pos.x + ((ItemSize.x / 2) - (textSize.x / 2)), pos.y + style.ItemInnerSpacing.y), ImGui::GetColorU32(ImGuiCol_Text), label, label_end);
         center.y += line_height + 4;
     }
 
@@ -1968,13 +1968,13 @@ static float DistOnSegmentSqr(ImVec2 pos, ImVec2 start, ImVec2 end)
     return dist - to_dist;
 }
 
-bool ImGui::SliderScalar2D(char const* pLabel, float* fValueX, float* fValueY, const float fMinX, const float fMaxX, const float fMinY, const float fMaxY, float const fZoom /*= 1.0f*/, bool bInput /*=true*/)
+bool ImGui::SliderScalar2D(char const* pLabel, float* fValueX, float* fValueY, const float fMinX, const float fMaxX, const float fMinY, const float fMaxY, float const fZoom /*= 1.0f*/, bool bInput /*=true*/, bool bHandle /*=true*/)
 {
     IM_ASSERT(fMinX < fMaxX);
     IM_ASSERT(fMinY < fMaxY);
     static bool drag_mouse = false;
     ImGuiID const iID = ImGui::GetID(pLabel);
-    ImVec2 const vSizeSubstract =  ImGui::CalcTextSize(std::to_string(1.0f).c_str()) * 1.1f;
+    ImVec2 const vSizeSubstract = bHandle ? ImGui::CalcTextSize(std::to_string(1.0f).c_str()) * 1.1f : ImVec2(8, 8);
     float const w = ImGui::CalcItemWidth();
     float const vSizeFull = (w - vSizeSubstract.x)*fZoom;
     ImVec2 const vSize(vSizeFull, vSizeFull);
@@ -2053,67 +2053,64 @@ bool ImGui::SliderScalar2D(char const* pLabel, float* fValueX, float* fValueY, c
     if (fScaleX < 1.0f - 2.0f*fYLimit)
         pDrawList->AddLine(ImVec2(oRect.Max.x - fCursorOff, vCursorPos.y), ImVec2(vCursorPos.x + fCursorOff, vCursorPos.y), uOrange, fLineThickness);
 
-    char pBufferX[16];
-    char pBufferY[16];
-    ImFormatString(pBufferX, IM_ARRAYSIZE(pBufferX), "%.5f", *(float const*)fValueX);
-    ImFormatString(pBufferY, IM_ARRAYSIZE(pBufferY), "%.5f", *(float const*)fValueY);
-
-    ImU32 const uTextCol = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_Text]);
-
-    ImGui::SetWindowFontScale(0.75f);
-
-    ImVec2 const vXSize = ImGui::CalcTextSize(pBufferX);
-    ImVec2 const vYSize = ImGui::CalcTextSize(pBufferY);
-
-    ImVec2 const vHandlePosX = ImVec2(vCursorPos.x, oRect.Max.y + vYSize.x*0.5f);
-    ImVec2 const vHandlePosY = ImVec2(oRect.Max.x + fHandleOffsetCoef * fCursorOff + vYSize.x, vCursorPos.y);
-
-    if (ImGui::IsMouseHoveringRect(vHandlePosX - ImVec2(fHandleRadius, fHandleRadius) - vSecurity, vHandlePosX + ImVec2(fHandleRadius, fHandleRadius) + vSecurity) &&
-        ImGui::IsMouseDown(ImGuiMouseButton_Left))
+    ImVec2 vXSize = {0, 0};
+    ImVec2 vYSize = {0, 0};
+    if (bHandle)
     {
-        ImVec2 const vCursorPos = ImGui::GetMousePos() - oRect.Min;
+        char pBufferX[16];
+        char pBufferY[16];
+        ImFormatString(pBufferX, IM_ARRAYSIZE(pBufferX), "%.5f", *(float const*)fValueX);
+        ImFormatString(pBufferY, IM_ARRAYSIZE(pBufferY), "%.5f", *(float const*)fValueY);
 
-        *fValueX = vCursorPos.x/(oRect.Max.x - oRect.Min.x)*fDeltaX + fMinX;
+        ImU32 const uTextCol = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyle().Colors[ImGuiCol_Text]);
 
-        bModified = true;
-        drag_mouse = true;
-    }
-    else if (ImGui::IsMouseHoveringRect(vHandlePosY - ImVec2(fHandleRadius, fHandleRadius) - vSecurity, vHandlePosY + ImVec2(fHandleRadius, fHandleRadius) + vSecurity) &&
+        ImGui::SetWindowFontScale(0.75f);
+
+        vXSize = ImGui::CalcTextSize(pBufferX);
+        vYSize = ImGui::CalcTextSize(pBufferY);
+
+        ImVec2 const vHandlePosX = ImVec2(vCursorPos.x, oRect.Max.y + vYSize.x*0.5f);
+        ImVec2 const vHandlePosY = ImVec2(oRect.Max.x + fHandleOffsetCoef * fCursorOff + vYSize.x, vCursorPos.y);
+
+        if (ImGui::IsMouseHoveringRect(vHandlePosX - ImVec2(fHandleRadius, fHandleRadius) - vSecurity, vHandlePosX + ImVec2(fHandleRadius, fHandleRadius) + vSecurity) &&
             ImGui::IsMouseDown(ImGuiMouseButton_Left))
-    {
-        ImVec2 const vCursorPos = ImGui::GetMousePos() - oRect.Min;
+        {
+            ImVec2 const vCursorPos = ImGui::GetMousePos() - oRect.Min;
 
-        *fValueY = fDeltaY - vCursorPos.y/(oRect.Max.y - oRect.Min.y)*fDeltaY + fMinY;
+            *fValueX = vCursorPos.x/(oRect.Max.x - oRect.Min.x)*fDeltaX + fMinX;
 
-        bModified = true;
-        drag_mouse = true;
+            bModified = true;
+            drag_mouse = true;
+        }
+        else if (ImGui::IsMouseHoveringRect(vHandlePosY - ImVec2(fHandleRadius, fHandleRadius) - vSecurity, vHandlePosY + ImVec2(fHandleRadius, fHandleRadius) + vSecurity) &&
+                ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        {
+            ImVec2 const vCursorPos = ImGui::GetMousePos() - oRect.Min;
+
+            *fValueY = fDeltaY - vCursorPos.y/(oRect.Max.y - oRect.Min.y)*fDeltaY + fMinY;
+
+            bModified = true;
+            drag_mouse = true;
+        }
+
+        pDrawList->AddText(
+            ImVec2(ImMin(ImMax(vCursorPos.x - vXSize.x*0.5f, oRect.Min.x), oRect.Min.x + vSize.x - vXSize.x),
+                            oRect.Max.y + fCursorOff),
+            uTextCol,
+            pBufferX);
+        pDrawList->AddText(
+            ImVec2(oRect.Max.x + fCursorOff, ImMin(ImMax(vCursorPos.y - vYSize.y*0.5f, oRect.Min.y),
+                    oRect.Min.y + vSize.y - vYSize.y)),
+            uTextCol,
+            pBufferY);
+        ImGui::SetWindowFontScale(1.0f);
     }
-
-    if (drag_mouse)
-        ImGui::CaptureMouseFromApp();
-
-    if (!ImGui::IsMouseDown(ImGuiMouseButton_Left) && drag_mouse)
-    {
-        drag_mouse = false;
-        ImGui::CaptureMouseFromApp(false);
-    }
-
-    pDrawList->AddText(
-        ImVec2(ImMin(ImMax(vCursorPos.x - vXSize.x*0.5f, oRect.Min.x), oRect.Min.x + vSize.x - vXSize.x),
-                        oRect.Max.y + fCursorOff),
-        uTextCol,
-        pBufferX);
-    pDrawList->AddText(
-        ImVec2(oRect.Max.x + fCursorOff, ImMin(ImMax(vCursorPos.y - vYSize.y*0.5f, oRect.Min.y),
-                oRect.Min.y + vSize.y - vYSize.y)),
-        uTextCol,
-        pBufferY);
-    ImGui::SetWindowFontScale(1.0f);
 
     // Borders::Right
     pDrawList->AddCircleFilled(ImVec2(oRect.Max.x, vCursorPos.y), 2.0f, uOrange, 3);
     // Handle Right::Y
-    pDrawList->AddNgonFilled(ImVec2(oRect.Max.x + fHandleOffsetCoef*fCursorOff + vYSize.x, vCursorPos.y), fHandleRadius, uBlue, 4);
+    if (bHandle)
+        pDrawList->AddNgonFilled(ImVec2(oRect.Max.x + fHandleOffsetCoef*fCursorOff + vYSize.x, vCursorPos.y), fHandleRadius, uBlue, 4);
     if (fScaleY > fYLimit)
         pDrawList->AddLine(ImVec2(oRect.Max.x, oRect.Min.y), ImVec2(oRect.Max.x, vCursorPos.y - fCursorOff), uBlue, fBorderThickness);
     if (fScaleY < 1.0f - fYLimit)
@@ -2133,7 +2130,8 @@ bool ImGui::SliderScalar2D(char const* pLabel, float* fValueX, float* fValueY, c
     // Borders::Bottom
     pDrawList->AddCircleFilled(ImVec2(vCursorPos.x, oRect.Max.y), 2.0f, uOrange, 3);
     // Handle Bottom::X
-    pDrawList->AddNgonFilled(ImVec2(vCursorPos.x, oRect.Max.y + vXSize.y*2.0f), fHandleRadius, uBlue, 4);
+    if (bHandle)
+        pDrawList->AddNgonFilled(ImVec2(vCursorPos.x, oRect.Max.y + vXSize.y*2.0f), fHandleRadius, uBlue, 4);
     if (fScaleX > fXLimit)
         pDrawList->AddLine(ImVec2(oRect.Min.x, oRect.Max.y), ImVec2(vCursorPos.x - fCursorOff, oRect.Max.y), uBlue, fBorderThickness);
     if (fScaleX < 1.0f - fXLimit)
@@ -2160,6 +2158,16 @@ bool ImGui::SliderScalar2D(char const* pLabel, float* fValueX, float* fValueY, c
         bModified |= ImGui::DragScalar(pBufferXID, ImGuiDataType_Float, fValueX, fSpeedX, &fMinX, &fMaxX);
         bModified |= ImGui::DragScalar(pBufferYID, ImGuiDataType_Float, fValueY, fSpeedY, &fMinY, &fMaxY);
     }
+
+    if (drag_mouse)
+        ImGui::CaptureMouseFromApp();
+
+    if (!ImGui::IsMouseDown(ImGuiMouseButton_Left) && drag_mouse)
+    {
+        drag_mouse = false;
+        ImGui::CaptureMouseFromApp(false);
+    }
+
     ImGui::EndChild();
     return bModified;
 }
@@ -2588,9 +2596,9 @@ bool ImGui::DragTimeMS(const char* label, float* p_data, float v_speed, float p_
 }
 
 // RangeSelect
-bool ImGui::InputVec2(char const* pLabel, ImVec2* pValue, ImVec2 const vMinValue, ImVec2 const vMaxValue, float const fScale /*= 1.0f*/, bool bInput/* = true*/)
+bool ImGui::InputVec2(char const* pLabel, ImVec2* pValue, ImVec2 const vMinValue, ImVec2 const vMaxValue, float const fScale /*= 1.0f*/, bool bInput/* = true*/, bool bHandle/* = true*/)
 {
-    return ImGui::SliderScalar2D(pLabel, &pValue->x, &pValue->y, vMinValue.x, vMaxValue.x, vMinValue.y, vMaxValue.y, fScale, bInput);
+    return ImGui::SliderScalar2D(pLabel, &pValue->x, &pValue->y, vMinValue.x, vMaxValue.x, vMinValue.y, vMaxValue.y, fScale, bInput, bHandle);
 }
 
 bool ImGui::InputVec3(char const* pLabel, ImVec4* pValue, ImVec4 const vMinValue, ImVec4 const vMaxValue, float const fScale /*= 1.0f*/)
@@ -6926,7 +6934,7 @@ void ImGui::SpinnerRotateSegments(const char *label, float radius, float thickne
             window->DrawList->PathClear();
             for (size_t i = 2; i <= num_segments - 2; i++)
             {
-                const float a = start * (1 + 0.1 * layer) + arc_angle * arc_num + (i * angle_offset);
+                const float a = start * (1 + 0.1f * layer) + arc_angle * arc_num + (i * angle_offset);
                 window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a * reverse) * r, centre.y + ImSin(a * reverse) * r));
             }
             window->DrawList->PathStroke(color, false, thickness);
@@ -6934,6 +6942,62 @@ void ImGui::SpinnerRotateSegments(const char *label, float radius, float thickne
 
         r -= (thickness + 1);
         reverse *= -1.f;
+    }
+}
+
+void ImGui::SpinnerLemniscate(const char* label, float radius, float thickness, const ImColor& color, float speed, float angle)
+{
+    SPINNER_HEADER(pos, size, centre);
+    // Render
+    const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+    const float start = (float)ImGui::GetTime() * speed;
+    const float a = radius;
+    const float t = start;
+    const float step = angle / num_segments;
+    const float th = thickness / num_segments;
+    /*
+        x = a cos(t) / 1 + sin²(t)
+        y = a sin(t) . cos(t) / 1 + sin²(t)
+    */
+    const auto get_coord = [&](float const& a, float const& t) -> auto {
+        return std::make_pair((a * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))), (a * ImSin(t) * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))));
+    };
+    for (size_t i = 0; i < num_segments; i++)
+    {
+        const auto xy0 = get_coord(a, start + (i * step));
+        const auto xy1 = get_coord(a, start + ((i + 1) * step));
+
+        window->DrawList->AddLine(ImVec2(centre.x + xy0.first, centre.y + xy0.second),
+                                ImVec2(centre.x + xy1.first, centre.y + xy1.second),
+                                color,
+                                th * i);
+    }
+}
+
+void ImGui::SpinnerRotateGear(const char *label, float radius, float thickness, const ImColor &color, float speed, int pins)
+{
+    SPINNER_HEADER(pos, size, centre);
+
+    // Render
+    window->DrawList->PathClear();
+    const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+    float start = (float)ImGui::GetTime()* speed;
+    const float bg_angle_offset = IM_PI * 2.f / num_segments;
+    const float bg_radius = radius - thickness;
+    for (size_t i = 0; i <= num_segments; i++)
+    {
+        const float a = (i * bg_angle_offset);
+        window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * bg_radius, centre.y + ImSin(a) * bg_radius));
+    }
+    window->DrawList->PathStroke(color, false, bg_radius / 2);
+
+    const float rmin = bg_radius;
+    const float rmax = radius;
+    const float pin_angle_offset = IM_PI * 2.f / pins;
+    for (size_t i = 0; i <= pins; i++)
+    {
+        float a = start + (i * pin_angle_offset);
+        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * rmin, centre.y + ImSin(a) * rmin), ImVec2(centre.x + ImCos(a) * rmax, centre.y + ImSin(a) * rmax), color, thickness);
     }
 }
 
