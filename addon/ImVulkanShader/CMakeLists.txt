@@ -188,6 +188,7 @@ set(VKSHADER_SRCS
     filters/Vibrance_vulkan.cpp
     filters/ColorInvert_vulkan.cpp
     filters/ColorBalance_vulkan.cpp
+    filters/ColorCurve_vulkan.cpp
     filters/Bilateral_vulkan.cpp
     filters/Sobel_vulkan.cpp
     filters/Canny_vulkan.cpp
@@ -251,6 +252,8 @@ set(VKSHADER_INCS
     filters/ColorInvert_vulkan.h
     filters/ColorBalance_shader.h
     filters/ColorBalance_vulkan.h
+    filters/ColorCurve_shader.h
+    filters/ColorCurve_vulkan.h
     filters/Bilateral_shader.h
     filters/Bilateral_vulkan.h
     filters/Sobel_shader.h
@@ -334,7 +337,7 @@ add_library(
 
 set(VKSHADER_VERSION_MAJOR 1)
 set(VKSHADER_VERSION_MINOR 5)
-set(VKSHADER_VERSION_PATCH 3)
+set(VKSHADER_VERSION_PATCH 5)
 set(VKSHADER_VERSION_STRING ${VKSHADER_VERSION_MAJOR}.${VKSHADER_VERSION_MINOR}.${VKSHADER_VERSION_PATCH})
 
 if(NOT VKSHADER_STATIC)
