@@ -4,6 +4,7 @@
 #include <functional>
 #include <vector>
 #include <algorithm>
+#include <set>
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
@@ -618,6 +619,11 @@ struct IMGUI_API ImCurveEdit
     {
         int curveIndex;
         int pointIndex;
+        editPoint(int c, int p)
+        {
+            curveIndex = c;
+            pointIndex = p;
+        }
         bool operator <(const editPoint& other) const
         {
             if (curveIndex < other.curveIndex)
@@ -632,7 +638,19 @@ struct IMGUI_API ImCurveEdit
     struct Delegate
     {
         bool focused = false;
+        bool selectingQuad {false};
+        ImVec2 quadSelection {0, 0};
+        int overCurve {-1};
+        int movingCurve {-1};
+        bool scrollingV {false};
+        bool overSelectedPoint {false};
+        std::set<ImCurveEdit::editPoint> selectedPoints;
+        bool MovingCurrentTime {false};
+        bool pointsMoved {false};
+        ImVec2 mousePosOrigin;
+        std::vector<ImCurveEdit::KeyPoint> originalPoints;
         
+        virtual void Clear() = 0;
         virtual size_t GetCurveCount() = 0;
         virtual bool IsVisible(size_t /*curveIndex*/) { return true; }
         virtual CurveType GetCurveType(size_t /*curveIndex*/) const { return Linear; }
@@ -651,6 +669,7 @@ struct IMGUI_API ImCurveEdit
         virtual int EditPoint(size_t curveIndex, size_t pointIndex, ImVec2 value, CurveType type) = 0;
         virtual void AddPoint(size_t curveIndex, ImVec2 value, CurveType type) = 0;
         virtual float GetValue(size_t curveIndex, float t) = 0;
+        virtual void ClearPoint(size_t curveIndex) = 0;
         virtual void DeletePoint(size_t curveIndex, size_t pointIndex) = 0;
         virtual int AddCurve(std::string name, CurveType type, ImU32 color, bool visible, float _min, float _max, float _default) = 0;
         virtual void DeleteCurve(size_t curveIndex) = 0;
@@ -682,7 +701,7 @@ public:
     static float smoothstep(float edge0, float edge1, float t, CurveType type);
     static float distance(float x1, float y1, float x2, float y2);
     static float distance(float x, float y, float x1, float y1, float x2, float y2);
-    static bool Edit(Delegate& delegate, const ImVec2& size, unsigned int id, float& cursor_pos, unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, bool * changed = nullptr, ImVector<editPoint>* selectedPoints = NULL);
+    static bool Edit(Delegate& delegate, const ImVec2& size, unsigned int id, float& cursor_pos, unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, bool * changed = nullptr);
 };
 
 struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
@@ -692,6 +711,8 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
         : BackgroundColor(bg_color), GraticuleColor(gr_color)
     {}
     ~KeyPointEditor() { mKeys.clear(); }
+
+    void Clear() { mKeys.clear(); }
 
     KeyPointEditor& operator=(const KeyPointEditor& keypoint);
 
@@ -760,6 +781,13 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
         {
             mKeys[curveIndex].points.push_back({ImVec2(value.x, value.y), type});
             SortValues(curveIndex);
+        }
+    }
+    void ClearPoint(size_t curveIndex)
+    {
+        if (curveIndex < mKeys.size())
+        {
+            mKeys[curveIndex].points.clear();
         }
     }
     void DeletePoint(size_t curveIndex, size_t pointIndex)

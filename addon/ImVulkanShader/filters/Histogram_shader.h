@@ -18,6 +18,22 @@ layout (push_constant) uniform parameter \n\
 } p; \
 "
 
+#define SHADER_RGB2YUV \
+" \n\
+sfpmat3 matrix_mat_r2y = { \n\
+    {sfp(0.262700f), sfp(-0.139630f), sfp( 0.500000f)}, \n\
+    {sfp(0.678000f), sfp(-0.360370f), sfp(-0.459786f)}, \n\
+    {sfp(0.059300f), sfp( 0.500000f), sfp(-0.040214f)} \n\
+}; \n\
+sfpvec3 rgb_to_yuv(sfpvec3 rgb) \n\
+{\n\
+    sfpvec3 yuv; \n\
+    sfpvec3 yuv_offset = {sfp(0.f), sfp(0.5f), sfp(0.5)}; \n\
+    yuv = yuv_offset + matrix_mat_r2y * rgb; \n\
+    return clamp(yuv, sfp(0.f), sfp(1.f)); \n\
+} \
+"
+
 #define SHADER_MAIN \
 " \n\
 void main() \n\
@@ -27,15 +43,16 @@ void main() \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
     sfpvec4 rgba = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
+    rgba.a = rgb_to_yuv(rgba.rgb).x; \n\
     uint rid = uint(floor(rgba.r * sfp(p.out_w - 1))) + 0 * p.out_cstep; \n\
     uint gid = uint(floor(rgba.g * sfp(p.out_w - 1))) + 1 * p.out_cstep; \n\
     uint bid = uint(floor(rgba.b * sfp(p.out_w - 1))) + 2 * p.out_cstep; \n\
-    //uint aid = uint(floor(rgba.a * sfp(p.out_w - 1))) + 3 * p.out_cstep; \n\
+    uint yid = uint(floor(rgba.a * sfp(p.out_w - 1))) + 3 * p.out_cstep; \n\
     memoryBarrierBuffer(); \n\
     atomicAdd(histogram_int32_data[rid], 1); \n\
     atomicAdd(histogram_int32_data[gid], 1); \n\
     atomicAdd(histogram_int32_data[bid], 1); \n\
-    //atomicAdd(histogram_int32_data[aid], 1); \n\
+    atomicAdd(histogram_int32_data[yid], 1); \n\
     memoryBarrierBuffer(); \n\
 } \
 "
@@ -48,6 +65,7 @@ R"(
 layout (binding = 4) restrict buffer histogram_int32  { int histogram_int32_data[]; };
 )"
 SHADER_LOAD_RGBA
+SHADER_RGB2YUV
 SHADER_MAIN
 ;
 
@@ -125,7 +143,7 @@ void main() \n\
     int v_g = histogram_int32_data[data_offset.g]; \n\
     if (v_g == 0) \n\
     { \n\
-        int v_g = histogram_int32_data[data_nestest.g] / 2; \n\
+        v_g = histogram_int32_data[data_nestest.g] / 2; \n\
         histogram_float32_data[data_nestest.g] = \n\
         histogram_float32_data[data_offset.g] = (p.log_view == 1 ? log2(float(v_g + 1)) : float(v_g)) * p.scale; \n\
     } \n\
@@ -137,7 +155,7 @@ void main() \n\
     int v_b = histogram_int32_data[data_offset.b]; \n\
     if (v_b == 0) \n\
     { \n\
-        int v_b = histogram_int32_data[data_nestest.b] / 2; \n\
+        v_b = histogram_int32_data[data_nestest.b] / 2; \n\
         histogram_float32_data[data_nestest.b] = \n\
         histogram_float32_data[data_offset.b] = (p.log_view == 1 ? log2(float(v_b + 1)) : float(v_b)) * p.scale; \n\
     } \n\
@@ -145,17 +163,17 @@ void main() \n\
     { \n\
         histogram_float32_data[data_offset.b] = (p.log_view == 1 ? log2(float(v_b + 1)) : float(v_b)) * p.scale; \n\
     } \n\
-    // A Conv \n\
-    int v_a = histogram_int32_data[data_offset.a]; \n\
-    if (v_a == 0) \n\
+    // Y Conv \n\
+    int v_y = histogram_int32_data[data_offset.a]; \n\
+    if (v_y == 0) \n\
     { \n\
-        int v_a = histogram_int32_data[data_nestest.a] / 2; \n\
+        v_y = histogram_int32_data[data_nestest.a] / 2; \n\
         histogram_float32_data[data_nestest.a] = \n\
-        histogram_float32_data[data_offset.a] = (p.log_view == 1 ? log2(float(v_a + 1)) : float(v_a)) * p.scale; \n\
+        histogram_float32_data[data_offset.a] = (p.log_view == 1 ? log2(float(v_y + 1)) : float(v_y)) * p.scale; \n\
     } \n\
     else \n\
     { \n\
-        histogram_float32_data[data_offset.a] = (p.log_view == 1 ? log2(float(v_a + 1)) : float(v_a)) * p.scale; \n\
+        histogram_float32_data[data_offset.a] = (p.log_view == 1 ? log2(float(v_y + 1)) : float(v_y)) * p.scale; \n\
     } \n\
 } \
 "

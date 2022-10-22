@@ -908,9 +908,8 @@ void ShowExtraWidgetDemoWindow()
         if (dock_begin_end) curvs_flags |= CURVE_EDIT_FLAG_DOCK_BEGIN_END;
 
         ImVec2 item_pos = ImGui::GetCursorScreenPos();
-        ImVector<ImCurveEdit::editPoint> edit_points;
         float current_pos = -1.f;
-        ImCurveEdit::Edit(rampEdit, ImVec2(size_x, 300), ImGui::GetID("##bezier_view"), current_pos, curvs_flags, nullptr, nullptr, &edit_points);
+        ImCurveEdit::Edit(rampEdit, ImVec2(size_x, 300), ImGui::GetID("##bezier_view"), current_pos, curvs_flags, nullptr, nullptr);
         if (ImGui::IsItemHovered())
         {
             float pos = io.MousePos.x - item_pos.x;
@@ -934,24 +933,25 @@ void ShowExtraWidgetDemoWindow()
             ImGui::TableSetupColumn("Y", ImGuiTableColumnFlags_WidthFixed, 80);
             ImGui::TableSetupColumn("T", ImGuiTableColumnFlags_WidthFixed, 100);
             ImGui::TableHeadersRow();
-            for (int row = 0; row < edit_points.size(); row++)
+            //for (int row = 0; row < selected.size(); row++)
+            for (auto ep : rampEdit.selectedPoints)
             {
                 ImGui::TableNextRow(ImGuiTableRowFlags_None);
                 for (int column = 0; column < 5; column++)
                 {
                     if (!ImGui::TableSetColumnIndex(column) && column > 0)
                         continue;
-                    auto point = rampEdit.GetPoint(edit_points[row].curveIndex, edit_points[row].pointIndex);
-                    std::string column_id = std::to_string(edit_points[row].curveIndex) + "@" + std::to_string(edit_points[row].pointIndex);
+                    auto point = rampEdit.GetPoint(ep.curveIndex, ep.pointIndex);
+                    std::string column_id = std::to_string(ep.curveIndex) + "@" + std::to_string(ep.pointIndex);
                     switch (column)
                     {
-                        case 0 : ImGui::Text("%u", edit_points[row].curveIndex); break;
-                        case 1 : ImGui::Text("%u", edit_points[row].pointIndex); break;
+                        case 0 : ImGui::Text("%u", ep.curveIndex); break;
+                        case 1 : ImGui::Text("%u", ep.pointIndex); break;
                         case 2 :
                             ImGui::PushItemWidth(80);
                             if (ImGui::SliderFloat(("##x_pos@" + column_id).c_str(), &point.point.x, 0.f, size_x, "%.0f"))
                             {
-                                rampEdit.EditPoint(edit_points[row].curveIndex, edit_points[row].pointIndex, point.point, point.type);
+                                rampEdit.EditPoint(ep.curveIndex, ep.pointIndex, point.point, point.type);
                             }
                             ImGui::PopItemWidth();
                         break;
@@ -959,7 +959,7 @@ void ShowExtraWidgetDemoWindow()
                             ImGui::PushItemWidth(80);
                             if (ImGui::SliderFloat(("##y_pos" + column_id).c_str(), &point.point.y, 0.f, 1.f, "%.1f"))
                             {
-                                rampEdit.EditPoint(edit_points[row].curveIndex, edit_points[row].pointIndex, point.point, point.type);
+                                rampEdit.EditPoint(ep.curveIndex, ep.pointIndex, point.point, point.type);
                             }
                             ImGui::PopItemWidth();
                         break;
@@ -967,7 +967,7 @@ void ShowExtraWidgetDemoWindow()
                             ImGui::PushItemWidth(100);
                             if (ImGui::Combo(("##type" + column_id).c_str(), (int*)&point.type, curve_type_list, curve_type_count))
                             {
-                                rampEdit.EditPoint(edit_points[row].curveIndex, edit_points[row].pointIndex, point.point, point.type);
+                                rampEdit.EditPoint(ep.curveIndex, ep.pointIndex, point.point, point.type);
                             }
                             ImGui::PopItemWidth();
                         break;
