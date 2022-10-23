@@ -4919,8 +4919,6 @@ void ImGui::LoadingIndicatorCircle2(const char* label,float indicatorRadiusFacto
     // Render
     window->DrawList->PathClear();
 
-
-
     //int num_segments = indicatorRadiusPixels/8.f;
     //if (num_segments<4) num_segments=4;
 

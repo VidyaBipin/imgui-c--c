@@ -669,6 +669,7 @@ struct IMGUI_API ImCurveEdit
         virtual int EditPoint(size_t curveIndex, size_t pointIndex, ImVec2 value, CurveType type) = 0;
         virtual void AddPoint(size_t curveIndex, ImVec2 value, CurveType type) = 0;
         virtual float GetValue(size_t curveIndex, float t) = 0;
+        virtual float GetPointValue(size_t curveIndex, float t) = 0;
         virtual void ClearPoint(size_t curveIndex) = 0;
         virtual void DeletePoint(size_t curveIndex, size_t pointIndex) = 0;
         virtual int AddCurve(std::string name, CurveType type, ImU32 color, bool visible, float _min, float _max, float _default) = 0;
