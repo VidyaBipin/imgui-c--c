@@ -7887,8 +7887,8 @@ bool ImGui::ImCurveEdit::Edit(Delegate& delegate, const ImVec2& size, unsigned i
     {
         const ImVec2 bmin = ImMin(delegate.quadSelection, io.MousePos);
         const ImVec2 bmax = ImMax(delegate.quadSelection, io.MousePos);
-        draw_list->AddRectFilled(bmin, bmax, 0x40FF0000, 1.f);
-        draw_list->AddRect(bmin, bmax, 0xFFFF0000, 1.f);
+        draw_list->AddRectFilled(bmin, bmax, IM_COL32(255, 255, 0, 64), 1.f);
+        draw_list->AddRect(bmin, bmax, IM_COL32(255,255,0,255), 1.f);
         const ImRect selectionQuad(bmin, bmax);
         if (!io.MouseDown[0])
         {
