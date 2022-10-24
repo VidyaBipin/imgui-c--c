@@ -3462,8 +3462,9 @@ bool ed::NavigateAction::HandleZoom(const Control& control)
     const auto allowOffscreen = currentAction && currentAction->IsDragging();
 
     auto& io = ImGui::GetIO();
+    const bool is_shift_key_only = (io.KeyMods == ImGuiModFlags_Shift);
 
-    if (!io.MouseWheel || (!allowOffscreen && !Editor->IsHoveredWithoutOverlapp()))// && !ImGui::IsAnyItemActive())
+    if (!io.MouseWheel || !is_shift_key_only || (!allowOffscreen && !Editor->IsHoveredWithoutOverlapp()))// && !ImGui::IsAnyItemActive())
         return false;
 
     auto savedScroll = m_Scroll;

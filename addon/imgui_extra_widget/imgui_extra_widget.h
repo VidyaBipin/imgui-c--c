@@ -526,7 +526,8 @@ IMGUI_API void SpinnerTrianglesSeletor(const char *label, float radius, float th
 IMGUI_API void SpinnerFlowingGradient(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xff000000, float speed = 2.8f, float angle = IM_PI);
 IMGUI_API void SpinnerRotateSegments(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4, size_t layers = 1);
 IMGUI_API void SpinnerLemniscate(const char* label, float radius, float thickness, const ImColor& color = 0xffffffff, float speed = 2.8f, float angle = IM_PI / 2.0f);
-IMGUI_API void SpinnerRotateGear(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int pins = 12);
+IMGUI_API void SpinnerRotateGear(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t pins = 12);
+IMGUI_API void SpinnerRotatedAtom(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3);
 template<SpinnerTypeT Type, typename... Args>
 void Spinner(const char *label, const Args&... args)
 {
@@ -702,7 +703,7 @@ public:
     static float smoothstep(float edge0, float edge1, float t, CurveType type);
     static float distance(float x1, float y1, float x2, float y2);
     static float distance(float x, float y, float x1, float y1, float x2, float y2);
-    static bool Edit(Delegate& delegate, const ImVec2& size, unsigned int id, float& cursor_pos, unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, bool * changed = nullptr);
+    static bool Edit(ImDrawList* draw_list, Delegate& delegate, const ImVec2& size, unsigned int id, float& cursor_pos, unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, bool * changed = nullptr);
 };
 
 struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate

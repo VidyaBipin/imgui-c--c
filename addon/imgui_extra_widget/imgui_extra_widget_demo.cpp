@@ -578,6 +578,10 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SpinnerRotateGear("SpinnerRotateGear", 16, 6, ImColor(255, 255, 255), 2.1f * velocity, 8);
         ImGui::ShowTooltipOnHover("SpinnerRotateGear");
 
+        ImGui::SameLine();
+        ImGui::SpinnerRotatedAtom("SpinnerRotatedAtom", 16, 2, ImColor(255, 255, 255), 2.1f * velocity, 3);
+        ImGui::ShowTooltipOnHover("SpinnerRotatedAtom");
+
         // End
         ImGui::TreePop();
     }
@@ -909,7 +913,7 @@ void ShowExtraWidgetDemoWindow()
 
         ImVec2 item_pos = ImGui::GetCursorScreenPos();
         float current_pos = -1.f;
-        ImCurveEdit::Edit(rampEdit, ImVec2(size_x, 300), ImGui::GetID("##bezier_view"), current_pos, curvs_flags, nullptr, nullptr);
+        ImCurveEdit::Edit(nullptr, rampEdit, ImVec2(size_x, 300), ImGui::GetID("##bezier_view"), current_pos, curvs_flags, nullptr, nullptr);
         if (ImGui::IsItemHovered())
         {
             float pos = io.MousePos.x - item_pos.x;
