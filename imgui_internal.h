@@ -396,6 +396,7 @@ static inline ImVec4 operator+(const ImVec4& lhs, const ImVec4& rhs)            
 static inline ImVec4 operator-(const ImVec4& lhs, const ImVec4& rhs)            { return ImVec4(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z, lhs.w - rhs.w); }
 static inline ImVec4 operator*(const ImVec4& lhs, const ImVec4& rhs)            { return ImVec4(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z, lhs.w * rhs.w); }
 // Add By Dicky
+static inline ImVec4 operator-(ImVec4 v)                                        { return { -v.x, -v.y, -v.z, -v.w }; }
 static inline ImVec4 operator*(const ImVec4& lhs, const float rhs)              { return ImVec4(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs, lhs.w * rhs); }
 static inline ImVec4 operator/(const ImVec4& lhs, const float rhs)              { return ImVec4(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs, lhs.w / rhs); }
 static inline ImVec4 operator/(const ImVec4& lhs, const ImVec4& rhs)            { return ImVec4(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z, lhs.w / rhs.w); }
