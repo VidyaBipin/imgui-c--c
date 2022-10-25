@@ -16,6 +16,8 @@
 #include <TextEditor.h>
 #include <ImGuiTabWindow.h>
 #include <imgui_node_editor.h>
+#include <imgui_curve.h>
+#include <imgui_spline.h>
 #if IMGUI_VULKAN_SHADER
 #include <ImVulkanShader.h>
 #endif
@@ -223,6 +225,8 @@ public:
     bool show_text_editor_window = false;
     bool show_tab_window = false;
     bool show_node_editor_window = false;
+    bool show_curve_demo_window = false;
+    bool show_spline_demo_window = false;
 
 public:
     void DrawLineDemo();
@@ -513,6 +517,8 @@ bool Application_Frame(void* handle, bool app_will_quit)
         ImGui::Checkbox("Show Text Edit Window", &example->show_text_editor_window);
         ImGui::Checkbox("Show Tab Window", &example->show_tab_window);
         ImGui::Checkbox("Show Node Editor Window", &example->show_node_editor_window);
+        ImGui::Checkbox("Show Curve Demo Window", &example->show_curve_demo_window);
+        ImGui::Checkbox("Show Spline Demo Window", &example->show_spline_demo_window);
 
 #if IMGUI_VULKAN_SHADER
         ImGui::Checkbox("Show Vulkan Shader Test Window", &example->show_shader_window);
@@ -686,6 +692,28 @@ bool Application_Frame(void* handle, bool app_will_quit)
         if (ImGui::Begin("Example: Node Editor", &example->show_node_editor_window, ImGuiWindowFlags_NoScrollbar))
         {
             ImGui::ShowNodeEditorWindow();   // see its code for further info         
+        }
+        ImGui::End();
+    }
+
+    // Show Curve Demo Window
+    if (example->show_curve_demo_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(800,600), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Example: Curve Demo", &example->show_curve_demo_window, ImGuiWindowFlags_NoScrollbar))
+        {
+            ImGui::ShowCurveDemo();   // see its code for further info         
+        }
+        ImGui::End();
+    }
+
+    // Show Spline Demo Window
+    if (example->show_spline_demo_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(800,800), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Example: Spline Demo", &example->show_spline_demo_window, ImGuiWindowFlags_NoScrollbar))
+        {
+            ImGui::ShowSplineDemo();   // see its code for further info         
         }
         ImGui::End();
     }

@@ -855,6 +855,7 @@ void ShowExtraWidgetDemoWindow()
         ImGui::BezierSelect("##easeInExpo", ImVec2(200, 200), v);
         ImGui::TreePop();
     }
+    /*
     if (ImGui::TreeNode("Bezier View"))
     {
         ImGuiIO& io = ImGui::GetIO();
@@ -984,6 +985,7 @@ void ShowExtraWidgetDemoWindow()
         }
         ImGui::TreePop();
     }
+    */
     if (ImGui::TreeNode("Splitter windows"))
     {
         float h = 200;

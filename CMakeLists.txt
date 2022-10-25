@@ -872,6 +872,28 @@ if (IMGUI_BUILD_EXAMPLE)
     )
 endif(IMGUI_BUILD_EXAMPLE)
 
+# Curve
+set(IMGUI_SRC
+    ${IMGUI_SRC}
+    addon/ImCurve/imgui_curve.cpp
+    addon/ImCurve/imgui_spline.cpp
+)
+set(IMGUI_INCS
+    ${IMGUI_INCS}
+    addon/ImCurve/imgui_curve.h
+    addon/ImCurve/imgui_spline.h
+)
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImCurve
+)
+if (IMGUI_BUILD_EXAMPLE)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        addon/ImCurve/imgui_curve_demo.cpp
+    )
+endif(IMGUI_BUILD_EXAMPLE)
+
 # Memory Editor
 set(IMGUI_INCS
     ${IMGUI_INCS}
@@ -1102,7 +1124,7 @@ endif(IMGUI_STATIC)
 set(IMGUI_VERSION_MAJOR 1)
 set(IMGUI_VERSION_MINOR 88)
 set(IMGUI_VERSION_PATCH 32)
-set(IMGUI_VERSION_BUILD 03)
+set(IMGUI_VERSION_BUILD 04)
 set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH}.${IMGUI_VERSION_BUILD})
 
 add_library(imgui ${LIBRARY} ${IMGUI_SRC} ${IMGUI_INCS})
