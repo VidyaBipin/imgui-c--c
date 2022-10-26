@@ -68,7 +68,7 @@ Index of this file:
 #include <stdarg.h>                 // va_list, va_start, va_end
 #include <stddef.h>                 // ptrdiff_t, NULL
 #include <string.h>                 // memset, memmove, memcpy, strlen, strchr, strcpy, strcmp
-
+#include <math.h>                   // sqrtf, Add by Dicky
 // Define attributes of all API symbols declarations (e.g. for DLL under Windows)
 // IMGUI_API is used for core imgui functions, IMGUI_IMPL_API is used for the default backends files (imgui_impl_xxx.h)
 // Using dear imgui via a shared library is not recommended, because we don't guarantee backward nor forward ABI compatibility (also function call overhead, as dear imgui is a call-heavy API)
@@ -268,6 +268,7 @@ struct ImVec2
     bool operator==(const ImVec2& d)                { return x == d.x && y == d.y; }
     bool operator!=(const ImVec2& d) const          { return x != d.x || y != d.y; }
     bool operator!=(const ImVec2& d)                { return x != d.x || y != d.y; }
+    float len()                                     { return sqrtf(x * x + y * y); }
     // Add by Dicky end
 #ifdef IM_VEC2_CLASS_EXTRA
     IM_VEC2_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec2.

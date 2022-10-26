@@ -18,22 +18,6 @@ layout (push_constant) uniform parameter \n\
 } p; \
 "
 
-#define SHADER_RGB2YUV \
-" \n\
-sfpmat3 matrix_mat_r2y = { \n\
-    {sfp(0.262700f), sfp(-0.139630f), sfp( 0.500000f)}, \n\
-    {sfp(0.678000f), sfp(-0.360370f), sfp(-0.459786f)}, \n\
-    {sfp(0.059300f), sfp( 0.500000f), sfp(-0.040214f)} \n\
-}; \n\
-sfpvec3 rgb_to_yuv(sfpvec3 rgb) \n\
-{\n\
-    sfpvec3 yuv; \n\
-    sfpvec3 yuv_offset = {sfp(0.f), sfp(0.5f), sfp(0.5)}; \n\
-    yuv = yuv_offset + matrix_mat_r2y * rgb; \n\
-    return clamp(yuv, sfp(0.f), sfp(1.f)); \n\
-} \
-"
-
 #define SHADER_MAIN \
 " \n\
 void main() \n\
@@ -43,7 +27,7 @@ void main() \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
     sfpvec4 rgba = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
-    rgba.a = rgb_to_yuv(rgba.rgb).x; \n\
+    rgba.a = sfp(0.299) * rgba.r + sfp(0.587) * rgba.g + sfp(0.114) * rgba.b; \n\
     uint rid = uint(floor(rgba.r * sfp(p.out_w - 1))) + 0 * p.out_cstep; \n\
     uint gid = uint(floor(rgba.g * sfp(p.out_w - 1))) + 1 * p.out_cstep; \n\
     uint bid = uint(floor(rgba.b * sfp(p.out_w - 1))) + 2 * p.out_cstep; \n\
@@ -65,7 +49,6 @@ R"(
 layout (binding = 4) restrict buffer histogram_int32  { int histogram_int32_data[]; };
 )"
 SHADER_LOAD_RGBA
-SHADER_RGB2YUV
 SHADER_MAIN
 ;
 
