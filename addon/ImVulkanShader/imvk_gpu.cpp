@@ -3260,6 +3260,74 @@ int compile_spirv_module(const char* comp_string, const Option& opt, std::vector
     return compile_spirv_module(comp_string, length, opt, spirv, log);
 }
 
+static size_t GetLines(std::string& str, std::vector<std::string>& lines)
+{
+    size_t start = 0;
+    size_t end;
+    lines.clear();
+    while (1) 
+    {
+        std::string this_line;
+        if ((end = str.find("\n", start)) == std::string::npos)
+        {
+            if (!(this_line = str.substr(start)).empty()) 
+            {
+                lines.push_back(this_line);
+            }
+            break;
+        }
+        this_line = str.substr(start, end - start);
+        lines.push_back(this_line);
+        start = end + 1;
+    }
+    return lines.size();
+}
+
+static void ParserLog(const char* prog, const char *log)
+{
+    std::string program = std::string(prog);
+    std::string message = std::string(log);
+    if (!message.empty())
+    {
+        int row = -1;
+        int col = -1;
+        std::vector<std::string> logs;
+        GetLines(message, logs);
+        std::vector<std::string> code;
+        GetLines(program, code);
+        for (int i = 0; i < logs.size() - 2; i++)
+        {
+            std::string msg = logs[i];
+            size_t start = 0;
+            size_t end;
+            std::string this_word;
+            if ((end = logs[i].find(":", start)) != std::string::npos)
+            {
+                this_word = logs[i].substr(start, end - start);
+                if (this_word.compare("ERROR") == 0)
+                {
+                    start = end + 1;
+                    if ((end = logs[i].find(":", start)) != std::string::npos)
+                    {
+                        this_word = logs[i].substr(start, end - start);
+                        row = std::atoi(this_word.c_str());
+                        start = end + 1;
+                        if ((end = logs[i].find(":", start)) != std::string::npos)
+                        {
+                            this_word = logs[i].substr(start, end - start);
+                            col = std::atoi(this_word.c_str());
+                            if (col > 0 && col < code.size())
+                            {
+                                fprintf(stderr, "[Debug Error] %04d: %s\n", col, code[col - 1].c_str());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 int compile_spirv_module(const char* comp_data, int comp_data_size, const Option& opt, std::vector<uint32_t>& spirv, std::string& log)
 {
     std::vector<std::pair<const char*, const char*> > custom_defines;
@@ -3774,6 +3842,7 @@ int compile_spirv_module(const char* comp_data, int comp_data_size, const Option
             fprintf(stderr, "vkshader compile spir-v module failed\n");
             fprintf(stderr, "%s", s.getInfoLog());
             fprintf(stderr, "%s", s.getInfoDebugLog());
+            ParserLog(comp_data, s.getInfoLog());
             log = std::string(s.getInfoLog());
             compile_success = false;
         }
