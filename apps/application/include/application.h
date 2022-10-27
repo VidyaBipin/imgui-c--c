@@ -3,14 +3,14 @@
 #include <string>
 #if defined(__APPLE__)
 #define FULLSCREEN_OFFSET_X  0
-#define FULLSCREEN_OFFSET_Y  24
+#define FULLSCREEN_OFFSET_Y  0
 #define FULLSCREEN_WIDTH_ADJ  0
-#define FULLSCREEN_HEIGHT_ADJ  24
+#define FULLSCREEN_HEIGHT_ADJ  0
 #elif defined(__linux__)
 #define FULLSCREEN_OFFSET_X  64
-#define FULLSCREEN_OFFSET_Y  24
+#define FULLSCREEN_OFFSET_Y  0
 #define FULLSCREEN_WIDTH_ADJ  64
-#define FULLSCREEN_HEIGHT_ADJ  24
+#define FULLSCREEN_HEIGHT_ADJ  0
 #else
 #define FULLSCREEN_OFFSET_X  0
 #define FULLSCREEN_OFFSET_Y  0
