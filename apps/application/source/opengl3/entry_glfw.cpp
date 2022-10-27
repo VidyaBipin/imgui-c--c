@@ -83,10 +83,12 @@ int main(int, char**)
     {
         GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
         const GLFWvidmode * mode = glfwGetVideoMode(pMonitor);
-        property.pos_x = 0 + FULLSCREEN_OFFSET_X;
-        property.pos_y = 0 + FULLSCREEN_OFFSET_Y;
+        int x, y, w, h;
+        glfwGetMonitorWorkarea(pMonitor, &x, &y, &w, &h);
+        property.pos_x = x + FULLSCREEN_OFFSET_X;
+        property.pos_y = y + FULLSCREEN_OFFSET_Y;
         property.width = mode->width - FULLSCREEN_WIDTH_ADJ;
-        property.height = mode->height - FULLSCREEN_HEIGHT_ADJ;
+        property.height = mode->height - y;
         property.center = false;
         glfwWindowHint(GLFW_DECORATED, false);
     }

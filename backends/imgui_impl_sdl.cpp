@@ -686,7 +686,7 @@ static void ImGui_ImplSDL2_UpdateMonitors()
         //  DpiScale to cocoa_window.backingScaleFactor here.
         float dpi = 0.0f;
         if (!SDL_GetDisplayDPI(n, &dpi, nullptr, nullptr))
-            monitor.DpiScale = dpi / 96.0f;
+            monitor.DpiScale = floor(dpi / 96.0f); // Modify By Dicky
 #endif
         platform_io.Monitors.push_back(monitor);
     }
@@ -706,6 +706,8 @@ void ImGui_ImplSDL2_NewFrame()
         w = h = 0;
     if (bd->Renderer != nullptr)
         SDL_GetRendererOutputSize(bd->Renderer, &display_w, &display_h);
+    else if (bd->UseVulkan)
+        SDL_Vulkan_GetDrawableSize(bd->Window, &display_w, &display_h);
     else
         SDL_GL_GetDrawableSize(bd->Window, &display_w, &display_h);
     io.DisplaySize = ImVec2((float)w, (float)h);
