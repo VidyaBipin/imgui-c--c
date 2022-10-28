@@ -67,6 +67,8 @@ ColorConvert_vulkan::~ColorConvert_vulkan()
 
 bool ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMat, ImInterpolateMode type)
 {
+    if (!vkdev || !pipeline_gray_rgb || !pipeline_yuv_rgb || !pipeline_rgb_yuv || !pipeline_conv)
+        return false;
     if (dstMat.color_format < IM_CF_BGR)
     {
         std::ostringstream oss;
