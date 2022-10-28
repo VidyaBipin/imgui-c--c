@@ -57,7 +57,7 @@ int main(int, char**)
         const GLFWvidmode * mode = glfwGetVideoMode(pMonitor);
         int x, y, w, h;
         glfwGetMonitorWorkarea(pMonitor, &x, &y, &w, &h);
-        property.pos_x = x + FULLSCREEN_OFFSET_X;
+        property.pos_x = (x > 0 && x < 100) ? x : x + FULLSCREEN_OFFSET_X;
         property.pos_y = y + FULLSCREEN_OFFSET_Y;
         property.width = mode->width - FULLSCREEN_WIDTH_ADJ;
         property.height = mode->height - y;

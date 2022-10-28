@@ -50,7 +50,7 @@ int main(int, char**)
         SDL_GetCurrentDisplayMode(0, &DM);
         SDL_Rect r;
         SDL_GetDisplayUsableBounds(0, &r);
-        property.pos_x = r.x + FULLSCREEN_OFFSET_X;
+        property.pos_x = (r.x > 0 && r.x < 100) ? r.x : r.x + FULLSCREEN_OFFSET_X;
         property.pos_y = r.y + FULLSCREEN_OFFSET_Y;
         property.width = DM.w - FULLSCREEN_WIDTH_ADJ;
         property.height = DM.h - r.y;
