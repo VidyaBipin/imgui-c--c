@@ -12,7 +12,7 @@ ColorConvert_vulkan::ColorConvert_vulkan(int gpu)
     opt.blob_vkallocator = vkdev->acquire_blob_allocator();
     opt.staging_vkallocator = vkdev->acquire_staging_allocator();
 #ifdef VULKAN_SHADER_FP16
-    opt.use_fp16_arithmetic = true;
+    opt.use_fp16_arithmetic = false;
     opt.use_fp16_storage = false;   // fp16 has accuracy issue for int16 convert
 #endif
     cmd = new VkCompute(vkdev, "ColorConvert");

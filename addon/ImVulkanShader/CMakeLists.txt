@@ -26,7 +26,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 #set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0") 
 #endif(APPLE)
 
-option(VKSHADER_VULKAN_BENCHMARK      "Enable Vulkan Shader Benchmark" OFF)
+option(VKSHADER_VULKAN_BENCHMARK      "Enable Vulkan Shader Benchmark" ON)
 option(VKSHADER_VULKAN_FP16           "Enable Vulkan Shader support 16bits float" ON)
 option(VKSHADER_STATIC                "Build Vulkan Shader as static library" OFF)
 
