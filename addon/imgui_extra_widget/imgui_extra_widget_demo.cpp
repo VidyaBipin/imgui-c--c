@@ -582,6 +582,10 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SpinnerRotatedAtom("SpinnerRotatedAtom", 16, 2, ImColor(255, 255, 255), 2.1f * velocity, 3);
         ImGui::ShowTooltipOnHover("SpinnerRotatedAtom");
 
+        ImGui::SameLine();
+        ImGui::SpinnerAtom("SpinnerAtom", 16, 2, ImColor(255, 255, 255), 4.1f * velocity, 3);
+        ImGui::ShowTooltipOnHover("SpinnerAtom");
+
         // End
         ImGui::TreePop();
     }

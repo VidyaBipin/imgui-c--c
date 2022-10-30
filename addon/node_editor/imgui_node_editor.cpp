@@ -3319,7 +3319,7 @@ ed::EditorAction::AcceptResult ed::NavigateAction::Accept(const Control& control
     if (Editor->GetConfig().NavigateButtonIndex == 2 && Editor->GetConfig().EmulateMiddleButton)
         emulate_middle_button = true;
 
-    bool navigate_button_dragging = emulate_middle_button ? ImGui::IsMouseDragging(0, 0.0f) && io.KeyAlt :
+    bool navigate_button_dragging = emulate_middle_button ? ImGui::IsMouseDragging(0, 0.0f) && io.KeyShift :
                                                             ImGui::IsMouseDragging(Editor->GetConfig().NavigateButtonIndex, 0.0f);
     ImVec2 navigate_scroll_delta = emulate_middle_button ?  ImGui::GetMouseDragDelta(0) :
                                                             ImGui::GetMouseDragDelta(Editor->GetConfig().NavigateButtonIndex);
@@ -3413,7 +3413,7 @@ bool ed::NavigateAction::Process(const Control& control)
     if (Editor->GetConfig().NavigateButtonIndex == 2 && Editor->GetConfig().EmulateMiddleButton)
         emulate_middle_button = true;
 
-    bool navigate_button_dragging = emulate_middle_button ? ImGui::IsMouseDragging(0, 0.0f) && io.KeyAlt :
+    bool navigate_button_dragging = emulate_middle_button ? ImGui::IsMouseDragging(0, 0.0f) && io.KeyShift :
                                                             ImGui::IsMouseDragging(Editor->GetConfig().NavigateButtonIndex, 0.0f);
     ImVec2 navigate_scroll_delta = emulate_middle_button ?  ImGui::GetMouseDragDelta(0) :
                                                             ImGui::GetMouseDragDelta(Editor->GetConfig().NavigateButtonIndex);
