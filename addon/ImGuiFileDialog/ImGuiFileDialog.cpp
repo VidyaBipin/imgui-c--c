@@ -184,7 +184,7 @@ namespace IGFD
 #define buttonDriveString "Drives"
 #endif // buttonDriveString
 #ifndef buttonEditPathString
-#define buttonEditPathString "Edit path\nYou can also right click on path buttons"
+#define buttonEditPathString "Edit path or right click on path buttons"
 #endif // buttonEditPathString
 #ifndef buttonResetPathString
 #define buttonResetPathString "Reset to current directory"
@@ -306,9 +306,15 @@ namespace IGFD
 #ifndef addBookmarkButtonString
 #define addBookmarkButtonString "+"
 #endif // addBookmarkButtonString
+#ifndef addBookmarkButtonHelpString
+#define addBookmarkButtonHelpString "Add bookmark"
+#endif //addBookmarkButtonHelpString
 #ifndef removeBookmarkButtonString
 #define removeBookmarkButtonString "-"
 #endif // removeBookmarkButtonString
+#ifndef removeBookmarkButtonHelpString
+#define removeBookmarkButtonHelpString "Remove bookmark"
+#endif // removeBookmarkButtonHelpString
 #ifndef IMGUI_TOGGLE_BUTTON
 	inline bool inToggleButton(const char* vLabel, bool* vToggled)
 	{
@@ -3143,6 +3149,9 @@ namespace IGFD
 				prBookmarks.push_back(bookmark);
 			}
 		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip(addBookmarkButtonHelpString);
+
 		if (selectedBookmarkForEdition >= 0 &&
 			selectedBookmarkForEdition < (int)prBookmarks.size())
 		{
@@ -3153,6 +3162,8 @@ namespace IGFD
 				if (selectedBookmarkForEdition == (int)prBookmarks.size())
 					selectedBookmarkForEdition--;
 			}
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip(removeBookmarkButtonHelpString);
 
 			if (selectedBookmarkForEdition >= 0 &&
 				selectedBookmarkForEdition < (int)prBookmarks.size())
