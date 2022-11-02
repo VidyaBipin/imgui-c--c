@@ -71,6 +71,13 @@ int main(int, char**)
         printf("GLFW: Create Main window Error!!!\n");
         return 1;
     }
+
+    // Set window icon
+    if (!property.icon_path.empty())
+    {
+        ImGui_ImplGlfw_SetWindowIcon(window, property.icon_path.c_str());
+    }
+    
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
 

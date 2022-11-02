@@ -29,8 +29,11 @@ IMGUI_IMPL_API bool     ImGui_ImplGlfw_InitForVulkan(GLFWwindow* window, bool in
 IMGUI_IMPL_API bool     ImGui_ImplGlfw_InitForOther(GLFWwindow* window, bool install_callbacks);
 IMGUI_IMPL_API void     ImGui_ImplGlfw_Shutdown();
 IMGUI_IMPL_API void     ImGui_ImplGlfw_NewFrame();
-IMGUI_IMPL_API void     ImGui_ImplGlfw_WaitForEvent(); // Add By Dicky
-IMGUI_IMPL_API void     ImGui_ImplGlfw_FullScreen(ImGuiViewport* viewport, bool on); // Add By Dicky
+// Add By Dicky
+IMGUI_IMPL_API void     ImGui_ImplGlfw_WaitForEvent();
+IMGUI_IMPL_API void     ImGui_ImplGlfw_FullScreen(ImGuiViewport* viewport, bool on);
+IMGUI_IMPL_API void     ImGui_ImplGlfw_SetWindowIcon(GLFWwindow* window, const char * icon_path);
+// Add By Dicky end
 
 // GLFW callbacks (installer)
 // - When calling Init with 'install_callbacks=true': ImGui_ImplGlfw_InstallCallbacks() is called. GLFW callbacks will be installed for you. They will chain-call user's previously installed callbacks, if any.

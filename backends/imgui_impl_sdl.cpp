@@ -1080,4 +1080,32 @@ void ImGui_ImplSDL2_HookIme(SDL_Window* window)
     SDL_EventState(SDL_TEXTINPUT, SDL_ENABLE);
 #endif
 }
+
+void ImGui_ImplSDL2_SetWindowIcon(SDL_Window* window, const char * icon_path)
+{
+    SDL_Surface* apple_icon = nullptr;
+    int width = 0, height = 0, component = 0;
+    if (auto data = stbi_load(icon_path, &width, &height, &component, 4))
+    {
+        int depth = component * 8;
+        Uint32 rmask = depth == 8 ? 0 : 0x000000ff;
+        Uint32 gmask = depth == 8 ? 0 : 0x0000ff00;
+        Uint32 bmask = depth == 8 ? 0 : 0x00ff0000;
+        Uint32 amask = depth == 8 ? 0 : 0xff000000;
+        Uint32 pitch = width * (depth == 8 ? 1: depth == 24 ? 3 : depth == 32 ? 4 : 1);
+        apple_icon = SDL_CreateRGBSurfaceFrom((void *)data, 
+                                            width, 
+                                            height, 
+                                            depth,
+                                            pitch,
+                                            rmask, gmask, bmask, amask);
+        if(apple_icon)
+        {
+            Uint32 colorkey = SDL_MapRGB(apple_icon->format, 0, 0, 0);
+            SDL_SetColorKey(apple_icon, 1, colorkey);
+            SDL_SetWindowIcon(window, apple_icon);
+        }
+    }
+
+}
 // Add By Dicky

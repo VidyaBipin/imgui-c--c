@@ -37,6 +37,7 @@ IMGUI_IMPL_API void     ImGui_ImplSDL2_WaitForEvent();
 IMGUI_IMPL_API void     ImGui_ImplSDL2_FullScreen(ImGuiViewport* viewport, bool on);
 IMGUI_IMPL_API void     ImGui_ImplSDL2_InitIme();
 IMGUI_IMPL_API void     ImGui_ImplSDL2_HookIme(SDL_Window* window);
+IMGUI_IMPL_API void     ImGui_ImplSDL2_SetWindowIcon(SDL_Window* window, const char * icon_path);
 // Add By Dicky end
 
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS

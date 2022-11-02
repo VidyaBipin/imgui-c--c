@@ -64,6 +64,12 @@ int main(int, char**)
         return -1;
     }
 
+    // Set window icon
+    if (!property.icon_path.empty())
+    {
+        ImGui_ImplSDL2_SetWindowIcon(window, property.icon_path.c_str());
+    }
+
     // Hook IME effect windows only
     ImGui_ImplSDL2_HookIme(window);
     // Setup Vulkan

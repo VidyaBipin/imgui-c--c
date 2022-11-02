@@ -38,6 +38,7 @@ typedef struct ApplicationWindowProperty
     bool using_setting_path {true};
     bool internationalize {false};
     std::string language_path;
+    std::string icon_path;
     void* handle    {nullptr};
 
 } ApplicationWindowProperty;

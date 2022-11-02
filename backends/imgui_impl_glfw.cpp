@@ -1233,6 +1233,19 @@ void ImGui_ImplGlfw_FullScreen(ImGuiViewport* viewport, bool on)
         else glfwRestoreWindow(bd->Window);
     }
 }
+
+void ImGui_ImplGlfw_SetWindowIcon(GLFWwindow* window, const char * icon_path)
+{
+    GLFWimage icon;
+    icon.width = 32;
+    icon.height = 32;
+    int channels = 3;
+    if (auto data = stbi_load(icon_path, &icon.width, &icon.height, &channels, 4))
+    {
+        icon.pixels = data;
+        glfwSetWindowIcon(window, 1, &icon);
+    }
+}
 // Add By Dicky end
 
 #if defined(__clang__)
