@@ -586,6 +586,12 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SpinnerAtom("SpinnerAtom", 16, 2, ImColor(255, 255, 255), 4.1f * velocity, 3);
         ImGui::ShowTooltipOnHover("SpinnerAtom");
 
+
+        // line 8
+        ImGui::SpinnerRainbowBalls("SpinnerRainbowBalls", 16, 4, ImColor(0, 0, 0, 0), 1.5f * velocity, 5);
+        ImGui::ShowTooltipOnHover("SpinnerRainbowBalls");
+
+
         // End
         ImGui::TreePop();
     }

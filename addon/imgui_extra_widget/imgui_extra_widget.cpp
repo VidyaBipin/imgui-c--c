@@ -7073,6 +7073,28 @@ void ImGui::SpinnerRotatedAtom(const char *label, float radius, float thickness,
     }
 }
 
+void ImGui::SpinnerRainbowBalls(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls)
+{
+    SPINNER_HEADER(pos, size, centre);
+
+    // Render
+    const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+    const float start = ImFmod((float)ImGui::GetTime() * speed * 3.f, IM_PI);
+    const float rstart = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2);
+
+    const float radius1 = (0.8f + 0.2f * ImSin(start)) * radius;
+    const float angle_offset = IM_PI * 2.f / balls;
+
+    const bool rainbow = ((ImU32)color) == 0;
+
+    for (int i = 0; i <= balls; i++)
+    {
+        const float a = rstart + (i * angle_offset);
+        ImColor c = rainbow ? ImColor::HSV(ImSin((float)ImGui::GetTime() * 0.1f + (i * 1.f / balls)), 0.8f, 0.8f) : color;
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), thickness, c, num_segments);
+    }
+}
+
 // draw leader
 static void draw_badge(ImDrawList* drawList, ImRect bb, int type, bool filled, bool arrow, ImU32 color)
 {
