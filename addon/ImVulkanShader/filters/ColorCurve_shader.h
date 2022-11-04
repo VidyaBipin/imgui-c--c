@@ -31,8 +31,8 @@ void main() \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
     sfpvec4 color = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
-    ivec4 color_index = ivec4(floor(color * sfp(p.curve_w))); \n\
-    sfpvec4 result = sfpvec4(0); \n\
+    ivec4 color_index = ivec4(floor(color * sfp(p.curve_w - 1))); \n\
+    sfpvec4 result = sfpvec4(0.f); \n\
     sfp yuv_org = sfp(0.299) * color.r + sfp(0.587) * color.g + sfp(0.114) * color.b; \n\
     result.r = sfp(curve[color_index.r + p.curve_w * 1]); \n\
     result.g = sfp(curve[color_index.g + p.curve_w * 2]); \n\
