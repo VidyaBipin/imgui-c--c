@@ -7033,7 +7033,7 @@ void ImGui::SpinnerAtom(const char *label, float radius, float thickness, const 
     };
     ImVec2 ppos[3];
     for (int i = 0; i < elipses; ++i) {
-        ppos[i % 3] = draw_rotated_ellipse((IM_PI * (float)i/ elipses), start * (1 + 0.1 * i));
+        ppos[i % 3] = draw_rotated_ellipse((IM_PI * (float)i/ elipses), start * (1.f + 0.1f * i));
     }
     ImColor pcolors[3] = {ImColor(255, 0, 0), ImColor(0, 255, 0), ImColor(0, 0, 255)};
     for (int i = 0; i < elipses; ++i) {
@@ -7092,6 +7092,59 @@ void ImGui::SpinnerRainbowBalls(const char *label, float radius, float thickness
         const float a = rstart + (i * angle_offset);
         ImColor c = rainbow ? ImColor::HSV(ImSin((float)ImGui::GetTime() * 0.1f + (i * 1.f / balls)), 0.8f, 0.8f) : color;
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), thickness, c, num_segments);
+    }
+}
+
+void ImGui::SpinnerBarChartSine(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars, int mode)
+{
+    SPINNER_HEADER(pos, size, centre);
+
+    ImGuiContext &g = *GImGui;
+    const ImGuiStyle &style = g.Style;
+    const float nextItemKoeff = 1.5f;
+    const float yOffsetKoeftt = 0.8f;
+    const float heightSpeed = 0.8f;
+
+    // Render
+    float start = (float)ImGui::GetTime() * speed;
+
+    const float offset = IM_PI / bars;
+    for (int i = 0; i < bars; i++)
+    {
+        float a = start + (IM_PI - i * offset);
+        ImColor c = color;
+        c.Value.w = ImMax(0.1f, ImSin(a * heightSpeed));
+        float h = mode ? ImSin(a) * size.y / 2.f
+                       : (0.6f + 0.4f * c.Value.w) * size.y;
+        float halfs = mode ? 0 : size.y / 2.f;
+        window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) - thickness / 2, centre.y + halfs),
+                                        ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) + thickness / 2, centre.y + halfs - h * yOffsetKoeftt), c);
+    }
+}
+
+void ImGui::SpinnerBarChartRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars)
+{
+    SPINNER_HEADER(pos, size, centre);
+
+    ImGuiContext &g = *GImGui;
+    const ImGuiStyle &style = g.Style;
+    const float nextItemKoeff = 1.5f;
+    const float yOffsetKoeftt = 0.8f;
+    const float heightSpeed = 0.8f;
+
+    // Render
+    float start = (float)ImGui::GetTime() * speed;
+
+    const float hspeed = 0.1f + ImSin((float)ImGui::GetTime() * 0.1f) * 0.05f;
+    constexpr float rkoeff[6] = {4.f, 13.f, 3.4f, 8.7f, 25.f, 11.f};
+    float out_h, out_s, out_v;
+    ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+    for (int i = 0; i < bars; i++)
+    {
+        ImColor c = ImColor::HSV(out_h + i * 0.1, out_s, out_v);
+        float h = (0.6f + 0.4f * ImSin(start + (1.f + rkoeff[i % 6] * i * hspeed)) ) * size.y;
+        window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) - thickness / 2, centre.y + size.y / 2.f),
+                                        ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) + thickness / 2, centre.y + size.y / 2.f - h * yOffsetKoeftt), c);
     }
 }
 

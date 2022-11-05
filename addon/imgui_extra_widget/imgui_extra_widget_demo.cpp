@@ -349,6 +349,10 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SpinnerIngYang("SpinnerIngYang", 16, 5, false, 0, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI * 0.8f);
         ImGui::ShowTooltipOnHover("SpinnerIngYang");
 
+        ImGui::SameLine();
+        ImGui::SpinnerBarChartSine("SpinnerBarChartSine", 16, 4, ImColor(255, 255, 255), 6.8f * velocity, 4, 0);
+        ImGui::ShowTooltipOnHover("SpinnerBarChartSine");
+
         // Line 2
         ImGui::SpinnerBounceDots("SpinnerBounceDots", 6, ImColor(255, 255, 255), 6 * velocity, 3);
         ImGui::ShowTooltipOnHover("SpinnerBounceDots");
@@ -380,6 +384,10 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SameLine();
         ImGui::SpinnerIngYang("SpinnerIngYangR", 16, 5, true, 0.1f, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI * 0.8f);
         ImGui::ShowTooltipOnHover("SpinnerIngYangR");
+
+        ImGui::SameLine();
+        ImGui::SpinnerBarChartSine("SpinnerBarChartSine2", 16, 4, ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), 4.8f * velocity, 4, 1);
+        ImGui::ShowTooltipOnHover("SpinnerBarChartSine2");
 
         // line 3
         ImGui::SpinnerTwinAng180("SpinnerTwinAng", 16, 12, 4, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity);
@@ -421,6 +429,10 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SameLine();
         ImGui::SpinnerIngYang("SpinnerIngYangR2", 16, 5, true, 3.f, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI * 0.8f);
         ImGui::ShowTooltipOnHover("SpinnerIngYangR2");
+
+        ImGui::SameLine();
+        ImGui::SpinnerBarChartRainbow("SpinnerBarChartRainbow", 16, 4, ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), 6.8f * velocity, 4);
+        ImGui::ShowTooltipOnHover("SpinnerBarChartRainbow");
 
         // line 4
         ImGui::SpinnerBarsRotateFade("SpinnerBarsRotateFade", 8, 18, 4, ImColor(255, 255, 255), 7.6f, 6);
