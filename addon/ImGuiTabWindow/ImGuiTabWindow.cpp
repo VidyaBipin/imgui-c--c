@@ -935,7 +935,7 @@ struct TabWindowNode  {
             ch->name = (char*) ImGui::MemAlloc(sz);
             strcpy(ch->name,name);
             strcat(ch->name,".child");
-            sprintf(&ch->name[sz-2],"%d",i);
+            snprintf(&ch->name[sz-2],2,"%d",i);
             ch->name[sz-1]='\0';
             if (recursive) ch->assignChildNames(true);
         }

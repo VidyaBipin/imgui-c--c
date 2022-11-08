@@ -410,19 +410,19 @@ void ImGui::ShowNodeEditorWindow()
                 ImGui::TextDisabled("Pick One:");
                 ImGui::BeginChild("popup_scroller", ImVec2(100, 100), true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
                 if (ImGui::Button("Option 1")) {
-                    sprintf(popup_text, "Option 1");
+                    snprintf(popup_text, 128, "Option 1");
                     ImGui::CloseCurrentPopup();  // These calls revoke the popup open state, which was set by OpenPopup above.
                 }
                 if (ImGui::Button("Option 2")) {
-                    sprintf(popup_text, "Option 2");
+                    snprintf(popup_text, 128, "Option 2");
                     ImGui::CloseCurrentPopup();
                 }
                 if (ImGui::Button("Option 3")) {
-                    sprintf(popup_text, "Option 3");
+                    snprintf(popup_text, 128, "Option 3");
                     ImGui::CloseCurrentPopup();
                 }
                 if (ImGui::Button("Option 4")) {
-                    sprintf(popup_text, "Option 4");
+                    snprintf(popup_text, 128, "Option 4");
                     ImGui::CloseCurrentPopup();
                 }
                 ImGui::EndChild();
@@ -479,7 +479,7 @@ void ImGui::ShowNodeEditorWindow()
 
                 float progress_saturated = (progress < 0.0f) ? 0.0f : (progress > 1.0f) ? 1.0f : progress;
                 char buf[32];
-                sprintf(buf, "%d/%d", (int)(progress_saturated * 1753), 1753);
+                snprintf(buf, 32, "%d/%d", (int)(progress_saturated * 1753), 1753);
                 ImGui::ProgressBar(progress, ImVec2(0.f, 0.f), buf);
 
                 ImGui::PopItemWidth();

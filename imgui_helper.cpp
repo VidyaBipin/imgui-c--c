@@ -1647,7 +1647,7 @@ public:
 
         const int startSz = b.size();
         b.resize(startSz+additionalSize);
-        const int rv = vsprintf(&b[startSz-1],fmt,args2);
+        const int rv = vsnprintf(&b[startSz-1],additionalSize,fmt,args2);
         va_end(args2);
         //IM_ASSERT(additionalSize==rv);
         //IM_ASSERT(v[startSz+additionalSize-1]=='\0');
@@ -1845,7 +1845,7 @@ int StringAppend(ImVector<char>& v,const char* fmt, ...) {
 
     const int startSz = v.size();
     v.resize(startSz+additionalSize);
-    const int rv = vsprintf(&v[startSz-1],fmt,args2);
+    const int rv = vsnprintf(&v[startSz-1],additionalSize,fmt,args2);
     va_end(args2);
 
     return rv;

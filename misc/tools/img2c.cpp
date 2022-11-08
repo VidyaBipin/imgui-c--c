@@ -79,7 +79,7 @@ SDL_Surface* LoadImage( char* _fileName )
 FILE* openOutfileC( char* _baseOutFileName )
 {
 	char outname_c[ 2048 ];
-	sprintf( outname_c, "%s.cpp", _baseOutFileName );
+	snprintf( outname_c, 2048, "%s.cpp", _baseOutFileName ); // modify by dicky reduce warning
 	FILE* f = fopen( outname_c, "w" );
 	
 	return f;

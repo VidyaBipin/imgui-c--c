@@ -482,7 +482,7 @@ bool ImGui::Fader(const char *label, const ImVec2 &size, int *v, const int v_min
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     // For the vertical slider we allow centered text to overlap the frame padding
     char value_buf[64];
-    sprintf(value_buf, format, int(*v * power));
+    snprintf(value_buf, 64, format, int(*v * power)); // modify by dicky reduce warning
     const char *value_buf_end = value_buf + strlen(value_buf);
     RenderTextClipped(ImVec2(frame_bb.Min.x, frame_bb.Min.y + style.FramePadding.y), frame_bb.Max, value_buf, value_buf_end, nullptr, ImVec2(0.5f, 0.0f));
     if (label_size.x > 0.0f)
@@ -775,7 +775,7 @@ void ImGui::RoundProgressBar(float radius, float *p_value, float v_min, float v_
     ImVec4 base_color = ImVec4(0.f, 0.f, 0.f, 1.f);
     ColorSet back_color = {base_color, base_color, base_color};
     float percentage = (*p_value - v_min) / (v_max - v_min) * 100.f;
-    sprintf(label, "%02.1f%%", percentage);
+    snprintf(label, 20, "%02.1f%%", percentage);  // modify by dicky reduce warning
     ImVec2 pos = ImGui::GetCursorScreenPos();
     ImVec2 center = ImVec2(pos.x + radius, pos.y + radius);
     ImGui::InvisibleButton("##round_progress_bar", ImVec2(radius * 2, radius * 2));
@@ -1774,8 +1774,8 @@ bool ImGui::InputDate(const char* label, struct tm& date, const char* format, bo
                 PushID(cid+7*row+dwi);
                 if (!sunday_first && (dw > 0 && d.tm_wday == 0 && row == 0)) // 1st == synday case
                     TextUnformatted(" ");
-                if (cday <9 ) sprintf(cur_day_str," %.1d",(unsigned char)cday+1);
-                else sprintf(cur_day_str,"%.2d",(unsigned char)cday+1);
+                if (cday <9 ) snprintf(cur_day_str, 4," %.1d",(unsigned char)cday+1);
+                else snprintf(cur_day_str, 4,"%.2d",(unsigned char)cday+1);
 
                 // Highligth input date and today
                 bool is_today = cday+1 == cur_date.tm_mday && SameMonth(cur_date, d);
@@ -2576,18 +2576,18 @@ bool ImGui::DragTimeMS(const char* label, float* p_data, float v_speed, float p_
     uint32_t hour = (uint32_t)t;
     if (hour > 0)
     {
-        sprintf(value_buf, "%02d:", hour);
+        snprintf(value_buf, 64, "%02d:", hour);
     }
-    sprintf(value_buf, "%s%02u:%02u", value_buf, min, sec);
+    snprintf(value_buf, 64, "%s%02u:%02u", value_buf, min, sec);
     if (decimals == 3)
-        sprintf(value_buf, "%s.%03u", value_buf, milli);
+        snprintf(value_buf, 64, "%s.%03u", value_buf, milli);
     else if (decimals == 2)
-        sprintf(value_buf, "%s.%02u", value_buf, milli / 10);
+        snprintf(value_buf, 64, "%s.%02u", value_buf, milli / 10);
     else if (decimals == 1)
-        sprintf(value_buf, "%s.%01u", value_buf, milli / 100);
+        snprintf(value_buf, 64, "%s.%01u", value_buf, milli / 100);
 
     if (negative)
-        sprintf(value_buf, "-%s:", value_buf);
+        snprintf(value_buf, 64, "-%s:", value_buf);
 
     const char* value_buf_end = value_buf + strlen(value_buf);
     if (g.LogEnabled)
