@@ -470,6 +470,10 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SpinnerAngTwin("SpinnerAngTwin4", 14, 13, 3, ImColor(255, 0, 0), ImColor(0, 0, 0, 0), 5 * velocity, IM_PI / 1.5f, 2);
         ImGui::ShowTooltipOnHover("SpinnerAngTwin4");
 
+        ImGui::SameLine();
+        ImGui::SpinnerBlocks("SpinnerBlocks", 16, 7, ImColor(255, 255, 255, 30), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), 5 * velocity);
+        ImGui::ShowTooltipOnHover("SpinnerBlocks");
+
         // line 5
         ImGui::SpinnerTwinBall("SpinnerTwinBall", 16, 11, 2, 2.5f, ImColor(255, 0, 0), ImColor(255, 255, 255), 6 * velocity, 2);
         ImGui::ShowTooltipOnHover("SpinnerTwinBall(2)");
