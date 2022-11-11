@@ -3451,7 +3451,7 @@ static inline __attribute__((unused)) void mdiv_float_sse(float* dst, const floa
     for (i = 0; i < (long)len - 3; i += 4)
     {
         X = _mm_loadu_ps(src1 + i); // load chunk of 4 floats
-        X = _mm_loadu_ps(src2 + i); // load chunk of 4 floats
+        Y = _mm_loadu_ps(src2 + i); // load chunk of 4 floats
         X = _mm_div_ps(X, Y);
         _mm_storeu_ps(dst + i, X);
     }
