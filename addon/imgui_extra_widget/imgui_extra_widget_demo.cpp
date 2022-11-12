@@ -330,11 +330,11 @@ void ShowExtraWidgetDemoWindow()
         ImGui::ShowTooltipOnHover("SpinnerAng270");
         
         ImGui::SameLine();
-        ImGui::SpinnerAng("SpinnerAng270NoBg", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 0), 6 * velocity, 270.f / 360.f * 2 * IM_PI );
+        ImGui::Spinner<e_st_ang>("SpinnerAng270NoBg", Radius{16.f}, Thickness{2.f}, Color{ImColor(255, 255, 255)}, BgColor{ImColor(255, 255, 255, 0)}, Speed{6 * velocity}, Angle{270.f / 360.f * 2 * IM_PI});
         ImGui::ShowTooltipOnHover("SpinnerAng270NoBg");
         
         ImGui::SameLine();
-        ImGui::SpinnerVDots("SpinnerVDots", 16, 4, ImColor(255, 255, 255), 2.7f * velocity);
+        ImGui::Spinner<e_st_vdots>("SpinnerVDots", Radius{16.f}, Thickness{4.f}, Color{ImColor::HSV(hue * 0.001f, 0.8f, 0.8f)}, BgColor{ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f)}, Speed{2.7f * velocity}, Dots{12}, MiddleDots{6});
         ImGui::ShowTooltipOnHover("SpinnerVDots");
         
         ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
