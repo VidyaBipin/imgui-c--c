@@ -5503,7 +5503,7 @@ void ImGui::ImSpectrogram(const ImGui::ImMat& in_mat, ImGui::ImMat& out_mat, int
         while (length < in_mat.w + window - hope)
         {
             float * in_data;
-            if (length < in_mat.w)
+            if (length < in_mat.w - hope)
                 in_data = pin + length;
             else
                 in_data = (float *)zero_data.data;
