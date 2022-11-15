@@ -6856,6 +6856,40 @@ void ImGui::SpinnerTrianglesSeletor(const char *label, float radius, float thick
     draw_sectors(start, [&] (auto i) { ImColor rc = bg; rc.Value.w = (i / (float)bars) - 0.5f; return rc; });
 }
 
+void ImGui::SpinnerCamera(const char *label, float radius, float thickness, LeafColor *leaf_color, float speed, size_t bars) 
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+
+    // Render
+    window->DrawList->PathClear();
+
+    // Render
+    float start = (float)ImGui::GetTime() * speed;
+    const float angle_offset = IM_PI * 2 / bars;
+    const float angle_offset_t = angle_offset * 0.3f;
+    bars = ImMin<size_t>(bars, 32);
+
+    const float rmin = radius - thickness - 1;
+    auto get_points = [&] (auto left, auto right) -> std::array<ImVec2, 4> {
+        return {
+            ImVec2(centre.x + ImCos(left - 0.1f) * radius, centre.y + ImSin(left - 0.1f) * radius),
+            ImVec2(centre.x + ImCos(right + 0.15f) * radius, centre.y + ImSin(right + 0.15f) * radius),
+            ImVec2(centre.x + ImCos(right - 0.91f) * rmin, centre.y + ImSin(right - 0.91f) * rmin)
+        };
+    };
+
+    auto draw_sectors = [&] (auto s, auto color_func) {
+        for (size_t i = 0; i <= bars; i++) {
+            float left = s + (i * angle_offset) - angle_offset_t;
+            float right = s + (i * angle_offset) + angle_offset_t;
+            auto points = get_points(left, right);
+            window->DrawList->AddConvexPolyFilled(points.data(), 3, color_func((int)i));
+        }
+    };
+
+    draw_sectors(start, leaf_color);
+}
+
 void ImGui::SpinnerFlowingGradient(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bg, float speed, float angle)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);

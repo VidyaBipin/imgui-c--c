@@ -483,6 +483,7 @@ namespace ImGui
     };
 #undef IMPLRPOP
 
+using LeafColor = ImColor (int);
 IMGUI_API void SpinnerRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed);
 IMGUI_API void SpinnerAng(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI);
 IMGUI_API void SpinnerClock(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f);
@@ -524,6 +525,7 @@ IMGUI_API void SpinnerMoonLine(const char *label, float radius, float thickness,
 IMGUI_API void SpinnerCircleDrop(const char *label, float radius, float thickness, float thickness_drop, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI);
 IMGUI_API void SpinnerSurroundedIndicator(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f);
 IMGUI_API void SpinnerTrianglesSeletor(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t bars = 8);
+IMGUI_API void SpinnerCamera(const char *label, float radius, float thickness, LeafColor *leaf_color, float speed = 2.8f, size_t bars = 8);
 IMGUI_API void SpinnerFlowingGradient(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xff000000, float speed = 2.8f, float angle = IM_PI);
 IMGUI_API void SpinnerRotateSegments(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4, size_t layers = 1);
 IMGUI_API void SpinnerLemniscate(const char* label, float radius, float thickness, const ImColor& color = 0xffffffff, float speed = 2.8f, float angle = IM_PI / 2.0f);

@@ -403,8 +403,8 @@ void ShowExtraWidgetDemoWindow()
 
         ImGui::SameLine();
         nextdot2 -= 0.2f * velocity;
-        ImGui::SpinnerDots("SpinnerDots", &nextdot2, 16, 4, ImColor(255, 255, 255), 0.3f, 12, 6, 0.f);
-        ImGui::ShowTooltipOnHover("SpinnerDots(0.2v)");
+        ImGui::SpinnerDots("SpinnerDotsWoBg", &nextdot2, 16, 4, ImColor(255, 255, 255), 0.3f, 12, 6, 0.f);
+        ImGui::ShowTooltipOnHover("SpinnerDotsWoBg");
 
         ImGui::SameLine();
         ImGui::SpinnerIncScaleDots("SpinnerIncScaleDots", 16, 4, ImColor(255, 255, 255), 6.6f, 6);
@@ -607,6 +607,10 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SpinnerRainbowBalls("SpinnerRainbowBalls", 16, 4, ImColor(0, 0, 0, 0), 1.5f * velocity, 5);
         ImGui::ShowTooltipOnHover("SpinnerRainbowBalls");
 
+
+        ImGui::SameLine();
+        ImGui::SpinnerCamera("SpinnerCamera", 16, 8, [] (int i) { return ImColor::HSV(i * 0.25f, 0.8f, 0.8f); }, 4.8f * velocity, 8);
+        ImGui::ShowTooltipOnHover("SpinnerCamera");
 
         // End
         ImGui::TreePop();
