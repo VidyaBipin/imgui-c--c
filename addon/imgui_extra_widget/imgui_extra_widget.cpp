@@ -7173,6 +7173,35 @@ void ImGui::SpinnerBlocks(const char *label, float radius, float thickness, cons
     }
 }
 
+void ImGui::SpinnerFluid(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+
+    ImGuiContext &g = *GImGui;
+    const ImGuiStyle &style = g.Style;
+    const float nextItemKoeff = 1.5f;
+    const float heightSpeed = 0.8f;
+
+    // Render
+    const float hspeed = 0.1f + ImSin((float)ImGui::GetTime() * 0.1f) * 0.05f;
+    constexpr float rkoeff[6][3] = {{0.15f, 0.1f, 0.1f}, {0.033f, 0.15f, 0.8f}, {0.017f, 0.25f, 0.6f}, {0.037f, 0.1f, 0.4f}, {0.25f, 0.1f, 0.3f}, {0.11f, 0.1f, 0.2f}};
+    const float i_k = radius / bars;
+    const float j_k = radius * 2.f / num_segments;
+    float out_h, out_s, out_v;
+    ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+    for (int i = 0; i < bars; i++)
+    {
+        ImColor c = ImColor::HSV(out_h - i * 0.1f, out_s, out_v);
+        c.Value.w = rkoeff[i % 6][1];
+        for (int j = 0; j < num_segments; ++j)
+        {
+            float h = (0.6f + 0.3f * ImSin(ImGui::GetTime() * (speed * rkoeff[i % 6][2] * 2.f) + (2 * rkoeff[i % 6][0] * j * j_k))) * (radius * 2.f * rkoeff[i][2]);
+            window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + j * j_k, centre.y + size.y / 2.f),
+                                            ImVec2(pos.x + style.FramePadding.x + (j + 1) * (j_k), centre.y + size.y / 2.f - h), c);
+        }
+    }
+}
+
 // draw leader
 static void draw_badge(ImDrawList* drawList, ImRect bb, int type, bool filled, bool arrow, ImU32 color)
 {

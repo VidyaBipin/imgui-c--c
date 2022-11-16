@@ -338,12 +338,12 @@ void ShowExtraWidgetDemoWindow()
         ImGui::ShowTooltipOnHover("SpinnerVDots");
         
         ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
-        ImGui::SpinnerBounceBall("SpinnerBounceBall", 16, 6, ImColor(255, 255, 255), 4 * velocity);
+        ImGui::Spinner<e_st_bounce_ball>("SpinnerBounceBall", Radius{16.f}, Thickness{6.f}, Color{ImColor(255, 255, 255)}, Speed{4 * velocity});
         ImGui::ShowTooltipOnHover("SpinnerBounceBall");
         
         ImGui::SameLine();
-        ImGui::SpinnerAngEclipse("SpinnerAng", 16, 5, ImColor(255, 255, 255), 6 * velocity);
-        ImGui::ShowTooltipOnHover("SpinnerAng");
+        ImGui::SpinnerAngEclipse("SpinnerAngEclipse", 16, 5, ImColor(255, 255, 255), 6 * velocity);
+        ImGui::ShowTooltipOnHover("SpinnerAngEclipse");
         
         ImGui::SameLine();
         ImGui::SpinnerIngYang("SpinnerIngYang", 16, 5, false, 0, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI * 0.8f);
@@ -513,6 +513,10 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SameLine();
         ImGui::SpinnerArcRotation("SpinnerArcRotation", 13, 5, ImColor(255, 255, 255), 3 * velocity, 4);
         ImGui::ShowTooltipOnHover("SpinnerArcRotation");
+
+        ImGui::SameLine();
+        ImGui::SpinnerFluid("SpinnerFluid", 16, 4, ImColor(0, 0, 255), 3.8f * velocity, 4);
+        ImGui::ShowTooltipOnHover("SpinnerFluid");
 
         // line 6
         ImGui::SpinnerArcFade("SpinnerArcFade", 13, 5, ImColor(255, 255, 255), 3 * velocity, 4);
