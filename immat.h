@@ -3342,7 +3342,7 @@ static inline __attribute__((unused)) void madd_int8_neon(int8_t* dst, const int
         X = vld1q_s8(src1 + i); // load chunk of 16 char
         Y = vld1q_s8(src2 + i); // load chunk of 16 char
         X = vaddq_s8(X, Y);
-        vst1q_s8((__m128i *)(dst + i), X);
+        vst1q_s8(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
 }
@@ -4109,7 +4109,7 @@ static inline __attribute__((unused)) void mmul_int8_neon(int8_t* dst, const int
         X = vld1q_s8(src1 + i); // load chunk of 16 int8
         Y = vld1q_s8(src2 + i); // load chunk of 16 int8
         X = vmulq_s8(X, Y);
-        vst1q_s8((__m128i *)(dst + i), X);
+        vst1q_s8(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
 }
