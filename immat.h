@@ -2916,12 +2916,12 @@ static inline __attribute__((unused)) void mul_float_neon(float* dst, const floa
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
-static inline __attribute__((unused)) void mul_double_sse(double* dst, const double* src, const size_t len, const double v)
+static inline __attribute__((unused)) void mul_double_neon(double* dst, const double* src, const size_t len, const double v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
-static inline __attribute__((unused)) void mul_float16_sse(uint16_t* dst, const uint16_t* src, const size_t len, const float v)
+static inline __attribute__((unused)) void mul_float16_neon(uint16_t* dst, const uint16_t* src, const size_t len, const float v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) 
