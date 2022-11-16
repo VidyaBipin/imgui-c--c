@@ -2261,7 +2261,6 @@ static inline __attribute__((unused)) void add_float16_sse(uint16_t* dst, const 
 #define add_double_simd add_double_sse
 #define add_float16_simd add_float16_sse
 #elif __ARM_NEON
-// TODO::Dicky Add arm neon simd
 static inline __attribute__((unused)) void add_int8_neon(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
 {
     int i = 0;
@@ -2576,8 +2575,90 @@ static inline __attribute__((unused)) void sub_float16_sse(uint16_t* dst, const 
 #define sub_float_simd sub_float_sse
 #define sub_double_simd sub_double_sse
 #define sub_float16_simd sub_float16_sse
-//#elif __ARM_NEON
-// TODO::Dicky Add arm neon simd
+#elif __ARM_NEON
+static inline __attribute__((unused)) void sub_int8_neon(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+{
+    int i = 0;
+    int8x16_t V = vdupq_n_s8(v);
+    int8x16_t X;
+    for (i = 0; i < (long)len - 15; i += 16)
+    {
+        X = vld1q_s8(src + i); // load chunk of 16 char
+        X = vsubq_s8(X, V);
+        vst1q_s8(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src + i) - v;
+}
+static inline __attribute__((unused)) void sub_int16_neon(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+{
+    int i = 0;
+    int16x8_t V = vdupq_n_s16(v);
+    int16x8_t X;
+    for (i = 0; i < (long)len - 7; i += 8)
+    {
+        X = vld1q_s16(src + i); // load chunk of 8 short
+        X = vsubq_s16(X, V);
+        vst1q_s16(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src + i) - v;
+}
+static inline __attribute__((unused)) void sub_int32_neon(int32_t* dst, const int32_t* src, const size_t len, const int32_t v)
+{
+    int i = 0;
+    int32x4_t V = vdupq_n_s32(v);
+    int32x4_t X;
+    for (i = 0; i < (long)len - 3; i += 4)
+    {
+        X = vld1q_s32(src + i); // load chunk of 4 int
+        X = vsubq_s32(X, V);
+        vst1q_s32(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src + i) - v;
+}
+static inline __attribute__((unused)) void sub_int64_neon(int64_t* dst, const int64_t* src, const size_t len, const int64_t v)
+{
+    int i = 0;
+    int64x2_t V = vdupq_n_s64(v);
+    int64x2_t X;
+    for (i = 0; i < (long)len - 1; i += 2)
+    {
+        X = vld1q_s64(src + i); // load chunk of 2 int64
+        X = vsubq_s64(X, V);
+        vst1q_s64(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src + i) - v;
+}
+static inline __attribute__((unused)) void sub_float_neon(float* dst, const float* src, const size_t len, const float v)
+{
+    int i = 0;
+    float32x4_t V = vdupq_n_f32(v);
+    float32x4_t X;
+    for (i = 0; i < (long)len - 3; i += 4)
+    {
+        X = vld1q_f32(src + i); // load chunk of 4 floats
+        X = vsubq_f32(X, V);
+        vst1q_f32(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src + i) - v;
+}
+static inline __attribute__((unused)) void sub_double_neon(double* dst, const double* src, const size_t len, const double v)
+{
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) - v;
+}
+static inline __attribute__((unused)) void sub_float16_neon(uint16_t* dst, const uint16_t* src, const size_t len, const float v)
+{
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = 0; i < len; ++i) 
+        *(dst + i) = im_float32_to_float16(im_float16_to_float32(*(src + i)) - v);
+}
+#define sub_int8_simd sub_int8_neon
+#define sub_int16_simd sub_int16_neon
+#define sub_int32_simd sub_int32_neon
+#define sub_int64_simd sub_int64_neon
+#define sub_float_simd sub_float_neon
+#define sub_double_simd sub_double_neon
+#define sub_float16_simd sub_float16_neon
 #else
 static inline __attribute__((unused)) void sub_int8_c(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
 {
@@ -2777,8 +2858,82 @@ static inline __attribute__((unused)) void mul_float16_sse(uint16_t* dst, const 
 #define mul_float_simd mul_float_sse
 #define mul_double_simd mul_double_sse
 #define mul_float16_simd mul_float16_sse
-//#elif __ARM_NEON
-// TODO::Dicky Add arm neon simd
+#elif __ARM_NEON
+static inline __attribute__((unused)) void mul_int8_neon(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+{
+    int i = 0;
+    int8x16_t V = vdupq_n_s8(v);
+    int8x16_t X;
+    for (i = 0; i < (long)len - 15; i += 16)
+    {
+        X = vld1q_s8(src + i); // load chunk of 16 char
+        X = vmulq_s8(X, V);
+        vst1q_s8(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src + i) - v;
+}
+static inline __attribute__((unused)) void mul_int16_neon(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+{
+    int i = 0;
+    int16x8_t V = vdupq_n_s16(v);
+    int16x8_t X;
+    for (i = 0; i < (long)len - 7; i += 8)
+    {
+        X = vld1q_s16(src + i); // load chunk of 8 short
+        X = vmulq_s16(X, V);
+        vst1q_s16(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src + i) * v;
+}
+static inline __attribute__((unused)) void mul_int32_neon(int32_t* dst, const int32_t* src, const size_t len, const int32_t v)
+{
+    int i = 0;
+    int32x4_t V = vdupq_n_s32(v);
+    int32x4_t X;
+    for (i = 0; i < (long)len - 3; i += 4)
+    {
+        X = vld1q_s32(src + i); // load chunk of 4 int
+        X = vmulq_s32(X, V);
+        vst1q_s32(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src + i) * v;
+}
+static inline __attribute__((unused)) void mul_int64_neon(int64_t* dst, const int64_t* src, const size_t len, const int64_t v)
+{
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
+}
+static inline __attribute__((unused)) void mul_float_neon(float* dst, const float* src, const size_t len, const float v)
+{
+    int i = 0;
+    float32x4_t V = vdupq_n_f32(v);
+    float32x4_t X;
+    for (i = 0; i < (long)len - 3; i += 4)
+    {
+        X = vld1q_f32(src + i); // load chunk of 4 floats
+        X = vmulq_f32(X, V);
+        vst1q_f32(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src + i) * v;
+}
+static inline __attribute__((unused)) void mul_double_sse(double* dst, const double* src, const size_t len, const double v)
+{
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
+}
+static inline __attribute__((unused)) void mul_float16_sse(uint16_t* dst, const uint16_t* src, const size_t len, const float v)
+{
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = 0; i < len; ++i) 
+        *(dst + i) = im_float32_to_float16(im_float16_to_float32(*(src + i)) * v);
+}
+#define mul_int8_simd mul_int8_neon
+#define mul_int16_simd mul_int16_neon
+#define mul_int32_simd mul_int32_neon
+#define mul_int64_simd mul_int64_neon
+#define mul_float_simd mul_float_neon
+#define mul_double_simd mul_double_neon
+#define mul_float16_simd mul_float16_neon
 #else
 static inline __attribute__((unused)) void mul_int8_c(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
 {
@@ -2946,8 +3101,6 @@ static inline __attribute__((unused)) void div_float16_sse(uint16_t* dst, const 
 #define div_float_simd div_float_sse
 #define div_double_simd div_double_sse
 #define div_float16_simd div_float16_sse
-//#elif __ARM_NEON
-// TODO::Dicky Add arm neon simd
 #else
 static inline __attribute__((unused)) void div_int8_c(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
 {
