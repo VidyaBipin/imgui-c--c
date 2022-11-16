@@ -3332,8 +3332,90 @@ static inline __attribute__((unused)) void madd_float16_sse(uint16_t* dst, const
 #define madd_float_simd     madd_float_sse
 #define madd_double_simd    madd_double_sse
 #define madd_float16_simd   madd_float16_sse
-//#elif __ARM_NEON
-// TODO::Dicky Add arm neon simd
+#elif __ARM_NEON
+static inline __attribute__((unused)) void madd_int8_neon(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+{
+    int i = 0;
+    int8x16_t X, Y;
+    for (i = 0; i < (long)len - 15; i += 16)
+    {
+        X = vld1q_s8(src1 + i); // load chunk of 16 char
+        Y = vld1q_s8(src2 + i); // load chunk of 16 char
+        X = vaddq_s8(X, Y);
+        vst1q_s8((__m128i *)(dst + i), X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
+}
+static inline __attribute__((unused)) void madd_int16_neon(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+{
+    int i = 0;
+    int16x8_t X, Y;
+    for (i = 0; i < (long)len - 7; i += 8)
+    {
+        X = vld1q_s16(src1 + i); // load chunk of 8 short
+        Y = vld1q_s16(src2 + i); // load chunk of 8 short
+        X = vaddq_s16(X, Y);
+        vst1q_s16(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
+}
+static inline __attribute__((unused)) void madd_int32_neon(int32_t* dst, const int32_t* src1, const int32_t* src2, const size_t len)
+{
+    int i = 0;
+    int32x4_t X, Y;
+    for (i = 0; i < (long)len - 3; i += 4)
+    {
+        X = vld1q_s32(src1 + i); // load chunk of 4 int
+        Y = vld1q_s32(src2 + i); // load chunk of 4 int
+        X = vaddq_s32(X, Y);
+        vst1q_s32(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
+}
+static inline __attribute__((unused)) void madd_int64_neon(int64_t* dst, const int64_t* src1, const int64_t* src2, const size_t len)
+{
+    int i = 0;
+    int64x2_t X, Y;
+    for (i = 0; i < (long)len - 1; i += 2)
+    {
+        X = vld1q_s64(src1 + i); // load chunk of 2 int64
+        Y = vld1q_s64(src2 + i); // load chunk of 2 int64
+        X = vaddq_s64(X, Y);
+        vst1q_s64(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
+}
+static inline __attribute__((unused)) void madd_float_neon(float* dst, const float* src1, const float* src2, const size_t len)
+{
+    int i = 0;
+    float32x4_t X, Y;
+    for (i = 0; i < (long)len - 3; i += 4)
+    {
+        X = vld1q_f32(src1 + i); // load chunk of 4 floats
+        Y = vld1q_f32(src2 + i); // load chunk of 4 floats
+        X = vaddq_f32(X, Y);
+        vst1q_f32(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
+}
+static inline __attribute__((unused)) void madd_double_neon(double* dst, const double* src1, const double* src2, const size_t len)
+{
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
+}
+static inline __attribute__((unused)) void madd_float16_neon(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
+{
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = 0; i < len; ++i) 
+        *(dst + i) = im_float32_to_float16(im_float16_to_float32(*(src1 + i)) + im_float16_to_float32(*(src2 + i)));
+}
+#define madd_int8_simd      madd_int8_neon
+#define madd_int16_simd     madd_int16_neon
+#define madd_int32_simd     madd_int32_neon
+#define madd_int64_simd     madd_int64_neon
+#define madd_float_simd     madd_float_neon
+#define madd_double_simd    madd_double_neon
+#define madd_float16_simd   madd_float16_neon
 #else
 static inline __attribute__((unused)) void madd_int8_c(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
 {
@@ -3565,8 +3647,90 @@ static inline __attribute__((unused)) void msub_float16_sse(uint16_t* dst, const
 #define msub_float_simd     msub_float_sse
 #define msub_double_simd    msub_double_sse
 #define msub_float16_simd   msub_float16_sse
-//#elif __ARM_NEON
-// TODO::Dicky Add arm neon simd
+#elif __ARM_NEON
+static inline __attribute__((unused)) void msub_int8_neon(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+{
+    int i = 0;
+    int8x16_t X, Y;
+    for (i = 0; i < (long)len - 15; i += 16)
+    {
+        X = vld1q_s8(src1 + i); // load chunk of 16 char
+        Y = vld1q_s8(src2 + i); // load chunk of 16 char
+        X = vsubq_s8(X, Y);
+        vst1q_s8(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
+}
+static inline __attribute__((unused)) void msub_int16_neon(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+{
+    int i = 0;
+    int16x8_t X, Y;
+    for (i = 0; i < (long)len - 7; i += 8)
+    {
+        X = vld1q_s16(src1 + i); // load chunk of 8 short
+        Y = vld1q_s16(src2 + i); // load chunk of 8 short
+        X = vsubq_s16(X, Y);
+        vst1q_s16(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
+}
+static inline __attribute__((unused)) void msub_int32_neon(int32_t* dst, const int32_t* src1, const int32_t* src2, const size_t len)
+{
+    int i = 0;
+    int32x4_t X, Y;
+    for (i = 0; i < (long)len - 3; i += 4)
+    {
+        X = vld1q_s32(src1 + i); // load chunk of 4 int
+        Y = vld1q_s32(src2 + i); // load chunk of 4 int
+        X = vsubq_s32(X, Y);
+        vst1q_s32(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
+}
+static inline __attribute__((unused)) void msub_int64_neon(int64_t* dst, const int64_t* src1, const int64_t* src2, const size_t len)
+{
+    int i = 0;
+    int64x2_t X, Y;
+    for (i = 0; i < (long)len - 1; i += 2)
+    {
+        X = vld1q_s64(src1 + i); // load chunk of 2 int64
+        Y = vld1q_s64(src2 + i); // load chunk of 2 int64
+        X = vsubq_s64(X, Y);
+        vst1q_s64(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
+}
+static inline __attribute__((unused)) void msub_float_neon(float* dst, const float* src1, const float* src2, const size_t len)
+{
+    int i = 0;
+    float32x4_t X, Y;
+    for (i = 0; i < (long)len - 3; i += 4)
+    {
+        X = vld1q_f32(src1 + i); // load chunk of 4 floats
+        Y = vld1q_f32(src2 + i); // load chunk of 4 floats
+        X = vsubq_f32(X, Y);
+        vst1q_f32(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
+}
+static inline __attribute__((unused)) void msub_double_neon(double* dst, const double* src1, const double* src2, const size_t len)
+{
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
+}
+static inline __attribute__((unused)) void msub_float16_neon(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
+{
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = 0; i < len; ++i) 
+        *(dst + i) = im_float32_to_float16(im_float16_to_float32(*(src1 + i)) - im_float16_to_float32(*(src2 + i)));
+}
+#define msub_int8_simd      msub_int8_neon
+#define msub_int16_simd     msub_int16_neon
+#define msub_int32_simd     msub_int32_neon
+#define msub_int64_simd     msub_int64_neon
+#define msub_float_simd     msub_float_neon
+#define msub_double_simd    msub_double_neon
+#define msub_float16_simd   msub_float16_neon
 #else
 static inline __attribute__((unused)) void msub_int8_c(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
 {
@@ -3935,8 +4099,82 @@ static inline __attribute__((unused)) void mmul_float16_sse(uint16_t* dst, const
 #define mmul_float_simd      mmul_float_sse
 #define mmul_double_simd     mmul_double_sse
 #define mmul_float16_simd    mmul_float16_sse
-//#elif __ARM_NEON
-// TODO::Dicky Add arm neon simd
+#elif __ARM_NEON
+static inline __attribute__((unused)) void mmul_int8_neon(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+{
+    int i = 0;
+    int8x16_t X, Y;
+    for (i = 0; i < (long)len - 15; i += 16)
+    {
+        X = vld1q_s8(src1 + i); // load chunk of 16 int8
+        Y = vld1q_s8(src2 + i); // load chunk of 16 int8
+        X = vmulq_s8(X, Y);
+        vst1q_s8((__m128i *)(dst + i), X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
+}
+static inline __attribute__((unused)) void mmul_int16_neon(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+{
+    int i = 0;
+    int16x8_t X, Y;
+    for (i = 0; i < (long)len - 7; i += 8)
+    {
+        X = vld1q_s16(src1 + i); // load chunk of 8 short
+        Y = vld1q_s16(src2 + i); // load chunk of 8 short
+        X = vmulq_s16(X, Y);
+        vst1q_s16(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
+}
+static inline __attribute__((unused)) void mmul_int32_neon(int32_t* dst, const int32_t* src1, const int32_t* src2, const size_t len)
+{
+    int i = 0;
+    int32x4_t X, Y;
+    for (i = 0; i < (long)len - 3; i += 4)
+    {
+        X = vld1q_s32(src1 + i); // load chunk of 4 int
+        Y = vld1q_s32(src2 + i); // load chunk of 4 int
+        X = vmulq_s32(X, Y);
+        vst1q_s32(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
+}
+static inline __attribute__((unused)) void mmul_int64_neon(int64_t* dst, const int64_t* src1, const int64_t* src2, const size_t len)
+{
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
+}
+static inline __attribute__((unused)) void mmul_float_neon(float* dst, const float* src1, const float* src2, const size_t len)
+{
+    int i = 0;
+    float32x4_t X, Y;
+    for (i = 0; i < (long)len - 3; i += 4)
+    {
+        X = vld1q_f32(src1 + i); // load chunk of 4 floats
+        Y = vld1q_f32(src2 + i); // load chunk of 4 floats
+        X = vmulq_f32(X, Y);
+        vst1q_f32(dst + i, X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
+}
+static inline __attribute__((unused)) void mmul_double_neon(double* dst, const double* src1, const double* src2, const size_t len)
+{
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
+}
+static inline __attribute__((unused)) void mmul_float16_neon(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
+{
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = 0; i < len; ++i) 
+        *(dst + i) = im_float32_to_float16(im_float16_to_float32(*(src1 + i)) * im_float16_to_float32(*(src2 + i)));
+}
+#define mmul_int8_simd       mmul_int8_neon
+#define mmul_int16_simd      mmul_int16_neon
+#define mmul_int32_simd      mmul_int32_neon
+#define mmul_int64_simd      mmul_int64_neon
+#define mmul_float_simd      mmul_float_neon
+#define mmul_double_simd     mmul_double_neon
+#define mmul_float16_simd    mmul_float16_neon
 #else
 static inline __attribute__((unused)) void mmul_int8_c(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
 {
