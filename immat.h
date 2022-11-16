@@ -17,6 +17,8 @@
 #define IM_MALLOC_ALIGN 16
 #include <immintrin.h>
 #include <smmintrin.h>
+#elif __ARM_NEON
+#include <arm_neon.h>
 #else
 #define IM_MALLOC_ALIGN 8
 #endif
@@ -2257,6 +2259,21 @@ static inline __attribute__((unused)) void add_float16_sse(uint16_t* dst, const 
 #define add_float_simd add_float_sse
 #define add_double_simd add_double_sse
 #define add_float16_simd add_float16_sse
+#elif __ARM_NEON
+// TODO::Dicky Add arm neon simd
+static inline __attribute__((unused)) void add_int8_neon(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+{
+    int i = 0;
+    __m128i V = _mm_set1_epi8(v);
+    __m128i X;
+    for (i = 0; i < (long)len - 15; i += 16)
+    {
+        X = _mm_loadu_si128((__m128i const *)(src + i)); // load chunk of 16 char
+        X = _mm_add_epi8(X, V);
+        _mm_storeu_si128((__m128i *)(dst + i), X);
+    }
+    for (; i < len; ++i) *(dst + i) = *(src + i) + v;
+}
 #else
 static inline __attribute__((unused)) void add_int8_c(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
 {
@@ -2268,7 +2285,7 @@ static inline __attribute__((unused)) void add_int16_c(int16_t* dst, const int16
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) + v;
 }
-static inline __attribute__((unused)) void add_int32_c(int16_t* dst, const int32_t* src, const size_t len, const int32_t v)
+static inline __attribute__((unused)) void add_int32_c(int32_t* dst, const int32_t* src, const size_t len, const int32_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) + v;
@@ -2488,6 +2505,8 @@ static inline __attribute__((unused)) void sub_float16_sse(uint16_t* dst, const 
 #define sub_float_simd sub_float_sse
 #define sub_double_simd sub_double_sse
 #define sub_float16_simd sub_float16_sse
+#elif __ARM_NEON
+// TODO::Dicky Add arm neon simd
 #else
 static inline __attribute__((unused)) void sub_int8_c(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
 {
@@ -2499,7 +2518,7 @@ static inline __attribute__((unused)) void sub_int16_c(int16_t* dst, const int16
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) - v;
 }
-static inline __attribute__((unused)) void sub_int32_c(int16_t* dst, const int32_t* src, const size_t len, const int32_t v)
+static inline __attribute__((unused)) void sub_int32_c(int32_t* dst, const int32_t* src, const size_t len, const int32_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) - v;
@@ -2687,6 +2706,8 @@ static inline __attribute__((unused)) void mul_float16_sse(uint16_t* dst, const 
 #define mul_float_simd mul_float_sse
 #define mul_double_simd mul_double_sse
 #define mul_float16_simd mul_float16_sse
+#elif __ARM_NEON
+// TODO::Dicky Add arm neon simd
 #else
 static inline __attribute__((unused)) void mul_int8_c(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
 {
@@ -2698,7 +2719,7 @@ static inline __attribute__((unused)) void mul_int16_c(int16_t* dst, const int16
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
-static inline __attribute__((unused)) void mul_int32_c(int16_t* dst, const int32_t* src, const size_t len, const int32_t v)
+static inline __attribute__((unused)) void mul_int32_c(int32_t* dst, const int32_t* src, const size_t len, const int32_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
@@ -2854,6 +2875,8 @@ static inline __attribute__((unused)) void div_float16_sse(uint16_t* dst, const 
 #define div_float_simd div_float_sse
 #define div_double_simd div_double_sse
 #define div_float16_simd div_float16_sse
+#elif __ARM_NEON
+// TODO::Dicky Add arm neon simd
 #else
 static inline __attribute__((unused)) void div_int8_c(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
 {
@@ -2865,7 +2888,7 @@ static inline __attribute__((unused)) void div_int16_c(int16_t* dst, const int16
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) / v;
 }
-static inline __attribute__((unused)) void div_int32_c(int16_t* dst, const int32_t* src, const size_t len, const int32_t v)
+static inline __attribute__((unused)) void div_int32_c(int32_t* dst, const int32_t* src, const size_t len, const int32_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) / v;
@@ -3085,6 +3108,8 @@ static inline __attribute__((unused)) void madd_float16_sse(uint16_t* dst, const
 #define madd_float_simd     madd_float_sse
 #define madd_double_simd    madd_double_sse
 #define madd_float16_simd   madd_float16_sse
+#elif __ARM_NEON
+// TODO::Dicky Add arm neon simd
 #else
 static inline __attribute__((unused)) void madd_int8_c(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
 {
@@ -3096,7 +3121,7 @@ static inline __attribute__((unused)) void madd_int16_c(int16_t* dst, const int1
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
 }
-static inline __attribute__((unused)) void madd_int32_c(int16_t* dst, const int32_t* src1, const int32_t* src2, const size_t len)
+static inline __attribute__((unused)) void madd_int32_c(int32_t* dst, const int32_t* src1, const int32_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
@@ -3316,6 +3341,8 @@ static inline __attribute__((unused)) void msub_float16_sse(uint16_t* dst, const
 #define msub_float_simd     msub_float_sse
 #define msub_double_simd    msub_double_sse
 #define msub_float16_simd   msub_float16_sse
+#elif __ARM_NEON
+// TODO::Dicky Add arm neon simd
 #else
 static inline __attribute__((unused)) void msub_int8_c(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
 {
@@ -3327,7 +3354,7 @@ static inline __attribute__((unused)) void msub_int16_c(int16_t* dst, const int1
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
 }
-static inline __attribute__((unused)) void msub_int32_c(int16_t* dst, const int32_t* src1, const int32_t* src2, const size_t len)
+static inline __attribute__((unused)) void msub_int32_c(int32_t* dst, const int32_t* src1, const int32_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
@@ -3483,6 +3510,8 @@ static inline __attribute__((unused)) void mdiv_float16_sse(uint16_t* dst, const
 #define mdiv_float_simd      mdiv_float_sse
 #define mdiv_double_simd     mdiv_double_sse
 #define mdiv_float16_simd    mdiv_float16_sse
+#elif __ARM_NEON
+// TODO::Dicky Add arm neon simd
 #else
 static inline __attribute__((unused)) void mdiv_int8_c(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
 {
@@ -3494,7 +3523,7 @@ static inline __attribute__((unused)) void mdiv_int16_c(int16_t* dst, const int1
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
 }
-static inline __attribute__((unused)) void mdiv_int32_c(int16_t* dst, const int32_t* src1, const int32_t* src2, const size_t len)
+static inline __attribute__((unused)) void mdiv_int32_c(int32_t* dst, const int32_t* src1, const int32_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
@@ -3682,6 +3711,8 @@ static inline __attribute__((unused)) void mmul_float16_sse(uint16_t* dst, const
 #define mmul_float_simd      mmul_float_sse
 #define mmul_double_simd     mmul_double_sse
 #define mmul_float16_simd    mmul_float16_sse
+#elif __ARM_NEON
+// TODO::Dicky Add arm neon simd
 #else
 static inline __attribute__((unused)) void mmul_int8_c(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
 {
@@ -3693,7 +3724,7 @@ static inline __attribute__((unused)) void mmul_int16_c(int16_t* dst, const int1
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
 }
-static inline __attribute__((unused)) void mmul_int32_c(int16_t* dst, const int32_t* src1, const int32_t* src2, const size_t len)
+static inline __attribute__((unused)) void mmul_int32_c(int32_t* dst, const int32_t* src1, const int32_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
