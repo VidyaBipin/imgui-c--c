@@ -18,6 +18,7 @@
 #include <immintrin.h>
 #include <smmintrin.h>
 #elif __ARM_NEON
+#define IM_MALLOC_ALIGN 16
 #include <arm_neon.h>
 #else
 #define IM_MALLOC_ALIGN 8
@@ -2264,7 +2265,7 @@ static inline __attribute__((unused)) void add_float16_sse(uint16_t* dst, const 
 static inline __attribute__((unused)) void add_int8_neon(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
 {
     int i = 0;
-    int8x16_t V = vdup_n_s8(v);
+    int8x16_t V = vdupq_n_s8(v);
     int8x16_t X;
     for (i = 0; i < (long)len - 15; i += 16)
     {
@@ -2277,7 +2278,7 @@ static inline __attribute__((unused)) void add_int8_neon(int8_t* dst, const int8
 static inline __attribute__((unused)) void add_int16_neon(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
 {
     int i = 0;
-    int16x8_t V = vdup_n_s16(v);
+    int16x8_t V = vdupq_n_s16(v);
     int16x8_t X;
     for (i = 0; i < (long)len - 7; i += 8)
     {
@@ -2290,7 +2291,7 @@ static inline __attribute__((unused)) void add_int16_neon(int16_t* dst, const in
 static inline __attribute__((unused)) void add_int32_neon(int32_t* dst, const int32_t* src, const size_t len, const int32_t v)
 {
     int i = 0;
-    int32x4_t V = vdup_n_s32(v);
+    int32x4_t V = vdupq_n_s32(v);
     int32x4_t X;
     for (i = 0; i < (long)len - 3; i += 4)
     {
@@ -2303,7 +2304,7 @@ static inline __attribute__((unused)) void add_int32_neon(int32_t* dst, const in
 static inline __attribute__((unused)) void add_int64_neon(int64_t* dst, const int64_t* src, const size_t len, const int64_t v)
 {
     int i = 0;
-    int64x2_t V = vdup_n_s64(v);
+    int64x2_t V = vdupq_n_s64(v);
     int64x2_t X;
     for (i = 0; i < (long)len - 1; i += 2)
     {
@@ -2316,7 +2317,7 @@ static inline __attribute__((unused)) void add_int64_neon(int64_t* dst, const in
 static inline __attribute__((unused)) void add_float_neon(float* dst, const float* src, const size_t len, const float v)
 {
     int i = 0;
-    float32x4_t V = vdup_n_f32(v);
+    float32x4_t V = vdupq_n_f32(v);
     float32x4_t X;
     for (i = 0; i < (long)len - 3; i += 4)
     {
@@ -3617,7 +3618,7 @@ static inline __attribute__((unused)) void mdiv_float16_c(uint16_t* dst, const u
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) 
-        *(dst + i) = im_float32_to_float16(im_float16_to_float32(*(src + i)) / im_float16_to_float32(*(src + i)));
+        *(dst + i) = im_float32_to_float16(im_float16_to_float32(*(src1 + i)) / im_float16_to_float32(*(src2 + i)));
 }
 #define mdiv_int8_simd       mdiv_int8_c
 #define mdiv_int16_simd      mdiv_int16_c
@@ -3812,7 +3813,7 @@ static inline __attribute__((unused)) void mmul_float_c(float* dst, const float*
 static inline __attribute__((unused)) void mmul_double_c(double* dst, const double* src1, const double* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
-    for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) * (src2 + i);
+    for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
 }
 static inline __attribute__((unused)) void mmul_float16_c(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
