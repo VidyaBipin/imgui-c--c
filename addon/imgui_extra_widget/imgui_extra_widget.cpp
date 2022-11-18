@@ -7173,7 +7173,7 @@ void ImGui::SpinnerBlocks(const char *label, float radius, float thickness, cons
     }
 }
 
-void ImGui::SpinnerFluid(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars)
+void ImGui::SpinnerFluid(const char *label, float radius, const ImColor &color, float speed, int bars)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -7195,10 +7195,67 @@ void ImGui::SpinnerFluid(const char *label, float radius, float thickness, const
         c.Value.w = rkoeff[i % 6][1];
         for (int j = 0; j < num_segments; ++j)
         {
-            float h = (0.6f + 0.3f * ImSin(ImGui::GetTime() * (speed * rkoeff[i % 6][2] * 2.f) + (2 * rkoeff[i % 6][0] * j * j_k))) * (radius * 2.f * rkoeff[i][2]);
+            float h = (0.6f + 0.3f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[i % 6][2] * 2.f) + (2.f * rkoeff[i % 6][0] * j * j_k))) * (radius * 2.f * rkoeff[i][2]);
             window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + j * j_k, centre.y + size.y / 2.f),
                                             ImVec2(pos.x + style.FramePadding.x + (j + 1) * (j_k), centre.y + size.y / 2.f - h), c);
         }
+    }
+}
+
+void ImGui::SpinnerArcPolarFade(const char *label, float radius, const ImColor &color, float speed, size_t arcs)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+
+    // Render
+    float arc_angle = 2.f * IM_PI / (float)arcs;
+    const float angle_offset = arc_angle / num_segments;
+    constexpr float rkoeff[6][3] = {{0.15f, 0.1f, 0.1f}, {0.033f, 0.15f, 0.8f}, {0.017f, 0.25f, 0.6f}, {0.037f, 0.1f, 0.4f}, {0.25f, 0.1f, 0.3f}, {0.11f, 0.1f, 0.2f}};
+    for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
+    {
+        const float b = arc_angle * arc_num - IM_PI / 2.f - IM_PI / 4.f;
+        const float e = arc_angle * arc_num + arc_angle - IM_PI / 2.f - IM_PI / 4.f;
+        const float a = arc_angle * arc_num;
+        ImColor c = color;
+        float h = (0.6f + 0.3f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[arc_num % 6][2] * 2.f) + (2 * rkoeff[arc_num % 6][0])));
+        c.Value.w = h;
+
+        window->DrawList->PathClear();
+        window->DrawList->PathLineTo(centre);
+        for (size_t i = 0; i <= num_segments + 1; i++)
+        {
+            const float ar = arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f - IM_PI / 4.f;
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * radius, centre.y + ImSin(ar) * radius));
+        }
+        window->DrawList->PathFillConvex(c);
+    }
+}
+
+void ImGui::SpinnerArcPolarRadius(const char *label, float radius, const ImColor &color, float speed, size_t arcs)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+
+    // Render
+    float arc_angle = 2.f * IM_PI / (float)arcs;
+    const float angle_offset = arc_angle / num_segments;
+    constexpr float rkoeff[6][3] = {{0.15f, 0.1f, 0.41f}, {0.033f, 0.15f, 0.8f}, {0.017f, 0.25f, 0.6f}, {0.037f, 0.1f, 0.4f}, {0.25f, 0.1f, 0.3f}, {0.11f, 0.1f, 0.2f}};
+    float out_h, out_s, out_v;
+    ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+    for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
+    {
+        const float b = arc_angle * arc_num - IM_PI / 2.f - IM_PI / 4.f;
+        const float e = arc_angle * arc_num + arc_angle - IM_PI / 2.f - IM_PI / 4.f;
+        const float a = arc_angle * arc_num;
+        float r = (0.6f + 0.3f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[arc_num % 6][2] * 2.f) + (2.f * rkoeff[arc_num % 6][0])));
+
+        window->DrawList->PathClear();
+        window->DrawList->PathLineTo(centre);
+        ImColor c = ImColor::HSV(out_h + arc_num * 0.31f, out_s, out_v);
+        for (size_t i = 0; i <= num_segments + 1; i++)
+        {
+            const float ar = arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f - IM_PI / 4.f;
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * (radius * r), centre.y + ImSin(ar) * (radius * r)));
+        }
+        window->DrawList->PathFillConvex(c);
     }
 }
 
