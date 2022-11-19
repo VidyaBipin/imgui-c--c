@@ -19,7 +19,7 @@ void Application_FullScreen(bool on)
     ImGui_ImplSDL2_FullScreen(ImGui::GetMainViewport(), on);
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
     // Setup SDL
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
@@ -29,7 +29,7 @@ int main(int, char**)
     }
 
     // Setup window
-    ApplicationWindowProperty property;
+    ApplicationWindowProperty property(argc, argv);
     Application_GetWindowProperties(property);
     // Init IME effect windows only
     ImGui_ImplSDL2_InitIme();

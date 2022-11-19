@@ -20,6 +20,8 @@
 
 typedef struct ApplicationWindowProperty
 {
+    ApplicationWindowProperty() {}
+    ApplicationWindowProperty(int _argc, char** _argv) { argc = _argc; argv = _argv; }
     std::string name;
     int pos_x       {0};
     int pos_y       {0};
@@ -40,7 +42,8 @@ typedef struct ApplicationWindowProperty
     std::string language_path;
     std::string icon_path;
     void* handle    {nullptr};
-
+    int argc    {0};
+    char ** argv {nullptr};
 } ApplicationWindowProperty;
 
 void Application_GetWindowProperties(ApplicationWindowProperty& property);

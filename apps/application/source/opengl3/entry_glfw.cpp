@@ -36,7 +36,7 @@ void Application_FullScreen(bool on)
     ImGui_ImplGlfw_FullScreen(ImGui::GetMainViewport(), on);
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
     // Setup window
     glfwSetErrorCallback(error_callback);
@@ -70,7 +70,7 @@ int main(int, char**)
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 #endif
 
-    ApplicationWindowProperty property;
+    ApplicationWindowProperty property(argc, argv);
     Application_GetWindowProperties(property);
     ImVec2 display_scale = ImVec2(1.0, 1.0);
 

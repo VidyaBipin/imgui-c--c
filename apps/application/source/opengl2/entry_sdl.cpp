@@ -20,7 +20,7 @@ void Application_FullScreen(bool on)
     ImGui_ImplSDL2_FullScreen(ImGui::GetMainViewport(), on);
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
     // Setup SDL
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
