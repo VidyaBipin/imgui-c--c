@@ -39,6 +39,8 @@ typedef struct ApplicationWindowProperty
     bool full_size  {false};
     bool using_setting_path {true};
     bool internationalize {false};
+    bool top_most   {false};
+    bool window_border {true};
     std::string language_path;
     std::string icon_path;
     void* handle    {nullptr};

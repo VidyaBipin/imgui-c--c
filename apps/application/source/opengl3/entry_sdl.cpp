@@ -87,6 +87,17 @@ int main(int argc, char** argv)
     {
         window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
     }
+    else
+    {
+        if (property.top_most)
+        {
+            window_flags |= SDL_WINDOW_ALWAYS_ON_TOP;
+        }
+        if (!property.window_border)
+        {
+            window_flags |= SDL_WINDOW_BORDERLESS;
+        }
+    }
     std::string title = property.name;
     title += " SDL_GL3";
     SDL_Window* window = SDL_CreateWindow(title.c_str(), property.center ? SDL_WINDOWPOS_CENTERED : property.pos_x,

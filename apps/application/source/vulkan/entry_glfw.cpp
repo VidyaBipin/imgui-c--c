@@ -56,6 +56,17 @@ int main(int argc, char** argv)
         property.center = false;
         glfwWindowHint(GLFW_DECORATED, false);
     }
+    else
+    {
+        if (property.top_most)
+        {
+            glfwWindowHint(GLFW_FLOATING, true);
+        }
+        if (!property.window_border)
+        {
+            glfwWindowHint(GLFW_DECORATED, false);
+        }
+    }
 
     GLFWwindow* window = glfwCreateWindow(property.width, property.height, title.c_str(), NULL, NULL);
     if (!window)
