@@ -108,6 +108,19 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
                             property.center ? 100 : property.pos_x, property.center ? 100 : property.pos_y, property.width, property.height,
                             nullptr, nullptr, wc.hInstance, nullptr);
 
+    if (hwnd == nullptr)
+    {
+        fprintf(stderr, "Failed to Open window! %s\n", c_WindowName.c_str());
+        return 1;
+    }
+    if (property.top_most)
+    {
+        ::SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+    }
+    if (!property.window_border)
+    {
+        ::SetWindowLong(hwnd, GWL_STYLE, WS_BORDER); 
+    }
     // Setup Vulkan
     std::vector<const char *> instance_extensions;
     instance_extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);

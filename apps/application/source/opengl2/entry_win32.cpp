@@ -113,6 +113,19 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         fprintf(stderr, "Failed to Open window! %s\n", c_WindowName.c_str());
         return 1;
     }
+    if (hwnd == nullptr)
+    {
+        fprintf(stderr, "Failed to Open window! %s\n", c_WindowName.c_str());
+        return 1;
+    }
+    if (property.top_most)
+    {
+        ::SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+    }
+    if (!property.window_border)
+    {
+        ::SetWindowLong(hwnd, GWL_STYLE, WS_BORDER); 
+    }
     auto dc = GetDC(hwnd);
     if (dc == nullptr)
     {
@@ -159,7 +172,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     if (property.viewport)io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
     if (!property.auto_merge) io.ConfigViewportsNoAutoMerge = true;
     // Setup App setting file path
-    auto setting_path = roperty.using_setting_path ? ImGuiHelper::settings_path(property.name) : "";
+    auto setting_path = property.using_setting_path ? ImGuiHelper::settings_path(property.name) : "";
     auto ini_name = property.name;
     std::replace(ini_name.begin(), ini_name.end(), ' ', '_');
     setting_path += ini_name + ".ini";

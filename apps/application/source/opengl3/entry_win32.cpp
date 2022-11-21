@@ -113,6 +113,14 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         fprintf(stderr, "Failed to Open window! %s\n", c_WindowName.c_str());
         return 1;
     }
+    if (property.top_most)
+    {
+        ::SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+    }
+    if (!property.window_border)
+    {
+        ::SetWindowLong(hwnd, GWL_STYLE, WS_BORDER); 
+    }
     auto dc = GetDC(hwnd);
     if (dc == nullptr)
     {
