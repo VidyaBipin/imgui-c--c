@@ -348,19 +348,27 @@ bool ImGui::SliderBehavior(const ImRect& bb, ImGuiID id, ImGuiDataType data_type
 
 void ImGui::UvMeter(char const *label, ImVec2 const &size, int *value, int v_min, int v_max, int steps, int* stack, int* count)
 {
+    UvMeter(ImGui::GetWindowDrawList(), label, size, value, v_min, v_max, steps, stack, count);
+}
+
+void ImGui::UvMeter(ImDrawList *draw_list, char const *label, ImVec2 const &size, int *value, int v_min, int v_max, int steps, int* stack, int* count)
+{
     float fvalue = (float)*value;
     float *fstack = nullptr;
     float _f = 0.f;
     if (stack) { fstack = &_f; *fstack = (float)*stack; }
-    UvMeter(label, size, &fvalue, (float)v_min, (float)v_max, steps, fstack, count);
+    UvMeter(draw_list, label, size, &fvalue, (float)v_min, (float)v_max, steps, fstack, count);
     *value = (int)fvalue;
     if (stack) *stack = (int)*fstack;
 }
 
 void ImGui::UvMeter(char const *label, ImVec2 const &size, float *value, float v_min, float v_max, int steps, float* stack, int* count)
 {
-    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    UvMeter(ImGui::GetWindowDrawList(), label, size, value, v_min, v_max, steps, stack, count);
+}
 
+void ImGui::UvMeter(ImDrawList *draw_list, char const *label, ImVec2 const &size, float *value, float v_min, float v_max, int steps, float* stack, int* count)
+{
     ImVec2 pos = ImGui::GetCursorScreenPos();
 
     ImGui::InvisibleButton(label, size);
