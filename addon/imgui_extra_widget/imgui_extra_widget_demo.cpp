@@ -608,7 +608,7 @@ void ShowExtraWidgetDemoWindow()
 
 
         // line 8
-        ImGui::SpinnerRainbowBalls("SpinnerRainbowBalls", 16, 4, ImColor(0, 0, 0, 0), 1.5f * velocity, 5);
+        ImGui::SpinnerRainbowBalls("SpinnerRainbowBalls", 16, 4, ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), 1.5f * velocity, 5);
         ImGui::ShowTooltipOnHover("SpinnerRainbowBalls");
 
 
@@ -618,12 +618,16 @@ void ShowExtraWidgetDemoWindow()
 
 
         ImGui::SameLine();
-        ImGui::SpinnerArcPolarFade("SpinnerArcPolarFade", 16, ImColor(255, 255, 255), 6 * velocity, 6);
+        ImGui::SpinnerArcPolarFade("SpinnerArcPolarFade", 16, ImColor(255, 255, 255), 6.0f * velocity, 6);
         ImGui::ShowTooltipOnHover("SpinnerArcPolarFade");
 
         ImGui::SameLine();
         ImGui::SpinnerArcPolarRadius("SpinnerArcPolarRadius", 16, ImColor::HSV(0.25f, 0.8f, 0.8f), 6 * velocity, 6);
         ImGui::ShowTooltipOnHover("SpinnerArcPolarRadius");
+
+        ImGui::SameLine();
+        ImGui::SpinnerCaleidoscope("SpinnerArcPolarPies", 16, 4, ImColor::HSV(0.25f, 0.8f, 0.8f), 2.6f * velocity, 10);
+        ImGui::ShowTooltipOnHover("SpinnerArcPolarPies");
 
         // End
         ImGui::TreePop();
