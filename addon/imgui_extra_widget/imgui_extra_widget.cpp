@@ -5984,7 +5984,7 @@ void ImGui::SpinnerMovingDots(const char *label, float thickness, const ImColor 
         if (offset > size.x - thickness)
             th = size.x - offset;
 
-        window->DrawList->AddCircleFilled(ImVec2(pos.x + style.FramePadding.x + offset, centre.y), th, color, 8);
+        window->DrawList->AddCircleFilled(ImVec2(pos.x + offset - thickness, centre.y), th, color, 8);
     }
 }
 
@@ -7198,7 +7198,7 @@ void ImGui::SpinnerArcPolarRadius(const char *label, float radius, const ImColor
     }
 }
 
-void ImGui::SpinnerCaleidoscope(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t arcs)
+void ImGui::SpinnerCaleidoscope(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t arcs, int mode)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -7230,8 +7230,19 @@ void ImGui::SpinnerCaleidoscope(const char *label, float radius, float thickness
 
     float out_h, out_s, out_v;
     ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
-    draw_sectors(start * ImCos(start), [&] (auto i) { return ImColor::HSV(out_h + i * 0.31f, out_s, out_v); }, radius);
-    draw_sectors(start * ImSin(start), [&] (auto i) { return ImColor::HSV(out_h + i * 0.31f, out_s, out_v); }, radius - thickness - 2 );
+    draw_sectors(start, [&] (auto i) { return ImColor::HSV(out_h + i * 0.31f, out_s, out_v); }, radius);
+    switch (mode) {
+        case 0: draw_sectors(-start * 0.78f, [&] (auto i) { return ImColor::HSV(out_h + i * 0.31f, out_s, out_v); }, radius - thickness - 2); break;
+        case 1:
+        {
+            ImColor c = color;
+            float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
+            c.Value.w = ImMax(0.1f, ImMin(lerp_koeff, 1.f));
+            float dr = radius - thickness - 3;
+            window->DrawList->AddCircleFilled(centre, dr, c, num_segments);
+        } 
+        break;
+    }
 }
 
 // draw leader

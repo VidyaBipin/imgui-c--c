@@ -441,6 +441,7 @@ namespace ImGui
 		e_st_vdots,
 		e_st_bounce_ball,
 		e_st_eclipse,
+		e_st_ingyang,
 
         e_st_count
     };
@@ -453,11 +454,14 @@ namespace ImGui
     DECLPROP (Thickness, float, 1.f)
     DECLPROP (Color, ImColor, 0xffffffff)
     DECLPROP (BgColor, ImColor, 0xffffffff)
+	DECLPROP (AltColor, ImColor, 0xffffffff)
     DECLPROP (Angle, float, IM_PI)
     DECLPROP (FloatPtr, float_ptr, nullptr)
     DECLPROP (Dots, int, 0)
     DECLPROP (MiddleDots, int, 0)
     DECLPROP (MinThickness, float, 0.f)
+	DECLPROP (Reverse, bool, false)
+    DECLPROP (Delta, float, 0.f)
 #undef DECLPROP
 
 #define IMPLRPOP(basetype,type) basetype m_##type; \
@@ -479,11 +483,14 @@ namespace ImGui
         IMPLRPOP(float, Thickness)
         IMPLRPOP(ImColor, Color)
         IMPLRPOP(ImColor, BgColor)
+		IMPLRPOP(ImColor, AltColor)
         IMPLRPOP(float, Angle)
         IMPLRPOP(float_ptr, FloatPtr)
         IMPLRPOP(int, Dots)
         IMPLRPOP(int, MiddleDots)
         IMPLRPOP(float, MinThickness)
+		IMPLRPOP(bool, Reverse)
+        IMPLRPOP(float, Delta)
     };
 #undef IMPLRPOP
 
@@ -543,7 +550,7 @@ IMGUI_API void SpinnerBlocks(const char *label, float radius, float thickness, c
 IMGUI_API void SpinnerFluid(const char *label, float radius, const ImColor &color, float speed, int bars = 3);
 IMGUI_API void SpinnerArcPolarFade(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4);
 IMGUI_API void SpinnerArcPolarRadius(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4);
-IMGUI_API void SpinnerCaleidoscope(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 6);
+IMGUI_API void SpinnerCaleidoscope(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 6, int mode = 0);
 template<SpinnerTypeT Type, typename... Args>
 void Spinner(const char *label, const Args&... args)
 {
@@ -556,7 +563,8 @@ void Spinner(const char *label, const Args&... args)
         { e_st_ang,     [] (const char *label, const SpinnerConfig &c) { SpinnerAng(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Angle); } },
         { e_st_vdots,   [] (const char *label, const SpinnerConfig &c) { SpinnerVDots(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Dots); } },
         { e_st_bounce_ball, [](const char *label,const SpinnerConfig &c) { SpinnerBounceBall(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
-        { e_st_eclipse, [] (const char *label, const SpinnerConfig &c) { SpinnerAngEclipse(label , c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } }
+        { e_st_eclipse, [] (const char *label, const SpinnerConfig &c) { SpinnerAngEclipse(label , c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
+        { e_st_ingyang, [] (const char *label, const SpinnerConfig &c) { SpinnerIngYang(label, c.m_Radius, c.m_Thickness, c.m_Reverse, c.m_Delta, c.m_AltColor, c.m_Color, c.m_Speed, c.m_Angle); } }
     };
 
     SpinnerConfig config(SpinnerType{Type}, args...);
