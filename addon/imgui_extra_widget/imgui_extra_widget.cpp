@@ -6027,15 +6027,15 @@ void ImGui::SpinnerRotateDots(const char *label, float radius, float thickness, 
     }
 }
 
-void ImGui::SpinnerTwinAng(const char *label, float radius1, float radius2, float thickness, const ImColor &color1, const ImColor &color2, float speed)
+void ImGui::SpinnerTwinAng(const char *label, float radius1, float radius2, float thickness, const ImColor &color1, const ImColor &color2, float speed, float angle)
 {
     const float radius = ImMax(radius1, radius2);
     SPINNER_HEADER(pos, size, centre, num_segments);
 
     const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2.f);
     const float aoffset = ImFmod((float)ImGui::GetTime(), 1.5f * IM_PI);
-    const float bofsset = (aoffset > IM_PI) ? IM_PI : aoffset;
-    const float angle_offset = IM_PI * 2.f / num_segments;
+    const float bofsset = (aoffset > angle) ? angle : aoffset;
+    const float angle_offset = angle * 2.f / num_segments;
 
     window->DrawList->PathClear();
     for (size_t i = 0; i <= 2 * num_segments; i++)
@@ -6687,6 +6687,26 @@ void ImGui::SpinnerRotateGooeyBalls(const char *label, float radius, float thick
     }
 }
 
+void ImGui::SpinnerRotateTriangles(const char *label, float radius, float thickness, const ImColor &color, float speed, int tris)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+
+    const float start = ImFmod((float)ImGui::GetTime(), IM_PI);
+    const float rstart = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2);
+    const float radius1 = radius / 2.5f;
+    const float angle_offset = IM_PI * 2.f / tris;
+
+    for (int i = 0; i <= tris; i++)
+    {
+        const float a = rstart + (i * angle_offset);
+        ImVec2 tri_centre(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1);
+        ImVec2 p1(tri_centre.x + ImCos(-a) * radius1, tri_centre.y + ImSin(-a) * radius1);
+        ImVec2 p2(tri_centre.x + ImCos(-a + 2.f * IM_PI / 3.f) * radius1, tri_centre.y + ImSin(-a + 2.f * IM_PI / 3.f) * radius1);
+        ImVec2 p3(tri_centre.x + ImCos(-a - 2.f * IM_PI / 3.f) * radius1, tri_centre.y + ImSin(-a - 2.f * IM_PI / 3.f) * radius1);
+        window->DrawList->AddTriangleFilled(p1, p2, p3, color);
+    }
+}
+
 void ImGui::SpinnerMoonLine(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bg, float speed, float angle)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
@@ -7115,6 +7135,29 @@ void ImGui::SpinnerBlocks(const char *label, float radius, float thickness, cons
         const ImColor &c = (ti == start) ? color : bg;
         window->DrawList->AddRectFilled(ImVec2(lt.x + rpos.x * (offset_block), lt.y + rpos.y * offset_block),
                                       ImVec2(lt.x + rpos.x * (offset_block) + thickness, lt.y + rpos.y * offset_block + thickness), c);
+        ti++;
+    }
+}
+
+void ImGui::SpinnerScaleBlocks(const char *label, float radius, float thickness, const ImColor &bg, const ImColor &color, float speed)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+
+    ImVec2 lt{centre.x - radius, centre.y - radius};
+    const float offset_block = radius * 2.f / 3.f;
+
+    int start = (int)ImFmod((float)ImGui::GetTime() * speed, 9.f);
+
+    const ImVec2ih poses[] = {{0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}, {0, 2}, {1, 2}, {2, 2}};
+    constexpr float rkoeff[9] = {0.1f, 0.15f, 0.17f, 0.25f, 0.6f, 0.15f, 0.1f, 0.12f, 0.22f};
+
+    int ti = 0;
+    for (const auto &rpos: poses)
+    {
+        //const ImColor &c = (ti == start) ? color : bg;
+        float h = (0.8f + 0.4f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[ti % 9])));
+        window->DrawList->AddRectFilled(ImVec2(lt.x + rpos.x * (offset_block), lt.y + rpos.y * offset_block),
+                                        ImVec2(lt.x + rpos.x * (offset_block) + h * thickness, lt.y + rpos.y * offset_block + h * thickness), color);
         ti++;
     }
 }
