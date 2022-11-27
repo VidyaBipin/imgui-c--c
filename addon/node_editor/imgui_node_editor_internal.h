@@ -979,6 +979,7 @@ struct NavigateAction final: EditorAction
     virtual void ShowMetrics() override final;
 
     virtual NavigateAction* AsNavigate() override final { return this; }
+    virtual bool IsDragging() override final { return m_IsActive; }
 
     void NavigateTo(const ImRect& bounds, ZoomMode zoomMode, float duration = -1.0f, NavigationReason reason = NavigationReason::Unknown);
     void StopNavigation();

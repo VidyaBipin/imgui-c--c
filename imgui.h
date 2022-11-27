@@ -264,10 +264,10 @@ struct ImVec2
     float  operator[] (size_t idx) const    { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
     float& operator[] (size_t idx)          { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
     // Add by Dicky
-    bool operator==(const ImVec2& d) const          { return x == d.x && y == d.y; }
-    bool operator==(const ImVec2& d)                { return x == d.x && y == d.y; }
-    bool operator!=(const ImVec2& d) const          { return x != d.x || y != d.y; }
-    bool operator!=(const ImVec2& d)                { return x != d.x || y != d.y; }
+    bool operator==(const ImVec2& d) const          { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8; } //{ return x == d.x && y == d.y; }
+    bool operator==(const ImVec2& d)                { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8; } //{ return x == d.x && y == d.y; }
+    bool operator!=(const ImVec2& d) const          { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; } //{ return x != d.x || y != d.y; }
+    bool operator!=(const ImVec2& d)                { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; } //{ return x != d.x || y != d.y; }
     float len()                                     { return sqrtf(x * x + y * y); }
     // Add by Dicky end
 #ifdef IM_VEC2_CLASS_EXTRA
@@ -282,10 +282,10 @@ struct ImVec4
     constexpr ImVec4()                                        : x(0.0f), y(0.0f), z(0.0f), w(0.0f) { }
     constexpr ImVec4(float _x, float _y, float _z, float _w)  : x(_x), y(_y), z(_z), w(_w) { }
     // Add By Dicky
-    bool operator==(const ImVec4& d) const          { return x == d.x && y == d.y && z == d.z && w == d.w; }
-    bool operator==(const ImVec4& d)                { return x == d.x && y == d.y && z == d.z && w == d.w; }
-    bool operator!=(const ImVec4& d) const          { return x != d.x || y != d.y || z != d.z || w != d.w; }
-    bool operator!=(const ImVec4& d)                { return x != d.x || y != d.y || z != d.z || w != d.w; }
+    bool operator==(const ImVec4& d) const          { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8 && fabs(w - d.w) < 10e-8; } //{ return x == d.x && y == d.y && z == d.z && w == d.w; }
+    bool operator==(const ImVec4& d)                { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8 && fabs(w - d.w) < 10e-8; } //{ return x == d.x && y == d.y && z == d.z && w == d.w; }
+    bool operator!=(const ImVec4& d) const          { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8 || fabs(w - d.w) > 10e-8; } //{ return x != d.x || y != d.y || z != d.z || w != d.w; }
+    bool operator!=(const ImVec4& d)                { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8 || fabs(w - d.w) > 10e-8; } //{ return x != d.x || y != d.y || z != d.z || w != d.w; }
     // Add By Dicky end
 #ifdef IM_VEC4_CLASS_EXTRA
     IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec4.

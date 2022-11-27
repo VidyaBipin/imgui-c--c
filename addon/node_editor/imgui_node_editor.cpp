@@ -1251,7 +1251,10 @@ void ed::EditorContext::End()
         m_CurrentAction = nullptr;
 
     if (m_NavigateAction.m_IsActive)
+    {
         m_NavigateAction.Process(control);
+        m_CurrentAction = &m_NavigateAction;
+    }
     else
         m_NavigateAction.Accept(control);
 
@@ -3309,10 +3312,9 @@ ed::NavigateAction::NavigateAction(EditorContext* editor, ImGuiEx::Canvas& canva
 
 ed::EditorAction::AcceptResult ed::NavigateAction::Accept(const Control& control)
 {
-    IM_ASSERT(!m_IsActive);
-
-    if (m_IsActive)
-        return False;
+    //IM_ASSERT(!m_IsActive);
+    //if (m_IsActive)
+    //    return False;
     
     auto& io = ImGui::GetIO();
     bool emulate_middle_button = false;
@@ -3448,8 +3450,9 @@ bool ed::NavigateAction::Process(const Control& control)
         m_IsActive = false;
     }
 
-    // #TODO: Handle zoom while scrolling
-    // HandleZoom(control);
+    // Handle zoom while scrolling?
+    if (HandleZoom(control))
+        return True;
 
     return m_IsActive;
 }
@@ -3500,6 +3503,7 @@ bool ed::NavigateAction::HandleZoom(const Control& control)
     auto targetRect = m_Canvas.CalcViewRect(ImGuiEx::CanvasView(-targetScroll, newZoom));
 
     NavigateTo(targetRect, c_MouseZoomDuration, NavigationReason::MouseZoom);
+    m_IsActive    = true;
 
     return true;
 }
@@ -3775,10 +3779,9 @@ ed::SizeAction::SizeAction(EditorContext* editor):
 
 ed::EditorAction::AcceptResult ed::SizeAction::Accept(const Control& control)
 {
-    IM_ASSERT(!m_IsActive);
-
-    if (m_IsActive)
-        return False;
+    //IM_ASSERT(!m_IsActive);
+    //if (m_IsActive)
+    //    return False;
 
     if (control.ActiveNode && IsGroup(control.ActiveNode) && ImGui::IsMouseDragging(Editor->GetConfig().DragButtonIndex, 0))
     {
@@ -3955,10 +3958,9 @@ ed::DragAction::DragAction(EditorContext* editor):
 
 ed::EditorAction::AcceptResult ed::DragAction::Accept(const Control& control)
 {
-    IM_ASSERT(!m_IsActive);
-
-    if (m_IsActive)
-        return False;
+    //IM_ASSERT(!m_IsActive);
+    //if (m_IsActive)
+    //    return False;
 
     if (Editor->CanAcceptUserInput() && control.ActiveObject && ImGui::IsMouseDragging(Editor->GetConfig().DragButtonIndex))
     {
@@ -4135,18 +4137,16 @@ ed::SelectAction::SelectAction(EditorContext* editor):
 
 ed::EditorAction::AcceptResult ed::SelectAction::Accept(const Control& control)
 {
-    IM_ASSERT(!m_IsActive);
-
-    if (m_IsActive)
-        return False;
-
+    //IM_ASSERT(!m_IsActive);
+    //if (m_IsActive)
+    //    return False;
     auto& io = ImGui::GetIO();
-    m_SelectGroups   = io.KeyShift;
+    m_SelectGroups   = io.KeySuper;
     m_SelectLinkMode = io.KeyAlt;
 
     m_SelectedObjectsAtStart.clear();
 
-    if (Editor->CanAcceptUserInput() && control.BackgroundHot && ImGui::IsMouseDragging(Editor->GetConfig().SelectButtonIndex, 1))
+    if (Editor->CanAcceptUserInput() && !io.KeyShift && control.BackgroundHot && ImGui::IsMouseDragging(Editor->GetConfig().SelectButtonIndex, 1))
     {
         m_IsActive = true;
         m_StartPoint = ImGui::GetMousePos();
@@ -4681,10 +4681,9 @@ ed::CreateItemAction::CreateItemAction(EditorContext* editor):
 
 ed::EditorAction::AcceptResult ed::CreateItemAction::Accept(const Control& control)
 {
-    IM_ASSERT(!m_IsActive);
-
-    if (m_IsActive)
-        return EditorAction::False;
+    //IM_ASSERT(!m_IsActive);
+    //if (m_IsActive)
+    //    return EditorAction::False;
 
     if (control.ActivePin && (ImGui::IsMouseDown(Editor->GetConfig().DragButtonIndex) || ImGui::IsMouseDragging(Editor->GetConfig().DragButtonIndex)))
     {
@@ -5045,10 +5044,9 @@ void ed::DeleteItemsAction::DeleteDeadLinks(NodeId nodeId)
 
 ed::EditorAction::AcceptResult ed::DeleteItemsAction::Accept(const Control& control)
 {
-    IM_ASSERT(!m_IsActive);
-
-    if (m_IsActive)
-        return False;
+    //IM_ASSERT(!m_IsActive);
+    //if (m_IsActive)
+    //    return False;
 
     auto& io = ImGui::GetIO();
     if (Editor->CanAcceptUserInput() && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete)) && Editor->AreShortcutsEnabled())
