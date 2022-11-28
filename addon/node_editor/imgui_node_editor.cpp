@@ -3422,6 +3422,9 @@ bool ed::NavigateAction::Process(const Control& control)
 
     if (navigate_button_dragging)
     {
+        auto transaction = Editor->MakeTransaction("Navigate To");
+        transaction.AddAction(TransactionAction::Navigation, "Scroll View Begin");
+
         m_ScrollDelta = navigate_scroll_delta;
         m_Scroll      = m_ScrollStart - m_ScrollDelta * m_Zoom;
         m_VisibleRect = GetViewRect();
@@ -3438,8 +3441,7 @@ bool ed::NavigateAction::Process(const Control& control)
             m_VisibleRect = GetViewRect();
 
             auto transaction = Editor->MakeTransaction("Navigate To");
-
-            transaction.AddAction(TransactionAction::Navigation, "Scroll View");
+            transaction.AddAction(TransactionAction::Navigation, "Scroll View End");
 
             m_Scroll      = target;
             m_VisibleRect = GetViewRect();
