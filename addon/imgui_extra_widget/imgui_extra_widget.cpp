@@ -6543,6 +6543,31 @@ void ImGui::SpinnerFilledArcColor(const char *label, float radius, const ImColor
     }
 }
 
+void ImGui::SpinnerArcWedges(const char *label, float radius, const ImColor &color, float speed, size_t arcs)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = (float)ImGui::GetTime() * speed;
+    const float arc_angle = 2.f * IM_PI / (float)arcs;
+    const float angle_offset = arc_angle / num_segments;
+    float out_h, out_s, out_v;
+    ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+    for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
+    {
+        const float b = arc_angle * arc_num - IM_PI / 2.f;
+        const float e = arc_angle * arc_num + arc_angle - IM_PI / 2.f;
+        const float a = arc_angle * arc_num;
+        window->DrawList->PathClear();
+        window->DrawList->PathLineTo(centre);
+        for (size_t i = 0; i < num_segments + 1; i++)
+        {
+            const float start_a = ImFmod(start * (1.05f * (arc_num + 1)), IM_PI * 2.f);
+            const float ar = start_a + arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f;
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * radius, centre.y + ImSin(ar) * radius));
+        }
+        window->DrawList->PathFillConvex(ImColor::HSV(out_h + (1.f / arcs) * arc_num, out_s, out_v, 0.7f));
+    }
+}
+
 void ImGui::SpinnerTwinBall(const char *label, float radius1, float radius2, float thickness, float b_thickness, const ImColor &ball, const ImColor &bg, float speed, size_t balls)
 {
     float radius = ImMax(radius1, radius2);
@@ -7146,8 +7171,6 @@ void ImGui::SpinnerScaleBlocks(const char *label, float radius, float thickness,
     ImVec2 lt{centre.x - radius, centre.y - radius};
     const float offset_block = radius * 2.f / 3.f;
 
-    int start = (int)ImFmod((float)ImGui::GetTime() * speed, 9.f);
-
     const ImVec2ih poses[] = {{0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}, {0, 2}, {1, 2}, {2, 2}};
     constexpr float rkoeff[9] = {0.1f, 0.15f, 0.17f, 0.25f, 0.6f, 0.15f, 0.1f, 0.12f, 0.22f};
 
@@ -7158,6 +7181,28 @@ void ImGui::SpinnerScaleBlocks(const char *label, float radius, float thickness,
         float h = (0.8f + 0.4f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[ti % 9])));
         window->DrawList->AddRectFilled(ImVec2(lt.x + rpos.x * (offset_block), lt.y + rpos.y * offset_block),
                                         ImVec2(lt.x + rpos.x * (offset_block) + h * thickness, lt.y + rpos.y * offset_block + h * thickness), color);
+        ti++;
+    }
+}
+
+void ImGui::SpinnerScaleSquares(const char *label, float radius, float offset, const ImColor &bg, const ImColor &color, float speed)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    ImVec2 lt{centre.x - radius, centre.y - radius};
+    const float offset_block = radius * 2.f / 3.f;
+    const float hside = offset_block / 2.f;
+    const ImVec2ih poses[] = {{0, 0}, {1, 0}, {0, 1}, {2, 0}, {1, 1}, {0, 2}, {2, 1}, {1, 2}, {2, 2}};
+    const float offsets[] =  {0.f,    0.8f,   0.8f,   1.6f,   1.6f,   1.6f,   2.4f,   2.4f,   3.2f};
+    int ti = 0;
+    float out_h, out_s, out_v;
+    ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+    for (const auto &rpos: poses)
+    {
+        const ImColor c = ImColor::HSV(out_h + offsets[ti], out_s, out_v);
+        const float strict = (0.5f + 0.5f * ImSin((float)-ImGui::GetTime() * speed + offsets[ti % 9]));
+        const float side = ImClamp<float>(strict + 0.1f, 0.1f, 1.f) * hside;
+        window->DrawList->AddRectFilled(ImVec2(lt.x + hside + (rpos.x * offset_block) - side, lt.y + hside + (rpos.y * offset_block) - side),
+                                        ImVec2(lt.x + hside + (rpos.x * offset_block) + side, lt.y + hside + (rpos.y * offset_block) + side), c);
         ti++;
     }
 }

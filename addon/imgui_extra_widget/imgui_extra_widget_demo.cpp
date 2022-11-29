@@ -412,6 +412,9 @@ void ShowExtraWidgetDemoWindow()
                     case 79: ImGui::SpinnerCaleidoscope("SpinnerArcPolarPies2", 16, 4, ImColor::HSV(0.35f, 0.8f, 0.8f), 3.2f * velocity, 10, 1); ImGui::ShowTooltipOnHover("SpinnerArcPolarPies2"); break;
                     case 80: ImGui::SpinnerScaleBlocks("SpinnerScaleBlocks", 16, 8, ImColor(255, 255, 255, 30), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), 5 * velocity); ImGui::ShowTooltipOnHover("SpinnerScaleBlocks"); break;
                     case 81: ImGui::SpinnerRotateTriangles("SpinnerRotateTriangles", 16, 5, ImColor(255, 255, 255), 6.f * velocity, 3); ImGui::ShowTooltipOnHover("SpinnerRotateTriangles"); break;
+                    case 82: ImGui::SpinnerArcWedges("SpinnerArcWedges", 16, ImColor::HSV(0.3f, 0.8f, 0.8f), 2.8f * velocity, 4); ImGui::ShowTooltipOnHover("SpinnerArcWedges"); break;
+                    case 83: ImGui::SpinnerScaleSquares("SpinnerScaleSquares", 16, 8, ImColor(255, 255, 255, 30), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), 5 * velocity); ImGui::ShowTooltipOnHover("SpinnerScaleSquares"); break;
+
                     default: break;
                 }
                 ImGui::PopID();
