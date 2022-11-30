@@ -336,7 +336,7 @@ enum ImInterpolateMode {
 #define IM_ESIZE(a)    (a == IM_DT_INT8 ? (size_t)1u : (a == IM_DT_INT16 || a == IM_DT_FLOAT16) ? (size_t)2u : (a == IM_DT_INT32 || a == IM_DT_FLOAT32) ? (size_t)4u : (a == IM_DT_INT64 || a == IM_DT_FLOAT64) ? (size_t)8u : (size_t)0u)
 #define IM_DEPTH(a)    (a == IM_DT_INT8 ? 8 : (a == IM_DT_INT16 || a == IM_DT_FLOAT16) ? 16 : (a == IM_DT_INT32 || a == IM_DT_FLOAT32) ? 32 : (a == IM_DT_INT64 || a == IM_DT_FLOAT64) ? 64 : 0)
 #define IM_ISMONO(a)   (a == IM_CF_GRAY)
-#define IM_ISRGB(a)    (a == IM_CF_BGR || a == IM_CF_RGB || a == IM_CF_ABGR || a == IM_CF_ARGB)
+#define IM_ISRGB(a)    (a == IM_CF_BGR || a == IM_CF_RGB || a == IM_CF_ABGR || a == IM_CF_ARGB || a == IM_CF_BGRA || a == IM_CF_RGBA)
 #define IM_ISYUV(a)    (a == IM_CF_YUV420 || a == IM_CF_YUV422 || a == IM_CF_YUV444 || a == IM_CF_YUVA || a == IM_CF_NV12 || a == IM_CF_P010LE)
 #define IM_ISALPHA(a)  (a == IM_CF_ABGR || a == IM_CF_ARGB || a == IM_CF_YUVA)
 
@@ -363,9 +363,10 @@ struct ImPoint
     constexpr ImPoint(float _x, float _y)    : x(_x), y(_y) { }
     float  operator[] (size_t idx) const    { assert(idx <= 1); return (&x)[idx]; }
     float& operator[] (size_t idx)          { assert(idx <= 1); return (&x)[idx]; }
-    bool operator==(const ImPoint& d) const          { return x == d.x && y == d.y; }
-    bool operator==(const ImPoint& d)                { return x == d.x && y == d.y; }
-    bool operator!=(const ImPoint& d) const          { return x != d.x || y != d.y; }
+    bool operator==(const ImPoint& d) const { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8; }
+    bool operator==(const ImPoint& d)       { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8; }
+    bool operator!=(const ImPoint& d) const { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; }
+    bool operator!=(const ImPoint& d)       { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; }
 };
 
 struct ImPixel
@@ -373,10 +374,10 @@ struct ImPixel
     float r, g, b, a;
     constexpr ImPixel() : r(0.0f), g(0.0f), b(0.0f), a(0.0f) { }
     constexpr ImPixel(float _r, float _g, float _b, float _a)  : r(_r), g(_g), b(_b), a(_a) { }
-    bool operator==(const ImPixel& d) const          { return r == d.r && g == d.g && b == d.b && a == d.a; }
-    bool operator==(const ImPixel& d)                { return r == d.r && g == d.g && b == d.b && a == d.a; }
-    bool operator!=(const ImPixel& d) const          { return r != d.r || g != d.g || b != d.b || a != d.a; }
-    bool operator!=(const ImPixel& d)                { return r != d.r || g != d.g || b != d.b || a != d.a; }
+    bool operator==(const ImPixel& d) const { return fabs(r - d.r) < 10e-8 && fabs(g - d.g) < 10e-8 && fabs(b - d.b) < 10e-8 && fabs(a - d.a) < 10e-8; }
+    bool operator==(const ImPixel& d)       { return fabs(r - d.r) < 10e-8 && fabs(g - d.g) < 10e-8 && fabs(b - d.b) < 10e-8 && fabs(a - d.a) < 10e-8; }
+    bool operator!=(const ImPixel& d) const { return fabs(r - d.r) > 10e-8 || fabs(g - d.g) > 10e-8 || fabs(b - d.b) > 10e-8 || fabs(a - d.a) > 10e-8; }
+    bool operator!=(const ImPixel& d)       { return fabs(r - d.r) > 10e-8 || fabs(g - d.g) > 10e-8 || fabs(b - d.b) > 10e-8 || fabs(a - d.a) > 10e-8; }
 };
 ////////////////////////////////////////////////////////////////////
 
@@ -659,8 +660,9 @@ public:
     void* data;
 
     // element size in bytes
+    // 8 = double/int64
     // 4 = float32/int32
-    // 2 = float16
+    // 2 = float16/int16
     // 1 = int8/uint8
     // 0 = empty
     size_t elemsize;
