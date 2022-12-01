@@ -39,8 +39,8 @@ template<typename T, typename FLOAT_T>                      IMGUI_API float Slid
 
 IMGUI_API bool SliderBehavior(const ImRect& bb, ImGuiID id, ImGuiDataType data_type, void* p_v, const void* p_min, const void* p_max, const char* format, float power, ImGuiSliderFlags flags, ImRect* out_grab_bb);
 
-IMGUI_API void UvMeter(char const *label, ImVec2 const &size, int *value, int v_min, int v_max, int steps = 10, int* stack = nullptr, int* count = nullptr);
-IMGUI_API void UvMeter(char const *label, ImVec2 const &size, float *value, float v_min, float v_max, int steps = 10, float* stack = nullptr, int* count = nullptr);
+IMGUI_API void UvMeter(char const *label, ImVec2 const &size, int *value, int v_min, int v_max, int steps = 10, int* stack = nullptr, int* count = nullptr, float background = 0.f, std::map<float, float> segment = {});
+IMGUI_API void UvMeter(char const *label, ImVec2 const &size, float *value, float v_min, float v_max, int steps = 10, float* stack = nullptr, int* count = nullptr, float background = 0.f, std::map<float, float> segment = {});
 IMGUI_API void UvMeter(ImDrawList *draw_list, char const *label, ImVec2 const &size, int *value, int v_min, int v_max, int steps = 10, int* stack = nullptr, int* count = nullptr, float background = 0.f, std::map<float, float> segment = {});
 IMGUI_API void UvMeter(ImDrawList *draw_list, char const *label, ImVec2 const &size, float *value, float v_min, float v_max, int steps = 10, float* stack = nullptr, int* count = nullptr, float background = 0.f, std::map<float, float> segment = {});
 

@@ -346,9 +346,9 @@ bool ImGui::SliderBehavior(const ImRect& bb, ImGuiID id, ImGuiDataType data_type
     return false;
 }
 
-void ImGui::UvMeter(char const *label, ImVec2 const &size, int *value, int v_min, int v_max, int steps, int* stack, int* count)
+void ImGui::UvMeter(char const *label, ImVec2 const &size, int *value, int v_min, int v_max, int steps, int* stack, int* count, float background, std::map<float, float> segment)
 {
-    UvMeter(ImGui::GetWindowDrawList(), label, size, value, v_min, v_max, steps, stack, count);
+    UvMeter(ImGui::GetWindowDrawList(), label, size, value, v_min, v_max, steps, stack, count, background, segment);
 }
 
 void ImGui::UvMeter(ImDrawList *draw_list, char const *label, ImVec2 const &size, int *value, int v_min, int v_max, int steps, int* stack, int* count, float background, std::map<float, float> segment)
@@ -362,9 +362,9 @@ void ImGui::UvMeter(ImDrawList *draw_list, char const *label, ImVec2 const &size
     if (stack) *stack = (int)*fstack;
 }
 
-void ImGui::UvMeter(char const *label, ImVec2 const &size, float *value, float v_min, float v_max, int steps, float* stack, int* count)
+void ImGui::UvMeter(char const *label, ImVec2 const &size, float *value, float v_min, float v_max, int steps, float* stack, int* count, float background, std::map<float, float> segment)
 {
-    UvMeter(ImGui::GetWindowDrawList(), label, size, value, v_min, v_max, steps, stack, count);
+    UvMeter(ImGui::GetWindowDrawList(), label, size, value, v_min, v_max, steps, stack, count, background, segment);
 }
 
 void ImGui::UvMeter(ImDrawList *draw_list, char const *label, ImVec2 const &size, float *value, float v_min, float v_max, int steps, float* stack, int* count, float background, std::map<float, float> segment)
