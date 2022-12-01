@@ -351,13 +351,13 @@ void ImGui::UvMeter(char const *label, ImVec2 const &size, int *value, int v_min
     UvMeter(ImGui::GetWindowDrawList(), label, size, value, v_min, v_max, steps, stack, count);
 }
 
-void ImGui::UvMeter(ImDrawList *draw_list, char const *label, ImVec2 const &size, int *value, int v_min, int v_max, int steps, int* stack, int* count)
+void ImGui::UvMeter(ImDrawList *draw_list, char const *label, ImVec2 const &size, int *value, int v_min, int v_max, int steps, int* stack, int* count, float background, std::map<float, float> segment)
 {
     float fvalue = (float)*value;
     float *fstack = nullptr;
     float _f = 0.f;
     if (stack) { fstack = &_f; *fstack = (float)*stack; }
-    UvMeter(draw_list, label, size, &fvalue, (float)v_min, (float)v_max, steps, fstack, count);
+    UvMeter(draw_list, label, size, &fvalue, (float)v_min, (float)v_max, steps, fstack, count, background, segment);
     *value = (int)fvalue;
     if (stack) *stack = (int)*fstack;
 }
@@ -367,7 +367,7 @@ void ImGui::UvMeter(char const *label, ImVec2 const &size, float *value, float v
     UvMeter(ImGui::GetWindowDrawList(), label, size, value, v_min, v_max, steps, stack, count);
 }
 
-void ImGui::UvMeter(ImDrawList *draw_list, char const *label, ImVec2 const &size, float *value, float v_min, float v_max, int steps, float* stack, int* count)
+void ImGui::UvMeter(ImDrawList *draw_list, char const *label, ImVec2 const &size, float *value, float v_min, float v_max, int steps, float* stack, int* count, float background, std::map<float, float> segment)
 {
     ImVec2 pos = ImGui::GetCursorScreenPos();
 
@@ -396,13 +396,25 @@ void ImGui::UvMeter(ImDrawList *draw_list, char const *label, ImVec2 const &size
         float stepHeight = size.y / (v_max - v_min + 1);
         auto y = pos.y + size.y;
         auto hue = 0.4f;
-        auto sat = 0.6f;
+        auto sat = 1.0f;
         auto lum = 0.6f;
         for (float i = v_min; i <= v_max; i += steps_size)
         {
-            hue = 0.4f - (i / (v_max - v_min)) / 2.0f;
-            sat = (*value < i ? 0.0f : 0.6f);
-            lum = (*value < i ? 0.0f : 0.6f);
+            if (segment.empty())
+                hue = 0.4f - (i / (v_max - v_min)) / 2.0f;
+            else
+            {
+                for (const auto value : segment)
+                {
+                    if (i <= value.first)
+                    {
+                        hue = value.second;
+                        break;
+                    }
+                }
+            }
+            sat = (*value < i ? 0.8 : 1.0f);
+            lum = (*value < i ? background : 1.0f);
             draw_list->AddRectFilled(ImVec2(pos.x, y), ImVec2(pos.x + size.x, y - (stepHeight * steps_size - 1)), static_cast<ImU32>(ImColor::HSV(hue, sat, lum)));
             y = pos.y + size.y - (i * stepHeight);
         }
