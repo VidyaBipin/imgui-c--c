@@ -6366,11 +6366,11 @@ void ImGui::SpinnerIncScaleDots(const char *label, float radius, float thickness
     }
 }
 
-void ImGui::SpinnerBounceBall(const char *label, float radius, float thickness, const ImColor &color, float speed)
+void ImGui::SpinnerBounceBall(const char *label, float radius, float thickness, const ImColor &color, float speed, int dots, bool shadow)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
 
-    ImGuiStorage *storage = window->DC.StateStorage;
+    ImGuiStorage* storage = window->DC.StateStorage;
     const ImGuiID vtimeId = window->GetID("##vtime");
     const ImGuiID hmaxId = window->GetID("##hmax");
 
@@ -6379,14 +6379,23 @@ void ImGui::SpinnerBounceBall(const char *label, float radius, float thickness, 
 
     vtime += 0.05f;
     hmax += 0.01f;
-    float maxht = ImMax(ImSin(ImFmod((float)hmax, IM_PI)), 0.7f) * radius;
-
-    float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
 
     storage->SetFloat(vtimeId, vtime);
     storage->SetFloat(hmaxId, hmax);
 
-    window->DrawList->AddCircleFilled(ImVec2(centre.x, centre.y + radius - ImSin(start) * 2.f * maxht), thickness, color, 8);
+    constexpr float rkoeff[9] = {0.1f, 0.15f, 0.17f, 0.25f, 0.31f, 0.19f, 0.08f, 0.24f, 0.9f};
+    const int iterations = shadow ? 4 : 1;
+    for (int j = 0; j < iterations; j++) {
+        ImColor c = color;
+        c.Value.w -= 0.15f * j;
+        for (int i = 0; i < dots; i++) {
+            float start = ImFmod((float)ImGui::GetTime() * speed * (1 + rkoeff[i % 9]) - (IM_PI / 12.f) * j, IM_PI);
+            float sign = ((i % 2 == 0) ? 1 : -1);
+            float offset = (i == 0) ? 0.f : (floor((i+1) / 2.f + 0.1f) * sign * 2.f * thickness);
+            float maxht = ImMax(ImSin(ImFmod(hmax, IM_PI)), (0.7f + rkoeff[i % 9])) * radius;
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + offset, centre.y + radius - ImSin(start) * 2.f * maxht), thickness, c, 8);
+        }
+    }
 }
 
 void ImGui::SpinnerArcRotation(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t arcs)
