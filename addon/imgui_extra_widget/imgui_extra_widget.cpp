@@ -6470,6 +6470,73 @@ void ImGui::SpinnerArcFade(const char *label, float radius, float thickness, con
     }
 }
 
+void ImGui::SpinnerSquareStrokeFade(const char *label, float radius, float thickness, const ImColor &color, float speed)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 4.f);
+    const float arc_angle = 2.f * IM_PI / 4.f;
+    const float ht = thickness / 2.f;
+    for (size_t arc_num = 0; arc_num < 4; ++arc_num)
+    {
+        float a = arc_angle * arc_num;
+        ImColor c = color;
+        if (start < IM_PI * 2.f) {
+            c.Value.w = (start > a && start < (a + arc_angle))
+                            ? 1.f - (start - a) / (float)arc_angle
+                            : (start < a ? 1.f : 0.f);
+            c.Value.w = ImMax(0.05f, 1.f - c.Value.w);
+        } else {
+            const float startk = start - IM_PI * 2.f;
+            c.Value.w = (startk > a && startk < (a + arc_angle))
+                            ? 1.f - (startk - a) / (float)arc_angle
+                            : (startk < a ? 1.f : 0.f);
+            c.Value.w = ImMax(0.05f, c.Value.w);
+        }
+        a -= IM_PI / 4.f;
+        const float r = radius * 1.4f;
+        const bool right = ImSin(a) > 0;
+        const bool top = ImCos(a) < 0;
+        ImVec2 p1(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r);
+        ImVec2 p2(centre.x + ImCos(a - IM_PI / 2.f) * r, centre.y + ImSin(a - IM_PI / 2.f) * r);
+        switch (arc_num) {
+        case 0: p1.x -= ht; p2.x -= ht; break;
+        case 1: p1.y -= ht; p2.y -= ht; break;
+        case 2: p1.x += ht; p2.x += ht; break;
+        case 3: p1.y += ht; p2.y += ht; break;
+        }
+        window->DrawList->AddLine(p1, p2, c, thickness);
+    }
+}
+
+void ImGui::SpinnerSquareStrokeFill(const char *label, float radius, float thickness, const ImColor &color, float speed)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 2.f);
+    const float arc_angle = 2.f * IM_PI / 4.f;
+    const float ht = thickness / 2.f;
+    for (size_t arc_num = 0; arc_num < 4; ++arc_num)
+    {
+        float a = arc_angle * arc_num;
+        float segment_progress = (start > a && start < (a + arc_angle))
+                                    ? 1.f - (start - a) / (float)arc_angle
+                                    : (start < a ? 1.f : 0.f);
+        a -= IM_PI / 4.f;
+        segment_progress = 1.f - segment_progress;
+        const float r = radius * 1.4f;
+        const bool right = ImSin(a) > 0;
+        const bool top = ImCos(a) < 0;
+        ImVec2 p1(centre.x + ImCos(a - IM_PI / 2.f) * r, centre.y + ImSin(a - IM_PI / 2.f) * r);
+        ImVec2 p2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r);
+        switch (arc_num) {
+        case 0: p1.x -= ht; p2.x -= ht; p2.x = p1.x + (p2.x - p1.x) * segment_progress; break;
+        case 1: p1.y -= ht; p2.y -= ht; p2.y = p1.y + (p2.y - p1.y) * segment_progress; break;
+        case 2: p1.x += ht; p2.x += ht; p2.x = p1.x + (p2.x - p1.x) * segment_progress; break;
+        case 3: p1.y += ht; p2.y += ht; p2.y = p1.y + (p2.y - p1.y) * segment_progress; break;
+        }
+        window->DrawList->AddLine(p1, p2, color, thickness);
+    }
+}
+
 void ImGui::SpinnerFilledArcFade(const char *label, float radius, const ImColor &color, float speed, size_t arcs)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);

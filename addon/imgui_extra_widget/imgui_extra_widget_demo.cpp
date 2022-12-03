@@ -311,7 +311,7 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SliderFloat("Speed", &velocity, 0.0f, 10.0f, "velocity = %.3f");
         
         static ImVec2 selected{0, 0};
-        constexpr int sidex = 10, sidey = 9;
+        constexpr int sidex = 10, sidey = 10;
 
         float widget_size = 50.f;
         ImGuiStyle &style = GImGui->Style;
@@ -419,6 +419,8 @@ void ShowExtraWidgetDemoWindow()
                     case 86: ImGui::Spinner<e_st_bounce_ball>("SpinnerBounceBall3", Radius{16}, Thickness{4}, Color{ImColor(255, 255, 255)}, Speed{3.2f * velocity}, Dots{5}); ImGui::ShowTooltipOnHover("SpinnerBounceBall3"); break;
                     case 87: ImGui::SpinnerBounceBall("SpinnerBounceBallShadow", 16, 4, ImColor(255, 255, 255), 2.2f * velocity, 1, true); ImGui::ShowTooltipOnHover("SpinnerBounceBallShadow"); break;
                     case 88: ImGui::SpinnerBounceBall("SpinnerBounceBall5Shadow", 16, 4, ImColor(255, 255, 255), 3.6f * velocity, 5, true); ImGui::ShowTooltipOnHover("SpinnerBounceBall5Shadow"); break;
+                    case 89: ImGui::SpinnerSquareStrokeFade("SpinnerSquareStrokeFade", 13, 5, ImColor(255, 255, 255), 3 * velocity); ImGui::ShowTooltipOnHover("SpinnerSquareStrokeFade"); break;
+                    case 90: ImGui::SpinnerSquareStrokeFill("SpinnerSquareStrokeFill", 13, 5, ImColor(255, 255, 255), 3 * velocity); ImGui::ShowTooltipOnHover("SpinnerSquareStrokeFill"); break;
                     // ...
                     default: break;
                 }

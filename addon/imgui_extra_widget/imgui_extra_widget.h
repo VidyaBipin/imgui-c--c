@@ -527,6 +527,8 @@ IMGUI_API void SpinnerIncScaleDots(const char *label, float radius, float thickn
 IMGUI_API void SpinnerBounceBall(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int dots = 1, bool shadow = false);
 IMGUI_API void SpinnerArcRotation(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4);
 IMGUI_API void SpinnerArcFade(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4);
+IMGUI_API void SpinnerSquareStrokeFill(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f);
+IMGUI_API void SpinnerSquareStrokeFade(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f);
 IMGUI_API void SpinnerFilledArcFade(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4);
 IMGUI_API void SpinnerFilledArcColor(const char *label, float radius, const ImColor &color = 0xffff0000, const ImColor &bg = 0xffffffff, float speed = 2.8f, size_t arcs = 4);
 IMGUI_API void SpinnerArcWedges(const char *label, float radius, const ImColor &color = 0xffff0000, float speed = 2.8f, size_t arcs = 4);
