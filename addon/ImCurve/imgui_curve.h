@@ -159,6 +159,8 @@ struct IMGUI_API ImCurveEdit
         // TODO::Dicky handle undo/redo thru this functions
         virtual void BeginEdit(int /*index*/) {}
         virtual void EndEdit() {}
+
+        virtual ~Delegate() = default;
     };
 private:
     static int DrawPoint(ImDrawList* draw_list, ImVec2 pos, const ImVec2 size, const ImVec2 offset, bool edited);
