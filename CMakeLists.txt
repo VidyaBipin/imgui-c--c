@@ -82,6 +82,7 @@ find_package(PkgConfig)
 
 _OPTION(IMGUI_STATIC                "Build ImGui as static library" OFF)
 _OPTION(IMGUI_BUILD_EXAMPLE         "Build ImGui example" OFF)
+_OPTION(IMGUI_WGPU                  "Build ImGui wgpu backends" OFF)
 _OPTION(IMGUI_GL2                   "Build ImGui OpenGL2 backends" ON)
 _OPTION(IMGUI_GL3                   "Build ImGui OpenGL3 backends" ON)
 _OPTION(IMGUI_SDL2                  "Build ImGui SDL2 backends" ON)
@@ -185,12 +186,13 @@ endif(PKG_CONFIG_FOUND)
 else()
 set(IMGUI_STATIC ON CACHE BOOL "Enable Static ImGui Build by Force" FORCE)
 set(IMGUI_OPENGL ON CACHE BOOL "Enable ImGui OpenGL by Force" FORCE)
-set(IMGUI_SDL2 ON CACHE BOOL "Build ImGui SDL2 backends by Force" FORCE)
+set(IMGUI_SDL2 ON CACHE BOOL "Enable ImGui SDL2 backends by Force" FORCE)
 set(IMGUI_GL2 OFF CACHE BOOL "Build ImGui OpenGL2 backends by Force" FORCE)
 set(IMGUI_GL3 ON CACHE BOOL "Build ImGui OpenGL3 backends by Force" FORCE)
+set(IMGUI_WGPU ON CACHE BOOL "Build ImGui wgpu backends by Force" FORCE)
 set(IMGUI_VULKAN OFF CACHE BOOL "Disable ImGui Vulkan backends" FORCE)
 set(IMGUI_VULKAN_SHADER OFF CACHE BOOL "Disable ImGui With Vulkan compute support" FORCE)
-set(IMGUI_GLFW OFF CACHE BOOL "Disable ImGui GLFW support" FORCE)
+set(IMGUI_GLFW ON CACHE BOOL "Enable ImGui GLFW support by Force" FORCE)
 set(IMGUI_GLEW OFF CACHE BOOL "Disable ImGui GLEW support" FORCE)
 set(IMGUI_GLUT OFF CACHE BOOL "Disable ImGui GLUT support" FORCE)
 set(IMGUI_MATAL OFF CACHE BOOL "Disable ImGui Apple Matal support" FORCE)
@@ -201,7 +203,7 @@ set(IMGUI_DX12 OFF CACHE BOOL "Disable ImGui Windows DX12 support" FORCE)
 set(IMGUI_FREETYPE OFF CACHE BOOL "Disable ImGui with FreeType support" FORCE)
 set(IMGUI_APPS OFF CACHE BOOL "Disable apps base on imgui" FORCE)
 set(IMGUI_APPLE_APP OFF CACHE BOOL "Disable apple app base on imgui" FORCE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=128MB -s DISABLE_EXCEPTION_CATCHING=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1 -Wno-unused-command-line-argument")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=2  -s USE_GLFW=3 -s USE_WEBGPU=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=128MB -s DISABLE_EXCEPTION_CATCHING=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1 -Wno-unused-command-line-argument")
 endif()
 
 # base include
@@ -575,7 +577,7 @@ if (IMGUI_SDL2 AND SDL2_FOUND)
     )
 endif(IMGUI_SDL2 AND SDL2_FOUND)
 else()
-set(IMGUI_PLATFORM_SDL2 ON)
+    set(IMGUI_PLATFORM_SDL2 ON)
     set(IMGUI_SRC
         ${IMGUI_SRC}
         #backends/imgui_impl_sdlrenderer.cpp
@@ -585,6 +587,26 @@ set(IMGUI_PLATFORM_SDL2 ON)
         ${IMGUI_INCS}
         #backends/imgui_impl_sdlrenderer.h
         backends/imgui_impl_sdl.h
+    )
+
+    set(IMGUI_PLATFORM_WGPU ON)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        backends/imgui_impl_wgpu.cpp
+    )
+    set(IMGUI_INCS
+        ${IMGUI_INCS}
+        backends/imgui_impl_wgpu.h
+    )
+
+    set(IMGUI_PLATFORM_GLFW ON)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        backends/imgui_impl_glfw.cpp
+    )
+    set(IMGUI_INCS
+        ${IMGUI_INCS}
+        backends/imgui_impl_glfw.h
     )
 endif()
 
@@ -1392,25 +1414,46 @@ if (IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
 endif(IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
 
 if (IMGUI_BUILD_EXAMPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-    set(IMGUI_WEB_DIR ${PROJECT_BINARY_DIR}/web/)
-    SET(IMGUI_SHELL_FILE ${PROJECT_SOURCE_DIR}/test/shell_minimal.html)
+    set(IMGUI_WEB_OPENGL3_DIR ${PROJECT_BINARY_DIR}/web_opengl3/)
+    SET(IMGUI_SHELL_OPENGL3_FILE ${PROJECT_SOURCE_DIR}/test/shell_minimal.html)
     add_executable(
-        example_application
+        example_emscripten_opengl3
         test/example_emscripten_opengl3.cpp
     )
     target_link_libraries(
-        example_application
+        example_emscripten_opengl3
         imgui
     )
     set_target_properties(
-        example_application
+        example_emscripten_opengl3
         PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${IMGUI_WEB_DIR}
-        RUNTIME_OUTPUT_DIRECTORY ${IMGUI_WEB_DIR}
+        LIBRARY_OUTPUT_DIRECTORY ${IMGUI_WEB_OPENGL3_DIR}
+        RUNTIME_OUTPUT_DIRECTORY ${IMGUI_WEB_OPENGL3_DIR}
         OUTPUT_NAME "index"
         PREFIX ""
         SUFFIX ".html"
-        LINK_FLAGS "--shell-file ${IMGUI_SHELL_FILE}"
+        LINK_FLAGS "--shell-file ${IMGUI_SHELL_OPENGL3_FILE}"
+    )
+
+    set(IMGUI_WEB_WGPU_DIR ${PROJECT_BINARY_DIR}/web_wgpu/)
+    SET(IMGUI_SHELL_WGPU_FILE ${PROJECT_SOURCE_DIR}/test/wgpu_index.html)
+    add_executable(
+        example_emscripten_wgpu
+        test/example_emscripten_wgpu.cpp
+    )
+    target_link_libraries(
+        example_emscripten_wgpu
+        imgui
+    )
+    set_target_properties(
+        example_emscripten_wgpu
+        PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${IMGUI_WEB_WGPU_DIR}
+        RUNTIME_OUTPUT_DIRECTORY ${IMGUI_WEB_WGPU_DIR}
+        OUTPUT_NAME "index"
+        PREFIX ""
+        SUFFIX ".html"
+        LINK_FLAGS "--shell-file ${IMGUI_SHELL_WGPU_FILE}"
     )
 endif()
 
