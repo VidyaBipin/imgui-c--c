@@ -8,19 +8,25 @@
 // See https://github.com/ocornut/imgui/pull/2492 as an example on how to do just that.
 
 #include <imgui.h>
-#include <imgui_mat.h>
+#include <immat.h>
 #include <imgui_helper.h>
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
+#include <imgui_extra_widget.h>
+#include <implot.h>
 #include <stdio.h>
 #include <emscripten.h>
 #include <SDL.h>
 #include <SDL_opengles2.h>
-#include "imgui_markdown.h"
-#include "imgui_memory_editor.h"
-#include "ImGuiFileDialog.h"
-#include "HotKey.h"
-#include "TextEditor.h"
+#include <imgui_markdown.h>
+#include <imgui_memory_editor.h>
+#include <ImGuiFileDialog.h>
+#include <HotKey.h>
+#include <TextEditor.h>
+#include <ImGuiTabWindow.h>
+#include <imgui_node_editor.h>
+#include <imgui_curve.h>
+#include <imgui_spline.h>
 
 #include <fstream>
 #include <sstream>
@@ -30,6 +36,11 @@
 // Having a single function that acts as a loop prevents us to store state in the stack of said function. So we need some location for this.
 SDL_Window*     g_Window = NULL;
 SDL_GLContext   g_GLContext = NULL;
+
+static ImGui::ImMat image(256, 256, 4, 1u, 4);
+static ImGui::ImMat draw_mat {ImGui::ImMat(512, 512, 4, 1u, 4)};
+static ImTextureID ImageTexture = 0;
+static ImTextureID DrawMatTexture = 0;
 
 static std::vector<ImHotKey::HotKey> hotkeys = 
 { 
@@ -152,8 +163,97 @@ static inline void gray_bar(ImGui::ImMat& image, int x1,int y1,int x2,int y2,int
     }
 }
 
-static ImGui::ImMat image(256, 256, 4, 1u, 4);
-static ImTextureID ImageTexture = 0;
+static void DrawLineDemo()
+{
+    float t = (float)ImGui::GetTime();
+    float h = abs(sin(t * 0.2));
+    float s = abs(sin(t * 0.1)) * 0.5 + 0.4;
+    float h2 = abs(sin(t * 0.4));
+    ImVec4 base_color = ImVec4(0.f, 0.f, 0.f, 1.f);
+    ImVec4 light_color = ImVec4(0.f, 0.f, 0.f, 1.f);
+    ImGui::ColorConvertHSVtoRGB(h, s, 0.5f, base_color.x, base_color.y, base_color.z);
+    ImGui::ColorConvertHSVtoRGB(h2, s, 0.5f, light_color.x, light_color.y, light_color.z);
+    static float arc = 0.0;
+    draw_mat.clean(ImPixel(0.f, 0.f, 0.f, 1.f));
+    arc += 2 * M_PI / 64 / 32;
+    if (arc > 2 * M_PI / 64) arc = 0;
+    float cx = draw_mat.w * 0.5f, cy = draw_mat.h * 0.5f;
+    ImPixel line_color(base_color.x, base_color.y, base_color.z, 1.f);
+    ImPixel circle_color(light_color.x, light_color.y, light_color.z, 1.f);
+
+    // draw line test
+    for (int j = 0; j < 5; j++) 
+    {
+        float r1 = fminf(draw_mat.w, draw_mat.h) * (j + 0.5f) * 0.085f;
+        float r2 = fminf(draw_mat.w, draw_mat.h) * (j + 1.5f) * 0.085f;
+        float t = j * M_PI / 64.0f, r = (j + 1) * 0.5f;
+        for (int i = 1; i <= 64; i++, t += 2.0f * M_PI / 64.0f)
+        {
+            float ct = cosf(t + arc), st = sinf(t + arc);
+            draw_mat.draw_line(ImPoint(cx + r1 * ct, cy - r1 * st), ImPoint(cx + r2 * ct, cy - r2 * st), r, line_color);
+        }
+    }
+
+    // draw circle test(smooth) 
+    for (int j = 0; j < 5; j++)
+    {
+        float r = fminf(draw_mat.w, draw_mat.h) * (j + 1.5f) * 0.085f + 1;
+        float t = (j + 1) * 0.5f;
+        draw_mat.draw_circle(draw_mat.w / 2, draw_mat.h / 2, r, t, circle_color);
+    }
+
+    // draw circle test
+    draw_mat.draw_circle(draw_mat.w / 2, draw_mat.h / 2, draw_mat.w / 2 - 1, ImPixel(1.0, 1.0, 1.0, 1.0));
+
+    ImGui::ImMatToTexture(draw_mat, DrawMatTexture);
+    ImGui::Image(DrawMatTexture, ImVec2(draw_mat.w, draw_mat.h));
+}
+
+static void WarpMatrixDemo()
+{
+    const float width = 1920.f;
+    const float height = 1080.f;
+    ImVec2 src_corners[4];
+    ImVec2 dst_corners[4];
+    src_corners[0] = ImVec2(width / 1.80, height / 4.20);
+    src_corners[1] = ImVec2(width / 1.15, height / 3.32);
+    src_corners[2] = ImVec2(width / 1.33, height / 1.10);
+    src_corners[3] = ImVec2(width / 1.93, height / 1.36);
+    dst_corners[0] = ImVec2(0, 0);
+    dst_corners[1] = ImVec2(width, 0);
+    dst_corners[2] = ImVec2(width, height);
+    dst_corners[3] = ImVec2(0, height);
+    ImGui::ImMat M0 = ImGui::getPerspectiveTransform(dst_corners, src_corners);
+    ImGui::ImMat M1 = ImGui::getAffineTransform(dst_corners, src_corners);
+    for (int i = 0; i < 4; i++)
+    {
+        ImGui::Text("d: x=%.2f y=%.2f", dst_corners[i].x, dst_corners[i].y);
+        ImGui::SameLine(200);
+        ImGui::Text("s: x=%.2f y=%.2f", src_corners[i].x, src_corners[i].y);
+    }
+    ImGui::Separator();
+    ImGui::TextUnformatted("Perspective Transform:");
+    for (int h = 0; h < M0.h; h++)
+    {
+        for (int w = 0; w < M0.w; w++)
+        {
+            ImGui::Text("%.2f", M0.at<float>(w, h));
+            if ( w <  M0.w - 1)
+                ImGui::SameLine((w + 1) * 100);
+        }
+    }
+    ImGui::TextUnformatted("Affine Transform:");
+    for (int h = 0; h < M1.h; h++)
+    {
+        for (int w = 0; w < M1.w; w++)
+        {
+            ImGui::Text("%.2f", M1.at<float>(w, h));
+            if ( w <  M1.w - 1)
+                ImGui::SameLine((w + 1) * 100);
+        }
+    }
+}
+
 // For clarity, our main loop code is declared at the end.
 static void main_loop(void*);
 
@@ -195,9 +295,11 @@ int main(int, char**)
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
 
     // For an Emscripten build we are disabling file-system access, so let's not attempt to do a fopen() of the imgui.ini file.
     // You may manually call LoadIniSettingsFromMemory() to load settings from your own storage.
@@ -205,7 +307,7 @@ int main(int, char**)
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
+    //ImGui::StyleColorsLight();
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(g_Window, g_GLContext);
@@ -216,10 +318,11 @@ int main(int, char**)
     // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
     // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
     // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
+    // - Use '#define IMGUI_ENABLE_FREETYPE' in your imconfig file to use Freetype for higher quality font rendering.
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
     // - Emscripten allows preloading a file or folder to be accessible at runtime. See Makefile for details.
-    //io.Fonts->AddFontDefault();
+    io.Fonts->AddFontDefault();
 
 
     prepare_file_dialog_demo_window(&filedialog, nullptr);
@@ -244,8 +347,19 @@ static void main_loop(void* arg)
     static bool show_demo_window = true;
     static bool show_another_window = false;
     static bool show_file_dialog_window = false;
+    static bool show_implot_window = false;
     static bool show_markdown_window = false;
+    static bool show_widget_window = false;
+    static bool show_mat_draw_window = false;
+    static bool show_mat_warp_matrix = false;
+    static bool show_kalman_window = false;
+    static bool show_fft_window = false;
+    static bool show_stft_window = false;
     static bool show_text_editor_window = false;
+    static bool show_tab_window = false;
+    static bool show_node_editor_window = false;
+    static bool show_curve_demo_window = false;
+    static bool show_spline_demo_window = false;
 
     static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -283,7 +397,17 @@ static void main_loop(void* arg)
         ImGui::Checkbox("File Dialog Window", &show_file_dialog_window);
         ImGui::Checkbox("Memory Edit Window", &mem_edit.Open);
         ImGui::Checkbox("Show Markdown Window", &show_markdown_window);
-        ImGui::Checkbox("Show Text Editor Window", &show_text_editor_window);
+        ImGui::Checkbox("Show Extra Widget Window", &show_widget_window);
+        ImGui::Checkbox("Show Kalman Window", &show_kalman_window);
+        ImGui::Checkbox("Show FFT Window", &show_fft_window);
+        ImGui::Checkbox("Show STFT Window", &show_stft_window);
+        ImGui::Checkbox("Show ImMat Draw Window", &show_mat_draw_window);
+        ImGui::Checkbox("Show ImMat Warp Matrix", &show_mat_warp_matrix);
+        ImGui::Checkbox("Show Text Edit Window", &show_text_editor_window);
+        ImGui::Checkbox("Show Tab Window", &show_tab_window);
+        ImGui::Checkbox("Show Node Editor Window", &show_node_editor_window);
+        ImGui::Checkbox("Show Curve Demo Window", &show_curve_demo_window);
+        ImGui::Checkbox("Show Spline Demo Window", &show_spline_demo_window);
 
         // show hotkey window
         if (ImGui::Button("Edit Hotkeys"))
@@ -313,6 +437,16 @@ static void main_loop(void* arg)
         }
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::Text("Frames since last input: %d", ImGui::GetIO().FrameCountSinceLastInput);
+        ImGui::Text("Time Date: %s", ImGuiHelper::date_time_string().c_str());
+        ImGui::Text("User Name: %s", ImGuiHelper::username().c_str());
+        ImGui::Text("Home path: %s", ImGuiHelper::home_path().c_str());
+        ImGui::Text("Temp path: %s", ImGuiHelper::temp_path().c_str());
+        ImGui::Text("Working path: %s", ImGuiHelper::cwd_path().c_str());
+        ImGui::Text("Exec path: %s", ImGuiHelper::exec_path().c_str());
+        ImGui::Text("Setting path: %s", ImGuiHelper::settings_path("ImGui Example").c_str());
+        ImGui::Text("Memory usage: %zu", ImGuiHelper::memory_usage());
+        ImGui::Text("Memory Max usage: %zu", ImGuiHelper::memory_max_usage());
         ImGui::End();
     }
 
@@ -341,23 +475,124 @@ static void main_loop(void* arg)
     // Show Markdown Window
     if (show_markdown_window)
     {
-        std::string help_doc = get_file_contents();
+        ImGui::SetNextWindowSize(ImVec2(1024, 768), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Markdown window",&show_markdown_window, ImGuiWindowFlags_NoScrollbar);
+        std::string help_doc =          get_file_contents();
         mdConfig.linkCallback =         LinkCallback;
         mdConfig.tooltipCallback =      NULL;
         mdConfig.imageCallback =        ImageCallback;
         mdConfig.linkIcon =             ICON_FA_LINK;
         mdConfig.headingFormats[0] =    { io.Fonts->Fonts[0], true };
-        mdConfig.headingFormats[1] =    { io.Fonts->Fonts[1], true };
-        mdConfig.headingFormats[2] =    { io.Fonts->Fonts[2], false };
+        mdConfig.headingFormats[1] =    { io.Fonts->Fonts.size() > 1 ? io.Fonts->Fonts[1] : nullptr, true };
+        mdConfig.headingFormats[2] =    { io.Fonts->Fonts.size() > 2 ? io.Fonts->Fonts[2] : nullptr, false };
         mdConfig.userData =             NULL;
         mdConfig.formatCallback =       ExampleMarkdownFormatCallback;
         ImGui::Markdown( help_doc.c_str(), help_doc.length(), mdConfig );
+        ImGui::End();
+    }
+
+    // Show Extra widget Window
+    if (show_widget_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(1024, 768), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Extra Widget", &show_widget_window);
+        ImGui::ShowExtraWidgetDemoWindow();
+        ImGui::End();
+    }
+
+    // Show Kalman Window
+    if (show_kalman_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(1024, 768), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Kalman Demo", &show_kalman_window);
+        ImGui::ShowImKalmanDemoWindow();
+        ImGui::End();
+    }
+
+    // Show FFT Window
+    if (show_fft_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(1024, 1024), ImGuiCond_FirstUseEver);
+        ImGui::Begin("FFT Demo", &show_fft_window);
+        ImGui::ShowImFFTDemoWindow();
+        ImGui::End();
+    }
+
+    // Show STFT Window
+    if (show_stft_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(1024, 1024), ImGuiCond_FirstUseEver);
+        ImGui::Begin("STFT Demo", &show_stft_window);
+        ImGui::ShowImSTFTDemoWindow();
+        ImGui::End();
+    }
+
+    // Show ImMat line demo
+    if (show_mat_draw_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
+        ImGui::Begin("ImMat draw Demo", &show_mat_draw_window);
+        DrawLineDemo();
+        ImGui::End();
+    }
+
+    // Show ImMat warp matrix demo
+    if (show_mat_warp_matrix)
+    {
+        ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
+        ImGui::Begin("ImMat warp matrix Demo", &show_mat_warp_matrix);
+        WarpMatrixDemo();
+        ImGui::End();
     }
 
     // Show Text Edit Window
     if (show_text_editor_window)
     {
         editor.text_edit_demo(&show_text_editor_window);
+    }
+
+    // Show Tab Window
+    if (show_tab_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(700,600), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Example: TabWindow", &show_tab_window, ImGuiWindowFlags_NoScrollbar))
+        {
+            ImGui::ShowAddonsTabWindow();   // see its code for further info         
+        }
+        ImGui::End();
+    }
+
+    // Show Node Editor Window
+    if (show_node_editor_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(1024,1024), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Example: Node Editor", &show_node_editor_window, ImGuiWindowFlags_NoScrollbar))
+        {
+            ImGui::ShowNodeEditorWindow();   // see its code for further info         
+        }
+        ImGui::End();
+    }
+
+    // Show Curve Demo Window
+    if (show_curve_demo_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(800,600), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Example: Curve Demo", &show_curve_demo_window, ImGuiWindowFlags_NoScrollbar))
+        {
+            ImGui::ShowCurveDemo();   // see its code for further info         
+        }
+        ImGui::End();
+    }
+
+    // Show Spline Demo Window
+    if (show_spline_demo_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(800,800), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Example: Spline Demo", &show_spline_demo_window, ImGuiWindowFlags_NoScrollbar))
+        {
+            ImGui::ShowSplineDemo();   // see its code for further info         
+        }
+        ImGui::End();
     }
 
     // Rendering
