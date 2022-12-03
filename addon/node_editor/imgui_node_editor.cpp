@@ -1118,7 +1118,7 @@ void ed::EditorContext::Begin(const char* id, const ImVec2& size)
     m_NavigateAction.SetWindow(m_Canvas.ViewRect().Min, m_Canvas.ViewRect().GetSize());
 
     // Handle canvas size change. Scale to Y axis, center on X.
-    /*
+#if 0
     if (!ImRect_IsEmpty(previousVisibleRect) && previousSize != canvasSize)
     {
         m_NavigateAction.FinishNavigation();
@@ -1135,7 +1135,7 @@ void ed::EditorContext::Begin(const char* id, const ImVec2& size)
 
         m_NavigateAction.NavigateTo(previousVisibleRect, Detail::NavigateAction::ZoomMode::Exact, 0.0f);
     }
-    */
+#else
     if (!ImRect_IsEmpty(previousVisibleRect) && previousSize != canvasSize)
     {
         m_NavigateAction.FinishNavigation();
@@ -1170,7 +1170,7 @@ void ed::EditorContext::Begin(const char* id, const ImVec2& size)
 
         m_NavigateAction.NavigateTo(previousVisibleRect, Detail::NavigateAction::ZoomMode::Exact, 0.0f);
     }
-
+#endif
     m_Canvas.SetView(m_NavigateAction.GetView());
 
     // #debug #clip
@@ -3313,8 +3313,8 @@ ed::NavigateAction::NavigateAction(EditorContext* editor, ImGuiEx::Canvas& canva
 ed::EditorAction::AcceptResult ed::NavigateAction::Accept(const Control& control)
 {
     //IM_ASSERT(!m_IsActive);
-    //if (m_IsActive)
-    //    return False;
+    if (m_IsActive)
+        return False;
     
     auto& io = ImGui::GetIO();
     bool emulate_middle_button = false;
@@ -3782,8 +3782,8 @@ ed::SizeAction::SizeAction(EditorContext* editor):
 ed::EditorAction::AcceptResult ed::SizeAction::Accept(const Control& control)
 {
     //IM_ASSERT(!m_IsActive);
-    //if (m_IsActive)
-    //    return False;
+    if (m_IsActive)
+        return False;
 
     if (control.ActiveNode && IsGroup(control.ActiveNode) && ImGui::IsMouseDragging(Editor->GetConfig().DragButtonIndex, 0))
     {
@@ -3961,8 +3961,8 @@ ed::DragAction::DragAction(EditorContext* editor):
 ed::EditorAction::AcceptResult ed::DragAction::Accept(const Control& control)
 {
     //IM_ASSERT(!m_IsActive);
-    //if (m_IsActive)
-    //    return False;
+    if (m_IsActive)
+        return False;
 
     if (Editor->CanAcceptUserInput() && control.ActiveObject && ImGui::IsMouseDragging(Editor->GetConfig().DragButtonIndex))
     {
@@ -4140,8 +4140,8 @@ ed::SelectAction::SelectAction(EditorContext* editor):
 ed::EditorAction::AcceptResult ed::SelectAction::Accept(const Control& control)
 {
     //IM_ASSERT(!m_IsActive);
-    //if (m_IsActive)
-    //    return False;
+    if (m_IsActive)
+        return False;
     auto& io = ImGui::GetIO();
     m_SelectGroups   = io.KeySuper;
     m_SelectLinkMode = io.KeyAlt;
@@ -4684,8 +4684,8 @@ ed::CreateItemAction::CreateItemAction(EditorContext* editor):
 ed::EditorAction::AcceptResult ed::CreateItemAction::Accept(const Control& control)
 {
     //IM_ASSERT(!m_IsActive);
-    //if (m_IsActive)
-    //    return EditorAction::False;
+    if (m_IsActive)
+        return EditorAction::False;
 
     if (control.ActivePin && (ImGui::IsMouseDown(Editor->GetConfig().DragButtonIndex) || ImGui::IsMouseDragging(Editor->GetConfig().DragButtonIndex)))
     {
@@ -5047,8 +5047,8 @@ void ed::DeleteItemsAction::DeleteDeadLinks(NodeId nodeId)
 ed::EditorAction::AcceptResult ed::DeleteItemsAction::Accept(const Control& control)
 {
     //IM_ASSERT(!m_IsActive);
-    //if (m_IsActive)
-    //    return False;
+    if (m_IsActive)
+        return False;
 
     auto& io = ImGui::GetIO();
     if (Editor->CanAcceptUserInput() && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete)) && Editor->AreShortcutsEnabled())
