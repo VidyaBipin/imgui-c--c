@@ -690,6 +690,8 @@ static void ImGui_ImplSDL2_UpdateMonitors()
         float dpi = 0.0f;
         if (!SDL_GetDisplayDPI(n, &dpi, nullptr, nullptr))
             monitor.DpiScale = floor(dpi / 96.0f); // Modify By Dicky
+#else
+        monitor.DpiScale = 1.0f; // Add By Dicky in case old sdl not support monitor DPI API
 #endif
         platform_io.Monitors.push_back(monitor);
     }

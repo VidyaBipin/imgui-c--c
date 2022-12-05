@@ -801,6 +801,8 @@ static void ImGui_ImplGlfw_UpdateMonitors()
         float x_scale, y_scale;
         glfwGetMonitorContentScale(glfw_monitors[n], &x_scale, &y_scale);
         monitor.DpiScale = x_scale;
+#else
+        monitor.DpiScale = 1.0f; // Add By Dicky in case old glfw not support mmonitor DPI API
 #endif
         platform_io.Monitors.push_back(monitor);
     }
