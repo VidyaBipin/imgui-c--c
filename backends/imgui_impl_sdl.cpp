@@ -689,9 +689,7 @@ static void ImGui_ImplSDL2_UpdateMonitors()
         //  DpiScale to cocoa_window.backingScaleFactor here.
         float dpi = 0.0f;
         if (!SDL_GetDisplayDPI(n, &dpi, nullptr, nullptr))
-            monitor.DpiScale = floor(dpi / 96.0f); // Modify By Dicky
-#else
-        monitor.DpiScale = 1.0f; // Add By Dicky in case old sdl not support monitor DPI API
+            monitor.DpiScale = dpi > 96.f ? floor(dpi / 96.0f) : dpi / 96.0f; // Modify By Dicky
 #endif
         platform_io.Monitors.push_back(monitor);
     }
