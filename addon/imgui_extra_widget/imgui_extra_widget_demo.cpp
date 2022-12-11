@@ -426,6 +426,7 @@ void ShowExtraWidgetDemoWindow()
                     case 93: ImGui::SpinnerWaveDots("SpinnerWaveDots", 16, 3, ImColor(255, 255, 255), 6 * velocity); ImGui::ShowTooltipOnHover("SpinnerWaveDots"); break;
                     case 94: ImGui::SpinnerRotateShapes("SpinnerRotateShapes", 16, 2, ImColor(255, 255, 255), 6.f * velocity, 4, 4); ImGui::ShowTooltipOnHover("SpinnerRotateShapes"); break;
                     case 95: ImGui::SpinnerSquareStrokeLoading("SpinnerSquareStrokeLoanding", 13, 5, ImColor(255, 255, 255), 3 * velocity); ImGui::ShowTooltipOnHover("SpinnerSquareStrokeLoanding"); break;
+                    case 96: ImGui::SpinnerSinSquares("SpinnerSinSquares", 16, 2, ImColor(255, 255, 255), 1.f * velocity); ImGui::ShowTooltipOnHover("SpinnerSinSquares"); break;
 
                     // ...
                     default: break;
@@ -713,137 +714,6 @@ void ShowExtraWidgetDemoWindow()
         ImGui::BezierSelect("##easeInExpo", ImVec2(200, 200), v);
         ImGui::TreePop();
     }
-    /*
-    if (ImGui::TreeNode("Bezier View"))
-    {
-        ImGuiIO& io = ImGui::GetIO();
-        bool reset = false;
-        static bool value_limited = true;
-        static bool scroll_v = true;
-        static bool move_curve = true;
-        static bool keep_begin_end = false;
-        static bool dock_begin_end = false;
-        static ImGui::KeyPointEditor rampEdit(IM_COL32(0, 0, 0, 255), IM_COL32(32, 32, 32, 128));
-        char ** curve_type_list = nullptr;
-        auto curve_type_count = ImCurveEdit::GetCurveTypeName(curve_type_list);
-        float table_width = 300;
-        auto size_x = ImGui::GetWindowSize().x - table_width - 60;
-        if (rampEdit.GetCurveCount() <= 0)
-        {
-            auto index_1 = rampEdit.AddCurve("key1", ImCurveEdit::Smooth, IM_COL32(255, 0, 0, 255), true, -1, 1, 0);
-            rampEdit.AddPoint(index_1, ImVec2(size_x * 0.f, 0), ImCurveEdit::Smooth);
-            rampEdit.AddPoint(index_1, ImVec2(size_x * 0.25f, 0.610f), ImCurveEdit::Smooth);
-            rampEdit.AddPoint(index_1, ImVec2(size_x * 0.5f, 1.0f), ImCurveEdit::Smooth);
-            rampEdit.AddPoint(index_1, ImVec2(size_x * 0.75f, 0.610f), ImCurveEdit::Smooth);
-            rampEdit.AddPoint(index_1, ImVec2(size_x * 1.f, 0.f), ImCurveEdit::Smooth);
-
-            auto index_2 = rampEdit.AddCurve("key2", ImCurveEdit::Smooth, IM_COL32(0, 255, 0, 255), true, 0, 1, 0);
-            rampEdit.AddPoint(index_2, ImVec2(size_x * 0.f, 1.f), ImCurveEdit::Smooth);
-            rampEdit.AddPoint(index_2, ImVec2(size_x * 0.25f, 0.75f), ImCurveEdit::Smooth);
-            rampEdit.AddPoint(index_2, ImVec2(size_x * 0.5f, 0.5f), ImCurveEdit::Smooth);
-            rampEdit.AddPoint(index_2, ImVec2(size_x * 0.75f, 0.75f), ImCurveEdit::Smooth);
-            rampEdit.AddPoint(index_2, ImVec2(size_x * 1.f, 1.f), ImCurveEdit::Smooth);
-
-            auto index_3 = rampEdit.AddCurve("key3", ImCurveEdit::Smooth, IM_COL32(0, 0, 255, 255), true, 0, 100, 50);
-            rampEdit.AddPoint(index_3, ImVec2(size_x * 0.f, 0.f), ImCurveEdit::Smooth);
-            rampEdit.AddPoint(index_3, ImVec2(size_x * 0.25f, 0.05f), ImCurveEdit::Smooth);
-            rampEdit.AddPoint(index_3, ImVec2(size_x * 0.5f, 0.25f), ImCurveEdit::Smooth);
-            rampEdit.AddPoint(index_3, ImVec2(size_x * 0.75f, 0.75f), ImCurveEdit::Smooth);
-            rampEdit.AddPoint(index_3, ImVec2(size_x * 1.f, 1.f), ImCurveEdit::Smooth);
-        }
-        if (ImGui::Button("Reset##curve_reset"))
-            reset = true;
-        if (rampEdit.GetMax().x <= 0 || reset)
-        {
-            rampEdit.SetMax(ImVec2(size_x, 1.f));
-            rampEdit.SetMin(ImVec2(0.f, 0.f));
-        }
-        ImGui::Checkbox("Value limited", &value_limited); ImGui::SameLine();
-        ImGui::Checkbox("Scroll V", &scroll_v); ImGui::SameLine();
-        ImGui::Checkbox("Move Curve", &move_curve); ImGui::SameLine();
-        ImGui::Checkbox("Keep Begin End", &keep_begin_end); ImGui::SameLine();
-        ImGui::Checkbox("Dock Begin End", &dock_begin_end);
-        uint32_t curvs_flags = CURVE_EDIT_FLAG_NONE;
-        if (value_limited) curvs_flags |= CURVE_EDIT_FLAG_VALUE_LIMITED;
-        if (scroll_v) curvs_flags |= CURVE_EDIT_FLAG_SCROLL_V;
-        if (move_curve) curvs_flags |= CURVE_EDIT_FLAG_MOVE_CURVE;
-        if (keep_begin_end) curvs_flags |= CURVE_EDIT_FLAG_KEEP_BEGIN_END;
-        if (dock_begin_end) curvs_flags |= CURVE_EDIT_FLAG_DOCK_BEGIN_END;
-
-        ImVec2 item_pos = ImGui::GetCursorScreenPos();
-        float current_pos = -1.f;
-        ImCurveEdit::Edit(nullptr, rampEdit, ImVec2(size_x, 300), ImGui::GetID("##bezier_view"), current_pos, curvs_flags, nullptr, nullptr);
-        if (ImGui::IsItemHovered())
-        {
-            float pos = io.MousePos.x - item_pos.x;
-            ImGui::BeginTooltip();
-            for (int i = 0; i < rampEdit.GetCurveCount(); i++)
-            {
-                auto value = rampEdit.GetValue(i, pos);
-                ImGui::Text("pos=%.0f val=%f", pos, value);
-            }
-            ImGui::EndTooltip();
-        }
-
-        ImGui::SameLine();
-        static ImGuiTableFlags flags = ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
-        if (ImGui::BeginTable("table_selected", 5, flags, ImVec2(table_width, 300.f)))
-        {
-            ImGui::TableSetupScrollFreeze(2, 1);
-            ImGui::TableSetupColumn("C", ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_WidthFixed, 20); // Make the first column not hideable to match our use of TableSetupScrollFreeze()
-            ImGui::TableSetupColumn("P", ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_WidthFixed, 20);
-            ImGui::TableSetupColumn("X", ImGuiTableColumnFlags_WidthFixed, 80);
-            ImGui::TableSetupColumn("Y", ImGuiTableColumnFlags_WidthFixed, 80);
-            ImGui::TableSetupColumn("T", ImGuiTableColumnFlags_WidthFixed, 100);
-            ImGui::TableHeadersRow();
-            //for (int row = 0; row < selected.size(); row++)
-            for (auto ep : rampEdit.selectedPoints)
-            {
-                ImGui::TableNextRow(ImGuiTableRowFlags_None);
-                for (int column = 0; column < 5; column++)
-                {
-                    if (!ImGui::TableSetColumnIndex(column) && column > 0)
-                        continue;
-                    auto point = rampEdit.GetPoint(ep.curveIndex, ep.pointIndex);
-                    std::string column_id = std::to_string(ep.curveIndex) + "@" + std::to_string(ep.pointIndex);
-                    switch (column)
-                    {
-                        case 0 : ImGui::Text("%u", ep.curveIndex); break;
-                        case 1 : ImGui::Text("%u", ep.pointIndex); break;
-                        case 2 :
-                            ImGui::PushItemWidth(80);
-                            if (ImGui::SliderFloat(("##x_pos@" + column_id).c_str(), &point.point.x, 0.f, size_x, "%.0f"))
-                            {
-                                rampEdit.EditPoint(ep.curveIndex, ep.pointIndex, point.point, point.type);
-                            }
-                            ImGui::PopItemWidth();
-                        break;
-                        case 3 :
-                            ImGui::PushItemWidth(80);
-                            if (ImGui::SliderFloat(("##y_pos" + column_id).c_str(), &point.point.y, 0.f, 1.f, "%.1f"))
-                            {
-                                rampEdit.EditPoint(ep.curveIndex, ep.pointIndex, point.point, point.type);
-                            }
-                            ImGui::PopItemWidth();
-                        break;
-                        case 4 :
-                            ImGui::PushItemWidth(100);
-                            if (ImGui::Combo(("##type" + column_id).c_str(), (int*)&point.type, curve_type_list, curve_type_count))
-                            {
-                                rampEdit.EditPoint(ep.curveIndex, ep.pointIndex, point.point, point.type);
-                            }
-                            ImGui::PopItemWidth();
-                        break;
-                        default : break;
-                    }
-                    
-                }
-            }
-            ImGui::EndTable();
-        }
-        ImGui::TreePop();
-    }
-    */
     if (ImGui::TreeNode("Splitter windows"))
     {
         float h = 200;
