@@ -5885,6 +5885,53 @@ void ImGui::SpinnerBounceDots(const char *label, float radius, float thickness, 
     }
 }
 
+void ImGui::SpinnerZipDots(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t dots)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float nextItemKoeff = 3.5f;
+    const float heightKoeff = 2.f;
+    const float heightSpeed = 0.8f;
+    const float hsize = dots * (thickness * nextItemKoeff) / 2.f - (thickness * nextItemKoeff) * 0.5f;
+    const float start = (float)ImGui::GetTime() * speed;
+    const float offset = IM_PI / dots;
+    for (size_t i = 0; i < dots; i++)
+    {
+        const float sina = ImSin((start + (IM_PI - i * offset)) * heightSpeed);
+        const float y = ImMin(centre.y + sina * thickness * heightKoeff, centre.y);
+        const float deltay = ImAbs(y - centre.y);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + i * (thickness * nextItemKoeff), y), thickness, color, 8);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + i * (thickness * nextItemKoeff), y + 2 * deltay), thickness, color, 8);
+    }
+}
+
+void ImGui::SpinnerDotsToBar(const char *label, float radius, float thickness, float offset_k, const ImColor &color, float speed, size_t dots)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float nextItemKoeff = 3.5f;
+    const float heightSpeed = 0.8f;
+    const float hsize = dots * (thickness * nextItemKoeff) / 2.f - (thickness * nextItemKoeff) * 0.5f;
+    const float start = (float)ImGui::GetTime() * speed;
+    const float offset = IM_PI / dots;
+    const float hradius = (radius);
+    float out_h, out_s, out_v;
+    ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+    for (size_t i = 0; i < dots; i++)
+    {
+        const float sina = ImSin((start + (IM_PI - i * offset)) * heightSpeed);
+        const float sinb = ImSin((start + (IM_PI + IM_PI * offset_k - i * offset)) * heightSpeed);
+        const float y = ImMin(centre.y + sina * hradius, centre.y);
+        const float y2 = ImMin(sinb, 0.f) * (hradius * offset_k);
+        const float y3 = (y + y2);
+        const float deltay = ImAbs(y - centre.y);
+        ImColor c = ImColor::HSV(out_h + i * (1.f / dots * 2.f), out_s, out_v);
+        ImVec2 p1(centre.x - hsize + i * (thickness * nextItemKoeff), y3);
+        ImVec2 p2(centre.x - hsize + i * (thickness * nextItemKoeff), y3 + 2 * deltay);
+        window->DrawList->AddCircleFilled(p1, thickness, c, 8);
+        window->DrawList->AddCircleFilled(p2, thickness, c, 8);
+        window->DrawList->AddLine(p1, p2, c, thickness * 2.f);
+    }
+}
+
 void ImGui::SpinnerWaveDots(const char *label, float radius, float thickness, const ImColor &color, float speed)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
@@ -6579,12 +6626,12 @@ void ImGui::SpinnerSquareStrokeLoading(const char *label, float radius, float th
     const float arc_angle = 2.f * IM_PI / 4.f;
     const float ht = thickness / 2.f;
 
-    const float r = radius * 1.4f;
+    const float best_radius = radius * 1.4f;
     const float delta = (start - IM_PI * 2.f) / 2.f;
     for (size_t arc_num = 0; arc_num < 4; ++arc_num) {
         float a = arc_angle * arc_num;
         a -= IM_PI / 4.f;
-        ImVec2 pp(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r);
+        ImVec2 pp(centre.x + ImCos(a) * best_radius, centre.y + ImSin(a) * best_radius);
         window->DrawList->AddLine(ImVec2(pp.x - ht, pp.y), ImVec2(pp.x + ht, pp.y), color, thickness);
     }
 
@@ -6593,11 +6640,10 @@ void ImGui::SpinnerSquareStrokeLoading(const char *label, float radius, float th
     for (size_t arc_num = 0; arc_num < 4; ++arc_num)             {
         float a = arc_angle * arc_num;
         a -= IM_PI / 4.f;
-        const float r = radius * 1.4f;
         const bool right = ImSin(a) > 0;
         const bool top = ImCos(a) < 0;
-        ImVec2 p1(centre.x + ImCos(a - IM_PI / 2.f) * r, centre.y + ImSin(a - IM_PI / 2.f) * r);
-        ImVec2 p2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r);
+        ImVec2 p1(centre.x + ImCos(a - IM_PI / 2.f) * best_radius, centre.y + ImSin(a - IM_PI / 2.f) * best_radius);
+        ImVec2 p2(centre.x + ImCos(a) * best_radius, centre.y + ImSin(a) * best_radius);
         switch (arc_num) {
         case 0: p1.x -= ht; p2.x += ht;
             p1.x = grow ? p1.x : p1.x + (p2.x - p1.x) * (1.f - segment_progress); p2.x = grow ? p1.x + (p2.x - p1.x) * segment_progress : p2.x; break;
