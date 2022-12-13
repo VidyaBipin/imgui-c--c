@@ -568,6 +568,7 @@ IMGUI_API void SpinnerArcPolarFade(const char *label, float radius, const ImColo
 IMGUI_API void SpinnerArcPolarRadius(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4);
 IMGUI_API void SpinnerCaleidoscope(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 6, int mode = 0);
 IMGUI_API void SpinnerHboDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float minfade = 0.0f, float ryk = 0.f, float speed = 1.1f, size_t dots = 6);
+IMGUI_API void SpinnerSineArcs(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 3);
 IMGUI_API void SpinnerSwingDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f);
 
 template<SpinnerTypeT Type, typename... Args>

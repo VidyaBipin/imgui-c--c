@@ -7624,6 +7624,31 @@ void ImGui::SpinnerHboDots(const char *label, float radius, float thickness, con
     }
 }
 
+void ImGui::SpinnerSineArcs(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t arcs)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2.f);
+    float length = ImFmod(start, IM_PI);
+    const float dangle = ImSin(length) * IM_PI * 0.35f;
+    const float angle_offset = IM_PI / num_segments;
+    auto draw_spring = [&] (float k) {
+        float arc = 0.f;
+        window->DrawList->PathClear();
+        for (size_t i = 0; i < num_segments; i++) {
+            float a = start + (i * angle_offset);
+            if (ImSin(a) < 0.f)
+                a *= -1;
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + k * ImSin(a) * radius));
+            arc += angle_offset;
+            if (arc > dangle)
+                break;
+        }
+        window->DrawList->PathStroke(color, false, thickness);
+    };
+    draw_spring(1);
+    draw_spring(-1);
+}
+
 void ImGui::SpinnerSwingDots(const char *label, float radius, float thickness, const ImColor &color, float speed)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
