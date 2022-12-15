@@ -7624,7 +7624,7 @@ void ImGui::SpinnerHboDots(const char *label, float radius, float thickness, con
     }
 }
 
-void ImGui::SpinnerSineArcs(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t arcs)
+void ImGui::SpinnerSineArcs(const char *label, float radius, float thickness, const ImColor &color, float speed)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
     float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2.f);
@@ -7647,6 +7647,45 @@ void ImGui::SpinnerSineArcs(const char *label, float radius, float thickness, co
     };
     draw_spring(1);
     draw_spring(-1);
+}
+
+void ImGui::SpinnerTrianglesShift(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bg, float speed, size_t bars) 
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    ImColor c = color;
+    float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
+    c.Value.w = ImMax(0.1f, ImMin(lerp_koeff, 1.f));
+    const float angle_offset = IM_PI * 2.f / bars;
+    float start = (float)ImGui::GetTime() * speed;
+    const float astart = ImFmod(start, angle_offset);
+    const float half_pi = IM_PI / 2.f;
+    const float save_start = start;
+    start -= astart;
+    const float angle_offset_t = angle_offset * 0.3f;
+    bars = ImMin<size_t>(bars, 32);
+    const float rmin = radius - thickness;
+    auto get_points = [&] (auto left, auto right, auto r1, auto r2) -> std::array<ImVec2, 4> {
+        return {
+            ImVec2(centre.x + ImCos(left) * r1, centre.y + ImSin(left) * r1),
+            ImVec2(centre.x + ImCos(left) * r2, centre.y + ImSin(left) * r2),
+            ImVec2(centre.x + ImCos(right) * r2, centre.y + ImSin(right) * r2),
+            ImVec2(centre.x + ImCos(right) * r1, centre.y + ImSin(right) * r1)
+        };
+    };
+    ImColor rc = bg;
+    for (size_t i = 0; i < bars; i++) {
+        float left = start + (i * angle_offset) - angle_offset_t;
+        float right = start + (i * angle_offset) + angle_offset_t;
+        float centera = start - half_pi + (i * angle_offset);
+        float rmul = 1.f - ImClamp(ImAbs(centera - save_start), 0.f, half_pi) / half_pi;
+        rc.Value.w = ImMax(rmul, 0.1f);
+        rmul *= 1.5f;
+        rmul = ImMax(0.5f, rmul);
+        const float r1 = ImMax(rmin * rmul, rmin);
+        const float r2 = ImMax(radius * rmul, radius);
+        auto points = get_points(left, right, r1, r2);
+        window->DrawList->AddConvexPolyFilled(points.data(), 4, rc);
+    }
 }
 
 void ImGui::SpinnerSwingDots(const char *label, float radius, float thickness, const ImColor &color, float speed)
