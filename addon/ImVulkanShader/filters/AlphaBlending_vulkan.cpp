@@ -39,6 +39,7 @@ AlphaBlending_vulkan::~AlphaBlending_vulkan()
     if (vkdev)
     {
         if (pipe) { delete pipe; pipe = nullptr; }
+        if (pipe_alpha) { delete pipe_alpha; pipe_alpha = nullptr; }
         if (cmd) { delete cmd; cmd = nullptr; }
         if (opt.blob_vkallocator) { vkdev->reclaim_blob_allocator(opt.blob_vkallocator); opt.blob_vkallocator = nullptr; }
         if (opt.staging_vkallocator) { vkdev->reclaim_staging_allocator(opt.staging_vkallocator); opt.staging_vkallocator = nullptr; }

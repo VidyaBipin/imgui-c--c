@@ -217,6 +217,7 @@ compile_shader(filters/Waveform_shader.h Zero_data)
 compile_shader(filters/Waveform_shader.h ConvInt2Mat_data)
 compile_shader(filters/WhiteBalance_shader.h Filter_data)
 compile_shader(filters/lut3d/Lut3D_Shader.h LUT3D_data)
+compile_shader(filters/BookFlip_shader BookFlip_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -338,6 +339,7 @@ set(VKSHADER_SRCS
     filters/Vector_vulkan.cpp
     filters/warpPerspective_vulkan.cpp
     filters/warpAffine_vulkan.cpp
+    filters/BookFlip_vulkan.cpp
 )
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
@@ -422,6 +424,8 @@ set(VKSHADER_INCS
     filters/warpPerspective_vulkan.h
     filters/warpAffine_shader.h
     filters/warpAffine_vulkan.h
+    filters/BookFlip_shader.h
+    filters/BookFlip_vulkan.h
 )
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
