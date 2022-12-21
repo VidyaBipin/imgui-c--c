@@ -219,6 +219,7 @@ compile_shader(filters/WhiteBalance_shader.h Filter_data)
 compile_shader(filters/lut3d/Lut3D_Shader.h LUT3D_data)
 compile_shader(filters/BookFlip_shader BookFlip_data)
 compile_shader(filters/Bounce_vulkan Bounce_data)
+compile_shader(filters/BowTie_vulkan BowTie_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -342,6 +343,7 @@ set(VKSHADER_SRCS
     filters/warpAffine_vulkan.cpp
     filters/BookFlip_vulkan.cpp
     filters/Bounce_vulkan.cpp
+    filters/BowTie_vulkan.cpp
 )
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
@@ -430,6 +432,8 @@ set(VKSHADER_INCS
     filters/BookFlip_vulkan.h
     filters/Bounce_shader.h
     filters/Bounce_vulkan.h
+    filters/BowTie_shader.h
+    filters/BowTie_vulkan.h
 )
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
@@ -476,7 +480,7 @@ endif(VKSHADER_VULKAN_PREBUILD)
 
 set(VKSHADER_VERSION_MAJOR 1)
 set(VKSHADER_VERSION_MINOR 6)
-set(VKSHADER_VERSION_PATCH 0)
+set(VKSHADER_VERSION_PATCH 1)
 set(VKSHADER_VERSION_STRING ${VKSHADER_VERSION_MAJOR}.${VKSHADER_VERSION_MINOR}.${VKSHADER_VERSION_PATCH})
 
 if(NOT VKSHADER_STATIC)
