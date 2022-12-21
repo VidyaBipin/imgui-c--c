@@ -11,7 +11,7 @@ public:
     BookFlip_vulkan(int gpu = -1);
     ~BookFlip_vulkan();
 
-    double flip(const ImMat& src1, const ImMat& src2, ImMat& dst, float progress) const;
+    double transition(const ImMat& src1, const ImMat& src2, ImMat& dst, float progress) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

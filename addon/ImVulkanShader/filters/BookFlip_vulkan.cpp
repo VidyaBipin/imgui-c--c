@@ -76,7 +76,7 @@ void BookFlip_vulkan::upload_param(const VkMat& src1, const VkMat& src2, VkMat& 
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-double BookFlip_vulkan::flip(const ImMat& src1, const ImMat& src2, ImMat& dst, float progress) const
+double BookFlip_vulkan::transition(const ImMat& src1, const ImMat& src2, ImMat& dst, float progress) const
 {
     double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
