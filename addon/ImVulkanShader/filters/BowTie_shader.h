@@ -35,7 +35,7 @@ float check(vec2 p1, vec2 p2, vec2 p3) \n\
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y); \n\
 } \n\
 \n\
-bool PointInTriangle (vec2 pt, vec2 p1, vec2 p2, vec2 p3) \n\
+bool PointInTriangle(vec2 pt, vec2 p1, vec2 p2, vec2 p3) \n\
 { \n\
     bool b1, b2, b3; \n\
     b1 = check(pt, p1, p2) < 0.0; \n\
@@ -174,7 +174,7 @@ void main() \n\
         else \n\
             result = rgba_src1; \n\
     } \n\
-    else \n\
+    else if (p.direction == 1) \n\
     { \n\
         if (in_top_triangle(point)) \n\
         { \n\
@@ -222,6 +222,55 @@ void main() \n\
         } \n\
         else \n\
             result = rgba_src1; \n\
+    } \n\
+    else \n\
+    { \n\
+        if (p.progress < 0.5) \n\
+        { \n\
+            if (point.y < 0.5) \n\
+            { \n\
+                vec2 botLeft = vec2(-0., p.progress - 0.5); \n\
+                vec2 botRight = vec2(1., p.progress - 0.5); \n\
+                vec2 tip = vec2(0.5, p.progress); \n\
+                if (PointInTriangle(point, botLeft, botRight, tip)) \n\
+                    result = rgba_src2; \n\
+                else \n\
+                    result = rgba_src1; \n\
+            } \n\
+            else \n\
+            { \n\
+                vec2 topLeft = vec2(-0., 1. - p.progress + 0.5); \n\
+                vec2 topRight = vec2(1., 1. - p.progress + 0.5); \n\
+                vec2 tip = vec2(0.5, 1. - p.progress); \n\
+                if (PointInTriangle(point, topLeft, topRight, tip)) \n\
+                    result = rgba_src2; \n\
+                else \n\
+                    result = rgba_src1; \n\
+            } \n\
+        } \n\
+        else \n\
+        { \n\
+            if (point.x > 0.5) \n\
+            { \n\
+                vec2 top = vec2(p.progress + 0.5,  1.); \n\
+                vec2 bot = vec2(p.progress + 0.5, -0.); \n\
+                vec2 tip = vec2(mix(0.5, 1.0, 2.0 * (p.progress - 0.5)), 0.5); \n\
+                if (PointInTriangle(point, top, bot, tip)) \n\
+                    result = rgba_src1; \n\
+                else \n\
+                    result = rgba_src2; \n\
+            } \n\
+            else \n\
+            { \n\
+                vec2 top = vec2(1.0 - p.progress - 0.5,  1.); \n\
+                vec2 bot = vec2(1.0 - p.progress - 0.5, -0.); \n\
+                vec2 tip = vec2(mix(0.5, 0.0, 2.0 * (p.progress - 0.5)), 0.5); \n\
+                if (PointInTriangle(point, top, bot, tip)) \n\
+                    result = rgba_src1; \n\
+                else \n\
+                    result = rgba_src2; \n\
+            } \n\
+        } \n\
     } \n\
     store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
 } \
