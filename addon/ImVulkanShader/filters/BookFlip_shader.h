@@ -54,21 +54,21 @@ void main() \n\
     ivec2 uv = ivec2(gl_GlobalInvocationID.xy); \n\
     if (uv.x >= p.out_w || uv.y >= p.out_h) \n\
         return; \n\
-    vec2 point = vec2(float(uv.x) / float(p.w), float(uv.y) / float(p.h)); \n\
+    vec2 point = vec2(float(uv.x) / float(p.out_w - 1), float(uv.y) / float(p.out_h - 1)); \n\
     float pr = step(1.0 - p.progress, point.x); \n\
     sfpvec4 result = sfpvec4(0.f); \n\
     if (point.x < 0.5) \n\
     { \n\
-        sfpvec4 rgba_src1 = load_rgba(int(point.x * p.w), int(point.y * p.h), p.w, p.cstep, p.in_format, p.in_type); \n\
+        sfpvec4 rgba_src1 = load_rgba(int(point.x * (p.w - 1)), int(point.y * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
         vec2 left_point = skewLeft(point); \n\
-        sfpvec4 rgba_src2 = load_rgba_src2(int(left_point.x * p.w2), int(left_point.y * p.h2), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
+        sfpvec4 rgba_src2 = load_rgba_src2(int(left_point.x * (p.w2 - 1)), int(left_point.y * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
         result = mix(rgba_src1, rgba_src2 * addShade(), sfp(pr)); \n\
     } \n\
     else \n\
     { \n\
         vec2 right_point = skewRight(point); \n\
-        sfpvec4 rgba_src1 = load_rgba(int(right_point.x * p.w), int(right_point.y * p.h), p.w, p.cstep, p.in_format, p.in_type); \n\
-        sfpvec4 rgba_src2 = load_rgba_src2(int(point.x * p.w2), int(point.y * p.h2), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
+        sfpvec4 rgba_src1 = load_rgba(int(right_point.x * (p.w - 1)), int(right_point.y * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+        sfpvec4 rgba_src2 = load_rgba_src2(int(point.x * (p.w2 - 1)), int(point.y * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
         result = mix(rgba_src1 * addShade(), rgba_src2, sfp(pr)); \n\
     } \n\
     store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\

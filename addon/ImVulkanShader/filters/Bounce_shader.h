@@ -48,7 +48,7 @@ void main() \n\
     sfp phase = time * PI * sfp(p.bounces); \n\
     sfp y = (abs(cos(phase))) * (sfp(1.f) - stime); \n\
     sfp d = sfp(uv.y) / sfp(p.out_h) - y; \n\
-    sfpvec4 rgba_src1 = load_rgba(uv.x, uv.y + int((sfp(1.f) - y) * sfp(p.out_h)), p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba_src1 = load_rgba(uv.x, uv.y + int((sfp(1.f) - y) * sfp(p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
     sfpvec4 rgba_src2 = load_rgba_src2(uv.x, uv.y, p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
     sfpvec4 result = mix( \n\
             mix( \n\
