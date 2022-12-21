@@ -24,13 +24,7 @@ layout (push_constant) uniform parameter \n\
     int out_type; \n\
 \n\
     float progress; \n\
-    float shadow_height; \n\
-    float bounces; \n\
-    \n\
-    float red_shadow; \n\
-    float green_shadows; \n\
-    float blue_shadows; \n\
-    float alpha_shadows; \n\
+    float smoothness; \n\
 } p; \
 "
 
@@ -39,27 +33,13 @@ layout (push_constant) uniform parameter \n\
 const sfp PI = sfp(3.14159265358f); \n\
 sfpvec4 transition(vec2 point) \n\
 { \n\
-    float time = p.progress; \n\
-    float stime = sin(time * PI / 2.); \n\
-    float phase = time * PI * p.bounces; \n\
-    float y = (abs(cos(phase))) * (1.0 - stime); \n\
-    float d = point.y - y; \n\
-    sfpvec4 shadow_colour = sfpvec4(sfp(p.red_shadow), sfp(p.green_shadows), sfp(p.blue_shadows), sfp(p.alpha_shadows)); \n\
-    vec2 from_point = clamp(vec2(point.x, point.y + (1.0 - y)), vec2(0.f, 0.f), vec2(1.f, 1.f)); \n\
-    sfpvec4 rgba_from = load_rgba(int(from_point.x * (p.w - 1)), int((1.f - from_point.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+    vec2 rp = point * 2. - 1.; \n\
     sfpvec4 rgba_to = load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
+    sfpvec4 rgba_from = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
     return mix( \n\
-        mix( \n\
-            rgba_to, \n\
-            shadow_colour, \n\
-            sfp(step(d, p.shadow_height) * (1. - mix( \n\
-                ((d / p.shadow_height) * p.alpha_shadows) + (1.0 - p.alpha_shadows), \n\
-                1.0, \n\
-                smoothstep(0.95, 1., p.progress) // fade-out the shadow at the end \n\
-            ))) \n\
-        ), \n\
+        rgba_to, \n\
         rgba_from, \n\
-        sfp(step(d, 0.0)) \n\
+        sfp(smoothstep(0., p.smoothness, atan(rp.y, rp.x) - (p.progress - .5) * PI * 2.5)) \n\
     ); \n\
 } \n\
 \n\
@@ -74,7 +54,7 @@ void main() \n\
 } \
 "
 
-static const char Bounce_data[] = 
+static const char Radial_data[] = 
 SHADER_HEADER
 SHADER_PARAM
 SHADER_INPUT_OUTPUT_DATA

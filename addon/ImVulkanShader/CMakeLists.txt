@@ -222,6 +222,7 @@ compile_shader(filters/Bounce_vulkan Bounce_data)
 compile_shader(filters/BowTie_vulkan BowTie_data)
 compile_shader(filters/ButterflyWave_vulkan ButterflyWave_data)
 compile_shader(filters/Swap_vulkan Swap_data)
+compile_shader(filters/Radial_vulkan Radial_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -348,6 +349,7 @@ set(VKSHADER_SRCS
     filters/BowTie_vulkan.cpp
     filters/ButterflyWave_vulkan.cpp
     filters/Swap_vulkan.cpp
+    filters/Radial_vulkan.cpp
 )
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
@@ -442,6 +444,8 @@ set(VKSHADER_INCS
     filters/ButterflyWave_vulkan.h
     filters/Swap_shader.h
     filters/Swap_vulkan.h
+    filters/Radial_shader.h
+    filters/Radial_vulkan.h
 )
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
