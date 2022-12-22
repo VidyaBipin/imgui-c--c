@@ -244,6 +244,7 @@ compile_shader(fusions/ZoomInCircles_vulkan ZoomInCircles_data)
 compile_shader(fusions/Mosaic_vulkan Mosaic_data)
 compile_shader(fusions/BurnOut_vulkan BurnOut_data)
 compile_shader(fusions/Crosshatch_vulkan Crosshatch_data)
+compile_shader(fusions/CannabisLeaf_vulkan CannabisLeaf_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -500,6 +501,7 @@ set(VKSHADER_SRCS
     fusions/Mosaic_vulkan.cpp
     fusions/BurnOut_vulkan.cpp
     fusions/Crosshatch_vulkan.cpp
+    fusions/CannabisLeaf_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -560,6 +562,8 @@ set(VKSHADER_INCS
     fusions/BurnOut_vulkan.h
     fusions/Crosshatch_shader.h
     fusions/Crosshatch_vulkan.h
+    fusions/CannabisLeaf_shader.h
+    fusions/CannabisLeaf_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
