@@ -230,6 +230,7 @@ compile_shader(filters/WaterDrop_vulkan WaterDrop_data)
 compile_shader(filters/PageCurl_vulkan PageCurl_data)
 compile_shader(filters/GlitchMemories_vulkan GlitchMemories_data)
 compile_shader(filters/StereoViewer_vulkan StereoViewer_data)
+compile_shader(filters/LuminanceMelt_vulkan LuminanceMelt_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -364,6 +365,7 @@ set(VKSHADER_SRCS
     filters/PageCurl_vulkan.cpp
     filters/GlitchMemories_vulkan.cpp
     filters/StereoViewer_vulkan.cpp
+    filters/LuminanceMelt_vulkan.cpp
 )
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
@@ -474,6 +476,8 @@ set(VKSHADER_INCS
     filters/GlitchMemories_vulkan.h
     filters/StereoViewer_shader.h
     filters/StereoViewer_vulkan.h
+    filters/LuminanceMelt_shader.h
+    filters/LuminanceMelt_vulkan.h
 )
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
