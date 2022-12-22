@@ -240,6 +240,7 @@ compile_shader(fusions/Swirl_vulkan Swirl_data)
 compile_shader(fusions/CrossZoom_vulkan CrossZoom_data)
 compile_shader(fusions/Dreamy_vulkan Dreamy_data)
 compile_shader(fusions/GridFlip_vulkan GridFlip_data)
+compile_shader(fusions/ZoomInCircles_vulkan ZoomInCircles_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -492,6 +493,7 @@ set(VKSHADER_SRCS
     fusions/CrossZoom_vulkan.cpp
     fusions/Dreamy_vulkan.cpp
     fusions/GridFlip_vulkan.cpp
+    fusions/ZoomInCircles_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -544,6 +546,8 @@ set(VKSHADER_INCS
     fusions/Dreamy_vulkan.h
     fusions/GridFlip_shader.h
     fusions/GridFlip_vulkan.h
+    fusions/ZoomInCircles_shader.h
+    fusions/ZoomInCircles_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
