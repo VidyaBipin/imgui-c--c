@@ -238,6 +238,7 @@ compile_shader(fusions/ColourDistance_vulkan ColourDistance_data)
 compile_shader(fusions/CircleCrop_vulkan CircleCrop_data)
 compile_shader(fusions/Swirl_vulkan Swirl_data)
 compile_shader(fusions/CrossZoom_vulkan CrossZoom_data)
+compile_shader(fusions/Dreamy_vulkan Dreamy_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -488,6 +489,7 @@ set(VKSHADER_SRCS
     fusions/CircleCrop_vulkan.cpp
     fusions/Swirl_vulkan.cpp
     fusions/CrossZoom_vulkan.cpp
+    fusions/Dreamy_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -536,6 +538,8 @@ set(VKSHADER_INCS
     fusions/Swirl_vulkan.h
     fusions/CrossZoom_shader.h
     fusions/CrossZoom_vulkan.h
+    fusions/Dreamy_shader.h
+    fusions/Dreamy_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
