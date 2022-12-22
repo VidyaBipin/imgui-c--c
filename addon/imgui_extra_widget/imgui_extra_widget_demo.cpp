@@ -395,7 +395,7 @@ void ShowExtraWidgetDemoWindow()
                     case  62: ImGui::SpinnerFilledArcColor("SpinnerFilledArcColor", 16, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f * velocity, 4); ImGui::ShowTooltipOnHover("SpinnerFilledArcColor"); break;
                     case  63: ImGui::SpinnerCircleDrop("SpinnerCircleDrop", 16, 1.5f, 4.f, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f * velocity, IM_PI); ImGui::ShowTooltipOnHover("SpinnerCircleDrop"); break;
                     case  64: ImGui::SpinnerSurroundedIndicator("SpinnerSurroundedIndicator", 16, 5, ImColor(0, 0, 0), ImColor(255, 255, 255), 7.8f * velocity); ImGui::ShowTooltipOnHover("SpinnerSurroundedIndicator"); break;
-                    case  65: ImGui::SpinnerTrianglesSeletor("SpinnerTrianglesSeletor", 16, 8, ImColor(0, 0, 0), ImColor(255, 255, 255), 4.8f * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerTrianglesSeletor"); break;
+                    case  65: ImGui::SpinnerTrianglesSelector("SpinnerTrianglesSelector", 16, 8, ImColor(0, 0, 0), ImColor(255, 255, 255), 4.8f * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerTrianglesSelector"); break;
                     case  66: ImGui::SpinnerFlowingGradient("SpinnerFlowingFradient", 16, 6, ImColor(200, 80, 0), ImColor(80, 80, 80), 5 * velocity, IM_PI * 2.f); ImGui::ShowTooltipOnHover("SpinnerFlowingFradient"); break;
                     case  67: ImGui::SpinnerRotateSegments("SpinnerRotateSegments", 16, 4, ImColor(255, 255, 255), 3 * velocity, 4); ImGui::ShowTooltipOnHover("SpinnerRotateSegments"); break;
                     case  68: ImGui::SpinnerRotateSegments("SpinnerRotateSegments2", 16, 3, ImColor(255, 255, 255), 2.4f * velocity, 4, 2); ImGui::ShowTooltipOnHover("SpinnerRotateSegments2"); break;
@@ -433,6 +433,7 @@ void ShowExtraWidgetDemoWindow()
                     case 100: ImGui::SpinnerTrianglesShift("SpinnerTrianglesShift", 16, 8, ImColor(0, 0, 0), ImColor(255, 255, 255), 1.8f * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerTrianglesShift"); break;
                     case 101: ImGui::SpinnerCircularLines("SpinnerCircularLines", 16, ImColor(255, 255, 255), 1.5f * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerCircularLines"); break;
                     case 102: ImGui::SpinnerLoadingRing("SpinnerLoadingRing", 16, 6, ImColor(255, 0, 0), ImColor(255, 255, 255, 128), 1.f * velocity, 5); ImGui::ShowTooltipOnHover("SpinnerLoadingRing"); break;
+                    case 103: ImGui::SpinnerPatternRings("SpinnerPatternRings", 16, 2, ImColor(255, 255, 255), 4.1f * velocity, 3); ImGui::ShowTooltipOnHover("SpinnerPatternRings"); break;
 
                     // ...
                     default: break;

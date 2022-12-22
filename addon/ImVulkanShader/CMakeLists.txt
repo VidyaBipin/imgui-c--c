@@ -225,6 +225,7 @@ compile_shader(filters/Swap_vulkan Swap_data)
 compile_shader(filters/Radial_vulkan Radial_data)
 compile_shader(filters/WindowSlice_vulkan WindowSlice_data)
 compile_shader(filters/PolkaDots_vulkan PolkaDots_data)
+compile_shader(filters/SimpleZoom_vulkan SimpleZoom_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -354,6 +355,7 @@ set(VKSHADER_SRCS
     filters/Radial_vulkan.cpp
     filters/WindowSlice_vulkan.cpp
     filters/PolkaDots_vulkan.cpp
+    filters/SimpleZoom_vulkan.cpp
 )
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
@@ -454,6 +456,8 @@ set(VKSHADER_INCS
     filters/WindowSlice_vulkan.h
     filters/PolkaDots_shader.h
     filters/PolkaDots_vulkan.h
+    filters/SimpleZoom_shader.h
+    filters/SimpleZoom_vulkan.h
 )
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
