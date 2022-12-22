@@ -246,6 +246,7 @@ compile_shader(fusions/BurnOut_vulkan BurnOut_data)
 compile_shader(fusions/Crosshatch_vulkan Crosshatch_data)
 compile_shader(fusions/CannabisLeaf_vulkan CannabisLeaf_data)
 compile_shader(fusions/CrazyParametric_vulkan CrazyParametric_data)
+compile_shader(fusions/KaleidoScope_vulkan KaleidoScope_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -504,6 +505,7 @@ set(VKSHADER_SRCS
     fusions/Crosshatch_vulkan.cpp
     fusions/CannabisLeaf_vulkan.cpp
     fusions/CrazyParametric_vulkan.cpp
+    fusions/KaleidoScope_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -568,6 +570,8 @@ set(VKSHADER_INCS
     fusions/CannabisLeaf_vulkan.h
     fusions/CrazyParametric_shader.h
     fusions/CrazyParametric_vulkan.h
+    fusions/KaleidoScope_shader.h
+    fusions/KaleidoScope_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
