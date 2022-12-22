@@ -231,6 +231,7 @@ compile_shader(fusions/PageCurl_vulkan PageCurl_data)
 compile_shader(fusions/GlitchMemories_vulkan GlitchMemories_data)
 compile_shader(fusions/StereoViewer_vulkan StereoViewer_data)
 compile_shader(fusions/LuminanceMelt_vulkan LuminanceMelt_data)
+compile_shader(fusions/Perlin_vulkan Perlin_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -474,6 +475,7 @@ set(VKSHADER_SRCS
     fusions/GlitchMemories_vulkan.cpp
     fusions/StereoViewer_vulkan.cpp
     fusions/LuminanceMelt_vulkan.cpp
+    fusions/Perlin_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -508,6 +510,8 @@ set(VKSHADER_INCS
     fusions/StereoViewer_vulkan.h
     fusions/LuminanceMelt_shader.h
     fusions/LuminanceMelt_vulkan.h
+    fusions/Perlin_shader.h
+    fusions/Perlin_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
