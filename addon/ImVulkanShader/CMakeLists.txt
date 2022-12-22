@@ -217,20 +217,20 @@ compile_shader(filters/Waveform_shader.h Zero_data)
 compile_shader(filters/Waveform_shader.h ConvInt2Mat_data)
 compile_shader(filters/WhiteBalance_shader.h Filter_data)
 compile_shader(filters/lut3d/Lut3D_Shader.h LUT3D_data)
-compile_shader(filters/BookFlip_shader BookFlip_data)
-compile_shader(filters/Bounce_vulkan Bounce_data)
-compile_shader(filters/BowTie_vulkan BowTie_data)
-compile_shader(filters/ButterflyWave_vulkan ButterflyWave_data)
-compile_shader(filters/Swap_vulkan Swap_data)
-compile_shader(filters/Radial_vulkan Radial_data)
-compile_shader(filters/WindowSlice_vulkan WindowSlice_data)
-compile_shader(filters/PolkaDots_vulkan PolkaDots_data)
-compile_shader(filters/SimpleZoom_vulkan SimpleZoom_data)
-compile_shader(filters/WaterDrop_vulkan WaterDrop_data)
-compile_shader(filters/PageCurl_vulkan PageCurl_data)
-compile_shader(filters/GlitchMemories_vulkan GlitchMemories_data)
-compile_shader(filters/StereoViewer_vulkan StereoViewer_data)
-compile_shader(filters/LuminanceMelt_vulkan LuminanceMelt_data)
+compile_shader(fusions/BookFlip_shader BookFlip_data)
+compile_shader(fusions/Bounce_vulkan Bounce_data)
+compile_shader(fusions/BowTie_vulkan BowTie_data)
+compile_shader(fusions/ButterflyWave_vulkan ButterflyWave_data)
+compile_shader(fusions/Swap_vulkan Swap_data)
+compile_shader(fusions/Radial_vulkan Radial_data)
+compile_shader(fusions/WindowSlice_vulkan WindowSlice_data)
+compile_shader(fusions/PolkaDots_vulkan PolkaDots_data)
+compile_shader(fusions/SimpleZoom_vulkan SimpleZoom_data)
+compile_shader(fusions/WaterDrop_vulkan WaterDrop_data)
+compile_shader(fusions/PageCurl_vulkan PageCurl_data)
+compile_shader(fusions/GlitchMemories_vulkan GlitchMemories_data)
+compile_shader(fusions/StereoViewer_vulkan StereoViewer_data)
+compile_shader(fusions/LuminanceMelt_vulkan LuminanceMelt_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -309,7 +309,6 @@ set(VKSHADER_INCS
 )
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
-    filters/AlphaBlending_vulkan.cpp
     filters/colorspace_table.cpp
     filters/ColorConvert_vulkan.cpp
     filters/Resize_vulkan.cpp
@@ -352,25 +351,9 @@ set(VKSHADER_SRCS
     filters/Vector_vulkan.cpp
     filters/warpPerspective_vulkan.cpp
     filters/warpAffine_vulkan.cpp
-    filters/BookFlip_vulkan.cpp
-    filters/Bounce_vulkan.cpp
-    filters/BowTie_vulkan.cpp
-    filters/ButterflyWave_vulkan.cpp
-    filters/Swap_vulkan.cpp
-    filters/Radial_vulkan.cpp
-    filters/WindowSlice_vulkan.cpp
-    filters/PolkaDots_vulkan.cpp
-    filters/SimpleZoom_vulkan.cpp
-    filters/WaterDrop_vulkan.cpp
-    filters/PageCurl_vulkan.cpp
-    filters/GlitchMemories_vulkan.cpp
-    filters/StereoViewer_vulkan.cpp
-    filters/LuminanceMelt_vulkan.cpp
 )
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
-    filters/AlphaBlending_shader.h
-    filters/AlphaBlending_vulkan.h
     filters/ColorConvert_shader.h
     filters/ColorConvert_vulkan.h
     filters/Resize_shader.h
@@ -450,34 +433,6 @@ set(VKSHADER_INCS
     filters/warpPerspective_vulkan.h
     filters/warpAffine_shader.h
     filters/warpAffine_vulkan.h
-    filters/BookFlip_shader.h
-    filters/BookFlip_vulkan.h
-    filters/Bounce_shader.h
-    filters/Bounce_vulkan.h
-    filters/BowTie_shader.h
-    filters/BowTie_vulkan.h
-    filters/ButterflyWave_shader.h
-    filters/ButterflyWave_vulkan.h
-    filters/Swap_shader.h
-    filters/Swap_vulkan.h
-    filters/Radial_shader.h
-    filters/Radial_vulkan.h
-    filters/WindowSlice_shader.h
-    filters/WindowSlice_vulkan.h
-    filters/PolkaDots_shader.h
-    filters/PolkaDots_vulkan.h
-    filters/SimpleZoom_shader.h
-    filters/SimpleZoom_vulkan.h
-    filters/WaterDrop_shader.h
-    filters/WaterDrop_vulkan.h
-    filters/PageCurl_shader.h
-    filters/PageCurl_vulkan.h
-    filters/GlitchMemories_shader.h
-    filters/GlitchMemories_vulkan.h
-    filters/StereoViewer_shader.h
-    filters/StereoViewer_vulkan.h
-    filters/LuminanceMelt_shader.h
-    filters/LuminanceMelt_vulkan.h
 )
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
@@ -499,6 +454,64 @@ set(VKSHADER_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/filters
     ${CMAKE_CURRENT_SOURCE_DIR}/filters/lut3d
+)
+
+# add fusion
+set(VKSHADER_SRCS
+    ${VKSHADER_SRCS}
+    fusions/AlphaBlending_vulkan.cpp
+    fusions/BookFlip_vulkan.cpp
+    fusions/Bounce_vulkan.cpp
+    fusions/BowTie_vulkan.cpp
+    fusions/ButterflyWave_vulkan.cpp
+    fusions/Swap_vulkan.cpp
+    fusions/Radial_vulkan.cpp
+    fusions/WindowSlice_vulkan.cpp
+    fusions/PolkaDots_vulkan.cpp
+    fusions/SimpleZoom_vulkan.cpp
+    fusions/WaterDrop_vulkan.cpp
+    fusions/PageCurl_vulkan.cpp
+    fusions/GlitchMemories_vulkan.cpp
+    fusions/StereoViewer_vulkan.cpp
+    fusions/LuminanceMelt_vulkan.cpp
+)
+
+set(VKSHADER_INCS
+    ${VKSHADER_INCS}
+    fusions/AlphaBlending_shader.h
+    fusions/AlphaBlending_vulkan.h
+    fusions/BookFlip_shader.h
+    fusions/BookFlip_vulkan.h
+    fusions/Bounce_shader.h
+    fusions/Bounce_vulkan.h
+    fusions/BowTie_shader.h
+    fusions/BowTie_vulkan.h
+    fusions/ButterflyWave_shader.h
+    fusions/ButterflyWave_vulkan.h
+    fusions/Swap_shader.h
+    fusions/Swap_vulkan.h
+    fusions/Radial_shader.h
+    fusions/Radial_vulkan.h
+    fusions/WindowSlice_shader.h
+    fusions/WindowSlice_vulkan.h
+    fusions/PolkaDots_shader.h
+    fusions/PolkaDots_vulkan.h
+    fusions/SimpleZoom_shader.h
+    fusions/SimpleZoom_vulkan.h
+    fusions/WaterDrop_shader.h
+    fusions/WaterDrop_vulkan.h
+    fusions/PageCurl_shader.h
+    fusions/PageCurl_vulkan.h
+    fusions/GlitchMemories_shader.h
+    fusions/GlitchMemories_vulkan.h
+    fusions/StereoViewer_shader.h
+    fusions/StereoViewer_vulkan.h
+    fusions/LuminanceMelt_shader.h
+    fusions/LuminanceMelt_vulkan.h
+)
+set(VKSHADER_INC_DIRS
+    ${VKSHADER_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/fusions
 )
 
 include_directories(${VKSHADER_INC_DIRS})
@@ -523,8 +536,8 @@ add_dependencies(VkShader generate-comp)
 endif(VKSHADER_VULKAN_PREBUILD)
 
 set(VKSHADER_VERSION_MAJOR 1)
-set(VKSHADER_VERSION_MINOR 6)
-set(VKSHADER_VERSION_PATCH 1)
+set(VKSHADER_VERSION_MINOR 7)
+set(VKSHADER_VERSION_PATCH 0)
 set(VKSHADER_VERSION_STRING ${VKSHADER_VERSION_MAJOR}.${VKSHADER_VERSION_MINOR}.${VKSHADER_VERSION_PATCH})
 
 if(NOT VKSHADER_STATIC)
