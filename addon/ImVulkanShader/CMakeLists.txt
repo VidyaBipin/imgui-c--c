@@ -227,6 +227,7 @@ compile_shader(filters/WindowSlice_vulkan WindowSlice_data)
 compile_shader(filters/PolkaDots_vulkan PolkaDots_data)
 compile_shader(filters/SimpleZoom_vulkan SimpleZoom_data)
 compile_shader(filters/WaterDrop_vulkan WaterDrop_data)
+compile_shader(filters/PageCurl_vulkan PageCurl_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -358,6 +359,7 @@ set(VKSHADER_SRCS
     filters/PolkaDots_vulkan.cpp
     filters/SimpleZoom_vulkan.cpp
     filters/WaterDrop_vulkan.cpp
+    filters/PageCurl_vulkan.cpp
 )
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
@@ -462,6 +464,8 @@ set(VKSHADER_INCS
     filters/SimpleZoom_vulkan.h
     filters/WaterDrop_shader.h
     filters/WaterDrop_vulkan.h
+    filters/PageCurl_shader.h
+    filters/PageCurl_vulkan.h
 )
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
