@@ -235,6 +235,7 @@ compile_shader(fusions/Perlin_vulkan Perlin_data)
 compile_shader(fusions/DirectionalWarp_vulkan DirectionalWarp_data)
 compile_shader(fusions/Morph_vulkan Morph_data)
 compile_shader(fusions/ColourDistance_vulkan ColourDistance_data)
+compile_shader(fusions/CircleCrop_vulkan CircleCrop_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -482,6 +483,7 @@ set(VKSHADER_SRCS
     fusions/DirectionalWarp_vulkan.cpp
     fusions/Morph_vulkan.cpp
     fusions/ColourDistance_vulkan.cpp
+    fusions/CircleCrop_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -524,6 +526,8 @@ set(VKSHADER_INCS
     fusions/Morph_vulkan.h
     fusions/ColourDistance_shader.h
     fusions/ColourDistance_vulkan.h
+    fusions/CircleCrop_shader.h
+    fusions/CircleCrop_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
