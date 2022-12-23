@@ -269,6 +269,7 @@ compile_shader(fusions/RandomSquares_shader.h RandomSquares_data)
 compile_shader(fusions/RotateScale_shader.h RotateScale_data)
 compile_shader(fusions/SquaresWire_shader.h SquaresWire_data)
 compile_shader(fusions/Squeeze_shader.h Squeeze_data)
+compile_shader(fusions/Wind_shader.h Wind_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -552,6 +553,7 @@ set(VKSHADER_SRCS
     fusions/RotateScale_vulkan.cpp
     fusions/SquaresWire_vulkan.cpp
     fusions/Squeeze_vulkan.cpp
+    fusions/Wind_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -662,6 +664,8 @@ set(VKSHADER_INCS
     fusions/SquaresWire_vulkan.h
     fusions/Squeeze_shader.h
     fusions/Squeeze_vulkan.h
+    fusions/Wind_shader.h
+    fusions/Wind_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
@@ -691,7 +695,7 @@ endif(VKSHADER_VULKAN_PREBUILD)
 
 set(VKSHADER_VERSION_MAJOR 1)
 set(VKSHADER_VERSION_MINOR 7)
-set(VKSHADER_VERSION_PATCH 0)
+set(VKSHADER_VERSION_PATCH 1)
 set(VKSHADER_VERSION_STRING ${VKSHADER_VERSION_MAJOR}.${VKSHADER_VERSION_MINOR}.${VKSHADER_VERSION_PATCH})
 
 if(NOT VKSHADER_STATIC)
