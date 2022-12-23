@@ -261,6 +261,8 @@ add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
 endif(VKSHADER_VULKAN_PREBUILD)
 
+compile_shader(fusions/CircleBlur_shader.h CircleBlur_data)
+
 find_package(Glslang COMPONENTS Glslang SPIRV)
 find_package(SpirvTools)
 if(TARGET Glslang::Glslang)
@@ -523,6 +525,7 @@ set(VKSHADER_SRCS
     fusions/Ripple_vulkan.cpp
     fusions/Pinwheel_vulkan.cpp
     fusions/Burn_vulkan.cpp
+    fusions/CircleBlur_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -605,6 +608,8 @@ set(VKSHADER_INCS
     fusions/Pinwheel_vulkan.h
     fusions/Burn_shader.h
     fusions/Burn_vulkan.h
+    fusions/CircleBlur_shader.h
+    fusions/CircleBlur_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
