@@ -261,6 +261,7 @@ compile_shader(fusions/CrossWarp_shader.h CrossWarp_data)
 compile_shader(fusions/Cube_shader.h Cube_data)
 compile_shader(fusions/Doorway_shader.h Doorway_data)
 compile_shader(fusions/Flyeye_shader.h Flyeye_data)
+compile_shader(fusions/Heart_shader.h Heart_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -536,6 +537,7 @@ set(VKSHADER_SRCS
     fusions/Cube_vulkan.cpp
     fusions/Doorway_vulkan.cpp
     fusions/Flyeye_vulkan.cpp
+    fusions/Heart_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -630,6 +632,8 @@ set(VKSHADER_INCS
     fusions/Doorway_vulkan.h
     fusions/Flyeye_shader.h
     fusions/Flyeye_vulkan.h
+    fusions/Heart_shader.h
+    fusions/Heart_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
