@@ -255,12 +255,11 @@ compile_shader(fusions/DreamyZoom_shader.h DreamyZoom_data)
 compile_shader(fusions/DoomScreen_shader.h DoomScreen_data)
 compile_shader(fusions/Ripple_shader.h Ripple_data)
 compile_shader(fusions/Pinwheel_shader.h Pinwheel_data)
+compile_shader(fusions/Burn_shader.h Burn_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
 endif(VKSHADER_VULKAN_PREBUILD)
-
-
 
 find_package(Glslang COMPONENTS Glslang SPIRV)
 find_package(SpirvTools)
@@ -523,6 +522,7 @@ set(VKSHADER_SRCS
     fusions/DoomScreen_vulkan.cpp
     fusions/Ripple_vulkan.cpp
     fusions/Pinwheel_vulkan.cpp
+    fusions/Burn_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -603,6 +603,8 @@ set(VKSHADER_INCS
     fusions/Ripple_vulkan.h
     fusions/Pinwheel_shader.h
     fusions/Pinwheel_vulkan.h
+    fusions/Burn_shader.h
+    fusions/Burn_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
