@@ -250,6 +250,7 @@ compile_shader(fusions/CrazyParametric_shader.h CrazyParametric_data)
 compile_shader(fusions/KaleidoScope_shader.h KaleidoScope_data)
 compile_shader(fusions/WindowBlinds_shader.h WindowBlinds_data)
 compile_shader(fusions/Hexagonalize_shader.h Hexagonalize_data)
+compile_shader(fusions/GlitchDisplace_shader.h GlitchDisplace_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -511,6 +512,7 @@ set(VKSHADER_SRCS
     fusions/KaleidoScope_vulkan.cpp
     fusions/WindowBlinds_vulkan.cpp
     fusions/Hexagonalize_vulkan.cpp
+    fusions/GlitchDisplace_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -581,6 +583,8 @@ set(VKSHADER_INCS
     fusions/WindowBlinds_vulkan.h
     fusions/Hexagonalize_shader.h
     fusions/Hexagonalize_vulkan.h
+    fusions/GlitchDisplace_shader.h
+    fusions/GlitchDisplace_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
