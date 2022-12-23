@@ -257,6 +257,7 @@ compile_shader(fusions/Ripple_shader.h Ripple_data)
 compile_shader(fusions/Pinwheel_shader.h Pinwheel_data)
 compile_shader(fusions/Burn_shader.h Burn_data)
 compile_shader(fusions/ColorPhase_shader.h ColorPhase_data)
+compile_shader(fusions/CrossWarp_shader.h CrossWarp_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -528,6 +529,7 @@ set(VKSHADER_SRCS
     fusions/Burn_vulkan.cpp
     fusions/CircleBlur_vulkan.cpp
     fusions/ColorPhase_vulkan.cpp
+    fusions/CrossWarp_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -614,6 +616,8 @@ set(VKSHADER_INCS
     fusions/CircleBlur_vulkan.h
     fusions/ColorPhase_shader.h
     fusions/ColorPhase_vulkan.h
+    fusions/CrossWarp_shader.h
+    fusions/CrossWarp_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
