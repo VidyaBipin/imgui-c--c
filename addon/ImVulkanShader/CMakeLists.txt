@@ -253,6 +253,7 @@ compile_shader(fusions/Hexagonalize_shader.h Hexagonalize_data)
 compile_shader(fusions/GlitchDisplace_shader.h GlitchDisplace_data)
 compile_shader(fusions/DreamyZoom_shader.h DreamyZoom_data)
 compile_shader(fusions/DoomScreen_shader.h DoomScreen_data)
+compile_shader(fusions/Ripple_shader.h Ripple_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -519,6 +520,7 @@ set(VKSHADER_SRCS
     fusions/GlitchDisplace_vulkan.cpp
     fusions/DreamyZoom_vulkan.cpp
     fusions/DoomScreen_vulkan.cpp
+    fusions/Ripple_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -595,6 +597,8 @@ set(VKSHADER_INCS
     fusions/DreamyZoom_vulkan.h
     fusions/DoomScreen_shader.h
     fusions/DoomScreen_vulkan.h
+    fusions/Ripple_shader.h
+    fusions/Ripple_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
