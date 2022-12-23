@@ -247,6 +247,7 @@ compile_shader(fusions/Crosshatch_vulkan Crosshatch_data)
 compile_shader(fusions/CannabisLeaf_vulkan CannabisLeaf_data)
 compile_shader(fusions/CrazyParametric_vulkan CrazyParametric_data)
 compile_shader(fusions/KaleidoScope_vulkan KaleidoScope_data)
+compile_shader(fusions/WindowBlinds_vulkan WindowBlinds_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -506,6 +507,7 @@ set(VKSHADER_SRCS
     fusions/CannabisLeaf_vulkan.cpp
     fusions/CrazyParametric_vulkan.cpp
     fusions/KaleidoScope_vulkan.cpp
+    fusions/WindowBlinds_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -572,6 +574,8 @@ set(VKSHADER_INCS
     fusions/CrazyParametric_vulkan.h
     fusions/KaleidoScope_shader.h
     fusions/KaleidoScope_vulkan.h
+    fusions/WindowBlinds_shader.h
+    fusions/WindowBlinds_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
