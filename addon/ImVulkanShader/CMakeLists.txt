@@ -103,18 +103,18 @@ set(LINK_LIBS
     ${Vulkan_LIBRARY}
 )
 
-if(VKSHADER_VULKAN_PREBUILD)
+
 find_program(GLSLANGVALIDATOR_EXECUTABLE NAMES glslangValidator PATHS $ENV{VULKAN_SDK}/bin NO_CMAKE_FIND_ROOT_PATH)
 message(STATUS "VkShader Found glslangValidator: ${GLSLANGVALIDATOR_EXECUTABLE}")
-
-set(SHADER_COMP_FILES)
-set(SHADER_SPV_HEX_FILES)
-
 macro(compile_shader header data)
 generater_shader_comp(SHADER_COMP ${CMAKE_CURRENT_SOURCE_DIR}/${header} ${data})
 precompile_shader_spv(SHADER_SPV_HEX ${SHADER_COMP})
 list(APPEND SHADER_SPV_HEX_FILES ${SHADER_SPV_HEX})
 endmacro()
+
+if(VKSHADER_VULKAN_PREBUILD)
+set(SHADER_COMP_FILES)
+set(SHADER_SPV_HEX_FILES)
 #internal shaders
 compile_shader(imvk_Cast_shader.h cast_fp16_to_fp32_pack4)
 compile_shader(imvk_Cast_shader.h cast_fp16_to_fp32_pack8)
@@ -251,10 +251,13 @@ compile_shader(fusions/KaleidoScope_shader.h KaleidoScope_data)
 compile_shader(fusions/WindowBlinds_shader.h WindowBlinds_data)
 compile_shader(fusions/Hexagonalize_shader.h Hexagonalize_data)
 compile_shader(fusions/GlitchDisplace_shader.h GlitchDisplace_data)
+compile_shader(fusions/DreamyZoom_shader.h DreamyZoom_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
 endif(VKSHADER_VULKAN_PREBUILD)
+
+
 
 find_package(Glslang COMPONENTS Glslang SPIRV)
 find_package(SpirvTools)
@@ -513,6 +516,7 @@ set(VKSHADER_SRCS
     fusions/WindowBlinds_vulkan.cpp
     fusions/Hexagonalize_vulkan.cpp
     fusions/GlitchDisplace_vulkan.cpp
+    fusions/DreamyZoom_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -585,6 +589,8 @@ set(VKSHADER_INCS
     fusions/Hexagonalize_vulkan.h
     fusions/GlitchDisplace_shader.h
     fusions/GlitchDisplace_vulkan.h
+    fusions/DreamyZoom_shader.h
+    fusions/DreamyZoom_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
