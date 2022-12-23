@@ -153,8 +153,6 @@ compile_shader(imvk_copy_make_border_shader.h Filter_data)
 compile_shader(imvk_substract_mean_normalize_shader.h Filter_data)
 # filters
 compile_shader(filters/ALM_shader.h ALM_data)
-compile_shader(filters/AlphaBlending_shader.h AlphaBlending_data)
-compile_shader(filters/AlphaBlending_shader.h AlphaBlending_alpha_data)
 compile_shader(filters/Bilateral_shader.h Filter_data)
 compile_shader(filters/Brightness_shader.h Filter_data)
 compile_shader(filters/Canny_shader.h DSobelFilter_data)
@@ -217,37 +215,41 @@ compile_shader(filters/Waveform_shader.h Zero_data)
 compile_shader(filters/Waveform_shader.h ConvInt2Mat_data)
 compile_shader(filters/WhiteBalance_shader.h Filter_data)
 compile_shader(filters/lut3d/Lut3D_Shader.h LUT3D_data)
-compile_shader(fusions/BookFlip_shader BookFlip_data)
-compile_shader(fusions/Bounce_vulkan Bounce_data)
-compile_shader(fusions/BowTie_vulkan BowTie_data)
-compile_shader(fusions/ButterflyWave_vulkan ButterflyWave_data)
-compile_shader(fusions/Swap_vulkan Swap_data)
-compile_shader(fusions/Radial_vulkan Radial_data)
-compile_shader(fusions/WindowSlice_vulkan WindowSlice_data)
-compile_shader(fusions/PolkaDots_vulkan PolkaDots_data)
-compile_shader(fusions/SimpleZoom_vulkan SimpleZoom_data)
-compile_shader(fusions/WaterDrop_vulkan WaterDrop_data)
-compile_shader(fusions/PageCurl_vulkan PageCurl_data)
-compile_shader(fusions/GlitchMemories_vulkan GlitchMemories_data)
-compile_shader(fusions/StereoViewer_vulkan StereoViewer_data)
-compile_shader(fusions/LuminanceMelt_vulkan LuminanceMelt_data)
-compile_shader(fusions/Perlin_vulkan Perlin_data)
-compile_shader(fusions/DirectionalWarp_vulkan DirectionalWarp_data)
-compile_shader(fusions/Morph_vulkan Morph_data)
-compile_shader(fusions/ColourDistance_vulkan ColourDistance_data)
-compile_shader(fusions/CircleCrop_vulkan CircleCrop_data)
-compile_shader(fusions/Swirl_vulkan Swirl_data)
-compile_shader(fusions/CrossZoom_vulkan CrossZoom_data)
-compile_shader(fusions/Dreamy_vulkan Dreamy_data)
-compile_shader(fusions/GridFlip_vulkan GridFlip_data)
-compile_shader(fusions/ZoomInCircles_vulkan ZoomInCircles_data)
-compile_shader(fusions/Mosaic_vulkan Mosaic_data)
-compile_shader(fusions/BurnOut_vulkan BurnOut_data)
-compile_shader(fusions/Crosshatch_vulkan Crosshatch_data)
-compile_shader(fusions/CannabisLeaf_vulkan CannabisLeaf_data)
-compile_shader(fusions/CrazyParametric_vulkan CrazyParametric_data)
-compile_shader(fusions/KaleidoScope_vulkan KaleidoScope_data)
-compile_shader(fusions/WindowBlinds_vulkan WindowBlinds_data)
+# fusions
+compile_shader(fusions/AlphaBlending_shader.h AlphaBlending_data)
+compile_shader(fusions/AlphaBlending_shader.h AlphaBlending_alpha_data)
+compile_shader(fusions/BookFlip_shader.h BookFlip_data)
+compile_shader(fusions/Bounce_shader.h Bounce_data)
+compile_shader(fusions/BowTie_shader.h BowTie_data)
+compile_shader(fusions/ButterflyWave_shader.h ButterflyWave_data)
+compile_shader(fusions/Swap_shader.h Swap_data)
+compile_shader(fusions/Radial_shader.h Radial_data)
+compile_shader(fusions/WindowSlice_shader.h WindowSlice_data)
+compile_shader(fusions/PolkaDots_shader.h PolkaDots_data)
+compile_shader(fusions/SimpleZoom_shader.h SimpleZoom_data)
+compile_shader(fusions/WaterDrop_shader.h WaterDrop_data)
+compile_shader(fusions/PageCurl_shader.h PageCurl_data)
+compile_shader(fusions/GlitchMemories_shader.h GlitchMemories_data)
+compile_shader(fusions/StereoViewer_shader.h StereoViewer_data)
+compile_shader(fusions/LuminanceMelt_shader.h LuminanceMelt_data)
+compile_shader(fusions/Perlin_shader.h Perlin_data)
+compile_shader(fusions/DirectionalWarp_shader.h DirectionalWarp_data)
+compile_shader(fusions/Morph_shader.h Morph_data)
+compile_shader(fusions/ColourDistance_shader.h ColourDistance_data)
+compile_shader(fusions/CircleCrop_shader.h CircleCrop_data)
+compile_shader(fusions/Swirl_shader.h Swirl_data)
+compile_shader(fusions/CrossZoom_shader.h CrossZoom_data)
+compile_shader(fusions/Dreamy_shader.h Dreamy_data)
+compile_shader(fusions/GridFlip_shader.h GridFlip_data)
+compile_shader(fusions/ZoomInCircles_shader.h ZoomInCircles_data)
+compile_shader(fusions/Mosaic_shader.h Mosaic_data)
+compile_shader(fusions/BurnOut_shader.h BurnOut_data)
+compile_shader(fusions/Crosshatch_shader.h Crosshatch_data)
+compile_shader(fusions/CannabisLeaf_shader.h CannabisLeaf_data)
+compile_shader(fusions/CrazyParametric_shader.h CrazyParametric_data)
+compile_shader(fusions/KaleidoScope_shader.h KaleidoScope_data)
+compile_shader(fusions/WindowBlinds_shader.h WindowBlinds_data)
+compile_shader(fusions/Hexagonalize_shader.h Hexagonalize_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -508,6 +510,7 @@ set(VKSHADER_SRCS
     fusions/CrazyParametric_vulkan.cpp
     fusions/KaleidoScope_vulkan.cpp
     fusions/WindowBlinds_vulkan.cpp
+    fusions/Hexagonalize_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -576,6 +579,8 @@ set(VKSHADER_INCS
     fusions/KaleidoScope_vulkan.h
     fusions/WindowBlinds_shader.h
     fusions/WindowBlinds_vulkan.h
+    fusions/Hexagonalize_shader.h
+    fusions/Hexagonalize_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
