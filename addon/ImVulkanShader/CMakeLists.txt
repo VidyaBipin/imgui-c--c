@@ -260,6 +260,7 @@ compile_shader(fusions/ColorPhase_shader.h ColorPhase_data)
 compile_shader(fusions/CrossWarp_shader.h CrossWarp_data)
 compile_shader(fusions/Cube_shader.h Cube_data)
 compile_shader(fusions/Doorway_shader.h Doorway_data)
+compile_shader(fusions/Flyeye_shader.h Flyeye_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -534,6 +535,7 @@ set(VKSHADER_SRCS
     fusions/CrossWarp_vulkan.cpp
     fusions/Cube_vulkan.cpp
     fusions/Doorway_vulkan.cpp
+    fusions/Flyeye_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -626,6 +628,8 @@ set(VKSHADER_INCS
     fusions/Cube_vulkan.h
     fusions/Doorway_shader.h
     fusions/Doorway_vulkan.h
+    fusions/Flyeye_shader.h
+    fusions/Flyeye_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
