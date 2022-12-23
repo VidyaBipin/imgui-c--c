@@ -266,6 +266,7 @@ compile_shader(fusions/MultiplyBlend_shader.h MultiplyBlend_data)
 compile_shader(fusions/Pixelize_shader.h Pixelize_data)
 compile_shader(fusions/Polar_shader.h Polar_data)
 compile_shader(fusions/RandomSquares_shader.h RandomSquares_data)
+compile_shader(fusions/RotateScale_shader.h RotateScale_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -546,6 +547,7 @@ set(VKSHADER_SRCS
     fusions/Pixelize_vulkan.cpp
     fusions/Polar_vulkan.cpp
     fusions/RandomSquares_vulkan.cpp
+    fusions/RotateScale_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -650,6 +652,8 @@ set(VKSHADER_INCS
     fusions/Polar_vulkan.h
     fusions/RandomSquares_shader.h
     fusions/RandomSquares_vulkan.h
+    fusions/RotateScale_shader.h
+    fusions/RotateScale_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
