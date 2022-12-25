@@ -56,6 +56,7 @@ Index of this file:
 #include <limits.h>     // INT_MIN, INT_MAX
 #include <string>       // add by dicky for language support
 #include <map>          // add by dicky for language support
+#define FONTS_SCALE 2.f // define by dicky for clean fonts/icons
 
 // Enable SSE intrinsics if available
 #if (defined __SSE__ || defined __x86_64__ || defined _M_X64 || (defined(_M_IX86_FP) && (_M_IX86_FP >= 1))) && !defined(IMGUI_DISABLE_SSE)

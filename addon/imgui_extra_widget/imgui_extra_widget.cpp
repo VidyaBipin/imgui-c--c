@@ -7439,6 +7439,41 @@ void ImGui::SpinnerPatternSphere(const char *label, float radius, float thicknes
     }
 }
 
+void ImGui::SpinnerRingSynchronous(const char *label, float radius, float thickness, const ImColor &color, float speed, int elipses)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2.f);
+    num_segments *= 4;
+    const float aoffset = ImFmod((float)ImGui::GetTime(), 2.f * IM_PI);
+    const float bofsset = (aoffset > IM_PI) ? IM_PI : aoffset;
+    const float angle_offset = IM_PI * 2.f / num_segments;
+    float ared_min = 0, ared = 0;
+    if (aoffset > IM_PI)
+        ared_min = aoffset - IM_PI;
+    auto draw_ellipse = [&] (float alpha, float y, float r) {
+        window->DrawList->PathClear();
+        for (size_t i = 0; i <= num_segments + 1; i++)
+        {
+            ared = start + (i * angle_offset);
+            if (i * angle_offset < ared_min * 2)
+                continue;
+            if (i * angle_offset > bofsset * 2.f)
+                break;
+            float a = r;
+            float b = r * 0.25f;
+            const float xx = a * ImCos(ared) * ImCos(alpha) + b * ImSin(ared) * ImSin(alpha) + centre.x;
+            const float yy = b * ImSin(ared) * ImCos(alpha) - a * ImCos(ared) * ImSin(alpha) + pos.y + y;
+            window->DrawList->PathLineTo(ImVec2(xx, yy));
+        }
+        window->DrawList->PathStroke(color, false, thickness);
+    };
+    for (int i = 0; i < elipses; ++i)
+    {
+        float y = i * ((float)(size.y * 0.7f) / (float)elipses) + (size.y * 0.15f);
+        draw_ellipse(0, y, radius * ImSin((i + 1) * (IM_PI / (elipses + 1))));
+    }
+}
+
 void ImGui::SpinnerRotatedAtom(const char *label, float radius, float thickness, const ImColor &color, float speed, int elipses)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);

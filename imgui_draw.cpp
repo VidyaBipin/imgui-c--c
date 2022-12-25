@@ -2207,15 +2207,15 @@ static void         Decode85(const unsigned char* src, unsigned char* dst)
 ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
 {
     ImFont* font = nullptr;
-    float font_size = 16.0f;
+    float font_size = 16.0f * FONTS_SCALE;
 #if IMGUI_FONT_NO_LATIN && IMGUI_FONT_NO_UTF8
-    font_size = 14.0f;
+    font_size = 14.0f * FONTS_SCALE;
 #endif
     ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
     if (!font_cfg_template)
     {
-        font_cfg.OversampleH = 2;
-        font_cfg.OversampleV = 2;
+        font_cfg.OversampleH = 1;
+        font_cfg.OversampleV = 1;
         font_cfg.PixelSnapH = true;
     }
     if (font_cfg.SizePixels <= 0.0f)
@@ -2233,7 +2233,7 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
 #if IMGUI_FONT_SANS
     {
         ImFormatString(font_cfg.Name, IM_ARRAYSIZE(font_cfg.Name), "等宽正黑, %dpx", (int)font_cfg.SizePixels);
-        ImFont* cfont = AddFontFromMemoryCompressedBase85TTF(mono_sans_compressed_data_base85, 14.f, &font_cfg, glyph_ranges);
+        ImFont* cfont = AddFontFromMemoryCompressedBase85TTF(mono_sans_compressed_data_base85, 14.f * FONTS_SCALE, &font_cfg, glyph_ranges);
         if (font == nullptr) font = cfont;
     }
 #elif IMGUI_FONT_WEIHEI
@@ -2257,13 +2257,13 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
 #elif IMGUI_FONT_KAI
     {
         ImFormatString(font_cfg.Name, IM_ARRAYSIZE(font_cfg.Name), "等宽粗楷, %dpx", (int)font_cfg.SizePixels);
-        ImFont* cfont = AddFontFromMemoryCompressedBase85TTF(mono_kai_compressed_data_base85, 14.f, &font_cfg, glyph_ranges);
+        ImFont* cfont = AddFontFromMemoryCompressedBase85TTF(mono_kai_compressed_data_base85, 14.f * FONTS_SCALE, &font_cfg, glyph_ranges);
         if (font == nullptr) font = cfont;
     }
 #elif IMGUI_FONT_SONG
     {
         ImFormatString(font_cfg.Name, IM_ARRAYSIZE(font_cfg.Name), "等宽宋体, %dpx", (int)font_cfg.SizePixels);
-        ImFont* cfont = AddFontFromMemoryCompressedBase85TTF(mono_song_compressed_data_base85, 14.f, &font_cfg, glyph_ranges);
+        ImFont* cfont = AddFontFromMemoryCompressedBase85TTF(mono_song_compressed_data_base85, 14.f * FONTS_SCALE, &font_cfg, glyph_ranges);
         if (font == nullptr) font = cfont;
     }
 #elif IMGUI_FONT_YUAN
@@ -2276,9 +2276,9 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template)
 
 #if !IMGUI_FONT_NO_LATIN
     ImFontConfig ascii_config;
-    const float ascii_font_size = 14.0f;
-    ascii_config.OversampleH    = 4;
-    ascii_config.OversampleV    = 4;
+    const float ascii_font_size = 14.0f * FONTS_SCALE;
+    ascii_config.OversampleH    = 2;
+    ascii_config.OversampleV    = 2;
     ascii_config.MergeMode      = true; 
     ascii_config.PixelSnapH     = true;
     ascii_config.SizePixels     = ascii_font_size * 1.0f;

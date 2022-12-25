@@ -27,7 +27,7 @@ typedef struct ApplicationWindowProperty
     int pos_y       {0};
     int width       {1440};
     int height      {960};
-    float scale     {1.0};
+    float scale     {0.5};
     float fps       {30.f};
     bool resizable  {true};
     bool docking    {true};
