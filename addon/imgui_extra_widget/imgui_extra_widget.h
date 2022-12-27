@@ -561,6 +561,7 @@ IMGUI_API void SpinnerAtom(const char *label, float radius, float thickness, con
 IMGUI_API void SpinnerPatternRings(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3);
 IMGUI_API void SpinnerPatternSphere(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3);
 IMGUI_API void SpinnerRingSynchronous(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3);
+IMGUI_API void SpinnerRingWatermarks(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3);
 IMGUI_API void SpinnerRotatedAtom(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3);
 IMGUI_API void SpinnerRainbowBalls(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls = 5);
 IMGUI_API void SpinnerBarChartSine(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars = 5, int mode = 0);
