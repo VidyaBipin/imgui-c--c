@@ -60,13 +60,13 @@ void main() \n\
     if (point.x < 0.5) \n\
     { \n\
         sfpvec4 rgba_src1 = load_rgba(int(point.x * (p.w - 1)), int(point.y * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
-        vec2 left_point = skewLeft(point); \n\
+        vec2 left_point = clamp(skewLeft(point), vec2(0.f, 0.f), vec2(1.f, 1.f)); \n\
         sfpvec4 rgba_src2 = load_rgba_src2(int(left_point.x * (p.w2 - 1)), int(left_point.y * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
         result = mix(rgba_src1, rgba_src2 * addShade(), sfp(pr)); \n\
     } \n\
     else \n\
     { \n\
-        vec2 right_point = skewRight(point); \n\
+        vec2 right_point = clamp(skewRight(point), vec2(0.f, 0.f), vec2(1.f, 1.f)); \n\
         sfpvec4 rgba_src1 = load_rgba(int(right_point.x * (p.w - 1)), int(right_point.y * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
         sfpvec4 rgba_src2 = load_rgba_src2(int(point.x * (p.w2 - 1)), int(point.y * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
         result = mix(rgba_src1 * addShade(), rgba_src2, sfp(pr)); \n\
