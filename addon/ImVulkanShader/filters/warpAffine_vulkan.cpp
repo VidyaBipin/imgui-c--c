@@ -85,7 +85,10 @@ double warpAffine_vulkan::filter(const ImMat& src, ImMat& dst, const ImMat& M, I
     }
 
     VkMat dst_gpu;
-    dst_gpu.create_type(src.w, src.h, 4, dst.type, opt.blob_vkallocator);
+    if (dst.w != 0 && dst.h != 0)
+        dst_gpu.create_type(dst.w, dst.h, 4, dst.type, opt.blob_vkallocator);
+    else
+        dst_gpu.create_type(src.w, src.h, 4, dst.type, opt.blob_vkallocator);
 
     VkMat src_gpu;
     if (src.device == IM_DD_VULKAN)
