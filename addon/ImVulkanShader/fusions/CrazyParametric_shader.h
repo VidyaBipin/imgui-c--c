@@ -42,8 +42,8 @@ sfpvec4 transition(vec2 uv) \n\
     float y = (p.a - p.b) * sin(p.progress) - p.b * sin(p.progress * ((p.a / p.b) - 1.)); \n\
     vec2 offset = dir * vec2(sin(p.progress * dist * p.amplitude * x), sin(p.progress * dist * p.amplitude * y)) / p.smoothness; \n\
     vec2 p_offset = clamp(point + offset, vec2(0.f, 0.f), vec2(1.f, 1.f)); \n\
-    sfpvec4 rgba_to = load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
-    sfpvec4 rgba_from = load_rgba(int(p_offset.x * (p.w - 1)), int((1.f - p_offset.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba_to = load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
+    sfpvec4 rgba_from = load_rgba(int(p_offset.x * (p.w - 1)), int((1.f - p_offset.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     return mix(rgba_from, rgba_to, sfp(smoothstep(0.2, 1.0, p.progress))); \n\
 } \n\
 \n\
@@ -54,7 +54,7 @@ void main() \n\
         return; \n\
     vec2 point = vec2(float(uv.x) / float(p.out_w - 1), 1.f - float(uv.y) / float(p.out_h - 1)); \n\
     sfpvec4 result = transition(point); \n\
-    store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

@@ -62,7 +62,7 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
-    sfpvec4 rgba = load_rgba(gx, gy, p.w, p.cstep, p.format, p.type); \n\
+    sfpvec4 rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.format, p.type); \n\
     sfpvec4 hs = rgb_to_hsl(rgba); \n\
     sfpvec2 vector_point = hs_to_point(hs); \n\
     int length = int(hs.z * sfp(20.f)); \n\
@@ -184,10 +184,10 @@ void merge(int x, int y) \n\
         if (alpha > 0) \n\
         { \n\
             rgba.a = sfp(clamp(alpha / 255.f, 0.f, 1.f)); \n\
-            store_rgba(rgba, x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+            store_rgba(rgba, x, y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
         } else { \n\
             rgba.a = sfp(0.f); \n\
-            store_rgba(rgba, x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+            store_rgba(rgba, x, y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
         } \n\
     } \n\
 } \

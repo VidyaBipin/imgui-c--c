@@ -47,7 +47,7 @@ void main() \n\
             x = max(0, min(x, p.out_w - 1)); \n\
             y = max(0, min(y, p.out_h - 1)); \n\
             int index = j + i * 3; \n\
-            sfp value = load_rgba(x, y, p.w, p.cstep, p.in_format, p.in_type).r; \n\
+            sfp value = load_rgba(x, y, p.w, p.h, p.cstep, p.in_format, p.in_type).r; \n\
             vertical += value * verticalKernel[index]; \n\
             horizont += value * horizontKernel[index]; \n\
         } \n\
@@ -58,7 +58,7 @@ void main() \n\
     sum.y = vertical; \n\
     // dy \n\
     sum.z = horizont; \n\
-    store_rgb_float_no_clamp(sum, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgb_float_no_clamp(sum, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 
@@ -110,15 +110,15 @@ void main() \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
     //sfpvec2 suv = sfpvec2(gx, gy) + sfpvec2(0.5f); \n\
-    sfpvec3 gradinetAndDirection = load_rgb(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec3 gradinetAndDirection = load_rgb(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     sfpvec2 direction = normDirection(gradinetAndDirection.yz); \n\
-    sfp firstGradientMagnitude = load_rgb(gx + int(direction.x), gy + int(direction.y), p.w, p.cstep, p.in_format, p.in_type).x; \n\
-    sfp secondGradientMagnitude = load_rgb(gx - int(direction.x), gy - int(direction.y), p.w, p.cstep, p.in_format, p.in_type).x; \n\
+    sfp firstGradientMagnitude = load_rgb(gx + int(direction.x), gy + int(direction.y), p.w, p.h, p.cstep, p.in_format, p.in_type).x; \n\
+    sfp secondGradientMagnitude = load_rgb(gx - int(direction.x), gy - int(direction.y), p.w, p.h, p.cstep, p.in_format, p.in_type).x; \n\
     sfp multiplier = step(firstGradientMagnitude, gradinetAndDirection.x); \n\
     multiplier = multiplier * step(secondGradientMagnitude, gradinetAndDirection.x); \n\
     sfp thresholdCompliance = smoothstep(sfp(p.minThreshold), sfp(p.maxThreshold), gradinetAndDirection.x); \n\
     multiplier = multiplier * thresholdCompliance; \n\
-    store_gray(multiplier, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_gray(multiplier, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 
@@ -164,8 +164,8 @@ void main() \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
     sfp sum = sfp(0.0f); \n\
-    sfp current = load_gray_nms(gx, gy, p.nms_w, p.nms_cstep, p.nms_format, p.nms_type, 1.f); \n\
-    sfp alpha = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type).a; \n\
+    sfp current = load_gray_nms(gx, gy, p.nms_w, p.nms_h, p.nms_cstep, p.nms_format, p.nms_type, 1.f); \n\
+    sfp alpha = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type).a; \n\
     for (int i = 0; i < 3; ++i) \n\
     { \n\
         for (int j = 0; j < 3; ++j) \n\
@@ -175,13 +175,13 @@ void main() \n\
             // REPLICATE border \n\
             x = max(0, min(x, p.out_w - 1)); \n\
             y = max(0, min(y, p.out_h - 1)); \n\
-            sfp value = load_gray_nms(x, y, p.nms_w, p.nms_cstep, p.nms_format, p.nms_type, 1.f); \n\
+            sfp value = load_gray_nms(x, y, p.nms_w, p.nms_h, p.nms_cstep, p.nms_format, p.nms_type, 1.f); \n\
             sum += value; \n\
         } \n\
     } \n\
     sfp sumTest = step(sfp(1.5f), sum); \n\
     sfp pixelTest = step(sfp(0.01f), current); \n\
-    store_rgba(sfpvec4(sfpvec3(sumTest * pixelTest), alpha), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(sfpvec4(sfpvec3(sumTest * pixelTest), alpha), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

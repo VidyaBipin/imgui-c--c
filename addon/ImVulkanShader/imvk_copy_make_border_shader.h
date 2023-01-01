@@ -38,27 +38,27 @@ void main() \n\
     { \n\
         if (p.in_format == CF_ABGR || p.in_format == CF_ARGB) \n\
         { \n\
-            sfpvec4 rgba = load_rgba(uv.x - p.left, uv.y - p.top, p.w, p.cstep, p.in_format, p.in_type); \n\
+            sfpvec4 rgba = load_rgba(uv.x - p.left, uv.y - p.top, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
             if (p.out_format == CF_ABGR || p.out_format == CF_ARGB) \n\
-                store_rgba(rgba, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+                store_rgba(rgba, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
             else if (p.out_format == CF_BGR || p.out_format == CF_RGB) \n\
-                store_rgb(rgba.rgb, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+                store_rgb(rgba.rgb, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
         } \n\
         else if (p.in_format == CF_BGR || p.in_format == CF_RGB) \n\
         { \n\
-            sfpvec3 rgb = load_rgb(uv.x - p.left, uv.y - p.top, p.w, p.cstep, p.in_format, p.in_type); \n\
+            sfpvec3 rgb = load_rgb(uv.x - p.left, uv.y - p.top, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
             if (p.out_format == CF_ABGR || p.out_format == CF_ARGB) \n\
-                store_rgba(sfpvec4(rgb, sfp(1.0f)), uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+                store_rgba(sfpvec4(rgb, sfp(1.0f)), uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
             else if (p.out_format == CF_BGR || p.out_format == CF_RGB) \n\
-                store_rgb(rgb, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+                store_rgb(rgb, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
         } \n\
     } \n\
     else \n\
     { \n\
         if (p.out_format == CF_ABGR || p.out_format == CF_ARGB) \n\
-            store_rgba(sfpvec4(p.value, p.value, p.value, sfp(1.f)), uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+            store_rgba(sfpvec4(p.value, p.value, p.value, sfp(1.f)), uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
         else if (p.out_format == CF_BGR || p.out_format == CF_RGB) \n\
-            store_rgb(sfpvec3(p.value), uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+            store_rgb(sfpvec3(p.value), uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
     } \n\
 } \n\
 "

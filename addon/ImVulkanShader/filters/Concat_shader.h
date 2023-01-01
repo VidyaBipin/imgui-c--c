@@ -124,26 +124,26 @@ void main() \n\
     { \n\
         if (uv.x < p.w) \n\
         { \n\
-            sfpvec4 rgba = load_rgba(uv.x, uv.y, p.w, p.cstep, p.in_format, p.in_type); \n\
-            store_rgba(rgba, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+            sfpvec4 rgba = load_rgba(uv.x, uv.y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+            store_rgba(rgba, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
         } \n\
         else \n\
         { \n\
             sfpvec4 rgba = load2_rgba(uv.x - p.w, uv.y, p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
-            store_rgba(rgba, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+            store_rgba(rgba, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
         } \n\
     } \n\
     else \n\
     { \n\
         if (uv.y < p.h) \n\
         { \n\
-            sfpvec4 rgba = load_rgba(uv.x, uv.y, p.w, p.cstep, p.in_format, p.in_type); \n\
-            store_rgba(rgba, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+            sfpvec4 rgba = load_rgba(uv.x, uv.y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+            store_rgba(rgba, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
         } \n\
         else \n\
         { \n\
             sfpvec4 rgba = load2_rgba(uv.x, uv.y - p.h, p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
-            store_rgba(rgba, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+            store_rgba(rgba, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
         } \n\
     } \n\
 } \

@@ -122,6 +122,7 @@ void main()
 }
 )";
 
+// for shader common header
 #define SHADER_HEADER \
 "\
 #version 450 \n\
@@ -284,8 +285,10 @@ SHADER_LOAD_GRAY_INT16 \
 SHADER_LOAD_GRAY_FLOAT16 \
 SHADER_LOAD_GRAY_FLOAT32 \
 " \n\
-sfp load_gray(int x, int y, int w, int cstep, int format, int type, float scale) \n\
+sfp load_gray(int x, int y, int w, int h, int cstep, int format, int type, float scale) \n\
 { \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
     if (type == DT_INT8) \n\
         return load_gray_int8(x, y, w, cstep, format, scale); \n\
     else if (type == DT_INT16) \n\
@@ -358,8 +361,10 @@ SHADER_LOAD_RGB_INT16 \
 SHADER_LOAD_RGB_FLOAT16 \
 SHADER_LOAD_RGB_FLOAT32 \
 " \n\
-sfpvec3 load_rgb(int x, int y, int w, int cstep, int format, int type) \n\
+sfpvec3 load_rgb(int x, int y, int w, int h, int cstep, int format, int type) \n\
 { \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
     if (type == DT_INT8) \n\
         return load_rgb_int8(x, y, w, cstep, format); \n\
     else if (type == DT_INT16) \n\
@@ -436,8 +441,10 @@ SHADER_LOAD_RGBA_INT16 \
 SHADER_LOAD_RGBA_FLOAT16 \
 SHADER_LOAD_RGBA_FLOAT32 \
 " \n\
-sfpvec4 load_rgba(int x, int y, int w, int cstep, int format, int type) \n\
+sfpvec4 load_rgba(int x, int y, int w, int h, int cstep, int format, int type) \n\
 { \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
     if (type == DT_INT8) \n\
         return load_rgba_int8(x, y, w, cstep, format); \n\
     else if (type == DT_INT16) \n\
@@ -513,8 +520,10 @@ SHADER_LOAD_RGBA_NAME_INT16(src) \
 SHADER_LOAD_RGBA_NAME_FLOAT16(src) \
 SHADER_LOAD_RGBA_NAME_FLOAT32(src) \
 " \n\
-sfpvec4 load_rgba_"#src"(int x, int y, int w, int cstep, int format, int type) \n\
+sfpvec4 load_rgba_"#src"(int x, int y, int w, int h, int cstep, int format, int type) \n\
 { \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
     if (type == DT_INT8) \n\
         return load_rgba_int8_"#src"(x, y, w, cstep, format); \n\
     else if (type == DT_INT16) \n\
@@ -579,8 +588,10 @@ SHADER_LOAD_GRAY_NAME_INT16(src) \
 SHADER_LOAD_GRAY_NAME_FLOAT16(src) \
 SHADER_LOAD_GRAY_NAME_FLOAT32(src) \
 " \n\
-sfp load_gray_"#src"(int x, int y, int w, int cstep, int format, int type, float scale) \n\
+sfp load_gray_"#src"(int x, int y, int w, int h, int cstep, int format, int type, float scale) \n\
 { \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
     if (type == DT_INT8) \n\
         return load_gray_int8_"#src"(x, y, w, cstep, format, scale); \n\
     else if (type == DT_INT16) \n\
@@ -658,8 +669,10 @@ SHADER_LOAD_DST_RGBA_INT16 \
 SHADER_LOAD_DST_RGBA_FLOAT16 \
 SHADER_LOAD_DST_RGBA_FLOAT32 \
 " \n\
-sfpvec4 load_dst_rgba(int x, int y, int w, int cstep, int format, int type) \n\
+sfpvec4 load_dst_rgba(int x, int y, int w, int h, int cstep, int format, int type) \n\
 { \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
     if (type == DT_INT8) \n\
         return load_dst_rgba_int8(x, y, w, cstep, format); \n\
     else if (type == DT_INT16) \n\
@@ -716,8 +729,10 @@ SHADER_STORE_GRAY_INT16 \
 SHADER_STORE_GRAY_FLOAT16 \
 SHADER_STORE_GRAY_FLOAT32 \
 " \n\
-void store_gray(sfp val, int x, int y, int w, int cstep, int format, int type) \n\
+void store_gray(sfp val, int x, int y, int w, int h, int cstep, int format, int type) \n\
 { \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
     if (type == DT_INT8) \n\
         store_gray_int8(val, x, y, w, cstep, format); \n\
     else if (type == DT_INT16) \n\
@@ -780,8 +795,10 @@ SHADER_STORE_RGB_INT16 \
 SHADER_STORE_RGB_FLOAT16 \
 SHADER_STORE_RGB_FLOAT32 \
 " \n\
-void store_rgb(sfpvec3 val, int x, int y, int w, int cstep, int format, int type) \n\
+void store_rgb(sfpvec3 val, int x, int y, int w, int h, int cstep, int format, int type) \n\
 { \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
     if (type == DT_INT8) \n\
         store_rgb_int8(val, x, y, w, cstep, format); \n\
     else if (type == DT_INT16) \n\
@@ -848,8 +865,10 @@ SHADER_STORE_RGBA_INT16 \
 SHADER_STORE_RGBA_FLOAT16 \
 SHADER_STORE_RGBA_FLOAT32 \
 " \n\
-void store_rgba(sfpvec4 val, int x, int y, int w, int cstep, int format, int type) \n\
+void store_rgba(sfpvec4 val, int x, int y, int w, int h, int cstep, int format, int type) \n\
 { \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
     if (type == DT_INT8) \n\
         store_rgba_int8(val, x, y, w, cstep, format); \n\
     else if (type == DT_INT16) \n\
@@ -960,8 +979,10 @@ void store_rgb_float32_no_clamp(sfpvec3 val, int x, int y, int w, int cstep, int
 SHADER_STORE_RGB_FLOAT16_NO_CLAMP \
 SHADER_STORE_RGB_FLOAT32_NO_CLAMP \
 " \n\
-void store_rgb_float_no_clamp(sfpvec3 val, int x, int y, int w, int cstep, int format, int type) \n\
+void store_rgb_float_no_clamp(sfpvec3 val, int x, int y, int w, int h, int cstep, int format, int type) \n\
 { \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
     if (type == DT_FLOAT16) \n\
         store_rgb_float16_no_clamp(val, x, y, w, cstep, format); \n\
     else if (type == DT_FLOAT32) \n\
@@ -998,8 +1019,10 @@ void store_rgba_float32_no_clamp_"#dst"(sfpvec4 val, int x, int y, int w, int cs
 SHADER_STORE_RGBA_FLOAT16_NO_CLAMP(dst) \
 SHADER_STORE_RGBA_FLOAT32_NO_CLAMP(dst) \
 " \n\
-void store_rgba_float_no_clamp_"#dst"(sfpvec4 val, int x, int y, int w, int cstep, int format, int type) \n\
+void store_rgba_float_no_clamp_"#dst"(sfpvec4 val, int x, int y, int w, int h, int cstep, int format, int type) \n\
 { \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
     if (type == DT_FLOAT16) \n\
         store_rgba_float16_no_clamp_"#dst"(val, x, y, w, cstep, format); \n\
     else if (type == DT_FLOAT32) \n\
@@ -1040,8 +1063,10 @@ sfpvec4 load_float32_rgba_"#src"(int x, int y, int w, int cstep, int format) \n\
 SHADER_LOAD_FLOAT16_RGBA(src) \
 SHADER_LOAD_FLOAT32_RGBA(src) \
 " \n\
-sfpvec4 load_float_rgba_"#src"(int x, int y, int w, int cstep, int format, int type) \n\
+sfpvec4 load_float_rgba_"#src"(int x, int y, int w, int h, int cstep, int format, int type) \n\
 { \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
     if (type == DT_FLOAT16) \n\
         return load_float16_rgba_"#src"(x, y, w, cstep, format); \n\
     else if (type == DT_FLOAT32) \n\
@@ -1053,8 +1078,10 @@ sfpvec4 load_float_rgba_"#src"(int x, int y, int w, int cstep, int format, int t
 
 #define SHADER_LOAD_FLOAT16_GRAY(src) \
 " \n\
-sfp load_float16_gray_"#src"(int x, int y, int w, int cstep, int format) \n\
+sfp load_float16_gray_"#src"(int x, int y, int w, int h, int cstep, int format) \n\
 { \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
     sfp rgb_in = sfp(0.f); \n\
     ivec3 i_offset = (y * w + x) * cstep + ivec3(0, 0, 0); \n\
     rgb_in = sfp("#src"_data_float16[i_offset.x]); \n\
@@ -1064,8 +1091,10 @@ sfp load_float16_gray_"#src"(int x, int y, int w, int cstep, int format) \n\
 
 #define SHADER_LOAD_FLOAT32_GRAY(src) \
 " \n\
-sfp load_float32_gray_"#src"(int x, int y, int w, int cstep, int format) \n\
+sfp load_float32_gray_"#src"(int x, int y, int w, int h, int cstep, int format) \n\
 { \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
     sfp rgb_in = sfp(0.f); \n\
     ivec3 i_offset = (y * w + x) * cstep + ivec3(0, 0, 0); \n\
     rgb_in = sfp("#src"_data_float32[i_offset.x]); \n\

@@ -123,9 +123,9 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
-    sfpvec4 color = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 color = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     sfpvec3 result = balance(color.rgb); \n\
-    store_rgba(sfpvec4(result, color.a), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(sfpvec4(result, color.a), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \n\
 "
 

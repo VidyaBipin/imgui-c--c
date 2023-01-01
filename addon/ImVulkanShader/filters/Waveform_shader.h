@@ -30,7 +30,7 @@ void main() \n\
         return; \n\
     int dx = p.separate == 1 ? gx / 3 : gx; \n\
     int ox = p.separate == 1 ? p.out_w / 3 : 0; \n\
-    sfpvec4 rgba = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     int dyr = int(rgba.r * sfp(p.out_h - 1)); \n\
     ivec4 offset_r = (dyr * p.out_w + dx) * p.out_cstep + ivec4(0, 1, 2, 3); \n\
     int dyg = int(rgba.g * sfp(p.out_h - 1)); \n\

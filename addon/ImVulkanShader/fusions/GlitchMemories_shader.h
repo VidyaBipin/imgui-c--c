@@ -39,13 +39,13 @@ sfpvec4 transition(vec2 point) \n\
     vec2 green = clamp(point + dist * .3, vec2(0.f, 0.f), vec2(1.f, 1.f)); \n\
     vec2 blue = clamp(point + dist * .5, vec2(0.f, 0.f), vec2(1.f, 1.f)); \n\
 \n\
-    sfpvec4 rgba_from_red = load_rgba(int(red.x * (p.w - 1)), int((1.f - red.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
-    sfpvec4 rgba_from_green = load_rgba(int(green.x * (p.w - 1)), int((1.f - green.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
-    sfpvec4 rgba_from_blue = load_rgba(int(blue.x * (p.w - 1)), int((1.f - blue.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba_from_red = load_rgba(int(red.x * (p.w - 1)), int((1.f - red.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba_from_green = load_rgba(int(green.x * (p.w - 1)), int((1.f - green.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba_from_blue = load_rgba(int(blue.x * (p.w - 1)), int((1.f - blue.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
 \n\
-    sfpvec4 rgba_to_red = load_rgba_src2(int(red.x * (p.w2 - 1)), int((1.f - red.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
-    sfpvec4 rgba_to_green = load_rgba_src2(int(green.x * (p.w2 - 1)), int((1.f - green.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
-    sfpvec4 rgba_to_blue = load_rgba_src2(int(blue.x * (p.w2 - 1)), int((1.f - blue.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
+    sfpvec4 rgba_to_red = load_rgba_src2(int(red.x * (p.w2 - 1)), int((1.f - red.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
+    sfpvec4 rgba_to_green = load_rgba_src2(int(green.x * (p.w2 - 1)), int((1.f - green.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
+    sfpvec4 rgba_to_blue = load_rgba_src2(int(blue.x * (p.w2 - 1)), int((1.f - blue.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
 \n\
     return sfpvec4(mix(rgba_from_red, rgba_to_red, sfp(p.progress)).r, mix(rgba_from_green, rgba_to_green, sfp(p.progress)).g, mix(rgba_from_blue, rgba_to_blue, sfp(p.progress)).b, sfp(1.0)); \n\
 } \n\
@@ -57,7 +57,7 @@ void main() \n\
         return; \n\
     vec2 point = vec2(float(uv.x) / float(p.out_w - 1), 1.f - float(uv.y) / float(p.out_h - 1)); \n\
     sfpvec4 result = transition(point); \n\
-    store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

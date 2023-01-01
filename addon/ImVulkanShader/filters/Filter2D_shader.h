@@ -31,7 +31,7 @@ void main() \n\
     ivec2 uv = ivec2(gl_GlobalInvocationID.xy); \n\
     if (uv.x >= p.out_w || uv.y >= p.out_h) \n\
         return; \n\
-    sfp alpha = load_rgba(uv.x, uv.y, p.w, p.cstep, p.in_format, p.in_type).a; \n\
+    sfp alpha = load_rgba(uv.x, uv.y, p.w, p.h, p.cstep, p.in_format, p.in_type).a; \n\
     sfpvec3 sum = sfpvec3(sfp(0.0f)); \n\
     int kInd = 0; \n\
     for (int i = 0; i < p.yksize; ++i) \n\
@@ -43,11 +43,11 @@ void main() \n\
             // REPLICATE border \n\
             x = max(0, min(x, p.out_w - 1)); \n\
             y = max(0, min(y, p.out_h - 1)); \n\
-            sfpvec3 rgb = load_rgba(x, y, p.w, p.cstep, p.in_format, p.in_type).rgb * sfp(kernel_data[kInd++]); \n\
+            sfpvec3 rgb = load_rgba(x, y, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb * sfp(kernel_data[kInd++]); \n\
             sum = sum + rgb; \n\
         } \n\
     } \n\
-    store_rgba(sfpvec4(sum, alpha), uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(sfpvec4(sum, alpha), uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

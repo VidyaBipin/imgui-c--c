@@ -113,7 +113,7 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
-    sfpvec4 src_rgba = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 src_rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     sfpvec3 blur_rgb = load_blur_rgba(gx, gy, p.blur_w, p.blur_cstep, p.blur_format, p.blur_type).rgb; \n\
     sfpvec3 diff = abs(src_rgba.rgb - blur_rgb); \n\
     sfpvec4 result = sfpvec4(0.f); \n\
@@ -131,7 +131,7 @@ void main() \n\
         result.b = src_rgba.b; \n\
     else \n\
         result.b = clamp(amount.b, sfp(0.f), sfp(1.0f)); \n\
-    store_rgba(result, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

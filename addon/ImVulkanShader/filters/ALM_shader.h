@@ -54,7 +54,7 @@ sfpvec3 xyz_to_rgb(sfpvec3 xyz) \n\
 } \n\
 sfpvec4 alm(int x, int y) \n\
 { \n\
-    sfpvec4 rgba = load_rgba(x, y, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba = load_rgba(x, y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     sfpvec3 xyz = rgb_to_xyz(rgba.rgb); \n\
     sfp xx = xyz.x / (xyz.x + xyz.y + xyz.z); \n\
     sfp yy = xyz.y / (xyz.x + xyz.y + xyz.z); \n\
@@ -79,7 +79,7 @@ void main() \n\
         return; \n\
 \n\
     sfpvec4 vout = alm(gx, gy); \n\
-    store_rgba(vout, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(vout, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

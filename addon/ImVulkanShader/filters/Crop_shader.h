@@ -29,8 +29,8 @@ void main() \n\
     ivec2 uv = ivec2(gl_GlobalInvocationID.xy); \n\
     if (uv.x >= p.out_w || uv.y >= p.out_h) \n\
         return; \n\
-    sfpvec4 result = load_rgba(uv.x + p._x, uv.y + p._y, p.w, p.cstep, p.in_format, p.in_type); \n\
-    store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    sfpvec4 result = load_rgba(uv.x + p._x, uv.y + p._y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 
@@ -81,13 +81,13 @@ void main() \n\
     if (sre_pos.x < p._x || sre_pos.x >= p._x + p._w || sre_pos.y < p._y || sre_pos.y >= p._y + p._h) \n\
     { \n\
         if (p.fill == 1) \n\
-            store_rgba(sfpvec4(0.f), uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+            store_rgba(sfpvec4(0.f), uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
         return; \n\
     } \n\
     else \n\
     { \n\
-        sfpvec4 result = load_rgba(sre_pos.x, sre_pos.y, p.w, p.cstep, p.in_format, p.in_type); \n\
-        store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+        sfpvec4 result = load_rgba(sre_pos.x, sre_pos.y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+        store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
     } \n\
 } \
 "

@@ -52,8 +52,8 @@ sfpvec4 transition(vec2 uv) \n\
     point.y = sin(angle) * dist + 0.5; \n\
     point = clamp(point, vec2(0.f, 0.f), vec2(1.f, 1.f)); \n\
     sfpvec4 c = p.progress < 0.5 ? \n\
-                load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type) : \n\
-                load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
+                load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type) : \n\
+                load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
 \n\
     // Finally, apply the color \n\
     return c + sfp((p.progress < 0.5 ? mix(0.0, 1.0, phase) : mix(1.0, 0.0, phase))); \n\
@@ -66,7 +66,7 @@ void main() \n\
         return; \n\
     vec2 point = vec2(float(uv.x) / float(p.out_w - 1), 1.f - float(uv.y) / float(p.out_h - 1)); \n\
     sfpvec4 result = transition(point); \n\
-    store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

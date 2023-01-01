@@ -121,8 +121,8 @@ void main() \n\
         return; \n\
     vec2 point = vec2(float(uv.x) / float(p.w), float(uv.y) / float(p.h)); \n\
     sfpvec4 result = sfpvec4(0.f); \n\
-    sfpvec4 rgba_src1 = load_rgba(uv.x, uv.y, p.w, p.cstep, p.in_format, p.in_type); \n\
-    sfpvec4 rgba_src2 = load_rgba_src2(uv.x, uv.y, p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
+    sfpvec4 rgba_src1 = load_rgba(uv.x, uv.y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba_src2 = load_rgba_src2(uv.x, uv.y, p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
     if (p.direction == 0) \n\
     { \n\
         if (in_left_triangle(point)) \n\
@@ -272,7 +272,7 @@ void main() \n\
             } \n\
         } \n\
     } \n\
-    store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

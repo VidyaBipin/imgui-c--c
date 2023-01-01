@@ -48,13 +48,13 @@ sfpvec4 transition(vec2 point) \n\
     float inv = 1. - p.progress; \n\
     float disp = compute(point, vec2(0.5, 0.5)); \n\
     vec2 to_point = clamp(point + inv * disp, vec2(0, 0), vec2(1.f, 1.f)); \n\
-    sfpvec4 texTo = load_rgba_src2(int(to_point.x * (p.w2 - 1)), int(to_point.y * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
+    sfpvec4 texTo = load_rgba_src2(int(to_point.x * (p.w2 - 1)), int(to_point.y * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
     vec2 from_p1 = clamp(point + p.progress * disp * (1.0 - p.colorSeparation), vec2(0, 0), vec2(1.f, 1.f)); \n\
     vec2 from_p2 = clamp(point + p.progress * disp, vec2(0, 0), vec2(1.f, 1.f)); \n\
     vec2 from_p3 = clamp(point + p.progress * disp * (1.0 + p.colorSeparation), vec2(0, 0), vec2(1.f, 1.f)); \n\
-    sfpvec4 texFrom_p1 = load_rgba(int(from_p1.x * (p.w - 1)), int(from_p1.y * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
-    sfpvec4 texFrom_p2 = load_rgba(int(from_p2.x * (p.w - 1)), int(from_p2.y * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
-    sfpvec4 texFrom_p3 = load_rgba(int(from_p3.x * (p.w - 1)), int(from_p3.y * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 texFrom_p1 = load_rgba(int(from_p1.x * (p.w - 1)), int(from_p1.y * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 texFrom_p2 = load_rgba(int(from_p2.x * (p.w - 1)), int(from_p2.y * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 texFrom_p3 = load_rgba(int(from_p3.x * (p.w - 1)), int(from_p3.y * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     sfpvec4 texFrom = sfpvec4( \n\
         texFrom_p1.r, \n\
         texFrom_p2.g, \n\
@@ -70,7 +70,7 @@ void main() \n\
         return; \n\
     vec2 point = vec2(float(uv.x) / float(p.out_w - 1), float(uv.y) / float(p.out_h - 1)); \n\
     sfpvec4 result = transition(point); \n\
-    store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

@@ -31,18 +31,18 @@ void main() \n\
     if (uv.x >= p.out_w || uv.y >= p.out_h) \n\
         return; \n\
     sfpvec4 result; \n\
-    sfpvec4 rgba_dst = load_dst_rgba(uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    sfpvec4 rgba_dst = load_dst_rgba(uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
     if (uv.x - p.x_offset >= 0 && uv.y - p.y_offset >= 0 && \n\
         uv.x - p.x_offset < p.w && uv.y - p.y_offset < p.h) \n\
     { \n\
-        sfpvec4 rgba_src = load_rgba(uv.x - p.x_offset, uv.y - p.y_offset, p.w, p.cstep, p.in_format, p.in_type); \n\
+        sfpvec4 rgba_src = load_rgba(uv.x - p.x_offset, uv.y - p.y_offset, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
         result = sfpvec4(mix(rgba_dst.rgb, rgba_src.rgb, rgba_src.a * sfp(p.alpha)), sfp(1.0)); \n\
     } \n\
     else \n\
     { \n\
         result = rgba_dst; \n\
     } \n\
-    store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

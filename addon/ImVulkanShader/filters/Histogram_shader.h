@@ -26,7 +26,7 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
-    sfpvec4 rgba = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     rgba.a = sfp(0.299) * rgba.r + sfp(0.587) * rgba.g + sfp(0.114) * rgba.b; \n\
     uint rid = uint(floor(rgba.r * sfp(p.out_w - 1))) + 0 * p.out_cstep; \n\
     uint gid = uint(floor(rgba.g * sfp(p.out_w - 1))) + 1 * p.out_cstep; \n\

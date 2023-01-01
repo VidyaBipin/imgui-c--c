@@ -30,7 +30,7 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
-    sfpvec4 color = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 color = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     ivec4 color_index = ivec4(floor(color * sfp(p.curve_w - 1))); \n\
     sfpvec4 result = sfpvec4(0.f); \n\
     sfp yuv_org = sfp(0.299) * color.r + sfp(0.587) * color.g + sfp(0.114) * color.b; \n\
@@ -42,7 +42,7 @@ void main() \n\
     int y_index = int(floor(yuv * sfp(p.curve_w))); \n\
     deta_y += sfp(curve[y_index]) - yuv; \n\
     result += deta_y; \n\
-    store_rgba(sfpvec4(result.rgb, color.a), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(sfpvec4(result.rgb, color.a), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

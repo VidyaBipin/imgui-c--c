@@ -32,17 +32,17 @@ sfpvec4 sharpen(int x, int y) \n\
     int y1 = min(y + 1, p.h - 1); \n\
     int x0 = max(x - 1, 0); \n\
     int x1 = min(x + 1, p.w - 1); \n\
-    sfpvec4 current = load_rgba(x , y , p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 current = load_rgba(x , y , p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
 \n\
-    sfpvec3 a = load_rgba(x0, y0, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
-    sfpvec3 b = load_rgba(x , y0, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
-    sfpvec3 c = load_rgba(x1, y0, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
-    sfpvec3 d = load_rgba(x0, y , p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
+    sfpvec3 a = load_rgba(x0, y0, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb; \n\
+    sfpvec3 b = load_rgba(x , y0, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb; \n\
+    sfpvec3 c = load_rgba(x1, y0, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb; \n\
+    sfpvec3 d = load_rgba(x0, y , p.w, p.h, p.cstep, p.in_format, p.in_type).rgb; \n\
     sfpvec3 e = current.rgb; \n\
-    sfpvec3 f = load_rgba(x1, y , p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
-    sfpvec3 g = load_rgba(x0, y1, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
-    sfpvec3 h = load_rgba(x , y1, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
-    sfpvec3 i = load_rgba(x1, y1, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
+    sfpvec3 f = load_rgba(x1, y , p.w, p.h, p.cstep, p.in_format, p.in_type).rgb; \n\
+    sfpvec3 g = load_rgba(x0, y1, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb; \n\
+    sfpvec3 h = load_rgba(x , y1, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb; \n\
+    sfpvec3 i = load_rgba(x1, y1, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb; \n\
 \n\
     sfp mn, mn2, mx, mx2; \n\
     sfp amp, weight; \n\
@@ -106,7 +106,7 @@ void main() \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
     sfpvec4 result = sharpen(gx, gy); \n\
-    store_rgba(result, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

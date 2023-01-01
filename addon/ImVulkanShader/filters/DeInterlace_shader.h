@@ -23,17 +23,17 @@ layout (push_constant) uniform parameter \n\
 " \n\
 void deinterlace(int x, int y) \n\
 { \n\
-    sfpvec4 d0 = load_rgba(x, y + 0, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 d0 = load_rgba(x, y + 0, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     if (y % 2 == 0 || y == p.out_h -1) \n\
     { \n\
-        store_rgba(d0, x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+        store_rgba(d0, x, y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
     } \n\
     else \n\
     { \n\
-        sfpvec4 m1 = load_rgba(x, y < 2 ? y - 1 : y - 2, p.w, p.cstep, p.in_format, p.in_type); \n\
-        sfpvec4 s0 = load_rgba(x, y - 1, p.w, p.cstep, p.in_format, p.in_type); \n\
-        sfpvec4 p1 = load_rgba(x, y + 1, p.w, p.cstep, p.in_format, p.in_type); \n\
-        sfpvec4 p2 = load_rgba(x, y + 2, p.w, p.cstep, p.in_format, p.in_type); \n\
+        sfpvec4 m1 = load_rgba(x, y < 2 ? y - 1 : y - 2, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+        sfpvec4 s0 = load_rgba(x, y - 1, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+        sfpvec4 p1 = load_rgba(x, y + 1, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+        sfpvec4 p2 = load_rgba(x, y + 2, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
         sfpvec4 sum = sfpvec4(0); \n\
         sum -= m1; \n\
         sum += s0 * sfpvec4(4.0); \n\
@@ -47,7 +47,7 @@ void deinterlace(int x, int y) \n\
         cm.g = sfp(table_data[int(sum.g * sfp(256.0)) + 1024]); \n\
         cm.b = sfp(table_data[int(sum.b * sfp(256.0)) + 1024]); \n\
         cm.a = d0.a; \n\
-        store_rgba(cm, x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+        store_rgba(cm, x, y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
     } \n\
 } \
 "

@@ -73,17 +73,17 @@ sfpvec4 seeThrough(float yc, vec2 p1, mat3 rotation, mat3 rrotation) \n\
     vec3 point = hitPoint(hitAngle, yc, rotation * vec3(p1, 1.0), rrotation); \n\
     if (yc <= 0.0 && (point.x < 0.0 || point.y < 0.0 || point.x > 1.0 || point.y > 1.0)) \n\
     { \n\
-        sfpvec4 rgba_to = load_rgba_src2(int(p1.x * (p.w2 - 1)), int((1.f - p1.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
+        sfpvec4 rgba_to = load_rgba_src2(int(p1.x * (p.w2 - 1)), int((1.f - p1.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
         return rgba_to; \n\
     } \n\
 \n\
     if (yc > 0.0) \n\
     { \n\
-        sfpvec4 rgba_from = load_rgba(int(p1.x * (p.w - 1)), int((1.f - p1.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+        sfpvec4 rgba_from = load_rgba(int(p1.x * (p.w - 1)), int((1.f - p1.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
         return rgba_from; \n\
     } \n\
 \n\
-    sfpvec4 color = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 color = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     sfpvec4 tcolor = sfpvec4(0.0); \n\
     return antiAlias(color, tcolor, distanceToEdge(point)); \n\
 } \n\
@@ -105,7 +105,7 @@ sfpvec4 seeThroughWithShadow(float yc, vec2 p, vec3 point, mat3 rotation, mat3 r
 \n\
 sfpvec4 backside(float yc, vec3 point) \n\
 { \n\
-    sfpvec4 color = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 color = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     float gray = (color.r + color.b + color.g) / 15.0; \n\
     gray += (8.0 / 10.0) * (pow(1.0 - abs(yc / cylinderRadius), 2.0 / 10.0) / 2.0 + (5.0 / 10.0)); \n\
     color.rgb = sfpvec3(sfp(gray)); \n\
@@ -132,7 +132,7 @@ sfpvec4 behindSurface(vec2 p1, float yc, vec3 point, mat3 rrotation) \n\
     { \n\
         shado = 0.0; \n\
     } \n\
-    sfpvec4 rgba_to = load_rgba_src2(int(p1.x * (p.w2 - 1)), int((1.f - p1.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
+    sfpvec4 rgba_to = load_rgba_src2(int(p1.x * (p.w2 - 1)), int((1.f - p1.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
     return sfpvec4(rgba_to.rgb - sfp(shado), sfp(1.0)); \n\
 } \n\
 \n\
@@ -167,7 +167,7 @@ sfpvec4 transition(vec2 point) \n\
     if (yc > cylinderRadius) \n\
     { \n\
         // Flat surface \n\
-        sfpvec4 rgba_from = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+        sfpvec4 rgba_from = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
         return rgba_from; \n\
     } \n\
 \n\
@@ -198,7 +198,7 @@ sfpvec4 transition(vec2 point) \n\
     } \n\
     else \n\
     { \n\
-        otherColor = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+        otherColor = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     } \n\
 \n\
     color = antiAlias(color, otherColor, cylinderRadius - abs(yc)); \n\
@@ -216,7 +216,7 @@ void main() \n\
         return; \n\
     vec2 point = vec2(float(uv.x) / float(p.out_w - 1), 1.f - float(uv.y) / float(p.out_h - 1)); \n\
     sfpvec4 result = transition(point); \n\
-    store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

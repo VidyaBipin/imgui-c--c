@@ -358,7 +358,7 @@ void main() \n\
         rgb = yuv_to_rgb(interplate(gx, gy)); \n\
     else \n\
         rgb = yuv_to_rgb(load_src_yuv(gx, gy)); \n\
-    store_rgba(sfpvec4(rgb, 1.0f), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(sfpvec4(rgb, 1.0f), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 
@@ -536,7 +536,7 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
-    sfpvec3 yuv = rgb_to_yuv(load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type).rgb); \n\
+    sfpvec3 yuv = rgb_to_yuv(load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb); \n\
     store_dst_yuv(yuv, gx, gy); \n\
 } \
 "
@@ -582,11 +582,11 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
-    sfp gray = load_gray(gx, gy, p.w, 1, p.in_format, p.in_type, p.in_scale); \n\
+    sfp gray = load_gray(gx, gy, p.w, p.h, 1, p.in_format, p.in_type, p.in_scale); \n\
     if (p.in_format == CF_NV12) \n\
         store_rgba_side_by_side(sfpvec4(sfpvec3(gray), 1.0f), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
     else \n\
-        store_rgba(sfpvec4(sfpvec3(gray), 1.0f), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+        store_rgba(sfpvec4(sfpvec3(gray), 1.0f), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 
@@ -628,10 +628,10 @@ void main() \n\
         return; \n\
     sfpvec4 rgba; \n\
     if (p.in_format == CF_BGR || p.in_format == CF_RGB) \n\
-        rgba = sfpvec4(load_rgb(gx, gy, p.w, p.cstep, p.in_format, p.in_type), sfp(1.0f)); \n\
+        rgba = sfpvec4(load_rgb(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type), sfp(1.0f)); \n\
     else \n\
-        rgba = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
-    store_rgba(rgba, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+        rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    store_rgba(rgba, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

@@ -48,7 +48,7 @@ void main() \n\
             x = max(0, min(x, p.out_w - 1)); \n\
             y = max(0, min(y, p.out_h - 1)); \n\
             int index = j + i * 3; \n\
-            sfp value = load_rgba(x, y, p.w, p.cstep, p.in_format, p.in_type).r; \n\
+            sfp value = load_rgba(x, y, p.w, p.h, p.cstep, p.in_format, p.in_type).r; \n\
             vertical += value * verticalKernel[index]; \n\
             horizont += value * horizontKernel[index]; \n\
         } \n\
@@ -60,7 +60,7 @@ void main() \n\
     sum.y = vertical* vertical; \n\
     sum.z = ((horizont * vertical) + sfp(1.0f)) / sfp(2.0f); \n\
     sum.w = sfp(1.0f); \n\
-    store_rgba(sum, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(sum, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 
@@ -102,13 +102,13 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
-    sfpvec4 derivativeElements = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 derivativeElements = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     sfp derivativeSum = derivativeElements.x + derivativeElements.y; \n\
     sfp zElement = (derivativeElements.z * sfp(2.0f)) - sfp(1.0f); \n\
     // R = Ix^2 * Iy^2 - Ixy * Ixy - k * (Ix^2 + Iy^2)^2 \n\
     sfp cornerness = derivativeElements.x * derivativeElements.y - (zElement * zElement) - sfp(p.harris) * derivativeSum * derivativeSum; \n\
     cornerness = cornerness * sfp(p.sensitivity); \n\
-    store_gray(cornerness, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_gray(cornerness, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 
@@ -253,7 +253,7 @@ void main() \n\
     // step(maxValue, values[4])需要当前值最大才为1 \n\
     sfp result = values[4]* step(maxValue, values[4]) * multiplier; \n\
     result = step(sfp(p.threshold), result); \n\
-    sfpvec4 rgba_in = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba_in = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     sfpvec3 rgb_in = rgba_in.rgb; \n\
     sfp alpha = rgba_in.a; \n\
     if (result > sfp(0.f)) \n\
@@ -268,12 +268,12 @@ void main() \n\
                 // REPLICATE border \n\
                 x = max(0, min(x, p.out_w - 1)); \n\
                 y = max(0, min(y, p.out_h - 1)); \n\
-                store_rgba(sfpvec4(rgb_in, alpha), x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+                store_rgba(sfpvec4(rgb_in, alpha), x, y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
             } \n\
         } \n\
     } \n\
     else \n\
-        store_rgba(sfpvec4(rgb_in, alpha), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+        store_rgba(sfpvec4(rgb_in, alpha), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

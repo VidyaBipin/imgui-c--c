@@ -59,7 +59,7 @@ void cie(int x, int y) \n\
 { \n\
     ivec2 ixy = {0, 0}; \n\
     sfpvec2 fxy = {sfp(0.f), sfp(0.f)}; \n\
-    sfpvec4 rgba = load_rgba(x, y, p.w, p.cstep, p.format, p.type); \n\
+    sfpvec4 rgba = load_rgba(x, y, p.w, p.h, p.cstep, p.format, p.type); \n\
     sfpvec3 xyz = rgb_to_xyz(rgba); \n\
     if (p.cie == LUV) \n\
     { \n\
@@ -137,7 +137,7 @@ layout (push_constant) uniform parameter \n\
 " \n\
 void merge(int x, int y) \n\
 { \n\
-    sfpvec4 rgba = load_rgba(x, y, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba = load_rgba(x, y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     int offset = y * p.w + x; \n\
     int alpha = int(alpha_blob_data[offset] * p.intensity); \n\
     if (p.show_color == 1) \n\
@@ -147,10 +147,10 @@ void merge(int x, int y) \n\
             //rgba.r = rgba.b = rgba.g = sfp(1.f - clamp(alpha / 255.f, 0.f, 1.f)); \n\
             rgba.r = rgba.b = rgba.g = sfp(clamp(alpha / 255.f, 0.f, 1.f)); \n\
             rgba.a = sfp(1.f); \n\
-            store_rgba(rgba, x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+            store_rgba(rgba, x, y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
         } else { \n\
             rgba.a = sfp(1.f); \n\
-            store_rgba(rgba, x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+            store_rgba(rgba, x, y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
         } \n\
     } \n\
     else \n\
@@ -168,7 +168,7 @@ void merge(int x, int y) \n\
         } \n\
         else \n\
             rgba.a = sfp(1.f); \n\
-        store_rgba(rgba, x, y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+        store_rgba(rgba, x, y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
     } \n\
 } \
 "

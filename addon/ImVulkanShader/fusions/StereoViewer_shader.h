@@ -74,7 +74,7 @@ sfpvec4 sample_with_corners_from(vec2 point, vec2 corner_size) \n\
     { \n\
         return black; \n\
     } \n\
-    sfpvec4 rgba_from = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba_from = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     return unscreen(rgba_from); \n\
 } \n\
 \n\
@@ -85,7 +85,7 @@ sfpvec4 sample_with_corners_to(vec2 point, vec2 corner_size) \n\
     { \n\
         return black; \n\
     } \n\
-    sfpvec4 rgba_to = load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
+    sfpvec4 rgba_to = load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
     return unscreen(rgba_to); \n\
 } \n\
 \n\
@@ -96,7 +96,7 @@ sfpvec4 simple_sample_with_corners_from(vec2 point, vec2 corner_size, float zoom
     { \n\
         return black; \n\
     } \n\
-    sfpvec4 rgba_from = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba_from = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     return rgba_from; \n\
 } \n\
 \n\
@@ -107,7 +107,7 @@ sfpvec4 simple_sample_with_corners_to(vec2 point, vec2 corner_size, float zoom_a
     { \n\
         return black; \n\
     } \n\
-    sfpvec4 rgba_to = load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
+    sfpvec4 rgba_to = load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
     return rgba_to; \n\
 } \n\
 \n\
@@ -203,7 +203,7 @@ sfpvec4 transition(vec2 uv) \n\
 \n\
     if (p.progress <= 0.0) { \n\
         // 0.0: start with the base frame always \n\
-        return load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+        return load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     } else if (p.progress < 0.1) { \n\
         // 0.0-0.1: zoom out and add rounded corners \n\
         a = p.progress / 0.1; \n\
@@ -222,7 +222,7 @@ sfpvec4 transition(vec2 uv) \n\
         return simple_sample_with_corners_to(point, corner_size * a, a); \n\
     } else { \n\
         // 1.0 end with base frame \n\
-        return load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
+        return load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
     } \n\
 } \n\
 \n\
@@ -233,7 +233,7 @@ void main() \n\
         return; \n\
     vec2 point = vec2(float(uv.x) / float(p.out_w - 1), 1.f - float(uv.y) / float(p.out_h - 1)); \n\
     sfpvec4 result = transition(point); \n\
-    store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

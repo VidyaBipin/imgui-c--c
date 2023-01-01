@@ -63,9 +63,9 @@ sfpvec4 denoise(int x, int y) \n\
     int spatial_y_offset = y * p.w + x; \n\
     int spatial_u_offset = p.w * p.h + y * p.w + x; \n\
     int spatial_v_offset = p.w * p.h * 2 + y * p.w + x; \n\
-    sfpvec4 rgba = load_rgba(x, y, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba = load_rgba(x, y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     sfpvec3 yuv0 = rgb_to_yuv(rgba.rgb); \n\
-    sfpvec3 yuv1 = x < p.w - 1 ? rgb_to_yuv(load_rgba(x + 1, y, p.w, p.cstep, p.in_format, p.in_type).rgb) : yuv0; \n\
+    sfpvec3 yuv1 = x < p.w - 1 ? rgb_to_yuv(load_rgba(x + 1, y, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb) : yuv0; \n\
     // Y \n\
     pixel_ant = lowpass(frame_spatial_data[spatial_y_offset], int(yuv0.x * sfp(65535.0f)) + 128, LUMA_SPATIAL); \n\
     frame_spatial_data[spatial_y_offset] = pixel_ant = lowpass(frame_spatial_data[spatial_y_offset], pixel_ant, LUMA_SPATIAL); \n\
@@ -109,7 +109,7 @@ void main() \n\
         return; \n\
 \n\
     sfpvec4 result = denoise(gx, gy); \n\
-    store_rgba(result, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

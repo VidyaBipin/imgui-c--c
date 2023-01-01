@@ -54,7 +54,7 @@ void main() \n\
         return; \n\
     sfp vertical = sfp(0.0f); \n\
     sfp horizont = sfp(0.0f); \n\
-    sfp alpha = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type).a; \n\
+    sfp alpha = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type).a; \n\
     for (int i = 0; i < 3; ++i) \n\
     { \n\
         for (int j = 0; j < 3; ++j) \n\
@@ -65,13 +65,13 @@ void main() \n\
             x = max(0, min(x, p.out_w - 1)); \n\
             y = max(0, min(y, p.out_h - 1)); \n\
             int index = j + i * 3; \n\
-            sfpvec3 value = rgb_to_yuv(load_rgba(x, y, p.w, p.cstep, p.in_format, p.in_type).rgb); \n\
+            sfpvec3 value = rgb_to_yuv(load_rgba(x, y, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb); \n\
             vertical += value.x * sfp(verticalKernel[index]); \n\
             horizont += value.x * sfp(horizontKernel[index]); \n\
         } \n\
     } \n\
     sfp mag = length(sfpvec2(horizont, vertical)) * sfp(p.strength); \n\
-    store_rgba(sfpvec4(mag, mag, mag, alpha), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(sfpvec4(mag, mag, mag, alpha), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

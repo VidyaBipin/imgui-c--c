@@ -46,7 +46,7 @@ void main() \n\
     ivec2 uv = ivec2(gl_GlobalInvocationID.xy); \n\
     if (uv.x >= p.out_w || uv.y >= p.out_h) \n\
         return; \n\
-    sfpvec3 inputColor = load_rgba(uv.x, uv.y, p.w, p.cstep, p.in_format, p.in_type).rgb; \n\
+    sfpvec3 inputColor = load_rgba(uv.x, uv.y, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb; \n\
     sfpvec3 chromaColor = sfpvec3(p.chromaColorX, p.chromaColorY, p.chromaColorZ); \n\
     sfpvec3 color1 = extractColor(chromaColor, sfp(p.lumaMask)); \n\
     sfpvec3 color2 = extractColor(inputColor, sfp(p.lumaMask)); \n\
@@ -245,19 +245,19 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
-    sfp val = load_float16_gray_alpha(gx, gy, p.alpha_w, p.alpha_cstep, p.alpha_format); \n\
+    sfp val = load_float16_gray_alpha(gx, gy, p.alpha_w, p.alpha_h, p.alpha_cstep, p.alpha_format); \n\
     if (p.output_type == CHROMAKEY_OUTPUT_ALPHA_ONLY) \n\
-        store_gray(val, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+        store_gray(val, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
     else if (p.output_type == CHROMAKEY_OUTPUT_ALPHA_RGBA) \n\
     { \n\
-        store_rgba(sfpvec4(val, val, val, sfp(1.0f)), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+        store_rgba(sfpvec4(val, val, val, sfp(1.0f)), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
     } \n\
     else \n\
     { \n\
-        sfpvec4 rgba = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
+        sfpvec4 rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
         sfp r_b = (rgba.r + rgba.b) / sfp(2.0f); \n\
         if (r_b < rgba.g) rgba.g = r_b; \n\
-        store_rgba(sfpvec4(rgba.rgb, val), gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+        store_rgba(sfpvec4(rgba.rgb, val), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
     } \n\
 } \
 "

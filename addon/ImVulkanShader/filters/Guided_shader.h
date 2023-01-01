@@ -27,7 +27,7 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
-    sfpvec4 rgba = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     store_rgba_float16_no_clamp_outTex1(sfpvec4(rgba.rgb * rgba.a, 1.0f), gx, gy, p.out_w, p.out_cstep, p.out_format); \n\
     store_rgba_float16_no_clamp_outTex2(sfpvec4(rgba.rgb * rgba.r, 1.0f), gx, gy, p.out_w, p.out_cstep, p.out_format); \n\
     store_rgba_float16_no_clamp_outTex2(sfpvec4(rgba.g * rgba.g, rgba.g * rgba.b, rgba.b * rgba.b, 1.0f), gx, gy, p.out_w, p.out_cstep, p.out_format); \n\
@@ -95,12 +95,12 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
-    sfpvec4 color = load_float_rgba_inTex1(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 color = load_float_rgba_inTex1(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     sfpvec3 mean_I = color.xyz; \n\
 	sfp mean_p = color.w; \n\
-	sfpvec3 mean_Ip = load_float_rgba_inTex2(gx, gy, p.w, p.cstep, p.in_format, p.in_type).xyz; \n\
-	sfpvec3 var_I_r = load_float_rgba_inTex3(gx, gy, p.w, p.cstep, p.in_format, p.in_type).xyz - mean_I.x * mean_I; \n\
-	sfpvec3 var_I_gbxfv = load_float_rgba_inTex4(gx, gy, p.w, p.cstep, p.in_format, p.in_type).xyz; \n\
+	sfpvec3 mean_Ip = load_float_rgba_inTex2(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type).xyz; \n\
+	sfpvec3 var_I_r = load_float_rgba_inTex3(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type).xyz - mean_I.x * mean_I; \n\
+	sfpvec3 var_I_gbxfv = load_float_rgba_inTex4(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type).xyz; \n\
     //计算方差 \n\
 	sfp gg = var_I_gbxfv.x - mean_I.y * mean_I.y; \n\
 	sfp gb = var_I_gbxfv.y - mean_I.y * mean_I.z; \n\
@@ -169,13 +169,13 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
-    sfpvec4 color = load_rgba(gx, gy, p.w, p.cstep, p.in_format, p.in_type); \n\
-    sfpvec4 mean = load_float_rgba_inTex(gx, gy, p.mean_w, p.mean_cstep, p.mean_format, p.mean_type); \n\
+    sfpvec4 color = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 mean = load_float_rgba_inTex(gx, gy, p.mean_w, p.mean_h, p.mean_cstep, p.mean_format, p.mean_type); \n\
     //sfp q = clamp(color.x * mean.x + color.y * mean.y + color.z * mean.z + mean.w, sfp(0.f), sfp(1.f)); \n\
     color.r = clamp(color.x * mean.x + mean.w, sfp(0.f), sfp(1.f)); \n\
     color.g = clamp(color.y * mean.y + mean.w, sfp(0.f), sfp(1.f)); \n\
     color.b = clamp(color.z * mean.z + mean.w, sfp(0.f), sfp(1.f)); \n\
-    store_rgba(color, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(color, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

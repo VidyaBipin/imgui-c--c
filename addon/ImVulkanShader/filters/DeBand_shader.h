@@ -32,11 +32,11 @@ sfpvec4 deband(int x, int y) \n\
     sfpvec4 rgba = sfpvec4(0); \n\
     int x_pos = xpos_data[y * p.w + x]; \n\
     int y_pos = ypos_data[y * p.w + x]; \n\
-    sfpvec4 ref0 = load_rgba(CLIP(x +  x_pos, 0, p.w - 1), CLIP(y +  y_pos, 0, p.h - 1), p.w, p.cstep, p.in_format, p.in_type); \n\
-    sfpvec4 ref1 = load_rgba(CLIP(x +  x_pos, 0, p.w - 1), CLIP(y + -y_pos, 0, p.h - 1), p.w, p.cstep, p.in_format, p.in_type); \n\
-    sfpvec4 ref2 = load_rgba(CLIP(x + -x_pos, 0, p.w - 1), CLIP(y + -y_pos, 0, p.h - 1), p.w, p.cstep, p.in_format, p.in_type); \n\
-    sfpvec4 ref3 = load_rgba(CLIP(x + -x_pos, 0, p.w - 1), CLIP(y +  y_pos, 0, p.h - 1), p.w, p.cstep, p.in_format, p.in_type); \n\
-    sfpvec4 src0 = load_rgba(x, y, p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 ref0 = load_rgba(CLIP(x +  x_pos, 0, p.w - 1), CLIP(y +  y_pos, 0, p.h - 1), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 ref1 = load_rgba(CLIP(x +  x_pos, 0, p.w - 1), CLIP(y + -y_pos, 0, p.h - 1), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 ref2 = load_rgba(CLIP(x + -x_pos, 0, p.w - 1), CLIP(y + -y_pos, 0, p.h - 1), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 ref3 = load_rgba(CLIP(x + -x_pos, 0, p.w - 1), CLIP(y +  y_pos, 0, p.h - 1), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 src0 = load_rgba(x, y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     // R \n\
     if (p.blur != 0) \n\
     { \n\
@@ -93,7 +93,7 @@ void main() \n\
     if (gx >= p.out_w || gy >= p.out_h) \n\
         return; \n\
     sfpvec4 result = deband(gx, gy); \n\
-    store_rgba(result, gx, gy, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

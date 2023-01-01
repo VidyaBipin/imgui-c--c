@@ -68,8 +68,8 @@ float getDividerSize() \n\
 \n\
 sfpvec4 transition(vec2 point) \n\
 { \n\
-    sfpvec4 rgba_to = load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
-    sfpvec4 rgba_from = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 rgba_to = load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
+    sfpvec4 rgba_from = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     if (p.progress < p.pause) \n\
     { \n\
         float currentProg = p.progress / p.pause; \n\
@@ -101,8 +101,8 @@ sfpvec4 transition(vec2 point) \n\
 \n\
             point.x = (point.x - offset) / abs(cp - 0.5) * 0.5 + offset; \n\
             point = clamp(point, vec2(0.f, 0.f), vec2(1.f, 1.f)); \n\
-            sfpvec4 a = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
-            sfpvec4 b = load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
+            sfpvec4 a = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+            sfpvec4 b = load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
 \n\
             float s = step(abs(size.x * (q.x - delta) - 0.5), abs(cp - 0.5)); \n\
             return mix(bgcolor, mix(b, a, sfp(step(cp, 0.5))), sfp(s)); \n\
@@ -128,7 +128,7 @@ void main() \n\
         return; \n\
     vec2 point = vec2(float(uv.x) / float(p.out_w - 1), 1.f - float(uv.y) / float(p.out_h - 1)); \n\
     sfpvec4 result = transition(point); \n\
-    store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

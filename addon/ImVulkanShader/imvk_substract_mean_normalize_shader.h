@@ -114,9 +114,9 @@ void main() \n\
     sfpvec4 norm_val = sfpvec4(sfp(p.norm_x), sfp(p.norm_y), sfp(p.norm_z), sfp(p.norm_w)); \n\
     sfpvec4 rgba = sfpvec4(0.f, 0.f, 0.f, 1.f); \n\
     if (p.in_format == CF_ABGR || p.in_format == CF_ARGB) \n\
-        rgba = load_rgba(uv.x, uv.y, p.w, p.cstep, p.in_format, p.in_type); \n\
+        rgba = load_rgba(uv.x, uv.y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     else if (p.in_format == CF_BGR || p.in_format == CF_RGB) \n\
-        rgba.rgb = load_rgb(uv.x, uv.y, p.w, p.cstep, p.in_format, p.in_type); \n\
+        rgba.rgb = load_rgb(uv.x, uv.y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     sfpvec4 result = (rgba - mean_val) * norm_val; \n\
     if (p.out_format == CF_ABGR || p.out_format == CF_ARGB) \n\
         store_rgba_planer_float_no_clamp(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\

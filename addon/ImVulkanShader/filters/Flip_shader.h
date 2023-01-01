@@ -35,8 +35,8 @@ void main() \n\
         ix = p.w - 1 - ix; \n\
     if (p.bFlipY != 0) \n\
         iy = p.h - 1 - iy; \n\
-    sfpvec4 result = load_rgba(ix, iy, p.w, p.cstep, p.in_format, p.in_type); \n\
-    store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    sfpvec4 result = load_rgba(ix, iy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 

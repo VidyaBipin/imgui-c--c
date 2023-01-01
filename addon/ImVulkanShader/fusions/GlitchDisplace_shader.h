@@ -71,14 +71,14 @@ float ease2(float t) \n\
 sfpvec4 transition(vec2 uv) \n\
 { \n\
     vec2 point = uv.xy / vec2(1.0).xy; \n\
-    sfpvec4 color1 = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
-    sfpvec4 color2 = load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
+    sfpvec4 color1 = load_rgba(int(point.x * (p.w - 1)), int((1.f - point.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 color2 = load_rgba_src2(int(point.x * (p.w2 - 1)), int((1.f - point.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
     vec2 disp = displace(color1, point, 0.33, 0.7, 1.0 - ease1(p.progress)); \n\
     vec2 disp2 = displace(color2, point, 0.33, 0.5, ease2(p.progress)); \n\
     disp = clamp(disp, vec2(0.f, 0.f), vec2(1.f, 1.f)); \n\
     disp2 = clamp(disp2, vec2(0.f, 0.f), vec2(1.f, 1.f)); \n\
-    sfpvec4 dColor1 = load_rgba_src2(int(disp.x * (p.w2 - 1)), int((1.f - disp.y) * (p.h2 - 1)), p.w2, p.cstep2, p.in_format2, p.in_type2); \n\
-    sfpvec4 dColor2 = load_rgba(int(disp2.x * (p.w - 1)), int((1.f - disp2.y) * (p.h - 1)), p.w, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec4 dColor1 = load_rgba_src2(int(disp.x * (p.w2 - 1)), int((1.f - disp.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
+    sfpvec4 dColor2 = load_rgba(int(disp2.x * (p.w - 1)), int((1.f - disp2.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     float val = ease1(p.progress); \n\
     sfpvec3 gray = sfpvec3(dot(min(dColor2, dColor1).rgb, sfpvec3(sfp(0.299), sfp(0.587), sfp(0.114)))); \n\
     dColor2 = sfpvec4(gray, sfp(1.0)); \n\
@@ -95,7 +95,7 @@ void main() \n\
         return; \n\
     vec2 point = vec2(float(uv.x) / float(p.out_w - 1), 1.f - float(uv.y) / float(p.out_h - 1)); \n\
     sfpvec4 result = transition(point); \n\
-    store_rgba(result, uv.x, uv.y, p.out_w, p.out_cstep, p.out_format, p.out_type); \n\
+    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 
