@@ -7977,6 +7977,27 @@ void ImGui::SpinnerCircularPoints(const char *label, float radius, float thickne
     }
 }
 
+void ImGui::SpinnerCurvedCircle(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t circles) 
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+    const float bg_angle_offset = PI_2 / num_segments;
+    float out_h, out_s, out_v;
+    ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+    for (int j = 0; j < circles; j++)
+    {
+        window->DrawList->PathClear();
+        const float rr = radius - ((radius * 0.5f) / circles) * j;
+        const float start_a = start * (1.1f * (j+1));
+        for (size_t i = 0; i <= num_segments; i++)
+        {
+            const float a = start_a + (i * bg_angle_offset);
+            const float r = rr - (0.2f * (i % 2)) * rr;
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r));
+        }
+        window->DrawList->PathStroke(ImColor::HSV(out_h + (j * 1.f / circles), out_s, out_v), false, thickness);
+    }
+}
 
 // draw leader
 static void draw_badge(ImDrawList* drawList, ImRect bb, int type, bool filled, bool arrow, ImU32 color)

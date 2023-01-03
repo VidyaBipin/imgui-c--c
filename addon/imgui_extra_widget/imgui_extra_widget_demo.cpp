@@ -311,7 +311,7 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SliderFloat("Speed", &velocity, 0.0f, 10.0f, "velocity = %.3f");
         
         static ImVec2 selected{0, 0};
-        constexpr int sidex = 10, sidey = 11;
+        constexpr int sidex = 10, sidey = 12;
 
         float widget_size = 50.f;
         ImGuiStyle &style = GImGui->Style;
@@ -440,6 +440,7 @@ void ShowExtraWidgetDemoWindow()
                     case 107: ImGui::SpinnerFilledArcRing("SpinnerFilledArcRing", 16, 6, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerFilledArcRing"); break;
                     case 108: ImGui::SpinnerPointsShift("SpinnerPointsShift", 16, 3, ImColor(0, 0, 0), ImColor(255, 255, 255), 1.8f * velocity, 10); ImGui::ShowTooltipOnHover("SpinnerPointsShift"); break;
                     case 109: ImGui::SpinnerCircularPoints("SpinnerCircularPoints", 16, 1.2, ImColor(255, 255, 255), 10.f * velocity, 7); ImGui::ShowTooltipOnHover("SpinnerCircularPoints"); break;
+                    case 110: ImGui::SpinnerCurvedCircle("SpinnerCurvedCircle", 16, 1.2f, ImColor(255, 255, 255), 1.f * velocity, 3); ImGui::ShowTooltipOnHover("SpinnerCurvedCircle"); break;
 
                     // ...
                     default: break;

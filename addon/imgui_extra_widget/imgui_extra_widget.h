@@ -583,6 +583,7 @@ IMGUI_API void SpinnerTrianglesShift(const char *label, float radius, float thic
 IMGUI_API void SpinnerPointsShift(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t bars = 8);
 IMGUI_API void SpinnerSwingDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f);
 IMGUI_API void SpinnerCircularPoints(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 1.8f, int lines = 8);
+IMGUI_API void SpinnerCurvedCircle(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t circles = 1);
 
 template<SpinnerTypeT Type, typename... Args>
 void Spinner(const char *label, const Args&... args)
