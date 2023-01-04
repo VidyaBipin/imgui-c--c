@@ -441,6 +441,8 @@ void ShowExtraWidgetDemoWindow()
                     case 108: ImGui::SpinnerPointsShift("SpinnerPointsShift", 16, 3, ImColor(0, 0, 0), ImColor(255, 255, 255), 1.8f * velocity, 10); ImGui::ShowTooltipOnHover("SpinnerPointsShift"); break;
                     case 109: ImGui::SpinnerCircularPoints("SpinnerCircularPoints", 16, 1.2, ImColor(255, 255, 255), 10.f * velocity, 7); ImGui::ShowTooltipOnHover("SpinnerCircularPoints"); break;
                     case 110: ImGui::SpinnerCurvedCircle("SpinnerCurvedCircle", 16, 1.2f, ImColor(255, 255, 255), 1.f * velocity, 3); ImGui::ShowTooltipOnHover("SpinnerCurvedCircle"); break;
+                    case 111: ImGui::SpinnerModCircle("SpinnerModCirclre", 16, 1.2f, ImColor(255, 255, 255), 1.f, 2.f, 3.f * velocity); ImGui::ShowTooltipOnHover("SpinnerModCirclre"); break;
+                    case 112: ImGui::SpinnerModCircle("SpinnerModCirclre2", 16, 1.2f, ImColor(255, 255, 255), 1.11f, 3.33f, 3.f * velocity); ImGui::ShowTooltipOnHover("SpinnerModCirclre2"); break;
 
                     // ...
                     default: break;
