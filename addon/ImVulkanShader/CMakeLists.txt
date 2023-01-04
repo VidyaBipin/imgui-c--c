@@ -270,6 +270,7 @@ compile_shader(fusions/RotateScale_shader.h RotateScale_data)
 compile_shader(fusions/SquaresWire_shader.h SquaresWire_data)
 compile_shader(fusions/Squeeze_shader.h Squeeze_data)
 compile_shader(fusions/Wind_shader.h Wind_data)
+compile_shader(fusions/LinearBlur_shader.h LinearBlur_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -554,6 +555,7 @@ set(VKSHADER_SRCS
     fusions/SquaresWire_vulkan.cpp
     fusions/Squeeze_vulkan.cpp
     fusions/Wind_vulkan.cpp
+    fusions/LinearBlur_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -666,6 +668,8 @@ set(VKSHADER_INCS
     fusions/Squeeze_vulkan.h
     fusions/Wind_shader.h
     fusions/Wind_vulkan.h
+    fusions/LinearBlur_shader.h
+    fusions/LinearBlur_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
