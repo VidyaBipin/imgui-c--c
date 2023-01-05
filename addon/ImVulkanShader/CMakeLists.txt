@@ -273,6 +273,8 @@ compile_shader(fusions/Wind_shader.h Wind_data)
 compile_shader(fusions/LinearBlur_shader.h LinearBlur_data)
 compile_shader(fusions/Door_shader.h Door_data)
 compile_shader(fusions/Fade_shader.h Fade_data)
+compile_shader(fusions/Slider_shader.h Slider_data)
+compile_shader(fusions/Wipe_shader.h Wipe_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -560,6 +562,8 @@ set(VKSHADER_SRCS
     fusions/LinearBlur_vulkan.cpp
     fusions/Door_vulkan.cpp
     fusions/Fade_vulkan.cpp
+    fusions/Slider_vulkan.cpp
+    fusions/Wipe_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -678,6 +682,10 @@ set(VKSHADER_INCS
     fusions/Door_vulkan.h
     fusions/Fade_shader.h
     fusions/Fade_vulkan.h
+    fusions/Slider_shader.h
+    fusions/Slider_vulkan.h
+    fusions/Wipe_shader.h
+    fusions/Wipe_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
