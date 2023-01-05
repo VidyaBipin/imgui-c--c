@@ -7370,20 +7370,18 @@ void ImGui::SpinnerAtom(const char *label, float radius, float thickness, const 
     elipses = std::min<int>(elipses, 3);
 
     auto draw_rotated_ellipse = [&] (float alpha, float start) {
-        std::array<ImVec2, 36> pts;
         alpha = ImFmod(alpha, IM_PI);
         float a = radius;
         float b = radius / 2.f; 
-        const float bg_angle_offset = PI_2 / num_segments;
+        window->DrawList->PathClear();
         for (int i = 0; i < num_segments; ++i) {
-            float anga = (i * bg_angle_offset);
-            pts[i].x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
-            pts[i].y = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y;
+            float anga = (i * (PI_2 / (num_segments - 1)));
+
+            float xx = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
+            float yy = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y;
+            window->DrawList->PathLineTo({xx, yy});
         }
-        for (int i = 1; i < num_segments; ++i) {
-            window->DrawList->AddLine(pts[i-1], pts[i], color, thickness);
-        }
-        window->DrawList->AddLine(pts[num_segments-1], pts[0], color, thickness);
+        window->DrawList->PathStroke(color, false, thickness);
         float anga = ImFmod(start, PI_2);
         float x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
         float y = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y;
@@ -7405,27 +7403,60 @@ void ImGui::SpinnerPatternRings(const char *label, float radius, float thickness
     const float start = (float)ImGui::GetTime()* speed;
     elipses = std::max<int>(elipses, 1);
     auto draw_rotated_ellipse = [&] (float alpha, float tr, float y) {
-        std::array<ImVec2, 36> pts;
         alpha = ImFmod(alpha, IM_PI);
         float a = radius;
         float b = radius / 2.f; 
-        const float bg_angle_offset = PI_2 / num_segments;
-        for (int i = 0; i < num_segments; ++i) {
-            float anga = (i * bg_angle_offset);
-            pts[i].x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
-            pts[i].y = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y + y;
-        }
+        const float bg_angle_offset = PI_2 / (num_segments - 1);
         ImColor c = color;
         c.Value.w = tr;
-        for (int i = 1; i < num_segments; ++i) {
-            window->DrawList->AddLine(pts[i-1], pts[i], c, thickness);
+        window->DrawList->PathClear();
+        for (int i = 0; i < num_segments; ++i) {
+            float anga = (i * bg_angle_offset);
+            float xx = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
+            float yy = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y + y;
+            window->DrawList->PathLineTo({xx, yy});
         }
-        window->DrawList->AddLine(pts[num_segments-1], pts[0], c, thickness);
+        window->DrawList->PathStroke(c, false, thickness);
     };
+
     for (int i = 0; i < elipses; ++i)
     {
         const float h = (0.5f * ImSin(start + (IM_PI / elipses) * i));
         draw_rotated_ellipse(0.f, 0.1f + (0.9f / elipses) * i, radius * h);
+    }
+}
+
+void ImGui::SpinnerPatternEclipse(const char *label, float radius, float thickness, const ImColor &color, float speed, int elipses, float delta_a, float delta_y)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = (float)ImGui::GetTime()* speed;
+    elipses = std::max<int>(elipses, 1);
+    auto draw_rotated_ellipse = [&] (const ImVec2 &pp, float alpha, float tr, float r, float x, float y) {
+        alpha = ImFmod(alpha, IM_PI);
+        float a = r;
+        float b = r / delta_a; 
+        ImColor c = color;
+        c.Value.w = tr;
+        window->DrawList->PathClear();
+        for (int i = 0; i < num_segments; ++i) {
+            float anga = (i *  PI_2 / (num_segments - 1));
+            float xx = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + pp.x + x;
+            float yy = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + pp.y + y;
+            window->DrawList->PathLineTo({xx, yy});
+        }
+        window->DrawList->PathStroke(c, false, thickness);
+    };
+    for (int i = 0; i < elipses; ++i)
+    {
+        const float rkoeff = (0.5f + 0.5f * ImSin(start + (IM_PI / elipses) * i));
+        const float h = ((1.f / elipses) * (i+1));
+        const float anga = start + (i *  PI_DIV_2 / elipses);
+        const float yoff = ((1.f / elipses) * i) * delta_y;
+        float a = (radius * (1.f - h));
+        float b = (radius * (1.f - h)) / delta_a; 
+        float xx = a * ImCos(anga) * ImCos(0) + b * ImSin(anga) * ImSin(0) + centre.x;
+        float yy = b * ImSin(anga) * ImCos(0) - a * ImCos(anga) * ImSin(0) + centre.y;
+        draw_rotated_ellipse(ImVec2(xx, yy), 0.f, 0.3f + (0.7f / elipses) * i, radius * h, 0.f, yoff * radius);
     }
 }
 
@@ -7435,22 +7466,19 @@ void ImGui::SpinnerPatternSphere(const char *label, float radius, float thicknes
     const float start = ImFmod((float)ImGui::GetTime() * speed * 3.f, size.y);
     elipses = std::max<int>(elipses, 1);
     auto draw_rotated_ellipse = [&] (float alpha, float tr, float y, float r) {
-        std::array<ImVec2, 36> pts;
         alpha = ImFmod(alpha, IM_PI);
         float a = r;
         float b = r / 4.f; 
-        const float bg_angle_offset = PI_2 / num_segments;
-        for (int i = 0; i < num_segments; ++i) {
-            float anga = (i * bg_angle_offset);
-            pts[i].x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
-            pts[i].y = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + pos.y + y;
-        }
         ImColor c = color;
         c.Value.w = tr;
-        for (int i = 1; i < num_segments; ++i) {
-            window->DrawList->AddLine(pts[i-1], pts[i], c, thickness);
+        window->DrawList->PathClear();
+        for (int i = 0; i < num_segments; ++i) {
+            float anga = (i * PI_2 / (num_segments - 1));
+            float xx = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
+            float yy = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + pos.y + y;
+            window->DrawList->PathLineTo({xx, yy});
         }
-        window->DrawList->AddLine(pts[num_segments-1], pts[0], c, thickness);
+        window->DrawList->PathStroke(c, false, thickness);
     };
     float offset = 0;
     float half_size = size.y * 0.5f;
