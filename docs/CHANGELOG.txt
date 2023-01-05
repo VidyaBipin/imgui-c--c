@@ -99,22 +99,13 @@ Other changes:
 
 
 -----------------------------------------------------------------------
- VERSION 1.89.2 WIP (In Progress)
+ VERSION 1.89.2 (Released 2023-01-05)
 -----------------------------------------------------------------------
 
-Breaking changes:
+Decorated log and release notes: https://github.com/ocornut/imgui/releases/tag/v1.89.2
 
 Other changes:
 
-- Inputs: added Shortcut() function (w/ routing policies) in public API. (#456, #2637)
-  Added ImGuiInputFlags_RouteFocused, ImGuiInputFlags_RouteGlobalXXX and other routing policies.
-    e.g. ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_C); with default policy:
-    - check that CTRL+C is pressed,
-    - and that current window is in focus stack,
-    - and that no other requests for CTRL+C have been made from deeper locations of the window/item stack.
-- Fixed cases where CTRL+Tab or Modal can occasionally lead to the creation of ImDrawCmd with
-  zero triangles, which would makes the render loop of some backends assert (e.g. Metal with
-  debugging, Allegro). (#4857, #5937)
 - Tables, Nav, Scrolling: fixed scrolling functions and focus tracking with frozen rows and
   frozen columns. Windows now have a better understanding of outer/inner decoration sizes,
   which should later lead us toward more flexible uses of menu/status bars. (#5143, #3692)
@@ -122,6 +113,9 @@ Other changes:
 - Tables, Columns: fixed cases where empty columns may lead to empty ImDrawCmd. (#4857, #5937)
 - Tables: fixed matching width of synchronized tables (multiple tables with same id) when only
   some instances have a vertical scrollbar and not all. (#5920)
+- Fixed cases where CTRL+Tab or Modal can occasionally lead to the creation of ImDrawCmd with
+  zero triangles, which would makes the render loop of some backends assert (e.g. Metal with
+  debugging, Allegro). (#4857, #5937)
 - Inputs, IO: reworked ImGuiMod_Shortcut to redirect to Ctrl/Super at runtime instead of
   compile-time, being consistent with our support for io.ConfigMacOSXBehaviors and making it
   easier for bindings generators to process that value. (#5923, #456)
@@ -140,7 +134,6 @@ Other changes:
   amount of glyphs from being packed correctly. (#5788, #5829)
 - Fonts: added a 'void* UserData' field in ImFontAtlas, as a convenience for use by
   applications using multiple font atlases.
-- Demo: added "Inputs->Shortcut Routing" section.
 - Demo: simplified "Inputs" section, moved contents to Metrics->Inputs.
 - Debug Tools: Metrics: added "Inputs" section, moved from Demo for consistency.
 - Misc: fixed parameters to IMGUI_DEBUG_LOG() not being dead-stripped when building
