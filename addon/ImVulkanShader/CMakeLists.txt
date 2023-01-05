@@ -272,6 +272,7 @@ compile_shader(fusions/Squeeze_shader.h Squeeze_data)
 compile_shader(fusions/Wind_shader.h Wind_data)
 compile_shader(fusions/LinearBlur_shader.h LinearBlur_data)
 compile_shader(fusions/Door_shader.h Door_data)
+compile_shader(fusions/Fade_shader.h Fade_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -558,6 +559,7 @@ set(VKSHADER_SRCS
     fusions/Wind_vulkan.cpp
     fusions/LinearBlur_vulkan.cpp
     fusions/Door_vulkan.cpp
+    fusions/Fade_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -674,6 +676,8 @@ set(VKSHADER_INCS
     fusions/LinearBlur_vulkan.h
     fusions/Door_shader.h
     fusions/Door_vulkan.h
+    fusions/Fade_shader.h
+    fusions/Fade_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
