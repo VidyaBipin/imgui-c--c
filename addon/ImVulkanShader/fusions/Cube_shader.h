@@ -37,49 +37,43 @@ vec2 project(vec2 point) \n\
 { \n\
     return point * vec2(1.0, -1.2) + vec2(0.0, -p.floating / 100.); \n\
 } \n\
-\n\
 bool inBounds(vec2 point) \n\
 { \n\
     return all(lessThan(vec2(0.0), point)) && all(lessThan(point, vec2(1.0))); \n\
 } \n\
-\n\
-sfpvec4 bgColor(vec2 point, vec2 pfr, vec2 pto) \n\
+sfpvec4 bgColor(vec2 pfr, vec2 pto) \n\
 { \n\
-    sfpvec4 c = sfpvec4(0.0, 0.0, 0.0, 1.0); \n\
+    sfpvec4 c = sfpvec4(sfp(0.0), sfp(0.0), sfp(0.0), sfp(1.0)); \n\
     pfr = project(pfr); \n\
     // FIXME avoid branching might help perf! \n\
     if (inBounds(pfr)) \n\
     { \n\
-        pfr = clamp(pfr, vec2(0.f, 0.f), vec2(1.f, 1.f)); \n\
         sfpvec4 rgba_from = load_rgba(int(pfr.x * (p.w - 1)), int((1.f - pfr.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
         c += mix(sfpvec4(0.0), rgba_from, sfp(p.reflection * mix(1.0, 0.0, pfr.y))); \n\
     } \n\
     pto = project(pto); \n\
     if (inBounds(pto)) \n\
     { \n\
-        pto = clamp(pto, vec2(0.f, 0.f), vec2(1.f, 1.f)); \n\
         sfpvec4 rgba_to = load_rgba_src2(int(pto.x * (p.w2 - 1)), int((1.f - pto.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
         c += mix(sfpvec4(0.0), rgba_to, sfp(p.reflection * mix(1.0, 0.0, pto.y))); \n\
     } \n\
     return c; \n\
 } \n\
-\n\
 vec2 xskew(vec2 point, float persp, float center) \n\
 { \n\
     float x = mix(point.x, 1.0 - point.x, center); \n\
     return ( \n\
         ( \n\
-            vec2(x, (point.y - 0.5 * (1.0 - p.persp) * x) / (1.0 + (p.persp - 1.0) * x)) \n\
+            vec2(x, (point.y - 0.5 * (1.0 - persp) * x) / (1.0 + (persp - 1.0) * x)) \n\
             - vec2(0.5 - distance(center, 0.5), 0.0) \n\
         ) \n\
         * vec2(0.5 / distance(center, 0.5) * (center < 0.5 ? 1.0 : -1.0), 1.0) \n\
         + vec2(center < 0.5 ? 0.0 : 1.0, 0.0) \n\
     ); \n\
 } \n\
-\n\
 sfpvec4 transition(vec2 op) \n\
 { \n\
-    float uz = p.unzoom * 2.0 * (0.5 - distance(0.5, p.progress)); \n\
+    float uz = p.unzoom * 2.0 * (0.5-distance(0.5, p.progress)); \n\
     vec2 point = -uz * 0.5 + (1.0 + uz) * op; \n\
     vec2 fromP = xskew( \n\
         (point - vec2(p.progress, 0.0)) / vec2(1.0 - p.progress, 1.0), \n\
@@ -94,15 +88,13 @@ sfpvec4 transition(vec2 op) \n\
     // FIXME avoid branching might help perf! \n\
     if (inBounds(fromP)) \n\
     { \n\
-        fromP = clamp(fromP, vec2(0.f, 0.f), vec2(1.f, 1.f)); \n\
         return load_rgba(int(fromP.x * (p.w - 1)), int((1.f - fromP.y) * (p.h - 1)), p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     } \n\
     else if (inBounds(toP)) \n\
     { \n\
-        toP = clamp(toP, vec2(0.f, 0.f), vec2(1.f, 1.f)); \n\
         return load_rgba_src2(int(toP.x * (p.w2 - 1)), int((1.f - toP.y) * (p.h2 - 1)), p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
     } \n\
-    return bgColor(op, fromP, toP); \n\
+    return bgColor(fromP, toP); \n\
 } \n\
 \n\
 void main() \n\
