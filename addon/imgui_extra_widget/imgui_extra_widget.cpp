@@ -5940,7 +5940,7 @@ void ImGui::SpinnerDotsToBar(const char *label, float radius, float thickness, f
     }
 }
 
-void ImGui::SpinnerWaveDots(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t lt)
+void ImGui::SpinnerWaveDots(const char *label, float radius, float thickness, const ImColor &color, float speed, int lt)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
     const float nextItemKoeff = 2.5f;
@@ -5959,7 +5959,7 @@ void ImGui::SpinnerWaveDots(const char *label, float radius, float thickness, co
     }
 }
 
-void ImGui::SpinnerFadeDots(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t lt)
+void ImGui::SpinnerFadeDots(const char *label, float radius, float thickness, const ImColor &color, float speed, int lt)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
     const float start = (float)ImGui::GetTime() * speed;
@@ -5973,7 +5973,7 @@ void ImGui::SpinnerFadeDots(const char *label, float radius, float thickness, co
     }
 }
 
-void ImGui::SpinnerMultiFadeDots(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t lt)
+void ImGui::SpinnerMultiFadeDots(const char *label, float radius, float thickness, const ImColor &color, float speed, int lt)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
     const float start = (float)ImGui::GetTime() * speed;
@@ -5990,7 +5990,7 @@ void ImGui::SpinnerMultiFadeDots(const char *label, float radius, float thicknes
     }
 }
 
-void ImGui::SpinnerScaleDots(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t lt)
+void ImGui::SpinnerScaleDots(const char *label, float radius, float thickness, const ImColor &color, float speed, int lt)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
     const float nextItemKoeff = 2.5f;
@@ -7076,27 +7076,45 @@ void ImGui::SpinnerSurroundedIndicator(const char *label, float radius, float th
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
 
-    ImColor c = color;
     float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
-    c.Value.w = ImMax(0.1f, ImMin(lerp_koeff, 1.f));
     window->DrawList->AddCircleFilled(centre, thickness, bg, num_segments);
-    window->DrawList->AddCircleFilled(centre, thickness, c, num_segments);
+    window->DrawList->AddCircleFilled(centre, thickness, color_alpha(color, ImMax(0.1f, ImMin(lerp_koeff, 1.f))), num_segments);
 
-    auto PathArc = [&] {
+    auto PathArc = [&] (auto c, auto th) {
+        window->DrawList->PathClear();
         const float bg_angle_offset = PI_2 / num_segments;
-        for (int i = 0; i <= num_segments; i++) {
-            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(i * bg_angle_offset) * radius, centre.y + ImSin(i * bg_angle_offset) * radius));
-        }
+        for (int i = 0; i <= num_segments; i++)
+          window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(i * bg_angle_offset) * radius, centre.y + ImSin(i * bg_angle_offset) * radius));
+        window->DrawList->PathStroke(c, false, th);
     };
 
-    window->DrawList->PathClear();
-    PathArc();
-    window->DrawList->PathStroke(bg, false, thickness);
-
-    PathArc();
     lerp_koeff = (ImSin((float)ImGui::GetTime() * speed * 1.6f) + 1.f) * 0.5f;
-    c.Value.w = 1.f - ImMax(0.1f, ImMin(lerp_koeff, 1.f));;
-    window->DrawList->PathStroke(c, false, thickness);
+    PathArc(bg, thickness);
+    PathArc(color_alpha(color, 1.f - ImMax(0.1f, ImMin(lerp_koeff, 1.f))), thickness);
+}
+
+void ImGui::SpinnerWifiIndicator(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bg, float speed, float cangle, int dots) 
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
+    float start_ang = -cangle - PI_DIV_4 - PI_DIV_2;
+    ImVec2 pc(centre.x + ImSin(cangle) * radius, centre.y + ImCos(cangle) * radius);
+    window->DrawList->AddCircleFilled(pc, thickness, bg, num_segments);
+    window->DrawList->AddCircleFilled(pc, thickness, color_alpha(color, ImMax(0.1f, ImMin(lerp_koeff, 1.f))), num_segments);
+    auto PathArc = [&] (auto as, auto c, auto th, auto r) {
+        window->DrawList->PathClear();
+        const float bg_angle_offset = PI_DIV(2) / num_segments;
+        for (int i = 0; i <= num_segments; i++)
+            window->DrawList->PathLineTo(ImVec2(pc.x + ImCos(as + i * bg_angle_offset) * r, pc.y + ImSin(as + i * bg_angle_offset) * r));
+        window->DrawList->PathStroke(c, false, th);
+    };
+    const float interval = (size.x * 0.7f) / dots;
+    for (int i = 0; i < dots; ++i) {
+        float r = 1.5f * (i + 1) * interval;
+        lerp_koeff = (ImSin((float)ImGui::GetTime() * speed - (i+1) * (IM_PI / dots)) + 1.f) * 0.5f;
+        PathArc(start_ang, bg, thickness, r);
+        PathArc(start_ang, color_alpha(color, ImMax(0.1f, ImMin(lerp_koeff, 1.f))), thickness, r);
+    }
 }
 
 void ImGui::SpinnerTrianglesSelector(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bg, float speed, size_t bars) 
@@ -7559,6 +7577,66 @@ void ImGui::SpinnerRainbowBalls(const char *label, float radius, float thickness
         ImColor c = rainbow ? ImColor::HSV(out_h + i * (1.f / balls) + colorback, out_s, out_v) : color;
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), thickness, c, num_segments);
     }
+}
+
+void ImGui::SpinnerRainbowShot(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = ImFmod((float)ImGui::GetTime() * speed * 3.f, PI_2);
+    const float colorback = 0.3f + 0.2f * ImSin((float)ImGui::GetTime() * speed);
+    const float rstart = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+    const float angle_offset = PI_2 / balls;
+    const bool rainbow = ((ImU32)color.Value.w) == 0;
+    float out_h, out_s, out_v;
+    ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+    for (int i = 0; i <= balls; i++)
+    {
+        float centera = start - PI_DIV_2 + (i * angle_offset);
+        float rmul = ImMax(0.2f, 1.f - ImSin(centera));
+       // rmul *= 1.f + ImSin(rmul * PI_2);
+        const float radius1 = ImMin(radius * rmul, radius);
+        //const float radius1 = (i * (1.f / balls)) * (ImSin(start / 2.f)) * radius;
+        const float a = (i * angle_offset);
+        ImColor c = rainbow ? ImColor::HSV(out_h + i * (1.f / balls) + colorback, out_s, out_v) : color;
+        //window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), thickness, c, num_segments);
+        window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), c, thickness);
+    }
+}
+
+void ImGui::SpinnerSpiral(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t arcs)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+    float a = radius / num_segments;
+    float b = a;
+    ImVec2 last = centre;
+    for (size_t arc_num = 0; arc_num < (num_segments * arcs); ++arc_num)
+    {
+        float angle = (PI_2 / num_segments) * arc_num;
+        float x = centre.x + (a + b * angle) * ImCos(start + angle);
+        float y = centre.y + (a + b * angle) * ImSin(start + angle);
+        window->DrawList->AddLine(last, ImVec2(x, y), color, thickness);
+        last = ImVec2(x, y);
+    }
+}
+
+void ImGui::SpinnerSpiralEye(const char *label, float radius, float thickness, const ImColor &color, float speed)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+    float a = (radius * 3.f) / num_segments;
+    float b = a;
+    num_segments *= 4;
+    auto half_eye = [&] (float side) {
+        for (size_t arc_num = 0; arc_num < num_segments; ++arc_num)         {
+            float angle = (PI_2 / num_segments) * arc_num;
+            float x = centre.x + (a + b * angle) * ImCos((start + angle) * side);
+            float y = centre.y + (a + b * angle) * ImSin((start + angle) * side);
+            window->DrawList->AddCircleFilled(ImVec2(x, y), thickness, color);
+        }
+    };
+    half_eye(1.f);
+    half_eye(-1.f);
 }
 
 void ImGui::SpinnerBarChartSine(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars, int mode)

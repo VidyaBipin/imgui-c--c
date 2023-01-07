@@ -446,6 +446,10 @@ void ShowExtraWidgetDemoWindow()
                     case 113: ImGui::SpinnerPatternEclipse("SpinnerPatternEclipse", 16, 2, ImColor(255, 255, 255), 4.1f * velocity, 5, 2.f, 0.f); ImGui::ShowTooltipOnHover("SpinnerPatternEclipse"); break;
                     case 114: ImGui::SpinnerPatternEclipse("SpinnerPatternEclipse2", 16, 2, ImColor(255, 255, 255), 4.1f * velocity, 9, 4.f, 1.f); ImGui::ShowTooltipOnHover("SpinnerPatternEclipse2"); break;
                     case 115: ImGui::SpinnerMultiFadeDots("SpinnerMultiFadeDots", 16, 2, ImColor(255, 255, 255), 8 * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerMultiFadeDots"); break;
+                    case 116: ImGui::SpinnerRainbowShot("SpinnerRainbowShot", 16, 4, ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), 1.5f * velocity, 5); ImGui::ShowTooltipOnHover("SpinnerRainbowShot"); break;
+                    case 117: ImGui::SpinnerSpiral("SpinnerSpiral", 16, 2, ImColor(255, 255, 255), 6 * velocity, 5); ImGui::ShowTooltipOnHover("SpinnerSpira"); break;
+                    case 118: ImGui::SpinnerSpiralEye("SpinnerSpiralEye", 16, 1, ImColor(255, 255, 255), 3 * velocity); ImGui::ShowTooltipOnHover("SpinnerSpiralEye"); break;
+                    case 119: ImGui::SpinnerWifiIndicator("SpinnerWifiIndicator", 16, 1.5f, ImColor(0, 0, 0), ImColor(255, 255, 255), 7.8f * velocity, 5.52f, 3); ImGui::ShowTooltipOnHover("SpinnerWifiIndicator"); break;
 
                     // ...
                     default: break;

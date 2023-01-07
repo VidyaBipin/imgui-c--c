@@ -275,6 +275,8 @@ compile_shader(fusions/Door_shader.h Door_data)
 compile_shader(fusions/Fade_shader.h Fade_data)
 compile_shader(fusions/Slider_shader.h Slider_data)
 compile_shader(fusions/Wipe_shader.h Wipe_data)
+compile_shader(fusions/Move_shader.h Move_data)
+compile_shader(fusions/Rolls_shader.h Rolls_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -564,6 +566,8 @@ set(VKSHADER_SRCS
     fusions/Fade_vulkan.cpp
     fusions/Slider_vulkan.cpp
     fusions/Wipe_vulkan.cpp
+    fusions/Move_vulkan.cpp
+    fusions/Rolls_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -686,6 +690,10 @@ set(VKSHADER_INCS
     fusions/Slider_vulkan.h
     fusions/Wipe_shader.h
     fusions/Wipe_vulkan.h
+    fusions/Move_shader.h
+    fusions/Move_vulkan.h
+    fusions/Rolls_shader.h
+    fusions/Rolls_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
@@ -715,7 +723,7 @@ endif(VKSHADER_VULKAN_PREBUILD)
 
 set(VKSHADER_VERSION_MAJOR 1)
 set(VKSHADER_VERSION_MINOR 7)
-set(VKSHADER_VERSION_PATCH 2)
+set(VKSHADER_VERSION_PATCH 3)
 set(VKSHADER_VERSION_STRING ${VKSHADER_VERSION_MAJOR}.${VKSHADER_VERSION_MINOR}.${VKSHADER_VERSION_PATCH})
 
 if(NOT VKSHADER_STATIC)

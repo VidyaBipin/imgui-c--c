@@ -450,6 +450,7 @@ namespace ImGui
     constexpr float PI_DIV_4 = IM_PI / 4.f;
     constexpr float PI_DIV_2 = IM_PI / 2.f;
     constexpr float PI_2 = IM_PI * 2.f;
+	constexpr float PI_DIV(float d) { return IM_PI / d; }
 
     DECLPROP (SpinnerType, SpinnerTypeT, e_st_rainbow)
     DECLPROP (Radius, float, 16.f)
@@ -515,10 +516,10 @@ IMGUI_API void SpinnerVDots(const char *label, float radius, float thickness, co
 IMGUI_API void SpinnerBounceDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3);
 IMGUI_API void SpinnerZipDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 5);
 IMGUI_API void SpinnerDotsToBar(const char *label, float radius, float thickness, float offset_k, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 5);
-IMGUI_API void SpinnerWaveDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t lt = 8);
-IMGUI_API void SpinnerFadeDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t lt = 8);
-IMGUI_API void SpinnerMultiFadeDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t lt = 8);
-IMGUI_API void SpinnerScaleDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t lt = 8);
+IMGUI_API void SpinnerWaveDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8);
+IMGUI_API void SpinnerFadeDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8);
+IMGUI_API void SpinnerMultiFadeDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8);
+IMGUI_API void SpinnerScaleDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8);
 IMGUI_API void SpinnerMovingDots(const char *label, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3);
 IMGUI_API void SpinnerRotateDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int dots = 2);
 IMGUI_API void SpinnerTwinAng(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed = 2.8f, float angle = IM_PI);
@@ -555,6 +556,7 @@ IMGUI_API void SpinnerSinSquares(const char *label, float radius, float thicknes
 IMGUI_API void SpinnerMoonLine(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xff000000, float speed = 2.8f, float angle = IM_PI);
 IMGUI_API void SpinnerCircleDrop(const char *label, float radius, float thickness, float thickness_drop, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI);
 IMGUI_API void SpinnerSurroundedIndicator(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f);
+IMGUI_API void SpinnerWifiIndicator(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float cangle = 0.f, int dots = 3);
 IMGUI_API void SpinnerTrianglesSelector(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t bars = 8);
 IMGUI_API void SpinnerCamera(const char *label, float radius, float thickness, LeafColor *leaf_color, float speed = 2.8f, size_t bars = 8);
 IMGUI_API void SpinnerFlowingGradient(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xff000000, float speed = 2.8f, float angle = IM_PI);
@@ -570,6 +572,9 @@ IMGUI_API void SpinnerRingSynchronous(const char *label, float radius, float thi
 IMGUI_API void SpinnerRingWatermarks(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3);
 IMGUI_API void SpinnerRotatedAtom(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3);
 IMGUI_API void SpinnerRainbowBalls(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls = 5);
+IMGUI_API void SpinnerRainbowShot(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls = 5);
+IMGUI_API void SpinnerSpiral(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4);
+IMGUI_API void SpinnerSpiralEye(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f);
 IMGUI_API void SpinnerBarChartSine(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars = 5, int mode = 0);
 IMGUI_API void SpinnerBarChartRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars = 5);
 IMGUI_API void SpinnerBlocks(const char *label, float radius, float thickness, const ImColor &bg, const ImColor &color, float speed);
