@@ -131,6 +131,7 @@ struct IMGUI_API ImCurveEdit
         virtual std::string GetCurveName(size_t curveIndex) = 0;
         virtual KeyPoint* GetPoints(size_t curveIndex) = 0;
         virtual KeyPoint GetPoint(size_t curveIndex, size_t pointIndex) = 0;
+        virtual void AlignValue(ImVec2& value) = 0;
         virtual int EditPoint(size_t curveIndex, size_t pointIndex, ImVec2 value, CurveType type) = 0;
         virtual void AddPoint(size_t curveIndex, ImVec2 value, CurveType type) = 0;
         virtual float GetValue(size_t curveIndex, float t) = 0;
@@ -170,6 +171,9 @@ public:
     static float distance(float x1, float y1, float x2, float y2);
     static float distance(float x, float y, float x1, float y1, float x2, float y2);
     static bool Edit(ImDrawList* draw_list, Delegate& delegate, const ImVec2& size, unsigned int id, float& cursor_pos, unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, bool * changed = nullptr);
+    static bool Edit(ImDrawList* draw_list, Delegate& delegate, const ImVec2& size, unsigned int id, 
+                    float& cursor_pos, float firstTime, float lastTime, float visibleTime, float msPixelWidthTarget,
+                    unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, bool * changed = nullptr);
 };
 
 struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
@@ -242,7 +246,23 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
         }
         return -1;
     }
-
+    void AlignValue(ImVec2& value)
+    {
+        if (mAlign.x > 0)
+        {
+            int64_t value_x = value.x;
+            int64_t index = (int64_t)floor((double)value_x / mAlign.x);
+            value_x = index * mAlign.x;
+            value.x = value_x;
+        }
+        if (mAlign.y > 0)
+        {
+            int64_t value_y = value.y;
+            int64_t index = (int64_t)floor((double)value_y / mAlign.y);
+            value_y = index * mAlign.y;
+            value.y = value_y;
+        }
+    }
     void AddPoint(size_t curveIndex, ImVec2 value, ImCurveEdit::CurveType type)
     {
         if (curveIndex < mKeys.size())
@@ -359,6 +379,7 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
     void SetCurveMax(size_t curveIndex, float _max) { if (curveIndex < mKeys.size()) mKeys[curveIndex].m_max = _max;  }
     float GetCurveDefault(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].m_default; return 0.f; }
     void SetCurveDefault(size_t curveIndex, float _default) { if (curveIndex < mKeys.size()) mKeys[curveIndex].m_default = _default; }
+    void SetCurveAlign(ImVec2 align) { mAlign = align; }
     void SetCurvePointDefault(size_t curveIndex, size_t pointIndex)
     {
         if (curveIndex < mKeys.size())
@@ -473,6 +494,7 @@ private:
     std::vector<ImCurveEdit::keys> mKeys;
     ImVec2 mMin {-1.f, -1.f};
     ImVec2 mMax {-1.f, -1.f};
+    ImVec2 mAlign {0.f, 0.f};
     ImU32 BackgroundColor {IM_COL32(24, 24, 24, 255)};
     ImU32 GraticuleColor {IM_COL32(48, 48, 48, 128)};
 

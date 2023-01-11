@@ -159,13 +159,14 @@ int ImGui::ImCurveEdit::DrawPoint(ImDrawList* draw_list, ImVec2 pos, const ImVec
     return ret;
 }
 
-bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate& delegate, const ImVec2& size, unsigned int id, float& cursor_pos, unsigned int flags, const ImRect* clippingRect, bool * changed)
+bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate& delegate, const ImVec2& size, unsigned int id, 
+                            float& cursor_pos, float firstTime, float lastTime, float visibleTime, float msPixelWidthTarget,
+                            unsigned int flags, const ImRect* clippingRect, bool * changed)
 {
-    const float timeline_height = 30.f;
     bool hold = false;
     bool curve_changed = false;
     bool draw_timeline = flags & CURVE_EDIT_FLAG_DRAW_TIMELINE;
-
+    const float timeline_height = 30.f;
     ImGuiIO& io = ImGui::GetIO();
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
     ImGui::PushStyleColor(ImGuiCol_Border, 0);
@@ -176,13 +177,19 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate& delegate, const I
     if (!draw_list) draw_list = ImGui::GetWindowDrawList();
     if (clippingRect)
         draw_list->PushClipRect(clippingRect->Min, clippingRect->Max, true);
-    
-    ImVec2 edit_size = size - ImVec2(0, draw_timeline ? timeline_height + 4 : 4);
-    const ImVec2 offset = window_pos + ImVec2(0.f, draw_timeline ? timeline_height + edit_size.y + 2 : edit_size.y + 2);
+
+    ImVec2 edit_size = size - ImVec2(0, 4);
+    const ImVec2 offset = window_pos + ImVec2(0.f, edit_size.y + 2);
     const ImVec2 ssize(edit_size.x, -edit_size.y);
     const ImRect container(offset + ImVec2(0.f, ssize.y), offset + ImVec2(ssize.x, 0.f));
     ImVec2& vmin = delegate.GetMin();
     ImVec2& vmax = delegate.GetMax();
+    ImVec2 _vmin = ImVec2(firstTime, vmin.y);
+    ImVec2 _vmax = ImVec2(lastTime, vmax.y);
+    ImVec2 _range = _vmax - _vmin;
+    const ImVec2 viewSize(edit_size.x, -edit_size.y);
+    const size_t curveCount = delegate.GetCurveCount();
+    const ImVec2 sizeOfPixel = ImVec2(1.f, 1.f) / viewSize;
 
     // draw timeline and mark
     if (draw_timeline)
@@ -286,24 +293,16 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate& delegate, const I
             }
         }
     }
-    ImVec2 range = vmax - vmin;// + ImVec2(1.f, 0.f);  // +1 because of inclusive last frame
-
-    const ImVec2 viewSize(edit_size.x, -edit_size.y);
-    const ImVec2 sizeOfPixel = ImVec2(1.f, 1.f) / viewSize;
-    const size_t curveCount = delegate.GetCurveCount();
 
     if ((flags & CURVE_EDIT_FLAG_SCROLL_V) && delegate.scrollingV)
     {
-        float deltaH = io.MouseDelta.y * range.y * sizeOfPixel.y;
+        float deltaH = io.MouseDelta.y * _range.y * sizeOfPixel.y;
         vmin.y -= deltaH;
         vmax.y -= deltaH;
         if (!ImGui::IsMouseDown(2))
             delegate.scrollingV = false;
         curve_changed = true;
     }
-
-    auto pointToRange = [&](ImVec2 pt) { return (pt - vmin) / range; };
-    auto rangeToPoint = [&](ImVec2 pt) { return (pt * range) + vmin; };
 
     // draw graticule line
     const float graticule_height = edit_size.y / 10.f;
@@ -312,15 +311,17 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate& delegate, const I
         draw_list->AddLine(offset + ImVec2(0, - graticule_height * i), offset + ImVec2(edit_size.x, - graticule_height * i), delegate.GetGraticuleColor(), 1.0f);
     }
 
+    auto pointToRange = [&](ImVec2 pt) { return (pt - _vmin) / _range; };
+    auto rangeToPoint = [&](ImVec2 pt) { return (pt * _range) + _vmin; };
+
     // draw cursor line
-    if (cursor_pos >= vmin.x && cursor_pos <= vmax.x)
+    if (cursor_pos >= _vmin.x && cursor_pos <= _vmax.x)
     {
         auto pt = pointToRange(ImVec2(cursor_pos, 0)) * viewSize + offset;
         draw_list->AddLine(pt, pt - ImVec2(0, edit_size.y), IM_COL32(0, 255, 0, 224), 2);
     }
 
     bool overCurveOrPoint = false;
-
     int localOverCurve = -1;
     int localOverPoint = -1;
     // make sure highlighted curve is rendered last
@@ -347,11 +348,12 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate& delegate, const I
         float curve_width = 1.3f;
         if ((c == highLightedCurveIndex && delegate.selectedPoints.empty() && !delegate.selectingQuad) || delegate.movingCurve == c)
             curve_width = 2.6f;
-
         for (size_t p = 0; p < ptCount - 1; p++)
         {
             const ImVec2 p1 = pointToRange(pts[p].point);
             const ImVec2 p2 = pointToRange(pts[p + 1].point);
+            if (pts[p].point.x > lastTime || pts[p + 1].point.x < firstTime)
+                continue;
             CurveType curveType = delegate.GetCurvePointType(c, p + 1);
             size_t subStepCount = distance(pts[p].point.x, pts[p].point.y, pts[p + 1].point.x, pts[p + 1].point.y);
             if (subStepCount <= 1) subStepCount = 100;
@@ -360,7 +362,6 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate& delegate, const I
             for (size_t substep = 0; substep < subStepCount - 1; substep++)
             {
                 float t = float(substep) * step;
-
                 const ImVec2 sp1 = ImLerp(p1, p2, t);
                 const ImVec2 sp2 = ImLerp(p1, p2, t + step);
 
@@ -375,10 +376,9 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate& delegate, const I
                     localOverCurve = int(c);
                     delegate.overCurve = int(c);
                 }
-
                 draw_list->AddLine(pos1, pos2, curveColor, curve_width);
             } // substep
-        } // point loop
+        }// point loop
 
         for (size_t p = 0; p < ptCount; p++)
         {
@@ -398,7 +398,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate& delegate, const I
                 localOverPoint = (int)p;
             }
         }
-    } // curves loop
+    }  // curves loop
 
     if (localOverCurve == -1)
         delegate.overCurve = -1;
@@ -429,6 +429,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate& delegate, const I
                 const size_t ptCount = delegate.GetCurvePointCount(sel.curveIndex);
                 auto value_range = fabs(delegate.GetCurveMax(sel.curveIndex) - delegate.GetCurveMin(sel.curveIndex)); 
                 ImVec2 p = rangeToPoint(pointToRange(delegate.originalPoints[originalIndex].point) + (io.MousePos - delegate.mousePosOrigin) * sizeOfPixel);
+                delegate.AlignValue(p);
                 if (flags & CURVE_EDIT_FLAG_VALUE_LIMITED)
                 {
                     if (p.x < vmin.x) p.x = vmin.x;
@@ -480,11 +481,12 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate& delegate, const I
     // add point with double left click 
     if (delegate.overCurve != -1 && io.MouseDoubleClicked[0])
     {
-        const ImVec2 np = rangeToPoint((io.MousePos - offset) / viewSize);
+        ImVec2 np = rangeToPoint((io.MousePos - offset) / viewSize);
         const CurveType t = delegate.GetCurveType(delegate.overCurve);
         auto value_range = delegate.GetCurveMax(delegate.overCurve) - delegate.GetCurveMin(delegate.overCurve); 
         auto point_value = delegate.GetValue(delegate.overCurve, np.x);
         point_value = (point_value - delegate.GetCurveMin(delegate.overCurve)) / (value_range + FLT_EPSILON);
+        delegate.AlignValue(np);
         delegate.BeginEdit(delegate.overCurve);
         delegate.AddPoint(delegate.overCurve, ImVec2(np.x, point_value), t);
         delegate.EndEdit();
@@ -526,9 +528,9 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate& delegate, const I
         }
     }
 
+    // move curve
     if (flags & CURVE_EDIT_FLAG_MOVE_CURVE)
     {
-        // move curve
         if (delegate.movingCurve != -1)
         {
             auto value_range = fabs(delegate.GetCurveMax(delegate.movingCurve) - delegate.GetCurveMin(delegate.movingCurve)); 
@@ -631,13 +633,20 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate& delegate, const I
         draw_list->PopClipRect();
 
     ImGui::EndChildFrame();
-    ImGui::PopStyleVar();
     ImGui::PopStyleColor(2);
-
+    ImGui::PopStyleVar();
     if (changed)
         *changed = curve_changed;
-
     return hold;
+}
+
+bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate& delegate, const ImVec2& size, unsigned int id, float& cursor_pos, unsigned int flags, const ImRect* clippingRect, bool * changed)
+{
+    float firstTime = 0;
+    float lastTime = delegate.GetMax().x;
+    float visibleTime = lastTime;
+    float msPixelWidthTarget = 1.f;
+    return ImGui::ImCurveEdit::Edit(draw_list, delegate, size, id, cursor_pos, firstTime, lastTime, visibleTime, msPixelWidthTarget, flags, clippingRect, changed);
 }
 
 ImGui::KeyPointEditor& ImGui::KeyPointEditor::operator=(const ImGui::KeyPointEditor& keypoint)
