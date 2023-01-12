@@ -6373,6 +6373,22 @@ void ImGui::SpinnerIncScaleDots(const char *label, float radius, float thickness
     }
 }
 
+void ImGui::SpinnerSolarBalls(const char *label, float radius, float thickness, const ImColor &ball, const ImColor &bg, float speed, size_t balls)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = (float)ImGui::GetTime()* speed;
+    const float bg_angle_offset = PI_2 / num_segments;
+    for (int i = 0; i < balls; ++i) {
+        const float rb = (radius / balls) * 1.3f * (i + 1);
+        window->DrawList->AddCircle(centre, rb, bg, num_segments, thickness * 0.3f);
+    }
+    for (int i = 0; i < balls; ++i) {
+        const float rb = (radius / balls) * 1.3f * (i + 1);
+        const float a = start * (1.0 + 0.1f * i);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * rb, centre.y + ImSin(a) * rb), thickness, ball);
+    }
+}
+
 void ImGui::SpinnerBounceBall(const char *label, float radius, float thickness, const ImColor &color, float speed, int dots, bool shadow)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);

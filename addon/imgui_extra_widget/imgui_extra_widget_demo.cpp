@@ -457,6 +457,7 @@ void ShowExtraWidgetDemoWindow()
                     case 124: ImGui::SpinnerDnaDots("SpinnerDnaDotsV", 16, 3, ImColor(255, 255, 255), 2 * velocity, 8, 0.25f, true); ImGui::ShowTooltipOnHover("SpinnerDnaDotsV"); break;
                     case 125: ImGui::SpinnerRotateDots("SpinnerRotateDots2", 16, 6, ImColor(255, 255, 255), 4 * velocity, ImMax<int>(int(ImSin((float)ImGui::GetTime() * 0.5f) * 8), 3)); ImGui::ShowTooltipOnHover("SpinnerRotateDots2"); break;
                     case 126: ImGui::SpinnerSevenSegments("SpinnerSevenSegments", "012345679ABCDEF", 16, 2, ImColor(255, 255, 255), 4 * velocity); ImGui::ShowTooltipOnHover("SpinnerSevenSegments"); break;
+                    case 127: ImGui::SpinnerSolarBalls("SpinnerSolarBalls", 16, 4, ImColor(255, 0, 0), ImColor(255, 255, 255), 5 * velocity, 4); ImGui::ShowTooltipOnHover("SpinnerSolarBalls"); break;
 
                     // ...
                     default: break;
