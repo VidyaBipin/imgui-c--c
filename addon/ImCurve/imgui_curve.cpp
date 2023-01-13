@@ -159,8 +159,8 @@ int ImGui::ImCurveEdit::DrawPoint(ImDrawList* draw_list, ImVec2 pos, const ImVec
     return ret;
 }
 
-bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const ImVec2& size, unsigned int id, 
-                            float& cursor_pos, float firstTime, float lastTime, float visibleTime, float msPixelWidthTarget,
+bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const ImVec2& size, unsigned int id, bool editable, 
+                            float& cursor_pos, float firstTime, float lastTime, 
                             unsigned int flags, const ImRect* clippingRect, bool * changed)
 {
     bool hold = false;
@@ -169,6 +169,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     const float timeline_height = 30.f;
     if (!delegate) return hold;
     ImGuiIO& io = ImGui::GetIO();
+    bool bEnableDelete = ImGui::IsKeyDown(ImGuiKey_LeftShift) && (io.KeyMods == ImGuiMod_Shift);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
     ImGui::PushStyleColor(ImGuiCol_Border, 0);
     ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.f, 0.f, 0.f, 0.f));
@@ -319,7 +320,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     if (cursor_pos >= _vmin.x && cursor_pos <= _vmax.x)
     {
         auto pt = pointToRange(ImVec2(cursor_pos, 0)) * viewSize + offset;
-        draw_list->AddLine(pt - ImVec2(1, 0), pt - ImVec2(1, edit_size.y), IM_COL32(0, 255, 0, 224), 2);
+        draw_list->AddLine(pt - ImVec2(0.5, 0), pt - ImVec2(0.5, edit_size.y), IM_COL32(0, 255, 0, 224), 2);
     }
 
     bool overCurveOrPoint = false;
@@ -506,7 +507,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     }
 
     // delete point with right click
-    if (localOverCurve !=-1 && localOverPoint != -1 && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+    if (localOverCurve !=-1 && localOverPoint != -1 && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && editable && bEnableDelete)
     {
         bool deletable = true;
         if (flags & CURVE_EDIT_FLAG_KEEP_BEGIN_END)
@@ -641,13 +642,11 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     return hold;
 }
 
-bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const ImVec2& size, unsigned int id, float& cursor_pos, unsigned int flags, const ImRect* clippingRect, bool * changed)
+bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const ImVec2& size, unsigned int id, bool editable, float& cursor_pos, unsigned int flags, const ImRect* clippingRect, bool * changed)
 {
     float firstTime = 0;
     float lastTime = delegate ? delegate->GetMax().x : 0;
-    float visibleTime = lastTime;
-    float msPixelWidthTarget = 1.f;
-    return ImGui::ImCurveEdit::Edit(draw_list, delegate, size, id, cursor_pos, firstTime, lastTime, visibleTime, msPixelWidthTarget, flags, clippingRect, changed);
+    return ImGui::ImCurveEdit::Edit(draw_list, delegate, size, id, editable, cursor_pos, firstTime, lastTime, flags, clippingRect, changed);
 }
 
 ImGui::KeyPointEditor& ImGui::KeyPointEditor::operator=(const ImGui::KeyPointEditor& keypoint)

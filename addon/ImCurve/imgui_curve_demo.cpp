@@ -55,7 +55,7 @@ void ImGui::ShowCurveDemo()
     if (dock_begin_end) curvs_flags |= CURVE_EDIT_FLAG_DOCK_BEGIN_END;
     ImVec2 item_pos = ImGui::GetCursorScreenPos();
     float current_pos = -1.f;
-    ImGui::ImCurveEdit::Edit(nullptr, &rampEdit, ImVec2(size_x, 300), ImGui::GetID("##bezier_view"), current_pos, curvs_flags, nullptr, nullptr);
+    ImGui::ImCurveEdit::Edit(nullptr, &rampEdit, ImVec2(size_x, 300), ImGui::GetID("##bezier_view"), true, current_pos, curvs_flags, nullptr, nullptr);
     if (ImGui::IsItemHovered())
     {
         float pos = io.MousePos.x - item_pos.x;

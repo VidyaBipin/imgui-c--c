@@ -170,9 +170,9 @@ public:
     static float smoothstep(float edge0, float edge1, float t, CurveType type);
     static float distance(float x1, float y1, float x2, float y2);
     static float distance(float x, float y, float x1, float y1, float x2, float y2);
-    static bool Edit(ImDrawList* draw_list, Delegate* delegate, const ImVec2& size, unsigned int id, float& cursor_pos, unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, bool * changed = nullptr);
-    static bool Edit(ImDrawList* draw_list, Delegate* delegate, const ImVec2& size, unsigned int id, 
-                    float& cursor_pos, float firstTime, float lastTime, float visibleTime, float msPixelWidthTarget,
+    static bool Edit(ImDrawList* draw_list, Delegate* delegate, const ImVec2& size, unsigned int id, bool editable, float& cursor_pos, unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, bool * changed = nullptr);
+    static bool Edit(ImDrawList* draw_list, Delegate* delegate, const ImVec2& size, unsigned int id, bool editable,
+                    float& cursor_pos, float firstTime, float lastTime,
                     unsigned int flags = CURVE_EDIT_FLAG_NONE, const ImRect* clippingRect = NULL, bool * changed = nullptr);
 };
 
