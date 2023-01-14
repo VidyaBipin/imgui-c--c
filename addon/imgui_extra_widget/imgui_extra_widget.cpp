@@ -5605,19 +5605,24 @@ static bool SpinnerBegin(const char *label, float radius, ImVec2 &pos, ImVec2 &s
 auto circle = [&] (auto point_func, auto dbc, auto dth) { window->DrawList->PathClear(); for (int i = 0; i < num_segments; i++) { ImVec2 p = point_func(i); window->DrawList->PathLineTo(ImVec2(centre.x + p.x, centre.y + p.y)); } window->DrawList->PathStroke(dbc, false, dth); }
 inline ImColor color_alpha(ImColor c, float alpha) { c.Value.w = alpha; return c; }
 
-void ImGui::SpinnerRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed, float ang_min, float ang_max)
+void ImGui::SpinnerRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed, float ang_min, float ang_max, int arcs)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
 
-    const float start = ImAbs(ImSin((float)ImGui::GetTime() * 1.8f) * (num_segments - 5));
-    const float a_min = ImMax(ang_min, PI_2 * ((float)start) / (float)num_segments);
-    const float a_max = ImMin(ang_max, PI_2 * ((float)num_segments - 3) / (float)num_segments);
+    for (int i = 0; i < arcs; ++i)
+    {
+        const float rb = (radius / arcs) * (i + 1);
 
-    circle([&] (int i) {
-        const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
-        const float rspeed = a + (float)ImGui::GetTime() * speed;
-        return ImVec2(ImCos(rspeed) * radius, ImSin(rspeed) * radius);
-    }, color, thickness);
+        const float start = ImAbs(ImSin((float)ImGui::GetTime()) * (num_segments - 5));
+        const float a_min = ImMax(ang_min, PI_2 * ((float)start) / (float)num_segments + (IM_PI / arcs) * i);
+        const float a_max = ImMin(ang_max, PI_2 * ((float)num_segments - 3) / (float)num_segments);
+
+        circle([&] (int i) {
+            const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
+            const float rspeed = a + (float)ImGui::GetTime() * speed;
+            return ImVec2(ImCos(rspeed) * rb, ImSin(rspeed) * rb);
+        }, color, thickness);
+    }
 }
 
 void ImGui::SpinnerAng(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bg, float speed, float angle)
@@ -6376,7 +6381,7 @@ void ImGui::SpinnerIncScaleDots(const char *label, float radius, float thickness
 void ImGui::SpinnerSolarBalls(const char *label, float radius, float thickness, const ImColor &ball, const ImColor &bg, float speed, size_t balls)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
-    const float start = (float)ImGui::GetTime()* speed;
+    const float start = (float)ImGui::GetTime() * speed;
     const float bg_angle_offset = PI_2 / num_segments;
     for (int i = 0; i < balls; ++i) {
         const float rb = (radius / balls) * 1.3f * (i + 1);
@@ -6386,6 +6391,35 @@ void ImGui::SpinnerSolarBalls(const char *label, float radius, float thickness, 
         const float rb = (radius / balls) * 1.3f * (i + 1);
         const float a = start * (1.0 + 0.1f * i);
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * rb, centre.y + ImSin(a) * rb), thickness, ball);
+    }
+}
+
+void ImGui::SpinnerSolarArcs(const char *label, float radius, float thickness, const ImColor &ball, const ImColor &bg, float speed, size_t balls)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = (float)ImGui::GetTime()* speed;
+    const int half_segments = num_segments / 2;
+    for (int i = 0; i < balls; ++i)
+    {
+        const float rb = (radius / balls) * 1.3f * (i + 1);
+        const float bg_angle_offset = IM_PI / half_segments;
+        const float mul = i % 2 ? -1 : 1;
+        window->DrawList->PathClear();
+        for (size_t i = 0; i <= half_segments; i++)
+        {
+            const float a = (i * bg_angle_offset);
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * rb, centre.y + ImSin(a) * rb * mul));
+        }
+        window->DrawList->PathStroke(bg, false, thickness * 0.8f);
+    }
+    for (int i = 0; i < balls; ++i)
+    {
+        const float rb = (radius / balls) * 1.3f * (i + 1);
+        const float a = ImFmod(start * (1.0 + 0.1f * i), PI_2);
+        const float mul = i % 2 ? -1 : 1;
+        float y = ImSin(a) * rb;
+        if ((y > 0 && mul < 0) || (y < 0 && mul > 0)) y = -y;
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * rb, centre.y + y), thickness, ball);
     }
 }
 
