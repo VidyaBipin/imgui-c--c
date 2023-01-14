@@ -327,7 +327,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     int localOverCurve = -1;
     int localOverPoint = -1;
     // make sure highlighted curve is rendered last
-    int* curvesIndex = (int*)malloc(sizeof(int) * curveCount);
+    std::vector<int> curvesIndex(curveCount);
     for (size_t c = 0; c < curveCount; c++)
         curvesIndex[c] = int(c);
     int highLightedCurveIndex = -1;
@@ -795,6 +795,352 @@ void ImGui::KeyPointEditor::Save(imgui_json::value& keypoint)
         curves.push_back(curve);
     }
     keypoint["Curves"] = curves;
+}
+
+ImGui::ImCurveEdit::CurveType ImGui::KeyPointEditor::GetCurvePointType(size_t curveIndex, size_t point) const 
+{
+    if (curveIndex < mKeys.size())
+    {
+        if (point < mKeys[curveIndex].points.size())
+        {
+            return mKeys[curveIndex].points[point].type;
+        }
+    }
+    return ImCurveEdit::CurveType::Hold;
+}
+
+ImGui::ImCurveEdit::KeyPoint ImGui::KeyPointEditor::GetPoint(size_t curveIndex, size_t pointIndex)
+{
+    if (curveIndex < mKeys.size())
+    {
+        if (pointIndex < mKeys[curveIndex].points.size())
+        {
+            auto value_range = fabs(GetCurveMax(curveIndex) - GetCurveMin(curveIndex)); 
+            ImCurveEdit::KeyPoint point = mKeys[curveIndex].points[pointIndex];
+            point.point.y = point.point.y * value_range + GetCurveMin(curveIndex);
+            return point;
+        }
+    }
+    return {};
+}
+
+int ImGui::KeyPointEditor::EditPoint(size_t curveIndex, size_t pointIndex, ImVec2 value, ImCurveEdit::CurveType type)
+{
+    if (curveIndex < mKeys.size())
+    {
+        if (pointIndex < mKeys[curveIndex].points.size())
+        {
+            auto value_range = fabs(GetCurveMax(curveIndex) - GetCurveMin(curveIndex)); 
+            auto point_value = (value.y - GetCurveMin(curveIndex)) / (value_range + FLT_EPSILON);
+            mKeys[curveIndex].points[pointIndex] = {ImVec2(value.x, point_value), type};
+            SortValues(curveIndex);
+            for (size_t i = 0; i < GetCurvePointCount(curveIndex); i++)
+            {
+                if (mKeys[curveIndex].points[i].point.x == value.x)
+                    return (int)i;
+            }
+        }
+    }
+    return -1;
+}
+
+void ImGui::KeyPointEditor::AlignValue(ImVec2& value)
+{
+    if (mAlign.x > 0)
+    {
+        int64_t value_x = value.x;
+        int64_t index = (int64_t)floor((double)value_x / mAlign.x);
+        value_x = index * mAlign.x;
+        value.x = value_x;
+    }
+    if (mAlign.y > 0)
+    {
+        int64_t value_y = value.y;
+        int64_t index = (int64_t)floor((double)value_y / mAlign.y);
+        value_y = index * mAlign.y;
+        value.y = value_y;
+    }
+}
+
+void ImGui::KeyPointEditor::AddPoint(size_t curveIndex, ImVec2 value, ImCurveEdit::CurveType type)
+{
+    if (curveIndex < mKeys.size())
+    {
+        mKeys[curveIndex].points.push_back({ImVec2(value.x, value.y), type});
+        SortValues(curveIndex);
+    }
+}
+
+void ImGui::KeyPointEditor::ClearPoint(size_t curveIndex)
+{
+    if (curveIndex < mKeys.size())
+    {
+        mKeys[curveIndex].points.clear();
+    }
+}
+
+void ImGui::KeyPointEditor::DeletePoint(size_t curveIndex, size_t pointIndex)
+{
+    if (curveIndex < mKeys.size())
+    {
+        if (pointIndex < mKeys[curveIndex].points.size())
+        {
+            auto iter = mKeys[curveIndex].points.begin() + pointIndex;
+            mKeys[curveIndex].points.erase(iter);
+        }
+    }
+}
+
+int ImGui::KeyPointEditor::AddCurve(std::string name, ImCurveEdit::CurveType type, ImU32 color, bool visible, float _min, float _max, float _default)
+{
+    auto new_key = ImCurveEdit::keys(name, type, color, visible, _min, _max, _default);
+    mKeys.push_back(new_key);
+    return mKeys.size() - 1;
+}
+
+void ImGui::KeyPointEditor::DeleteCurve(size_t curveIndex)
+{
+    if (curveIndex < mKeys.size())
+    {
+        auto iter = mKeys.begin() + curveIndex;
+        mKeys.erase(iter);
+    }
+}
+
+void ImGui::KeyPointEditor::DeleteCurve(std::string name)
+{
+    int index = GetCurveIndex(name);
+    if (index != -1)
+    {
+        DeleteCurve(index);
+    }
+}
+
+int ImGui::KeyPointEditor::GetCurveIndex(std::string name)
+{
+    int index = -1;
+    auto iter = std::find_if(mKeys.begin(), mKeys.end(), [name](const ImCurveEdit::keys& key)
+    {
+        return key.name == name;
+    });
+    if (iter != mKeys.end())
+    {
+        index = iter - mKeys.begin();
+    }
+    return index;
+}
+
+float ImGui::KeyPointEditor::GetPointValue(size_t curveIndex, float t)
+{
+    auto value_range = GetCurveMax(curveIndex) - GetCurveMin(curveIndex); 
+    auto value = GetValue(curveIndex, t);
+    value = (value - GetCurveMin(curveIndex)) / (value_range + FLT_EPSILON);
+    return value;
+}
+
+float ImGui::KeyPointEditor::GetValue(size_t curveIndex, float t)
+{
+    if (curveIndex <  mKeys.size())
+    {
+        auto range = GetMax() - GetMin() + ImVec2(1.f, 0.f); 
+        auto value_range = fabs(GetCurveMax(curveIndex) - GetCurveMin(curveIndex)); 
+        auto pointToRange = [&](ImVec2 pt) { return (pt - GetMin()) / range; };
+        const size_t ptCount = GetCurvePointCount(curveIndex);
+        if (ptCount <= 0)
+            return 0;
+        const ImCurveEdit::KeyPoint* pts = GetPoints(curveIndex);
+        if (ptCount <= 1)
+            return pointToRange(pts[0].point).x;
+        int found_index = -1;
+        for (int i = 0; i < ptCount - 1; i++)
+        {
+            if (t >= pts[i].point.x && t <= pts[i + 1].point.x)
+            {
+                found_index = i;
+                break;
+            }
+        }
+        if (found_index != -1)
+        {
+            const ImVec2 p1 = pointToRange(pts[found_index].point);
+            const ImVec2 p2 = pointToRange(pts[found_index + 1].point);
+            float x = (t - pts[found_index].point.x) / (pts[found_index + 1].point.x - pts[found_index].point.x);
+            const ImVec2 sp = ImLerp(p1, p2, x);
+            ImCurveEdit::CurveType type = (t - pts[found_index].point.x) < (pts[found_index + 1].point.x - t) ? pts[found_index].type : pts[found_index + 1].type;
+            const float rt = ImCurveEdit::smoothstep(p1.x, p2.x, sp.x, type);
+            const float v = ImLerp(p1.y, p2.y, rt);
+            return v * value_range + GetCurveMin(curveIndex);
+        }
+    }
+    return 0;
+}
+
+void ImGui::KeyPointEditor::SetCurvePointDefault(size_t curveIndex, size_t pointIndex)
+{
+    if (curveIndex < mKeys.size())
+    {
+        if (pointIndex < mKeys[curveIndex].points.size())
+        {
+            auto value_range = fabs(GetCurveMax(curveIndex) - GetCurveMin(curveIndex)); 
+            auto value_default = GetCurveDefault(curveIndex);
+            value_default = (value_default - GetCurveMin(curveIndex)) / (value_range + FLT_EPSILON);
+            mKeys[curveIndex].points[pointIndex].point.y = value_default;
+            mKeys[curveIndex].points[pointIndex].type = GetCurveType(curveIndex);
+        }
+    }
+}
+
+void ImGui::KeyPointEditor::MoveTo(float x)
+{
+    float offset = x - mMin.x;
+    float length = fabs(mMax.x - mMin.x);
+    mMin.x = x;
+    mMax.x = mMin.x + length;
+    for (size_t i = 0; i < mKeys.size(); i++)
+    {
+        for (auto iter = mKeys[i].points.begin(); iter != mKeys[i].points.end(); iter++)
+        {
+            iter->point.x += offset;
+        }
+    }
+}
+
+void ImGui::KeyPointEditor::SetMin(ImVec2 vmin, bool dock)
+{
+    if (dock)
+    {
+        for (size_t i = 0; i < mKeys.size(); i++)
+        {
+            // first get current begin value
+            auto value = GetPointValue(i, mMin.x);
+            if (vmin.x > mMin.x) value = GetPointValue(i, vmin.x);
+            // second delete out of range points, keep begin end
+            if (mKeys[i].points.size() > 2)
+            {
+                for (auto iter = mKeys[i].points.begin() + 1; iter != mKeys[i].points.end() - 1;)
+                {
+                    if (iter->point.x < vmin.x || iter->point.y < vmin.y)
+                    {
+                        iter = mKeys[i].points.erase(iter);
+                    }
+                    else
+                        ++iter;
+                }
+            }
+            // finanl reset begin point
+            if (mKeys[i].points.size() > 0)
+            {
+                auto start_iter = mKeys[i].points.begin();
+                if (start_iter != mKeys[i].points.end()) 
+                {
+                    start_iter->point.x = vmin.x;
+                    start_iter->point.y = value;
+                }
+            }
+        }
+    }
+    mMin = vmin;
+}
+
+void ImGui::KeyPointEditor::SetMax(ImVec2 vmax, bool dock)
+{
+    if (dock)
+    {
+        for (size_t i = 0; i < mKeys.size(); i++)
+        {
+            // first get current begin value
+            auto value = GetPointValue(i, mMax.x);
+            if (vmax.x < mMax.x) value = GetPointValue(i, vmax.x);
+            // second delete out of range points, keep begin end
+            if (mKeys[i].points.size() > 2)
+            {
+                for (auto iter = mKeys[i].points.begin() + 1; iter != mKeys[i].points.end() - 1;)
+                {
+                    if (iter->point.x > vmax.x)
+                    {
+                        iter = mKeys[i].points.erase(iter);
+                    }
+                    else
+                        ++iter;
+                }
+            }
+            // finanl reset begin end point
+            if (mKeys[i].points.size() > 0)
+            {
+                auto end_iter = mKeys[i].points.begin() + mKeys[i].points.size() - 1;
+                if (end_iter != mKeys[i].points.end()) 
+                {
+                    end_iter->point.x = vmax.x;
+                    end_iter->point.y = value;
+                }
+            }
+        }
+    }
+    mMax = vmax;
+}
+
+ImVec2 ImGui::KeyPointEditor::GetPrevPoint(float pos)
+{
+    ImVec2 point(0, 0);
+    const size_t curveCount = GetCurveCount();
+    float min_pos = FLT_MAX;
+    for (size_t cur = 0; cur < curveCount; cur++)
+    {
+        const size_t ptCount = GetCurvePointCount(cur);
+        const ImCurveEdit::KeyPoint* pts = GetPoints(cur);
+        for (size_t p = ptCount - 1; p >= 0; p--)
+        {
+            const ImVec2 p1 = pts[p].point;
+            if (p1.x > pos)
+                continue;
+            if (p1.x == pos && p != 0)
+                continue;
+            if (p1.x < min_pos)
+            {
+                min_pos = p1.x;
+                point.x = min_pos;
+                break;
+            }
+        }
+    }
+    return point;
+}
+
+ImVec2 ImGui::KeyPointEditor::GetNextPoint(float pos)
+{
+    ImVec2 point(0, 0);
+    const size_t curveCount = GetCurveCount();
+    float max_pos = FLT_MIN;
+    for (size_t cur = 0; cur < curveCount; cur++)
+    {
+        const size_t ptCount = GetCurvePointCount(cur);
+        const ImCurveEdit::KeyPoint* pts = GetPoints(cur);
+        for (size_t p = 0; p < ptCount; p++)
+        {
+            const ImVec2 p1 = pts[p].point;
+            if (p1.x < pos)
+                continue;
+            if (p1.x == pos && p != ptCount - 1)
+                continue;
+            if (p1.x > max_pos)
+            {
+                max_pos = p1.x;
+                point.x = max_pos;
+                break;
+            }
+        }
+    }
+    return point;
+}
+
+void ImGui::KeyPointEditor::SortValues(size_t curveIndex)
+{
+    if (curveIndex < mKeys.size())
+    {
+        auto b = std::begin(mKeys[curveIndex].points);
+        auto e = std::begin(mKeys[curveIndex].points) + GetCurvePointCount(curveIndex);
+        std::sort(b, e, [](ImCurveEdit::KeyPoint a, ImCurveEdit::KeyPoint b) { return a.point.x < b.point.x; });
+    }
 }
 
 bool ImGui::ImCurveEditKey(std::string button_lable, ImGui::ImCurveEdit::keys * key, std::string name, float _min, float _max, float _default, float space)
