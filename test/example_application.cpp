@@ -18,6 +18,7 @@
 #include <imgui_node_editor.h>
 #include <imgui_curve.h>
 #include <imgui_spline.h>
+#include <ImGuiZMOquat.h>
 #if IMGUI_VULKAN_SHADER
 #include <ImVulkanShader.h>
 #endif
@@ -227,6 +228,7 @@ public:
     bool show_node_editor_window = false;
     bool show_curve_demo_window = false;
     bool show_spline_demo_window = false;
+    bool show_zmoquat_window = false;
 
 public:
     void DrawLineDemo();
@@ -519,6 +521,7 @@ bool Application_Frame(void* handle, bool app_will_quit)
         ImGui::Checkbox("Show Node Editor Window", &example->show_node_editor_window);
         ImGui::Checkbox("Show Curve Demo Window", &example->show_curve_demo_window);
         ImGui::Checkbox("Show Spline Demo Window", &example->show_spline_demo_window);
+        ImGui::Checkbox("Show ZmoQuat Demo Window", &example->show_zmoquat_window);
 
 #if IMGUI_VULKAN_SHADER
         ImGui::Checkbox("Show Vulkan Shader Test Window", &example->show_shader_window);
@@ -714,6 +717,17 @@ bool Application_Frame(void* handle, bool app_will_quit)
         if (ImGui::Begin("Example: Spline Demo", &example->show_spline_demo_window, ImGuiWindowFlags_NoScrollbar))
         {
             ImGui::ShowSplineDemo();   // see its code for further info         
+        }
+        ImGui::End();
+    }
+
+    // Show Zmo Quat Window
+    if (example->show_zmoquat_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(1280, 900), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("ZMOQuat", &example->show_zmoquat_window, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar))
+        {
+            ImGui::ShowGizmoDemo();
         }
         ImGui::End();
     }

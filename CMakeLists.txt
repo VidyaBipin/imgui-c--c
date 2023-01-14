@@ -1005,6 +1005,33 @@ if(IMGUI_BUILD_EXAMPLE)
     )
 endif(IMGUI_BUILD_EXAMPLE)
 
+# ImGuiQuat
+set(IMGUI_SRC
+    ${IMGUI_SRC}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/ImGuiZMOquat.cpp
+)
+set(IMGUI_INCS
+    ${IMGUI_INCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/ImGuiZMOquat.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/vgConfig.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/vGizmo.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/vGizmoMath.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/vgMath.h
+)
+
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat
+)
+
+if(IMGUI_BUILD_EXAMPLE)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/ImGuiZmoQuat_demo.cpp
+    )
+endif(IMGUI_BUILD_EXAMPLE)
+
+
 if(ZLIB_FOUND)
     add_definitions(-DIMGUI_USE_ZLIB)
     set(LINK_LIBS
@@ -1153,7 +1180,7 @@ endif(IMGUI_STATIC)
 set(IMGUI_VERSION_MAJOR 1)
 set(IMGUI_VERSION_MINOR 89)
 set(IMGUI_VERSION_PATCH 20)
-set(IMGUI_VERSION_BUILD 01)
+set(IMGUI_VERSION_BUILD 02)
 set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH}.${IMGUI_VERSION_BUILD})
 
 add_library(imgui ${LIBRARY} ${IMGUI_SRC} ${IMGUI_INCS})
