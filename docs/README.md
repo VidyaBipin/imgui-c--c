@@ -19,6 +19,8 @@ Add following addon collection also：
   ![node edit view Image](images/nodeeditor.jpg)
 * TextEditor and other widget(https://github.com/Flix01/imgui/tree/imgui_with_addons/addons)
   ![text edit view Image](images/texteditor.jpg)
+* Custom Toggle widget(https://github.com/cmdwtf/imgui_toggle)
+  ![Custom Toggle View](images/toggle.jpg)
 * Hotkey(https://github.com/CedricGuillemet/ImHotKey)
   ![hotkey view Image](images/hotkey.jpg)
 * ImageInspect(https://github.com/CedricGuillemet/imgInspect)
