@@ -1005,7 +1005,7 @@ if(IMGUI_BUILD_EXAMPLE)
     )
 endif(IMGUI_BUILD_EXAMPLE)
 
-# ImGuiQuat
+# ImGuiZmoQuat
 set(IMGUI_SRC
     ${IMGUI_SRC}
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/ImGuiZMOquat.cpp
@@ -1028,6 +1028,28 @@ if(IMGUI_BUILD_EXAMPLE)
     set(IMGUI_SRC
         ${IMGUI_SRC}
         ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/ImGuiZmoQuat_demo.cpp
+    )
+endif(IMGUI_BUILD_EXAMPLE)
+
+# ImGuiZmo
+set(IMGUI_SRC
+    ${IMGUI_SRC}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiZmo.cpp
+)
+set(IMGUI_INCS
+    ${IMGUI_INCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiZmo.h
+)
+
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo
+)
+
+if(IMGUI_BUILD_EXAMPLE)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiZmo_demo.cpp
     )
 endif(IMGUI_BUILD_EXAMPLE)
 
@@ -1180,7 +1202,7 @@ endif(IMGUI_STATIC)
 set(IMGUI_VERSION_MAJOR 1)
 set(IMGUI_VERSION_MINOR 89)
 set(IMGUI_VERSION_PATCH 20)
-set(IMGUI_VERSION_BUILD 04)
+set(IMGUI_VERSION_BUILD 05)
 set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH}.${IMGUI_VERSION_BUILD})
 
 add_library(imgui ${LIBRARY} ${IMGUI_SRC} ${IMGUI_INCS})

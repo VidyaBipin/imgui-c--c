@@ -1,7 +1,7 @@
 #include "ImGuiZMOquat.h"
 #include "vgMath.h"
 
-void ImGui::ShowGizmoDemo()
+void ImGui::ShowQuatDemo()
 {
     static vec3 tLight =  vec3(3.f,3.f,3.f);
     static vec4 quatPt = vec4(-0.65f, 0.4f, 0.25f, 0.05f);

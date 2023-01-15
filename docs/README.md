@@ -1,6 +1,8 @@
 Fork from *Dear ImGui(https://github.com/ocornut/imgui)* docking/multiview branch and stack layout support and add CMake build script
 Add following addon collection also：
 
+* ImGuiZmo(https://github.com/CedricGuillemet/ImGuizmo)
+  ![ImGuiZmo view Image](images/zmo.jpg)
 * imGuIZMO.quat(https://github.com/BrutPitt/imGuIZMO.quat)
   ![imGuIZMOquat view Image](images/zmoquat.jpg)
 * implot(https://github.com/epezent/implot)

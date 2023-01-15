@@ -332,7 +332,7 @@ IMGUI_API bool gizmo3D(const char*, vec3&, quat&, vec3&, float=IMGUIZMO_DEF_SIZE
 #if IMGUI_BUILD_EXAMPLE
 namespace ImGui
 {
-    IMGUI_API void ShowGizmoDemo(); 
+    IMGUI_API void ShowQuatDemo(); 
 }
 #endif
 //#undef imguiGizmo_DEF_SIZE
