@@ -20,6 +20,7 @@
 #include <imgui_spline.h>
 #include <ImGuiZMOquat.h>
 #include <ImGuiZmo.h>
+#include <imgui_toggle.h>
 
 #if IMGUI_VULKAN_SHADER
 #include <ImVulkanShader.h>
@@ -232,6 +233,7 @@ public:
     bool show_spline_demo_window = false;
     bool show_zmoquat_window = false;
     bool show_zmo_window = false;
+    bool show_toggle_window = false;
 
 public:
     void DrawLineDemo();
@@ -526,6 +528,7 @@ bool Application_Frame(void* handle, bool app_will_quit)
         ImGui::Checkbox("Show Spline Demo Window", &example->show_spline_demo_window);
         ImGui::Checkbox("Show ZmoQuat Demo Window", &example->show_zmoquat_window);
         ImGui::Checkbox("Show Zmo Demo Window", &example->show_zmo_window);
+        ImGui::Checkbox("Show Toggle Demo Window", &example->show_toggle_window);
 
 #if IMGUI_VULKAN_SHADER
         ImGui::Checkbox("Show Vulkan Shader Test Window", &example->show_shader_window);
@@ -744,6 +747,16 @@ bool Application_Frame(void* handle, bool app_will_quit)
         ImGuizmo::ShowImGuiZmoDemo();
         ImGui::End();
     }
+
+    // Show Toggle Window
+    if (example->show_toggle_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(1280, 800), ImGuiCond_FirstUseEver);
+        ImGui::Begin("##Toggle", &example->show_toggle_window, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar);
+        ImGui::imgui_toggle_example();
+        ImGui::End();
+    }
+
 #if IMGUI_VULKAN_SHADER
     // Show Vulkan Shader Test Window
     if (example->show_shader_window)

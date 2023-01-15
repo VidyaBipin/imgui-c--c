@@ -1053,6 +1053,35 @@ if(IMGUI_BUILD_EXAMPLE)
     )
 endif(IMGUI_BUILD_EXAMPLE)
 
+# imgui toggle
+set(IMGUI_SRC
+    ${IMGUI_SRC}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_toggle/imgui_toggle.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_toggle/imgui_toggle_palette.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_toggle/imgui_toggle_presets.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_toggle/imgui_toggle_renderer.cpp
+)
+set(IMGUI_INCS
+    ${IMGUI_INCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_toggle/imgui_toggle.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_toggle/imgui_offset_rect.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_toggle/imgui_toggle_math.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_toggle/imgui_toggle_palette.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_toggle/imgui_toggle_presets.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_toggle/imgui_toggle_renderer.h
+)
+
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_toggle
+)
+
+if(IMGUI_BUILD_EXAMPLE)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_toggle/imgui_toggle_demo.cpp
+    )
+endif(IMGUI_BUILD_EXAMPLE)
 
 if(ZLIB_FOUND)
     add_definitions(-DIMGUI_USE_ZLIB)
