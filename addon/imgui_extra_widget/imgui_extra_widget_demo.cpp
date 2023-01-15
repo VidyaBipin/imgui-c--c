@@ -152,6 +152,34 @@ void ShowExtraWidgetDemoWindow()
         {
             // choice OK here
         }
+
+        // CheckboxFlags Overload
+        ImGui::Spacing();
+        ImGui::AlignTextToFramePadding();ImGui::Text("CheckBoxFlags Overload:");
+        static int numFlags=16;
+        static int numRows=2;
+        static int numColumns=3;
+        ImGui::PushItemWidth(ImGui::GetWindowWidth()*0.2f);
+        ImGui::SliderInt("Flags##CBF_Flags",&numFlags,1,20);ImGui::SameLine();
+        ImGui::SliderInt("Rows##CBF_Rows",&numRows,1,4);ImGui::SameLine();
+        ImGui::SliderInt("Columns##CBF_Columns",&numColumns,1,5);
+        ImGui::PopItemWidth();
+
+        static unsigned int cbFlags = (unsigned int)  128+32+8+1;
+        static const unsigned int cbAnnotationFlags = 0;//132;   // Optional (default is zero = no annotations)
+        int flagIndexHovered = -1;  // Optional
+        ImGui::CheckboxFlags("Flags###CBF_Overload",&cbFlags,numFlags,numRows,numColumns,cbAnnotationFlags,&flagIndexHovered);
+        if (flagIndexHovered!=-1) {
+            // Test: Manual positional tooltip
+            ImVec2 m = ImGui::GetIO().MousePos;
+            ImGui::SetNextWindowPos(ImVec2(m.x, m.y+ImGui::GetTextLineHeightWithSpacing()));
+            ImGui::Begin("CBF_Overload_Tooltip", NULL, ImGuiWindowFlags_Tooltip | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar);
+            ImGui::Text("flag %d. Hold shift\nwhile clicking to toggle it",flagIndexHovered);
+            ImGui::End();
+        }
+        // BUG: This is completely wrong (both x and y position):
+        //ImGui::SameLine(0,0);ImGui::Text("%s","Test");    // (I don't know how to get this fixed)
+
         ImGui::TreePop();
     }
     if (ImGui::TreeNode("Line leader"))
@@ -746,6 +774,44 @@ void ShowExtraWidgetDemoWindow()
     { 
         static float v[5] = { 0.950f, 0.050f, 0.795f, 0.035f }; 
         ImGui::BezierSelect("##easeInExpo", ImVec2(200, 200), v);
+        ImGui::TreePop();
+    }
+    if (ImGui::TreeNode("virtual keyboard##VK"))
+    {
+        static int keyboardLogicalLayoutIndex = ImGui::KLL_QWERTY;
+        static int keyboardPhysicalLayoutIndex = ImGui::KPL_ISO;
+        static ImGui::VirtualKeyboardFlags virtualKeyboardFlags = ImGui::VirtualKeyboardFlags_ShowAllBlocks; // ShowAllBlocks displays all the keyboard parts
+        static ImGuiKey lastKeyReturned = ImGuiKey_COUNT;
+
+        const float w = ImGui::GetContentRegionAvail().x*0.15f;
+        ImGui::SetNextItemWidth(w);
+        ImGui::Combo("Logical Layout##VK",&keyboardLogicalLayoutIndex,ImGui::GetKeyboardLogicalLayoutNames(),ImGui::KLL_COUNT);
+        ImGui::SameLine(0.f,w);
+        ImGui::SetNextItemWidth(w);
+        ImGui::Combo("Physical Layout##VK",&keyboardPhysicalLayoutIndex,ImGui::GetKeyboardPhysicalLayoutNames(),ImGui::KPL_COUNT);
+
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x*0.35f);
+
+        static const char* tooltips[6] = {"ShowBaseBlock","ShowFunctionBlock","ShowArrowBlock","ShowKeypadBlock","NoMouseInteraction","NoKeyboardInteraction"};
+        int flagHovered = -1;
+        if (ImGui::CheckboxFlags("Flags##VKFlags",&virtualKeyboardFlags,6,1,1,0,&flagHovered)) lastKeyReturned = ImGuiKey_COUNT;;
+        if (flagHovered>=0 && flagHovered<6) ImGui::SetTooltip("hold SHIFT to toggle the \"%s\" flag",tooltips[flagHovered]);
+
+        ImGui::Spacing();
+
+        ImGuiKey keyReturned =  ImGuiKey_COUNT;
+
+        const ImVec2 childWindowSize(0,350.f*ImGui::GetFontSize()/18.f);
+        ImGui::SetNextWindowSize(childWindowSize);
+        if (ImGui::BeginChild("VirtualKeyBoardChildWindow##VK",childWindowSize,false,ImGuiWindowFlags_HorizontalScrollbar)) {
+            // Draw an arbitrary keyboard layout to visualize translated keys
+            keyReturned = ImGui::VirtualKeyboard(virtualKeyboardFlags,(ImGui::KeyboardLogicalLayout) keyboardLogicalLayoutIndex,(ImGui::KeyboardPhysicalLayout) keyboardPhysicalLayoutIndex);
+            // ---------------------------------------------------------------
+        }
+        ImGui::EndChild();
+        if (keyReturned!=ImGuiKey_COUNT) lastKeyReturned = keyReturned;
+        if (lastKeyReturned!=ImGuiKey_COUNT) ImGui::Text("Last returned ImGuiKey: \"%s\"",lastKeyReturned==ImGuiKey_None?"NONE":ImGui::GetKeyName(lastKeyReturned));
+
         ImGui::TreePop();
     }
     if (ImGui::TreeNode("Splitter windows"))

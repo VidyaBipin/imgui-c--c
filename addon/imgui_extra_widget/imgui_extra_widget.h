@@ -127,6 +127,15 @@ IMGUI_API bool RangeSelectVec2(const char* pLabel, ImVec2* pCurMin, ImVec2* pCur
 IMGUI_API bool  BezierSelect(const char *label, const ImVec2 size, float P[5]);    // P[4] is curve presets(0 - 24)
 IMGUI_API float BezierValue(float dt01, float P[4], int step = 0);
 
+// Experimental: CheckboxFlags(...) overload to handle multiple flags with a single call
+// returns the value of the pressed flag (not the index of the check box), or zero
+// flagAnnotations, when!=0, just displays a circle in the required checkboxes
+// itemHoveredOut, when used, returns the index of the hovered check box (not its flag), or -1.
+// pFlagsValues, when used, must be numFlags long, and must contain the flag values (not the flag indices) that the control must use.
+// KNOWN BUG: When ImGui::SameLine() is used after it, the alignment is broken
+IMGUI_API unsigned int CheckboxFlags(const char* label,unsigned int* flags,int numFlags,int numRows,int numColumns,unsigned int flagAnnotations=0,int* itemHoveredOut=NULL,const unsigned int* pFlagsValues=NULL);
+IMGUI_API unsigned int CheckboxFlags(const char* label,int* flags,int numFlags,int numRows,int numColumns,unsigned int flagAnnotations=0,int* itemHoveredOut=NULL,const unsigned int* pFlagsValues=NULL);
+
 // Color Processing
 // func: ImU32(*func)(float const x, float const y)
 template < typename Type >
@@ -666,6 +675,46 @@ protected:
     bool m_DontAskAgain;
     int m_Selected;
 };
+}
+
+namespace ImGui {
+    // Virtual Keyboard
+    // USAGE: to get started, just call VirtualKeyboard() in one of your ImGui windows
+    enum KeyboardLogicalLayout {
+      KLL_QWERTY = 0,
+      KLL_QWERTZ,
+      KLL_AZERTY,
+      KLL_COUNT
+    };
+    IMGUI_API const char** GetKeyboardLogicalLayoutNames();
+    enum KeyboardPhysicalLayout {
+      KPL_ANSI = 0,
+      KPL_ISO,
+      KPL_JIS,
+      KPL_COUNT
+    };
+    IMGUI_API const char** GetKeyboardPhysicalLayoutNames();
+    enum VirtualKeyboardFlags_ {
+        VirtualKeyboardFlags_ShowBaseBlock       =   1<<0,
+        VirtualKeyboardFlags_ShowFunctionBlock   =   1<<1,
+        VirtualKeyboardFlags_ShowArrowBlock      =   1<<2,  // This can't be excluded when both VirtualKeyboardFlags_BlockBase and VirtualKeyboardFlags_BlockKeypad are used
+        VirtualKeyboardFlags_ShowKeypadBlock     =   1<<3,
+        VirtualKeyboardFlags_ShowAllBlocks        =   VirtualKeyboardFlags_ShowBaseBlock|VirtualKeyboardFlags_ShowFunctionBlock|VirtualKeyboardFlags_ShowArrowBlock|VirtualKeyboardFlags_ShowKeypadBlock,
+        VirtualKeyboardFlags_NoMouseInteraction = 1<<4,
+        VirtualKeyboardFlags_NoKeyboardInteraction = 1<<5,
+        VirtualKeyboardFlags_NoInteraction = VirtualKeyboardFlags_NoMouseInteraction | VirtualKeyboardFlags_NoKeyboardInteraction
+    };
+    typedef int VirtualKeyboardFlags;
+    // Displays a virtual keyboard.
+    // It always returns ImGuiKey_COUNT, unless:
+    //     a) a mouse is clicked (clicked event) on a key AND flag VirtualKeyboardFlags_NoMouseInteraction is not used (DEFAULT)
+    //     b) a key is typed (released event) AND VirtualKeyboardFlags_NoKeyboardInteraction is not used (DEFAULT). Note that multiple keys can be pressed together, but only one is returned.
+    // In that case, it returns the clicked (or typed) key.
+    IMGUI_API ImGuiKey VirtualKeyboard(VirtualKeyboardFlags flags=VirtualKeyboardFlags_ShowAllBlocks,KeyboardLogicalLayout logicalLayout=KLL_QWERTY,KeyboardPhysicalLayout physicalLayout=KPL_ISO);
+
+    // Possible improvements (in random order):
+    // 1) The L-shaped enter key is not displayed perfectly. Improve it.
+    // 2) Add entries to the KeyboardLogicalLayout enum and implement keyboards for specific countries, riducing the number of 'empty' keys present in the general layout.
 } // namespace ImGui
 
 #endif // IMGUI_WIDGET_H
