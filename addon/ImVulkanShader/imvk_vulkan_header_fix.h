@@ -232,3 +232,15 @@ typedef struct VkPhysicalDeviceCooperativeMatrixPropertiesNV
 typedef VkResult(VKAPI_PTR* PFN_vkGetPhysicalDeviceCooperativeMatrixPropertiesNV)(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkCooperativeMatrixPropertiesNV* pProperties);
 #endif // VK_HEADER_VERSION < 101
 
+#if VK_HEADER_VERSION < 208
+//typedef enum VkShaderInstanceCreateFlagBits
+//{
+#if !defined(VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR)
+#define VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR 0x00000001
+#endif
+#if !defined(VK_INSTANCE_CREATE_FLAG_BITS_MAX_ENUM)
+#define VK_INSTANCE_CREATE_FLAG_BITS_MAX_ENUM 0x7FFFFFFF
+#endif
+//} VkShaderInstanceCreateFlagBits;
+#endif // VK_HEADER_VERSION < 208
+

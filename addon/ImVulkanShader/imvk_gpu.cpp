@@ -70,6 +70,7 @@ struct layer_shader_registry_entry
 int support_VK_KHR_external_memory_capabilities = 0;
 int support_VK_KHR_get_physical_device_properties2 = 0;
 int support_VK_KHR_get_surface_capabilities2 = 0;
+int support_VK_KHR_portability_enumeration = 0;
 int support_VK_KHR_surface = 0;
 int support_VK_EXT_debug_utils = 0;
 
@@ -195,6 +196,7 @@ public:
     int support_VK_KHR_maintenance2;
     int support_VK_KHR_maintenance3;
     int support_VK_KHR_multiview;
+    int support_VK_KHR_portability_subset;
     int support_VK_KHR_push_descriptor;
     int support_VK_KHR_sampler_ycbcr_conversion;
     int support_VK_KHR_shader_float16_int8;
@@ -535,6 +537,11 @@ int GpuInfo::support_VK_KHR_maintenance3() const
 int GpuInfo::support_VK_KHR_multiview() const
 {
     return d->support_VK_KHR_multiview;
+}
+
+int GpuInfo::support_VK_KHR_portability_subset() const
+{
+    return d->support_VK_KHR_portability_subset;
 }
 
 int GpuInfo::support_VK_KHR_push_descriptor() const
@@ -886,6 +893,7 @@ int create_gpu_instance()
 
     support_VK_KHR_get_physical_device_properties2 = 0;
     support_VK_KHR_get_surface_capabilities2 = 0;
+    support_VK_KHR_portability_enumeration = 0;
     support_VK_KHR_surface = 0;
     support_VK_EXT_debug_utils = 0;
     for (uint32_t j = 0; j < instanceExtensionPropertyCount; j++)
@@ -901,6 +909,8 @@ int create_gpu_instance()
             support_VK_KHR_get_physical_device_properties2 = exp.specVersion;
         else if (strcmp(exp.extensionName, "VK_KHR_get_surface_capabilities2") == 0)
             support_VK_KHR_get_surface_capabilities2 = exp.specVersion;
+        else if (strcmp(exp.extensionName, "VK_KHR_portability_enumeration") == 0)
+            support_VK_KHR_portability_enumeration = exp.specVersion;
         else if (strcmp(exp.extensionName, "VK_KHR_surface") == 0)
             support_VK_KHR_surface = exp.specVersion;
         else if (strcmp(exp.extensionName, "VK_EXT_debug_utils") == 0)
@@ -913,6 +923,8 @@ int create_gpu_instance()
         enabledExtensions.push_back("VK_KHR_get_physical_device_properties2");
     if (support_VK_KHR_get_surface_capabilities2)
         enabledExtensions.push_back("VK_KHR_get_surface_capabilities2");
+    if (support_VK_KHR_portability_enumeration)
+        enabledExtensions.push_back("VK_KHR_portability_enumeration");
     if (support_VK_KHR_surface)
         enabledExtensions.push_back("VK_KHR_surface");
 #if ENABLE_VALIDATION_LAYER
@@ -947,13 +959,11 @@ int create_gpu_instance()
     applicationInfo.apiVersion = instance_api_version;
 
     VkInstanceCreateInfo instanceCreateInfo;
-#if defined(__APPLE__) && VK_HEADER_VERSION >= 216
-    enabledExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-    enabledExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-    instanceCreateInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-#endif
     instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instanceCreateInfo.pNext = 0;
+    instanceCreateInfo.flags = 0;
+    if (support_VK_KHR_portability_enumeration)
+        instanceCreateInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
     instanceCreateInfo.pApplicationInfo = &applicationInfo;
     instanceCreateInfo.enabledLayerCount = enabledLayers.size();
     instanceCreateInfo.ppEnabledLayerNames = enabledLayers.data();
@@ -1268,6 +1278,7 @@ int create_gpu_instance()
         gpu_info.support_VK_KHR_maintenance2 = 0;
         gpu_info.support_VK_KHR_maintenance3 = 0;
         gpu_info.support_VK_KHR_multiview = 0;
+        gpu_info.support_VK_KHR_portability_subset = 0;
         gpu_info.support_VK_KHR_push_descriptor = 0;
         gpu_info.support_VK_KHR_sampler_ycbcr_conversion = 0;
         gpu_info.support_VK_KHR_shader_float16_int8 = 0;
@@ -1308,6 +1319,8 @@ int create_gpu_instance()
                 gpu_info.support_VK_KHR_maintenance3 = exp.specVersion;
             else if (strcmp(exp.extensionName, "VK_KHR_multiview") == 0)
                 gpu_info.support_VK_KHR_multiview = exp.specVersion;
+            else if (strcmp(exp.extensionName, "VK_KHR_portability_subset") == 0)
+                gpu_info.support_VK_KHR_portability_subset = exp.specVersion;
             else if (strcmp(exp.extensionName, "VK_KHR_push_descriptor") == 0)
                 gpu_info.support_VK_KHR_push_descriptor = exp.specVersion;
             else if (strcmp(exp.extensionName, "VK_KHR_sampler_ycbcr_conversion") == 0)
@@ -1870,6 +1883,8 @@ VulkanDevice::VulkanDevice(int device_index)
         enabledExtensions.push_back("VK_KHR_maintenance3");
     if (info.support_VK_KHR_multiview())
         enabledExtensions.push_back("VK_KHR_multiview");
+    if (info.support_VK_KHR_portability_subset())
+        enabledExtensions.push_back("VK_KHR_portability_subset");
     if (info.support_VK_KHR_push_descriptor())
         enabledExtensions.push_back("VK_KHR_push_descriptor");
     if (info.support_VK_KHR_sampler_ycbcr_conversion())
