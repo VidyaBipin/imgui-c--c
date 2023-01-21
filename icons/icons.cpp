@@ -14,7 +14,7 @@ bool ImGui::LoadInternalIcons(ImFontAtlas* atlas)
     icons_config.MergeMode      = true; 
     icons_config.PixelSnapH     = true;
     icons_config.SizePixels     = icons_size * 1.0f;
-    icons_config.EllipsisChar   = (ImWchar)0x0085;
+    icons_config.EllipsisChar   = (ImWchar)-1; //(ImWchar)0x0085;
     
     // Audio Icons
     icons_config.GlyphOffset.y  = FONTS_SCALE * 4.0f * IM_FLOOR(icons_config.SizePixels / icons_size);  // Add +4 offset per 16 units
