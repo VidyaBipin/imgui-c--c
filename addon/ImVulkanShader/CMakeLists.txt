@@ -36,6 +36,7 @@ option(VKSHADER_STATIC                "Build Vulkan Shader as static library" OF
 
 find_package(PkgConfig)
 find_package(Vulkan)
+find_package(OpenMP)
 
 set(LINK_LIBS)
 
@@ -60,13 +61,13 @@ elseif(CMAKE_OSX_ARCHITECTURES MATCHES "x86" OR CMAKE_SYSTEM_PROCESSOR MATCHES "
     endif()
 endif()
 
-if (APPLE)
+if (APPLE AND OPENMP_FOUND)
     message(STATUS "VkShader(Apple) Use OpenMP")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xpreprocessor -fopenmp")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Xpreprocessor -fopenmp")
-    set(LINK_LIBS ${LINK_LIBS} -L/usr/local/lib -lomp pthread)
-else()
-    find_package(OpenMP)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    include_directories(${OpenMP_CXX_INCLUDE_DIR})
+    set(LINK_LIBS ${LINK_LIBS} ${OpenMP_libomp_LIBRARY})
+elseif(OPENMP_FOUND)
     if(NOT TARGET OpenMP::OpenMP_CXX)
     set_property(TARGET OpenMP::OpenMP_CXX
                 PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
