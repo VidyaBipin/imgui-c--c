@@ -1463,10 +1463,10 @@ float ImGui::ProgressBar(const char *optionalPrefixText, float value, const floa
 
     const ImFontAtlas* fontAtlas = ImGui::GetIO().Fonts;
 
-    if (optionalPrefixText && strlen(optionalPrefixText)>0)
+    if (optionalPrefixText && strlen(optionalPrefixText) > 0)
     {
         ImGui::AlignTextToFramePadding();
-        ImGui::Text("%s",optionalPrefixText);
+        ImGui::RenderText(ImGui::GetCursorScreenPos(), optionalPrefixText);
         ImGui::SameLine();
     }
 
