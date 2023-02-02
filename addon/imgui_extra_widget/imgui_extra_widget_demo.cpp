@@ -279,7 +279,7 @@ void ShowExtraWidgetDemoWindow()
         float progress=(time > 0 ? time : -time);
         // No IDs needed for ProgressBars:
         ImGui::ProgressBar("ProgressBar", progress);
-        ImGui::ProgressBar("ProgressBar", 1.f - progress);
+        ImGui::ProgressBar("ProgressBar##demo", 1.f - progress);
         ImGui::ProgressBar("", 500 + progress * 1000, 500, 1500, "%4.0f (absolute value in [500,1500] and fixed bar size)", ImVec2(150, -1));
         ImGui::ProgressBar("", 500 + progress * 1000, 500, 1500, "%3.0f%% (same as above, but with percentage and new colors)", ImVec2(150, -1), ImVec4(0.7, 0.7, 1, 1),ImVec4(0.05, 0.15, 0.5, 0.8),ImVec4(0.8, 0.8, 0,1));
         

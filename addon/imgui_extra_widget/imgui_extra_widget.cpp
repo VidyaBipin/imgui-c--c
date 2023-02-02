@@ -1452,6 +1452,10 @@ float ImGui::ProgressBar(const char *optionalPrefixText, float value, const floa
                         const char *format, const ImVec2 &sizeOfBarWithoutTextInPixels, 
                         const ImVec4 &colorLeft, const ImVec4 &colorRight, const ImVec4 &colorBorder)
 {
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    ImGuiWindow* window = GetCurrentWindow();
+    ImVec2 item_pos = ImGui::GetCursorPos();
     if (value<minValue) value=minValue;
     else if (value>maxValue) value = maxValue;
     const float valueFraction = (maxValue==minValue) ? 1.0f : ((value-minValue)/(maxValue-minValue));
@@ -1465,9 +1469,14 @@ float ImGui::ProgressBar(const char *optionalPrefixText, float value, const floa
 
     if (optionalPrefixText && strlen(optionalPrefixText) > 0)
     {
-        ImGui::AlignTextToFramePadding();
-        ImGui::RenderText(ImGui::GetCursorScreenPos(), optionalPrefixText);
-        ImGui::SameLine();
+        // Hide anything after a '##' string
+        const char* text_display_end = FindRenderedTextEnd(optionalPrefixText);
+        if (optionalPrefixText != text_display_end)
+        {
+            ImVec2 overlay_size = CalcTextSize(optionalPrefixText, text_display_end);
+            window->DrawList->AddText(g.Font, g.FontSize, ImGui::GetCursorScreenPos(), GetColorU32(ImGuiCol_Text), optionalPrefixText, text_display_end);
+            ImGui::SetCursorPos(item_pos + ImVec2(overlay_size.x + style.ItemInnerSpacing.x, 0));
+        }
     }
 
     if (valueFraction>0)
