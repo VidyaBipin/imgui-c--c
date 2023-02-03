@@ -108,6 +108,7 @@ double Flip_vulkan::flip(const ImMat& src, ImMat& dst, bool bFlipX, bool bFlipY)
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 } //namespace ImGui 

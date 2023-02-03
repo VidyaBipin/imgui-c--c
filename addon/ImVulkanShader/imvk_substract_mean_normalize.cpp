@@ -114,6 +114,7 @@ double  Substract_Mean_Normalize_vulkan::forward(const ImMat& bottom_blob, ImMat
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    top_blob.copy_attribute(bottom_blob);
     return ret;
 }
 } // namespace ImGui

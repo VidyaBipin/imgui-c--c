@@ -754,6 +754,17 @@ public:
     // ordination, see enum Ordination, default is NCWH
     Ordination ord;
 
+    void copy_attribute(const ImMat& mat)
+    {
+        time_stamp = mat.time_stamp;
+        rate = mat.rate;
+        flags = mat.flags;
+        color_range = mat.color_range;
+        color_space = mat.color_space;
+        ord = mat.ord;
+        duration = mat.duration;
+    }
+
 protected:
     virtual void allocate_buffer();
 

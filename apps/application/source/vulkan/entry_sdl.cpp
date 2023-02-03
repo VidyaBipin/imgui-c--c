@@ -198,6 +198,11 @@ int main(int argc, char** argv)
             {
                 show = true;
             }
+            if (event.type == SDL_DROPFILE)
+            {
+                // TODO::Handle drop file
+                // file path in event.drop.file
+            }
         }
         if (!show && !(io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable))
         {

@@ -130,6 +130,7 @@ double Flyeye_vulkan::transition(const ImMat& src1, const ImMat& src2, ImMat& ds
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src1);
     return ret;
 }
 } //namespace ImGui 

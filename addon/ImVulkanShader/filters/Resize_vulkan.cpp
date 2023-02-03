@@ -111,6 +111,7 @@ double Resize_vulkan::Resize(const ImMat& src, ImMat& dst, float fx, float fy, I
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 } //namespace ImGui

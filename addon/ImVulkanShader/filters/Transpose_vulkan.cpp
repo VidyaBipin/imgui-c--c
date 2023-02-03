@@ -108,6 +108,7 @@ double Transpose_vulkan::transpose(const ImMat& src, ImMat& dst, bool bFlipX, bo
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 } //namespace ImGui 

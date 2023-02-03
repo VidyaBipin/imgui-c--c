@@ -148,6 +148,7 @@ double Vector_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, float in
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 } // namespace ImGui

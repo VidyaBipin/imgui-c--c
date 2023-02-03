@@ -115,6 +115,7 @@ double Copy_Make_Border_vulkan::forward(const ImMat& bottom_blob, ImMat& top_blo
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    top_blob.copy_attribute(bottom_blob);
     return ret;
 }
 } // namespace ImGui

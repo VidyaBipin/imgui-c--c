@@ -301,6 +301,7 @@ double Harris_vulkan::filter(const ImMat& src, ImMat& dst, int _blurRadius, floa
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 } // namespace ImGui

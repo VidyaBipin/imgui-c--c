@@ -208,6 +208,7 @@ double Crop_vulkan::cropto(const ImMat& src, ImMat& dst, int _x, int _y, int _w,
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 } //namespace ImGui 

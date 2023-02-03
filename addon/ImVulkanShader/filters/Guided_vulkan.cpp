@@ -205,6 +205,7 @@ double Guided_vulkan::filter(const ImMat& src, ImMat& dst, int r, float eps)
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 } // namespace ImGui

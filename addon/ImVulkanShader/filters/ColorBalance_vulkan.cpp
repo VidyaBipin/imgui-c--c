@@ -114,6 +114,7 @@ double ColorBalance_vulkan::filter(const ImMat& src, ImMat& dst, ImVec4& shadows
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 } //namespace ImGui 

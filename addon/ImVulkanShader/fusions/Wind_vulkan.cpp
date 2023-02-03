@@ -128,6 +128,7 @@ double Wind_vulkan::transition(const ImMat& src1, const ImMat& src2, ImMat& dst,
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src1);
     return ret;
 }
 } //namespace ImGui 

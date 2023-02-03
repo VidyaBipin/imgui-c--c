@@ -140,6 +140,7 @@ double Waveform_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int le
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 } // namespace ImGui

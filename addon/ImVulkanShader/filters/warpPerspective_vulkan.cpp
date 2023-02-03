@@ -127,6 +127,7 @@ double warpPerspective_vulkan::filter(const ImMat& src, ImMat& dst, const ImMat&
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 } //namespace ImGui 

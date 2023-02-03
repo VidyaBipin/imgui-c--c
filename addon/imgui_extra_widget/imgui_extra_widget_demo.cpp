@@ -848,6 +848,19 @@ void ShowExtraWidgetDemoWindow()
 
         ImGui::TreePop();
     }
+    if (ImGui::TreeNode("Drag Drop Test"))
+    {
+        ImGui::InvisibleButton("Drag_drop extra test", ImVec2(128, 128));
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("FILES"))
+            {
+                ImGui::TextUnformatted((const char*)payload->Data);
+            }
+            ImGui::EndDragDropTarget();
+        }
+        ImGui::TreePop();
+    }
 }
 
 void ShowImKalmanDemoWindow()

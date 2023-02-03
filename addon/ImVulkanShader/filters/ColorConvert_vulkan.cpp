@@ -77,6 +77,8 @@ bool ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMat,
         return false;
     }
 
+    dstMat.copy_attribute(srcMat);
+
     int srcClrCatg = GetColorFormatCategory(srcMat.color_format);
     int dstClrCatg = GetColorFormatCategory(dstMat.color_format);
     // source is RGB
@@ -148,7 +150,7 @@ bool ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMat,
 
     cmd->submit_and_wait();
     cmd->reset();
-
+    
     return true;
 }
 
@@ -353,6 +355,7 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImColo
 
     VkMat dst_gpu;
     dst_gpu.create_type(im_YUV.w, im_YUV.h, 4, im_RGB.type, opt.blob_vkallocator);
+    im_RGB.copy_attribute(im_YUV);
 
     VkMat src_gpu;
     if (im_YUV.device == IM_DD_VULKAN)
@@ -431,6 +434,7 @@ double ColorConvert_vulkan::RGBA2YUV(const ImMat& im_RGB, ImMat & im_YUV, ImColo
     }
     VkMat dst_gpu;
     dst_gpu.create_type(im_RGB.w, im_RGB.h, 4, im_YUV.type, opt.blob_vkallocator);
+    im_YUV.copy_attribute(im_RGB);
 
     VkMat src_gpu;
     if (im_RGB.device == IM_DD_VULKAN)
@@ -503,6 +507,7 @@ double ColorConvert_vulkan::GRAY2RGBA(const ImMat& im, ImMat & im_RGB, ImColorSp
     }
     VkMat dst_gpu;
     dst_gpu.create_type(im.w, im.h, 4, im_RGB.type, opt.blob_vkallocator);
+    im_RGB.copy_attribute(im);
 
     VkMat src_gpu;
     if (im.device == IM_DD_VULKAN)
@@ -575,6 +580,7 @@ double ColorConvert_vulkan::Conv(const ImMat& im, ImMat & om) const
 
     VkMat dst_gpu;
     dst_gpu.create_type(im.w, im.h, 4, om.type, opt.blob_vkallocator);
+    om.copy_attribute(im);
 
     VkMat src_gpu;
     if (im.device == IM_DD_VULKAN)

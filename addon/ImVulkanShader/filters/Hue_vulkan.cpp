@@ -106,6 +106,7 @@ double Hue_vulkan::filter(const ImMat& src, ImMat& dst, float hue) const
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 } //namespace ImGui 

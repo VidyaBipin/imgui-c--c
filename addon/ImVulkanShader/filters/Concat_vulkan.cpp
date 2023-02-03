@@ -142,6 +142,7 @@ double Concat_vulkan::concat(const ImMat& src0, const ImMat& src1, ImMat& dst, i
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src0);
     return ret;
 }
 } //namespace ImGui 

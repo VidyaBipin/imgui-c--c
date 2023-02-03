@@ -303,6 +303,7 @@ double Canny_vulkan::filter(const ImMat& src, ImMat& dst, int _blurRadius, float
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 } // namespace ImGui

@@ -135,6 +135,7 @@ double CopyTo_vulkan::copyTo(const ImMat& src, ImMat& dst, int x, int y, float a
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 } //namespace ImGui 

@@ -133,6 +133,7 @@ double RotateScale_vulkan::transition(const ImMat& src1, const ImMat& src2, ImMa
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src1);
     return ret;
 }
 } //namespace ImGui 

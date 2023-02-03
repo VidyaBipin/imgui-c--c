@@ -106,6 +106,7 @@ double Brightness_vulkan::filter(const ImMat& src, ImMat& dst, float brightness)
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 } //namespace ImGui 

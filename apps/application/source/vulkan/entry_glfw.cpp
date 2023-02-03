@@ -21,6 +21,10 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
+static void DropCallback(GLFWwindow*, int count, const char** paths)
+{
+}
+
 void Application_FullScreen(bool on)
 {
     ImGui_ImplGlfw_FullScreen(ImGui::GetMainViewport(), on);
@@ -92,6 +96,8 @@ int main(int argc, char** argv)
         display_scale = ImVec2(x_scale, y_scale);
     }
 #endif
+    glfwSetDropCallback(window, DropCallback);
+    
     // Setup Vulkan
     if (!glfwVulkanSupported())
     {

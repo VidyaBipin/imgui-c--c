@@ -143,6 +143,7 @@ double AlphaBlending_vulkan::blend(const ImMat& src1, const ImMat& src2, ImMat& 
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src1);
     return ret;
 }
 
@@ -244,6 +245,7 @@ double AlphaBlending_vulkan::blend(const ImMat& src1, const ImMat& src2, ImMat& 
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src1);
     return ret;
 }
 

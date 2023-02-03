@@ -1280,6 +1280,7 @@ double CIE_vulkan::scope(const ImMat& src, ImMat& dst, float intensity, bool sho
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 
