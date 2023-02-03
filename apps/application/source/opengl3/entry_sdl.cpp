@@ -179,8 +179,8 @@ int main(int argc, char** argv)
     while (!app_done)
     {
         ImGui_ImplSDL2_WaitForEvent();
-        
         SDL_Event event;
+        std::vector<std::string> paths;
         while (SDL_PollEvent(&event))
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
@@ -203,8 +203,9 @@ int main(int argc, char** argv)
             }
             if (event.type == SDL_DROPFILE)
             {
-                // TODO::Handle drop file
                 // file path in event.drop.file
+                paths.push_back(event.drop.file);
+                show = true;
             }
         }
 
@@ -212,6 +213,11 @@ int main(int argc, char** argv)
         {
             ImGui::sleep(10);
             continue;
+        }
+        if (!paths.empty())
+        {
+            Application_DropFromSystem(paths);
+            paths.clear();
         }
         
         // Start the Dear ImGui frame

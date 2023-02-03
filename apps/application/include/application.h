@@ -54,3 +54,4 @@ void Application_Initialize(void** handle = nullptr);
 void Application_Finalize(void** handle = nullptr);
 bool Application_Frame(void* handle = nullptr, bool app_will_quit = false);
 void Application_FullScreen(bool on);
+void Application_DropFromSystem(std::vector<std::string>& drops);

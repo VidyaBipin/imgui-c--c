@@ -35,6 +35,15 @@ static void error_callback(int error, const char* description)
 
 static void DropCallback(GLFWwindow*, int count, const char** paths)
 {
+    std::vector<std::string> paths;
+    for (int i = 0; i < count; i++)
+    {
+        paths.push_back(paths[i]);
+    }
+    if (!path.empty())
+    {
+        Application_DropFromSystem(paths);
+    }
 }
 
 void Application_FullScreen(bool on)
