@@ -21,7 +21,7 @@
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
 //  2023-XX-XX: Platform: Added support for multiple windows via the ImGuiPlatformIO interface.
-//  2023-02-01: Inputs: flipping both wheel axises when running on Emscripten's GLFW emulation. (#6096)
+//  2023-02-02: Inputs: Scaling X value on Emscripten (bug?). (#4019, #6096)
 //  2023-01-18: Handle unsupported glfwGetVideoMode() call on e.g. Emscripten.
 //  2023-01-04: Inputs: Fixed mods state on Linux when using Alt-GR text input (e.g. German keyboard layout), could lead to broken text input. Revert a 2022/01/17 change were we resumed using mods provided by GLFW, turns out they were faulty.
 //  2022-11-22: Perform a dummy glfwGetError() read to cancel missing names with glfwGetKeyName(). (#5908)
@@ -318,23 +318,24 @@ void ImGui_ImplGlfw_MouseButtonCallback(GLFWwindow* window, int button, int acti
     // Add By Dicky end
 }
 
+// Modify by Dicky for mouse wheel axis config
 void ImGui_ImplGlfw_ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
+    ImGuiIO& io = ImGui::GetIO();
     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
     if (bd->PrevUserCallbackScroll != nullptr && window == bd->Window)
         bd->PrevUserCallbackScroll(window, xoffset, yoffset);
 
-#if defined(__EMSCRIPTEN__)
-    // Emscripten's GLFW emulation reports grossly mis-scaled and flipped scroll events.
-    // The scale is still currently incorrect, see #4019 #6096 for details.
-    xoffset /= -120.0f;
-    yoffset /= -120.0f;
-#endif
+    float wheel_x = io.ConfigFlippedMouseWheelAxisX ? xoffset : -xoffset;
+    float wheel_y = io.ConfigFlippedMouseWheelAxisY ? -yoffset : yoffset;
 
-    ImGuiIO& io = ImGui::GetIO();
-    io.FrameCountSinceLastInput = 0; // Add By Dicky
-    io.AddMouseWheelEvent((float)xoffset, (float)yoffset);
+#ifdef __EMSCRIPTEN__
+    wheel_x /= 100.0;
+#endif
+    io.FrameCountSinceLastInput = 0;
+    io.AddMouseWheelEvent(wheel_x, wheel_y);
 }
+// Modify by Dicky end
 
 static int ImGui_ImplGlfw_TranslateUntranslatedKey(int key, int scancode)
 {

@@ -2090,6 +2090,10 @@ struct ImGuiIO
     bool        ConfigWindowsMoveFromTitleBarOnly; // = false       // Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.
     float       ConfigMemoryCompactTimer;       // = 60.0f          // Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1.0f to disable.
 
+    // Add by Dicky
+    bool        ConfigFlippedMouseWheelAxisX;   // = false;         // flipped mouse wheel x axis value
+    bool        ConfigFlippedMouseWheelAxisY;   // = false;         // flipped mouse wheel y axis value
+    // Add By Dicky end
     //------------------------------------------------------------------
     // Platform Functions
     // (the imgui_impl_xxxx backend files are setting those up for you)

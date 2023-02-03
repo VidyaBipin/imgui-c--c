@@ -1273,6 +1273,11 @@ ImGuiIO::ImGuiIO()
     ConfigWindowsMoveFromTitleBarOnly = false;
     ConfigMemoryCompactTimer = 60.0f;
 
+    // Add by Dicky
+    ConfigFlippedMouseWheelAxisX = false;
+    ConfigFlippedMouseWheelAxisY = false;
+    // Add by Dicky end
+
     // Platform Functions
     BackendPlatformName = BackendRendererName = NULL;
     BackendPlatformUserData = BackendRendererUserData = BackendLanguageUserData = NULL;

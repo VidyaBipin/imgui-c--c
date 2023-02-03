@@ -21,6 +21,8 @@
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
 //  2023-XX-XX: Platform: Added support for multiple windows via the ImGuiPlatformIO interface.
+//  2023-02-02: Added support for SDL 2.0.18+ preciseX/preciseY mouse wheel data for smooth scrolling + Scaling X value on Emscripten (bug?). (#4019, #6096)
+//  2023-02-02: Removed SDL_MOUSEWHEEL value clamping, as values seem correct in latest Emscripten. (#4019)
 //  2023-02-01: Flipping SDL_MOUSEWHEEL 'wheel.x' value to match other backends and offer consistent horizontal scrolling direction. (#4019, #6096, #1463)
 //  2022-10-11: Using 'nullptr' instead of 'NULL' as per our switch to C++11.
 //  2022-09-26: Inputs: Disable SDL 2.0.22 new "auto capture" (SDL_HINT_MOUSE_AUTO_CAPTURE) which prevents drag and drop across windows for multi-viewport support + don't capture when drag and dropping. (#5710)
@@ -294,13 +296,25 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
                 mouse_pos.x += window_x;
                 mouse_pos.y += window_y;
             }
+            io.FrameCountSinceLastInput = 0; // add By Dicky
             io.AddMousePosEvent(mouse_pos.x, mouse_pos.y);
             return true;
         }
         case SDL_MOUSEWHEEL:
         {
-            float wheel_x = (event->wheel.x < 0) ? 1.0f : (event->wheel.x > 0) ? -1.0f : 0.0f; // About the clamping and flipped axis: see #4019
-            float wheel_y = (event->wheel.y > 0) ? 1.0f : (event->wheel.y < 0) ? -1.0f : 0.0f;
+            //IMGUI_DEBUG_LOG("wheel %.2f %.2f, precise %.2f %.2f\n", (float)event->wheel.x, (float)event->wheel.y, event->wheel.preciseX, event->wheel.preciseY);
+#if SDL_VERSION_ATLEAST(2,0,18) // If this fails to compile on Emscripten: update to latest Emscripten!
+                                // modify by dicky to using mouse wheel axis config 
+            float wheel_x = io.ConfigFlippedMouseWheelAxisX ? -event->wheel.preciseX : event->wheel.preciseX;
+            float wheel_y = io.ConfigFlippedMouseWheelAxisY ? -event->wheel.preciseY : event->wheel.preciseY;
+#else
+            float wheel_x = io.ConfigFlippedMouseWheelAxisX ? -(float)event->wheel.x : (float)event->wheel.x;
+            float wheel_y = io.ConfigFlippedMouseWheelAxisY ? -(float)event->wheel.y : (float)event->wheel.y;
+#endif
+#ifdef __EMSCRIPTEN__
+            wheel_x /= 100.0f;
+#endif
+            io.FrameCountSinceLastInput = 0; // add By Dicky
             io.AddMouseWheelEvent(wheel_x, wheel_y);
             return true;
         }
@@ -315,12 +329,14 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             if (event->button.button == SDL_BUTTON_X2) { mouse_button = 4; }
             if (mouse_button == -1)
                 break;
+            io.FrameCountSinceLastInput = 0; // add By Dicky
             io.AddMouseButtonEvent(mouse_button, (event->type == SDL_MOUSEBUTTONDOWN));
             bd->MouseButtonsDown = (event->type == SDL_MOUSEBUTTONDOWN) ? (bd->MouseButtonsDown | (1 << mouse_button)) : (bd->MouseButtonsDown & ~(1 << mouse_button));
             return true;
         }
         case SDL_TEXTINPUT:
         {
+            io.FrameCountSinceLastInput = 0; // add By Dicky
             io.AddInputCharactersUTF8(event->text.text);
             return true;
         }
@@ -329,6 +345,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
         {
             ImGui_ImplSDL2_UpdateKeyModifiers((SDL_Keymod)event->key.keysym.mod);
             ImGuiKey key = ImGui_ImplSDL2_KeycodeToImGuiKey(event->key.keysym.sym);
+            io.FrameCountSinceLastInput = 0; // add By Dicky
             io.AddKeyEvent(key, (event->type == SDL_KEYDOWN));
             io.SetKeyEventNativeData(key, event->key.keysym.sym, event->key.keysym.scancode, event->key.keysym.scancode); // To support legacy indexing (<1.87 user code). Legacy backend uses SDLK_*** as indices to IsKeyXXX() functions.
             return true;
