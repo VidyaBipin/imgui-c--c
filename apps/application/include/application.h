@@ -1,6 +1,7 @@
 #pragma once
 #include <imgui.h>
 #include <string>
+#include <vector>
 #if defined(__APPLE__)
 #define FULLSCREEN_OFFSET_X  0
 #define FULLSCREEN_OFFSET_Y  0
