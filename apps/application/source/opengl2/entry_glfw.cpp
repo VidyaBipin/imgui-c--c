@@ -35,14 +35,14 @@ static void error_callback(int error, const char* description)
 
 static void DropCallback(GLFWwindow*, int count, const char** paths)
 {
-    std::vector<std::string> paths;
+    std::vector<std::string> file_paths;
     for (int i = 0; i < count; i++)
     {
-        paths.push_back(paths[i]);
+        file_paths.push_back(paths[i]);
     }
-    if (!path.empty())
+    if (!file_paths.empty())
     {
-        Application_DropFromSystem(paths);
+        Application_DropFromSystem(file_paths);
     }
 }
 
