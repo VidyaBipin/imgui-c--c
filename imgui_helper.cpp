@@ -1999,9 +1999,32 @@ bool file_exists(const std::string& path)
     return access(path.c_str(), R_OK) == 0;
 }
 
+std::string path_url(const std::string& path)
+{
+    auto pos = path.find_last_of(PATH_SEP);
+    if (pos != std::string::npos)
+        return path.substr(0, pos + 1);
+    return "";
+}
+
 std::string path_filename(const std::string& path)
 {
-    return path.substr(0, path.find_last_of(PATH_SEP) + 1);
+    auto pos = path.find_last_of(PATH_SEP);
+    if (pos != std::string::npos)
+        return path.substr(pos + 1);
+    return "";
+}
+
+std::string path_suffix(const std::string& path)
+{
+    auto filename = path_filename(path);
+    if (!filename.empty())
+    {
+        auto pos = filename.find_last_of('.');
+        if (pos != std::string::npos)
+            return filename.substr(pos);
+    }
+    return "";
 }
 
 std::string date_time_string()
@@ -2144,13 +2167,13 @@ std::string exec_path()
     int len = readlink("/proc/self/exe", exePath, PATH_MAX);
     if (len <= 0 || len == PATH_MAX) // memory not sufficient or general error occured
         return path;
-    path = path_filename(std::string(exePath));
+    path = path_url(std::string(exePath));
 #elif defined(_WIN32)
     // Return written bytes, indicating if memory was sufficient
     unsigned int len = GetModuleFileNameA(GetModuleHandleA(0x0), exePath, MAX_PATH);
     if (len == 0) // memory not sufficient or general error occured
         return path;
-    path = path_filename(std::string(exePath));
+    path = path_url(std::string(exePath));
 #elif defined(__APPLE__)
     unsigned int len = (unsigned int)PATH_MAX;
     // Obtain executable path to canonical path, return zero on success
@@ -2160,7 +2183,7 @@ std::string exec_path()
         char * realPath = realpath(exePath, 0x0);
         if (realPath == 0x0)
             return path;
-        path = path_filename(std::string(realPath));
+        path = path_url(std::string(realPath));
         free(realPath);
     }
     else // len is initialized with the required number of bytes (including zero byte)
@@ -2177,7 +2200,7 @@ std::string exec_path()
         // Check if conversion to canonical path succeeded
         if (realPath == 0x0)
             return path;
-        path = path_filename(std::string(realPath));
+        path = path_url(std::string(realPath));
         free(realPath);
     }
 #endif

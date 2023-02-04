@@ -429,8 +429,12 @@ IMGUI_API bool SetFileContent(const char *filePath, const unsigned char* content
 
 // true of file exists
 IMGUI_API bool file_exists(const std::string& path);
-// extract the path of a filename from a full URI (e.g. file:://home/me/toto.mpg -> file:://home/me/)
+// extract the path of a full URI (e.g. file:://home/me/toto.mpg -> file:://home/me/)
+IMGUI_API std::string path_url(const std::string& path);
+// extract the filename of a full URI (e.g. file:://home/me/toto.mpg -> toto.mpg)
 IMGUI_API std::string path_filename(const std::string& path);
+// get file url suffix
+IMGUI_API std::string path_suffix(const std::string& path);
 // get fixed length string (17 chars) YYYYMMDDHHmmssiii
 IMGUI_API std::string date_time_string();
 // get the OS dependent username
