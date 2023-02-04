@@ -415,6 +415,11 @@ namespace IGFD
 			str.replace(pos, oldStr.length(), newStr);
 			pos += newStr.length();
 		}
+#else
+		// Suppress warnings from the compiler.
+		(void)str;
+		(void)oldStr;
+		(void)newStr;
 #endif // _IGFD_WIN_
 		return found;
 	}
@@ -439,6 +444,11 @@ namespace IGFD
 			if (!token.empty() || (token.empty() && pushEmpty)) //-V728
 				arr.push_back(token);
 		}
+#else
+		// Suppress warnings from the compiler.
+		(void)text;
+		(void)delimiter;
+		(void)pushEmpty;
 #endif // _IGFD_WIN_
 		return arr;
 	}
@@ -459,6 +469,9 @@ namespace IGFD
 					(int)wstr.size(), &res[0], size_needed, NULL, NULL);
 			}
 		}
+#else
+		// Suppress warnings from the compiler.
+		(void)wstr;
 #endif // _IGFD_WIN_
 		return res;
 	}
@@ -479,6 +492,9 @@ namespace IGFD
 					(int)str.size(), &res[0], size_needed);
 			}
 		}
+#else
+		// Suppress warnings from the compiler.
+		(void)str;
 #endif // _IGFD_WIN_
 		return res;
 	}
@@ -563,7 +579,7 @@ namespace IGFD
 				const auto dir_iter = std::filesystem::directory_iterator(pathName);
 				(void)dir_iter; // for avoid unused warnings
 			}
-			catch (std::exception /*ex*/)
+			catch (const std::exception & /*ex*/)
 			{
 				// fail so this dir cant be opened
 				bExists = false;
@@ -3157,9 +3173,11 @@ namespace IGFD
 				prBookmarks.push_back(bookmark);
 			}
 		}
+		// Add By Dicky
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip(addBookmarkButtonHelpString);
-
+		// Add By Dicky end
+		
 		if (selectedBookmarkForEdition >= 0 &&
 			selectedBookmarkForEdition < (int)prBookmarks.size())
 		{
@@ -3170,8 +3188,10 @@ namespace IGFD
 				if (selectedBookmarkForEdition == (int)prBookmarks.size())
 					selectedBookmarkForEdition--;
 			}
+			// Add By Dicky
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip(removeBookmarkButtonHelpString);
+			// Add By Dicky end
 
 			if (selectedBookmarkForEdition >= 0 &&
 				selectedBookmarkForEdition < (int)prBookmarks.size())

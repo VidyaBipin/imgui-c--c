@@ -384,7 +384,7 @@ void ShowExtraWidgetDemoWindow()
                     case  23: nextdot2 -= 0.2f * velocity; ImGui::SpinnerDots("SpinnerDotsWoBg", &nextdot2, 16, 4, ImColor(255, 255, 255), 0.3f * velocity, 12, 0.f); ImGui::ShowTooltipOnHover("SpinnerDotsWoBg"); break;
                     case  24: ImGui::SpinnerIncScaleDots("SpinnerIncScaleDots", 16, 4, ImColor(255, 255, 255), 6.6f * velocity, 6); ImGui::ShowTooltipOnHover("SpinnerIncScaleDots"); break;
                     case  25: ImGui::SpinnerAng("SpinnerAng90", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 128), 8.f * velocity, IM_PI / 2.f); ImGui::ShowTooltipOnHover("SpinnerAng90"); break;
-                    case  26: ImGui::SpinnerAng("SpinnerAng90", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 0), 8.5f * velocity, IM_PI / 2.f); ImGui::ShowTooltipOnHover("SpinnerAng90"); break;
+                    case  26: ImGui::SpinnerAng("SpinnerAng90NoBg", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 0), 8.5f * velocity, IM_PI / 2.f); ImGui::ShowTooltipOnHover("SpinnerAng90NoBg"); break;
                     case  27: ImGui::SpinnerFadeBars("SpinnerFadeBars", 10, ImColor(255, 255, 255), 4.8f * velocity, 3); ImGui::ShowTooltipOnHover("SpinnerFadeBars"); break;
                     case  28: ImGui::SpinnerPulsar("SpinnerPulsar", 16, 2, ImColor(255, 255, 255), 1 * velocity); ImGui::ShowTooltipOnHover("SpinnerPulsar"); break;
                     case  29: ImGui::SpinnerIngYang("SpinnerIngYangR2", 16, 5, true, 3.f, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI * 0.8f); ImGui::ShowTooltipOnHover("SpinnerIngYangR2"); break;
@@ -498,6 +498,7 @@ void ShowExtraWidgetDemoWindow()
                     case 137: ImGui::Spinner<e_st_vdots>("SpinnerVDots2", Radius{16}, Thickness{4}, Color{ImColor(255, 255, 255)}, BgColor{ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f)}, Speed{2.1f * velocity}, Dots{2}, MiddleDots{6}); ImGui::ShowTooltipOnHover("SpinnerVDots2"); break;
                     case 138: ImGui::Spinner<e_st_vdots>("SpinnerVDots3", Radius{16}, Thickness{4}, Color{ImColor(255, 255, 255)}, BgColor{ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f)}, Speed{2.9f * velocity}, Dots{3}, MiddleDots{6}); ImGui::ShowTooltipOnHover("SpinnerVDots3"); break;
                     case 139: ImGui::SpinnerSquareRandomDots("SpinnerSquareRandomDots", 16, 2.8f, ImColor(255, 255, 255, 30), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), 5 * velocity); ImGui::ShowTooltipOnHover("SpinnerSquareRandomDots"); break;
+                    case 140: ImGui::SpinnerFluidPoints("SpinnerFluidPoints", 16, 2.8f, ImColor(0, 0, 255), 3.8f * velocity, Dots{4}, 0.45f); ImGui::ShowTooltipOnHover("SpinnerFluidPoints"); break;
 
                     // ...
                     default: break;

@@ -599,6 +599,7 @@ IMGUI_API void SpinnerBarChartRainbow(const char *label, float radius, float thi
 IMGUI_API void SpinnerBlocks(const char *label, float radius, float thickness, const ImColor &bg, const ImColor &color, float speed);
 IMGUI_API void SpinnerSquareRandomDots(const char *label, float radius, float thickness, const ImColor &bg, const ImColor &color, float speed);
 IMGUI_API void SpinnerFluid(const char *label, float radius, const ImColor &color, float speed, int bars = 3);
+IMGUI_API void SpinnerFluidPoints(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t dots = 6, float delta = 0.35f);
 IMGUI_API void SpinnerScaleBlocks(const char *label, float radius, float thickness, const ImColor &color, float speed);
 IMGUI_API void SpinnerScaleSquares(const char *label, float radius, float thikness, const ImColor &color, float speed);
 IMGUI_API void SpinnerArcPolarFade(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4);
