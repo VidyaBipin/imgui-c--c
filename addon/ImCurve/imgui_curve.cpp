@@ -196,7 +196,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     // draw timeline and mark
     if (draw_timeline)
     {
-        float duration = vmax.x - vmin.x;
+        float duration = _vmax.x - _vmin.x;
         float msPixelWidth = size.x / (duration + FLT_EPSILON);
         ImVec2 headerSize(size.x, (float)timeline_height);
         ImGui::InvisibleButton("CurveTimelineBar", headerSize);
@@ -209,11 +209,11 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
         if (delegate->MovingCurrentTime && duration > 0)
         {
             auto oldPos = cursor_pos;
-            auto newPos = (int64_t)((io.MousePos.x - movRect.Min.x) / msPixelWidth) + vmin.x;
-            if (newPos < vmin.x)
-                newPos = vmin.x;
-            if (newPos >= vmax.x)
-                newPos = vmax.x;
+            auto newPos = (int64_t)((io.MousePos.x - movRect.Min.x) / msPixelWidth) + _vmin.x;
+            if (newPos < _vmin.x)
+                newPos = _vmin.x;
+            if (newPos >= _vmax.x)
+                newPos = _vmax.x;
             cursor_pos = newPos;
         }
         if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
@@ -242,7 +242,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
             }
             if (baseIndex && px >= window_pos.x)
             {
-                std::string time_str = ImGuiHelper::MillisecToString(i + vmin.x, 2);
+                std::string time_str = ImGuiHelper::MillisecToString(i + _vmin.x, 2);
                 ImGui::SetWindowFontScale(0.8);
                 draw_list->AddText(ImVec2((float)px + 3.f, window_pos.y), IM_COL32(224, 224, 224, 255), time_str.c_str());
                 ImGui::SetWindowFontScale(1.0);
@@ -261,7 +261,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
         ImGui::SetWindowFontScale(0.8);
         auto time_str = ImGuiHelper::MillisecToString(cursor_pos, 2);
         ImVec2 str_size = ImGui::CalcTextSize(time_str.c_str(), nullptr, true);
-        float strOffset = window_pos.x + (cursor_pos - vmin.x) * msPixelWidth - str_size.x * 0.5f;
+        float strOffset = window_pos.x + (cursor_pos - _vmin.x) * msPixelWidth - str_size.x * 0.5f;
         ImVec2 str_pos = ImVec2(strOffset, window_pos.y + 10);
         draw_list->AddRectFilled(str_pos + ImVec2(-3, 0), str_pos + str_size + ImVec2(3, 3), IM_COL32(  0, 128,   0, 144), 2.0, ImDrawFlags_RoundCornersAll);
         draw_list->AddText(str_pos, IM_COL32(  0, 255,   0, 255), time_str.c_str());
@@ -434,20 +434,20 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
                 delegate->AlignValue(p);
                 if (flags & CURVE_EDIT_FLAG_VALUE_LIMITED)
                 {
-                    if (p.x < vmin.x) p.x = vmin.x;
-                    if (p.y < vmin.y) p.y = vmin.y;
-                    if (p.x > vmax.x) p.x = vmax.x;
-                    if (p.y > vmax.y) p.y = vmax.y;
+                    if (p.x < _vmin.x) p.x = _vmin.x;
+                    if (p.y < _vmin.y) p.y = _vmin.y;
+                    if (p.x > _vmax.x) p.x = _vmax.x;
+                    if (p.y > _vmax.y) p.y = _vmax.y;
                 }
                 if (flags & CURVE_EDIT_FLAG_DOCK_BEGIN_END)
                 {
                     if (sel.pointIndex == 0)
                     {
-                        p.x = vmin.x;
+                        p.x = _vmin.x;
                     }
                     else if (sel.pointIndex == ptCount - 1)
                     {
-                        p.x = vmax.x;
+                        p.x = _vmax.x;
                     }
                 }
                 const CurveType t = delegate->originalPoints[originalIndex].type;
@@ -555,20 +555,20 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
                     ImVec2 pt = rangeToPoint(pointToRange(delegate->originalPoints[p].point) + (io.MousePos - delegate->mousePosOrigin) * sizeOfPixel);
                     if (flags & CURVE_EDIT_FLAG_VALUE_LIMITED)
                     {
-                        if (pt.x < vmin.x) pt.x = vmin.x;
-                        if (pt.y < vmin.y) pt.y = vmin.y;
-                        if (pt.x > vmax.x) pt.x = vmax.x;
-                        if (pt.y > vmax.y) pt.y = vmax.y;
+                        if (pt.x < _vmin.x) pt.x = _vmin.x;
+                        if (pt.y < _vmin.y) pt.y = _vmin.y;
+                        if (pt.x > _vmax.x) pt.x = _vmax.x;
+                        if (pt.y > _vmax.y) pt.y = _vmax.y;
                     }
                     if (flags & CURVE_EDIT_FLAG_DOCK_BEGIN_END)
                     {
                         if (p == 0)
                         {
-                            pt.x = vmin.x;
+                            pt.x = _vmin.x;
                         }
                         else if (p == ptCount - 1)
                         {
-                            pt.x = vmax.x;
+                            pt.x = _vmax.x;
                         }
                     }
                     pt.y = pt.y * value_range + delegate->GetCurveMin(delegate->movingCurve);
