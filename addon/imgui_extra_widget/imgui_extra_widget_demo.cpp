@@ -499,6 +499,7 @@ void ShowExtraWidgetDemoWindow()
                     case 138: ImGui::Spinner<e_st_vdots>("SpinnerVDots3", Radius{16}, Thickness{4}, Color{ImColor(255, 255, 255)}, BgColor{ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f)}, Speed{2.9f * velocity}, Dots{3}, MiddleDots{6}); ImGui::ShowTooltipOnHover("SpinnerVDots3"); break;
                     case 139: ImGui::SpinnerSquareRandomDots("SpinnerSquareRandomDots", 16, 2.8f, ImColor(255, 255, 255, 30), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), 5 * velocity); ImGui::ShowTooltipOnHover("SpinnerSquareRandomDots"); break;
                     case 140: ImGui::SpinnerFluidPoints("SpinnerFluidPoints", 16, 2.8f, ImColor(0, 0, 255), 3.8f * velocity, Dots{4}, 0.45f); ImGui::ShowTooltipOnHover("SpinnerFluidPoints"); break;
+                    case 141: ImGui::SpinnerDotsLoading("SpinnerDotsLoading", 16, 4.f, ImColor(255, 255, 255), ImColor(255, 255, 255, 124), 2.f * velocity); ImGui::ShowTooltipOnHover("SpinnerDotsLoading"); break;
 
                     // ...
                     default: break;
