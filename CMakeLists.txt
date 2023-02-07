@@ -568,12 +568,12 @@ if (IMGUI_SDL2 AND SDL2_FOUND)
     set(IMGUI_SRC
         ${IMGUI_SRC}
         #backends/imgui_impl_sdlrenderer.cpp
-        backends/imgui_impl_sdl.cpp
+        backends/imgui_impl_sdl2.cpp
     )
     set(IMGUI_INCS
         ${IMGUI_INCS}
         #backends/imgui_impl_sdlrenderer.h
-        backends/imgui_impl_sdl.h
+        backends/imgui_impl_sdl2.h
     )
 endif(IMGUI_SDL2 AND SDL2_FOUND)
 else()
@@ -581,12 +581,12 @@ else()
     set(IMGUI_SRC
         ${IMGUI_SRC}
         #backends/imgui_impl_sdlrenderer.cpp
-        backends/imgui_impl_sdl.cpp
+        backends/imgui_impl_sdl2.cpp
     )
     set(IMGUI_INCS
         ${IMGUI_INCS}
         #backends/imgui_impl_sdlrenderer.h
-        backends/imgui_impl_sdl.h
+        backends/imgui_impl_sdl2.h
     )
 
     set(IMGUI_PLATFORM_WGPU ON)
@@ -1101,7 +1101,7 @@ if (IMGUI_APPS)
         message(STATUS "    [ImGui application rendering with Vulkan]")
         set(IMGUI_APP_SRC
             ${IMGUI_APP_SRC}
-            apps/application/source/vulkan/entry_sdl.cpp
+            apps/application/source/vulkan/entry_sdl2.cpp
         )
     elseif(BACKEND_RENDERING MATCHES VULKAN AND GLFW_FOUND AND IMGUI_GLFW)
         set(IMGUI_APPLICATION_RENDERING_VULKAN ON)
@@ -1146,7 +1146,7 @@ if (IMGUI_APPS)
             message(STATUS "    [ImGui application platform with SDL2]")
             set(IMGUI_APP_SRC
                 ${IMGUI_APP_SRC}
-                apps/application/source/opengl3/entry_sdl.cpp
+                apps/application/source/opengl3/entry_sdl2.cpp
             )
         elseif(IMGUI_GLFW AND GLFW_FOUND)
             set(IMGUI_APPLICATION_PLATFORM_GLFW ON)
@@ -1171,7 +1171,7 @@ if (IMGUI_APPS)
             message(STATUS "    [ImGui application platform with SDL2]")
             set(IMGUI_APP_SRC
                 ${IMGUI_APP_SRC}
-                apps/application/source/opengl2/entry_sdl.cpp
+                apps/application/source/opengl2/entry_sdl2.cpp
             )   
         elseif(IMGUI_GLFW AND GLFW_FOUND)
             set(IMGUI_APPLICATION_PLATFORM_GLFW ON)
@@ -1286,21 +1286,21 @@ if (IMGUI_BUILD_EXAMPLE AND SDL2_FOUND AND IMGUI_SDL2)
     # Build examples
     if(BACKEND_RENDERING MATCHES OPENGL3)
         add_executable(
-            example_sdl_opengl3
-            test/example_sdl_opengl3.cpp
+            example_sdl2_opengl3
+            test/example_sdl2_opengl3.cpp
         )
         target_link_libraries(
-            example_sdl_opengl3
+            example_sdl2_opengl3
             imgui
             ${LINK_LIBS}
         )
     elseif(BACKEND_RENDERING MATCHES OPENGL2)
         add_executable(
-            example_sdl_opengl2
-            test/example_sdl_opengl2.cpp
+            example_sdl2_opengl2
+            test/example_sdl2_opengl2.cpp
         )
         target_link_libraries(
-            example_sdl_opengl2
+            example_sdl2_opengl2
             imgui
             ${LINK_LIBS}
         )
@@ -1309,11 +1309,11 @@ if (IMGUI_BUILD_EXAMPLE AND SDL2_FOUND AND IMGUI_SDL2)
     # Build Vulkan examples
     if (BACKEND_RENDERING MATCHES VULKAN)
         add_executable(
-            example_sdl_vulkan
-            test/example_sdl_vulkan.cpp
+            example_sdl2_vulkan
+            test/example_sdl2_vulkan.cpp
         )
         target_link_libraries(
-            example_sdl_vulkan
+            example_sdl2_vulkan
             imgui
             ${LINK_LIBS}
         )

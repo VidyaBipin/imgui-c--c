@@ -1,11 +1,9 @@
 #include "imgui.h"
 #include "imgui_helper.h"
 #include "imgui_internal.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_opengl2.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_opengl3.h"
 #include <stdio.h>
-#include <SDL.h>
-#include <SDL_opengl.h>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -13,6 +11,12 @@
 #include "application.h"
 #if IMGUI_VULKAN_SHADER
 #include <ImVulkanShader.h>
+#endif
+#include <SDL.h>
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+#include <SDL_opengles2.h>
+#else
+#include <SDL_opengl.h>
 #endif
 
 void Application_FullScreen(bool on)
@@ -31,17 +35,39 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    ApplicationWindowProperty property;
+    ApplicationWindowProperty property(argc, argv);
     Application_GetWindowProperties(property);
     // Init IME effect windows only
     ImGui_ImplSDL2_InitIme();
+
+    // Decide GL+GLSL versions
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+    // GL ES 2.0 + GLSL 100
+    const char* glsl_version = "#version 100";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#elif defined(__APPLE__)
+    // GL 3.2 Core + GLSL 150
+    const char* glsl_version = "#version 150";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+#else
+    // GL 3.0 + GLSL 130
+    const char* glsl_version = "#version 130";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#endif
 
     // Create window with graphics context
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
     int window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
     if (property.resizable) window_flags |= SDL_WINDOW_RESIZABLE;
     if (property.full_size)
@@ -73,7 +99,7 @@ int main(int argc, char** argv)
         }
     }
     std::string title = property.name;
-    title += " SDL_GL2";
+    title += " SDL_GL3";
     SDL_Window* window = SDL_CreateWindow(title.c_str(), property.center ? SDL_WINDOWPOS_CENTERED : property.pos_x,
                                                         property.center ? SDL_WINDOWPOS_CENTERED : property.pos_y,
                                                         property.width, property.height, window_flags);
@@ -88,10 +114,10 @@ int main(int argc, char** argv)
     {
         ImGui_ImplSDL2_SetWindowIcon(window, property.icon_path.c_str());
     }
-    
     // Hook IME effect windows only
     ImGui_ImplSDL2_HookIme(window);
     
+    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
@@ -105,7 +131,7 @@ int main(int argc, char** argv)
     io.Fonts->AddFontDefault();
     io.FontGlobalScale = property.scale;
     if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     if (property.docking) io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
     if (property.viewport)io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
@@ -123,7 +149,7 @@ int main(int argc, char** argv)
         g.Style.TextInternationalize = 1;
         g.LanguageName = "Default";
     }
-
+    
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
@@ -136,14 +162,14 @@ int main(int argc, char** argv)
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
-    ImGui_ImplOpenGL2_Init();
+    ImGui_ImplOpenGL3_Init(glsl_version);
 
 #if IMGUI_VULKAN_SHADER
     ImGui::ImVulkanShaderInit();
 #endif
 
     ImVec4 clear_color = ImVec4(0.f, 0.f, 0.f, 1.f);
-
+    //property.handle = gl_context;
     Application_Initialize(&property.handle);
 
     // Main loop
@@ -182,6 +208,7 @@ int main(int argc, char** argv)
                 show = true;
             }
         }
+
         if (!show && !(io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable))
         {
             ImGui::sleep(10);
@@ -192,9 +219,12 @@ int main(int argc, char** argv)
             Application_DropFromSystem(paths);
             paths.clear();
         }
+        
         // Start the Dear ImGui frame
-        ImGui_ImplOpenGL2_NewFrame();
+        
+        ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
+
         ImGui::NewFrame();
 
         if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
@@ -210,7 +240,8 @@ int main(int argc, char** argv)
         glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         // Update and Render additional Platform Windows
         // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
         //  For this specific demo app we could also call SDL_GL_MakeCurrent(window, gl_context) directly)
@@ -222,6 +253,7 @@ int main(int argc, char** argv)
             ImGui::RenderPlatformWindowsDefault();
             SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
         }
+
         SDL_GL_SwapWindow(window);
     }
 
@@ -231,7 +263,7 @@ int main(int argc, char** argv)
 #if IMGUI_VULKAN_SHADER
     ImGui::ImVulkanShaderClear();
 #endif
-    ImGui_ImplOpenGL2_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 
