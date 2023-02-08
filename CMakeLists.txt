@@ -1263,11 +1263,11 @@ if (IMGUI_BUILD_EXAMPLE AND SDL2_FOUND AND IMGUI_SDL2)
         )
         if(BACKEND_RENDERING MATCHES OPENGL3)
             add_executable(
-                example_sdl_rendering
-                test/example_sdl_rendering.cpp
+                example_sdl2_rendering
+                test/example_sdl2_rendering.cpp
             )
             target_link_libraries(
-                example_sdl_rendering
+                example_sdl2_rendering
                 imgui
                 ${SDL2_IMAGE_LIBRARY}
                 ${LINK_LIBS}
