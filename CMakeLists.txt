@@ -1027,7 +1027,7 @@ set(IMGUI_INC_DIRS
 if(IMGUI_BUILD_EXAMPLE)
     set(IMGUI_SRC
         ${IMGUI_SRC}
-        ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/ImGuiZMOQuat_demo.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/ImGuiZMOquat_demo.cpp
     )
 endif(IMGUI_BUILD_EXAMPLE)
 
