@@ -115,7 +115,7 @@ int main(int argc, char** argv)
         ImGui_ImplSDL2_SetWindowIcon(window, property.icon_path.c_str());
     }
     // Hook IME effect windows only
-    ImGui_ImplSDL2_HookIme(window);
+    //ImGui_ImplSDL2_HookIme(window);
     
     SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);

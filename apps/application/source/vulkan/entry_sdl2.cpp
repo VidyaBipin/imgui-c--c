@@ -82,7 +82,8 @@ int main(int argc, char** argv)
     }
 
     // Hook IME effect windows only
-    ImGui_ImplSDL2_HookIme(window);
+    //ImGui_ImplSDL2_HookIme(window);
+
     // Setup Vulkan
     uint32_t extensions_count = 0;
     SDL_Vulkan_GetInstanceExtensions(window, &extensions_count, NULL);

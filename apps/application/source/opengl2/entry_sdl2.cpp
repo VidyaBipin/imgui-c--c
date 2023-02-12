@@ -90,7 +90,7 @@ int main(int argc, char** argv)
     }
     
     // Hook IME effect windows only
-    ImGui_ImplSDL2_HookIme(window);
+    //ImGui_ImplSDL2_HookIme(window);
     
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
