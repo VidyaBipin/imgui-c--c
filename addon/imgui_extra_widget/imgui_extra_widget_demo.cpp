@@ -489,7 +489,7 @@ void ShowExtraWidgetDemoWindow()
                     case 128: ImGui::SpinnerSolarArcs("SpinnerSolarArcs", 16, 4, ImColor(255, 0, 0), ImColor(255, 255, 255), 5 * velocity, 4); ImGui::ShowTooltipOnHover("SpinnerSolarArcs"); break;
                     case 129: ImGui::SpinnerRainbow("Spinner", 16, 2, ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f), 8 * velocity, 0.f, PI_2, 3); ImGui::ShowTooltipOnHover("Spinner"); break;
                     case 130: ImGui::SpinnerRotatingHeart("SpinnerRotatedHeart", 16, 2, ImColor(255, 0, 0), 8 * velocity, 0.f); ImGui::ShowTooltipOnHover("SpinnerRotatedHeart"); break;
-                    case 131: ImGui::SpinnerSolarScaleBalls("SpinnerSolarScaleBalls", 16, 1.3f, ImColor(255, 0, 0), ImColor(255, 255, 255), 1 * velocity, 36); ImGui::ShowTooltipOnHover("SpinnerSolarScaleBalls"); break;
+                    case 131: ImGui::SpinnerSolarScaleBalls("SpinnerSolarScaleBalls", 16, 1.3f, ImColor(255, 0, 0), 1 * velocity, 36); ImGui::ShowTooltipOnHover("SpinnerSolarScaleBalls"); break;
                     case 132: ImGui::SpinnerOrionDots("SpinnerOrionDots", 16, 1.3f, ImColor(255, 255, 255), 4 * velocity, 12); ImGui::ShowTooltipOnHover("SpinnerOrionDots"); break;
                     case 133: ImGui::SpinnerGalaxyDots("SpinnerGalaxyDots", 16, 1.3f, ImColor(255, 255, 255), 0.2 * velocity, 6); ImGui::ShowTooltipOnHover("SpinnerGalaxyDots"); break;
                     case 134: ImGui::SpinnerAsciiSymbolPoints("SpinnerAsciiSymbolPoints", "012345679ABCDEF", 16, 2, ImColor(255, 255, 255), 4 * velocity); ImGui::ShowTooltipOnHover("SpinnerAsciiSymbolPoints"); break;
@@ -500,6 +500,7 @@ void ShowExtraWidgetDemoWindow()
                     case 139: ImGui::SpinnerSquareRandomDots("SpinnerSquareRandomDots", 16, 2.8f, ImColor(255, 255, 255, 30), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), 5 * velocity); ImGui::ShowTooltipOnHover("SpinnerSquareRandomDots"); break;
                     case 140: ImGui::SpinnerFluidPoints("SpinnerFluidPoints", 16, 2.8f, ImColor(0, 0, 255), 3.8f * velocity, Dots{4}, 0.45f); ImGui::ShowTooltipOnHover("SpinnerFluidPoints"); break;
                     case 141: ImGui::SpinnerDotsLoading("SpinnerDotsLoading", 16, 4.f, ImColor(255, 255, 255), ImColor(255, 255, 255, 124), 2.f * velocity); ImGui::ShowTooltipOnHover("SpinnerDotsLoading"); break;
+                    case 142: ImGui::SpinnerDotsToPoints("SpinnerDotsToPoints", 16, 3, 0.5f, ImColor::HSV(0.31f, 0.8f, 0.8f), 1.8 * velocity, 5); ImGui::ShowTooltipOnHover("SpinnerDotsToPoints"); break;
 
                     // ...
                     default: break;
