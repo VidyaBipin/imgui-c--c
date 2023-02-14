@@ -35,6 +35,11 @@ int main(int argc, char** argv)
         return -1;
     }
 
+    // From 2.0.18: Enable native IME.
+#ifdef SDL_HINT_IME_SHOW_UI
+    SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+#endif
+
     ApplicationWindowProperty property(argc, argv);
     Application_GetWindowProperties(property);
     // Init IME effect windows only
