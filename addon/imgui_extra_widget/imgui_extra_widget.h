@@ -530,6 +530,7 @@ IMGUI_API void SpinnerDotsToPoints(const char *label, float radius, float thickn
 IMGUI_API void SpinnerDotsToBar(const char *label, float radius, float thickness, float offset_k, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 5);
 IMGUI_API void SpinnerWaveDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8);
 IMGUI_API void SpinnerFadeDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8);
+IMGUI_API void SpinnerThreeDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8);
 IMGUI_API void SpinnerMultiFadeDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8);
 IMGUI_API void SpinnerScaleDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8);
 IMGUI_API void SpinnerMovingDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3);

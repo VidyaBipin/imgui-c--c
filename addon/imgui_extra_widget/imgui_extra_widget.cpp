@@ -6153,6 +6153,29 @@ void ImGui::SpinnerFadeDots(const char *label, float radius, float thickness, co
     }
 }
 
+void ImGui::SpinnerThreeDots(const char *label, float radius, float thickness, const ImColor &color, float speed, int lt)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+    const float nextItemKoeff = 2.5f;
+    const float offset = size.x / 4.f;
+    float ab = start;
+    int msize = 2;
+    if (start < IM_PI) { ab = 0; msize = 1; }
+    for (size_t i = 0; i < msize; i++)
+    {
+        float a = ab + i * IM_PI - PI_DIV_2;
+        window->DrawList->AddCircleFilled(ImVec2(centre.x - offset + ImSin(a) * offset, centre.y + ImCos(a) * offset), thickness, color_alpha(color, 1.f), lt);
+    }
+    float ba = start; msize = 2;
+    if (start > IM_PI && start < PI_2) { ba = 0; msize = 1; }
+    for (size_t i = 0; i < msize; i++)
+    {
+        float a = -ba + i * IM_PI + PI_DIV_2;
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + offset + ImSin(a) * offset, centre.y + ImCos(a) * offset), thickness, color_alpha(color, 1.f), lt);
+    }
+}
+
 void ImGui::SpinnerMultiFadeDots(const char *label, float radius, float thickness, const ImColor &color, float speed, int lt)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);

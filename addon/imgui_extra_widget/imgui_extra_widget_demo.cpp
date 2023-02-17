@@ -339,7 +339,7 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SliderFloat("Speed", &velocity, 0.0f, 10.0f, "velocity = %.3f");
         
         static ImVec2 selected{0, 0};
-        constexpr int sidex = 11, sidey = 13;
+        constexpr int sidex = 11, sidey = 14;
 
         float widget_size = 50.f;
         ImGuiStyle &style = GImGui->Style;
@@ -501,6 +501,7 @@ void ShowExtraWidgetDemoWindow()
                     case 140: ImGui::SpinnerFluidPoints("SpinnerFluidPoints", 16, 2.8f, ImColor(0, 0, 255), 3.8f * velocity, Dots{4}, 0.45f); ImGui::ShowTooltipOnHover("SpinnerFluidPoints"); break;
                     case 141: ImGui::SpinnerDotsLoading("SpinnerDotsLoading", 16, 4.f, ImColor(255, 255, 255), ImColor(255, 255, 255, 124), 2.f * velocity); ImGui::ShowTooltipOnHover("SpinnerDotsLoading"); break;
                     case 142: ImGui::SpinnerDotsToPoints("SpinnerDotsToPoints", 16, 3, 0.5f, ImColor::HSV(0.31f, 0.8f, 0.8f), 1.8 * velocity, 5); ImGui::ShowTooltipOnHover("SpinnerDotsToPoints"); break;
+                    case 143: ImGui::SpinnerThreeDots("SpinnerThreeDots", 16, 6, ImColor(255, 255, 255), 4 * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerThreeDots"); break;
 
                     // ...
                     default: break;
