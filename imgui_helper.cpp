@@ -666,19 +666,48 @@ ImTextureID ImLoadTexture(const char* path)
         return nullptr;
 }
 
+static  GLuint readbackFramebuffer = 0;
 bool ImTextureToFile(ImTextureID texture, std::string path)
 {
     auto textureIt = ImFindTexture(texture);
     if (textureIt == g_Textures.end())
         return false;
-#if IMGUI_RENDERING_VULKAN
+    int ret = -1;
+    
+    int width = ImGui::ImGetTextureWidth(texture);
+    int height = ImGui::ImGetTextureHeight(texture);
+    int channels = 4; // TODO::Dicky need check
+    void* data = IM_ALLOC(width * height * channels);
+
     if (textureIt->TextureID)
     {
-        ImGui_ImplVulkan_SaveTexture(textureIt->TextureID, path);
-        return true;
-    }
+#if IMGUI_RENDERING_VULKAN
+        ret = ImGui_ImplVulkan_GetTextureData(textureIt->TextureID, data, width, height, channels);
+#elif IMGUI_RENDERING_GL3
+
 #endif
-    return false;
+    }
+    
+    if (ret != 0 || !width || !height || !channels)
+    {
+        if (data) IM_FREE(data);
+        return false;
+    }
+    auto file_suffix = ImGuiHelper::path_suffix(path);
+    if (!file_suffix.empty())
+    {
+        if (file_suffix.compare(".png") == 0 || file_suffix.compare(".PNG") == 0)
+            stbi_write_png(path.c_str(), width, height, channels, data, width * channels);
+        else if (file_suffix.compare(".jpg") == 0 || file_suffix.compare(".JPG") == 0 ||
+                file_suffix.compare(".jpeg") == 0 || file_suffix.compare(".JPEG") == 0)
+            stbi_write_jpg(path.c_str(), width, height, channels, data, width * channels);
+        else if (file_suffix.compare(".bmp") == 0 || file_suffix.compare(".BMP") == 0)
+            stbi_write_bmp(path.c_str(), width, height, channels, data);
+        else if (file_suffix.compare(".tga") == 0 || file_suffix.compare(".TGA") == 0)
+            stbi_write_tga(path.c_str(), width, height, channels, data);
+    }
+    if (data) IM_FREE(data);
+    return true;
 }
 
 void ImMatToTexture(ImGui::ImMat mat, ImTextureID& texture)

@@ -2147,13 +2147,13 @@ void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, const void * pixels)
     vkDestroyCommandPool(v->Device, commandPool, nullptr);
 }
 
-void ImGui_ImplVulkan_SaveTexture(ImTextureVk texture, std::string path)
+int ImGui_ImplVulkan_GetTextureData(ImTextureVk texture, void *data, int& width, int& height, int& channels)
 {
-    if (!texture) return;
+    if (!texture || !data) return -1;
     ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
-    if (!bd) return;
+    if (!bd) return -1;
     ImGui_ImplVulkan_InitInfo* v = bd->VulkanInitInfo;
-    if (!v || !v->PhysicalDevice) return;
+    if (!v || !v->PhysicalDevice) return -1;
 
     VkDeviceSize imageSize = texture->textureWidth * texture->textureHeight * texture->textureChannels;
     VkBuffer stagingBuffer;
@@ -2172,43 +2172,26 @@ void ImGui_ImplVulkan_SaveTexture(ImTextureVk texture, std::string path)
         throw std::runtime_error("failed to create graphics command pool!");
     }
 
-    //transitionImageLayout(v, commandPool, texture->textureImage, 
-    //                    VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, 
-    //                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     copyImageToBuffer(v, commandPool, stagingBuffer, texture->textureImage, 
                     static_cast<uint32_t>(texture->textureWidth), static_cast<uint32_t>(texture->textureHeight));
-    void* data;
-    vkMapMemory(v->Device, stagingBufferMemory, 0, imageSize, 0, &data);
-    if (!data)
+
+    void* buffer = nullptr;
+    vkMapMemory(v->Device, stagingBufferMemory, 0, imageSize, 0, &buffer);
+    if (!buffer)
     {
         throw std::runtime_error("failed to map image memory!");
     }
-    {
-        std::string file_suffix;
-        auto separator = path.find_last_of('.');
-        if (separator != std::string::npos)
-            file_suffix = path.substr(separator + 1);
-        if (!file_suffix.empty())
-        {
-            if (file_suffix.compare("png") == 0 || file_suffix.compare("PNG") == 0)
-                stbi_write_png(path.c_str(), texture->textureWidth, texture->textureHeight, 4, data, texture->textureWidth * 4);
-            else if (file_suffix.compare("jpg") == 0 || file_suffix.compare("JPG") == 0 ||
-                    file_suffix.compare("jpeg") == 0 || file_suffix.compare("JPEG") == 0)
-                stbi_write_jpg(path.c_str(), texture->textureWidth, texture->textureHeight, 4, data, texture->textureWidth * 4);
-            else if (file_suffix.compare("bmp") == 0 || file_suffix.compare("BMP") == 0)
-                stbi_write_bmp(path.c_str(), texture->textureWidth, texture->textureHeight, 4, data);
-            else if (file_suffix.compare("tga") == 0 || file_suffix.compare("TGA") == 0)
-                stbi_write_tga(path.c_str(), texture->textureWidth, texture->textureHeight, 4, data);
-            //else if (file_suffix.compare("hdr") == 0 || file_suffix.compare("HDR") == 0)
-            //    stbi_write_hdr(path.c_str(), texture->textureWidth, texture->textureHeight, 4, data); // HDR only support float
-        }
-    }
+
+    memcpy(data, buffer, imageSize);
 
     vkUnmapMemory(v->Device, stagingBufferMemory);
-    
     vkDestroyBuffer(v->Device, stagingBuffer, nullptr);
     vkFreeMemory(v->Device, stagingBufferMemory, nullptr);
     vkDestroyCommandPool(v->Device, commandPool, nullptr);
+    width = texture->textureWidth;
+    height = texture->textureHeight;
+    channels = texture->textureChannels;
+    return 0;
 }
 
 void ImGui_ImplVulkan_DestroyTexture(ImTextureVk* texture)
