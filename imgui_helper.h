@@ -27,6 +27,7 @@ IMGUI_API ImTextureID ImLoadTexture(const char* path);
 IMGUI_API void ImDestroyTexture(ImTextureID texture);
 IMGUI_API int ImGetTextureWidth(ImTextureID texture);
 IMGUI_API int ImGetTextureHeight(ImTextureID texture);
+IMGUI_API int ImGetTextureData(ImTextureID texture, void* data);
 IMGUI_API double ImGetTextureTimeStamp(ImTextureID texture);
 IMGUI_API bool ImTextureToFile(ImTextureID texture, std::string path);
 IMGUI_API void ImMatToTexture(ImGui::ImMat mat, ImTextureID& texture);

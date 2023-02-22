@@ -666,12 +666,46 @@ ImTextureID ImLoadTexture(const char* path)
         return nullptr;
 }
 
-static  GLuint readbackFramebuffer = 0;
-bool ImTextureToFile(ImTextureID texture, std::string path)
+int ImGetTextureData(ImTextureID texture, void* data)
 {
+    int ret = -1;
     auto textureIt = ImFindTexture(texture);
     if (textureIt == g_Textures.end())
-        return false;
+        return -1;
+    if (!textureIt->TextureID || !data)
+        return -1;
+
+    int width = ImGui::ImGetTextureWidth(texture);
+    int height = ImGui::ImGetTextureHeight(texture);
+    int channels = 4; // TODO::Dicky need check
+
+    if (width <= 0 || height <= 0 || channels <= 0)
+        return -1;
+
+#if IMGUI_RENDERING_VULKAN
+    ret = ImGui_ImplVulkan_GetTextureData(textureIt->TextureID, data, width, height, channels);
+#elif IMGUI_RENDERING_GL3 || IMGUI_RENDERING_GL2
+    glEnable(GL_TEXTURE_2D);
+    GLint last_texture = 0;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+    glBindTexture(GL_TEXTURE_2D, textureIt->TextureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glBindTexture(GL_TEXTURE_2D, last_texture);
+    ret = 0;
+#else
+    return -1;
+#endif
+    if (ret != 0)
+        return -1;
+    return 0;
+}
+
+bool ImTextureToFile(ImTextureID texture, std::string path)
+{
     int ret = -1;
     
     int width = ImGui::ImGetTextureWidth(texture);
@@ -679,14 +713,7 @@ bool ImTextureToFile(ImTextureID texture, std::string path)
     int channels = 4; // TODO::Dicky need check
     void* data = IM_ALLOC(width * height * channels);
 
-    if (textureIt->TextureID)
-    {
-#if IMGUI_RENDERING_VULKAN
-        ret = ImGui_ImplVulkan_GetTextureData(textureIt->TextureID, data, width, height, channels);
-#elif IMGUI_RENDERING_GL3
-
-#endif
-    }
+    ret = ImGetTextureData(texture, data);
     
     if (ret != 0 || !width || !height || !channels)
     {

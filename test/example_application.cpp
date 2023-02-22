@@ -21,6 +21,7 @@
 #include <ImGuiZMOquat.h>
 #include <ImGuiZmo.h>
 #include <imgui_toggle.h>
+#include <imgui_tex_inspect.h>
 
 #if IMGUI_VULKAN_SHADER
 #include <ImVulkanShader.h>
@@ -234,6 +235,7 @@ public:
     bool show_zmoquat_window = false;
     bool show_zmo_window = false;
     bool show_toggle_window = false;
+    bool show_tex_inspect_window = false;
 
 public:
     void DrawLineDemo();
@@ -534,6 +536,7 @@ bool Application_Frame(void* handle, bool app_will_quit)
         ImGui::Checkbox("Show ZmoQuat Demo Window", &example->show_zmoquat_window);
         ImGui::Checkbox("Show Zmo Demo Window", &example->show_zmo_window);
         ImGui::Checkbox("Show Toggle Demo Window", &example->show_toggle_window);
+        ImGui::Checkbox("Show TexInspect Window", &example->show_tex_inspect_window);
 
 #if IMGUI_VULKAN_SHADER
         ImGui::Checkbox("Show Vulkan Shader Test Window", &example->show_shader_window);
@@ -760,6 +763,12 @@ bool Application_Frame(void* handle, bool app_will_quit)
         ImGui::Begin("##Toggle", &example->show_toggle_window, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar);
         ImGui::imgui_toggle_example();
         ImGui::End();
+    }
+
+    // Show TexInspect Window
+    if (example->show_tex_inspect_window)
+    {
+        ImGuiTexInspect::ShowImGuiTexInspectDemo();
     }
 
 #if IMGUI_VULKAN_SHADER

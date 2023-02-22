@@ -1083,6 +1083,32 @@ if(IMGUI_BUILD_EXAMPLE)
     )
 endif(IMGUI_BUILD_EXAMPLE)
 
+# imgui_tex_inspect
+set(IMGUI_SRC
+    ${IMGUI_SRC}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_tex_inspect/imgui_tex_inspect.cpp
+)
+
+set(IMGUI_INCS
+    ${IMGUI_INCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_tex_inspect/imgui_tex_inspect.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_tex_inspect/imgui_tex_inspect_internal.h
+)
+
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_tex_inspect
+)
+
+
+if(IMGUI_BUILD_EXAMPLE)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_tex_inspect/imgui_tex_inspect_demo.cpp
+    )
+endif(IMGUI_BUILD_EXAMPLE)
+
+# ZLib
 if(ZLIB_FOUND)
     add_definitions(-DIMGUI_USE_ZLIB)
     set(LINK_LIBS
