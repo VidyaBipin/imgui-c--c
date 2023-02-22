@@ -1,3 +1,88 @@
+Fork from *Dear ImGui(https://github.com/ocornut/imgui)* docking/multiview branch and stack layout support and add CMake build script
+Add following addon collection also：
+* ImGuiTexInspect(https://github.com/andyborrell/imgui_tex_inspect)
+  ![ImGuiTexInspect view Image](images/ImGuiTexInspect.jpg)
+* ImGuiZmo(https://github.com/CedricGuillemet/ImGuizmo)
+  ![ImGuiZmo view Image](images/zmo.jpg)
+* imGuIZMO.quat(https://github.com/BrutPitt/imGuIZMO.quat)
+  ![imGuIZMOquat view Image](images/zmoquat.jpg)
+* implot(https://github.com/epezent/implot)
+  ![implot view Image](images/implot.jpg)
+* ImGuiFileDialog(https://github.com/aiekick/ImGuiFileDialog/tree/Lib_Only)
+  ![imguifiledialog view Image](images/ImGuiFileDialog.jpg)
+* ImGuiTabWindow(https://github.com/Flix01/imgui/tree/imgui_with_addons)
+  ![tabwindow view Image](images/TableWindow.jpg)
+* Markdown(https://github.com/juliettef/imgui_markdown)
+  ![markdown view Image](images/markdown.jpg)
+* MemoryEditor(http://www.github.com/ocornut/imgui_club)
+  ![memoryedit view Image](images/memeditor.jpg)
+* ImGui Node editor(https://github.com/thedmd/imgui-node-editor/tree/feature/blueprint-next)
+  ![node edit view Image](images/nodeeditor.jpg)
+* TextEditor and other widget(https://github.com/Flix01/imgui/tree/imgui_with_addons/addons)
+  ![text edit view Image](images/texteditor.jpg)
+* Custom Toggle widget(https://github.com/cmdwtf/imgui_toggle)
+  ![Custom Toggle View](images/toggle.jpg)
+* Hotkey(https://github.com/CedricGuillemet/ImHotKey)
+  ![hotkey view Image](images/hotkey.jpg)
+* ImageInspect(https://github.com/CedricGuillemet/imgInspect)
+  ![ImageInspect view Image](images/ImageInspect.jpg)
+* CurveEdit(https://github.com/CedricGuillemet/ImGuizmo)
+  ![CurveEdit view Image](images/CurveEdit.jpg)
+* ImSpinner(https://github.com/dalerank/imspinner)
+  ![ImSpinner view Image](images/ImSpinner.gif)
+* Pie Menu(https://gist.github.com/thennequin/64b4b996ec990c6ddc13a48c6a0ba68c)
+  ![Pie menu widget](images/pie.jpg)
+* Bezier Widget
+  ![Bezier view Image](images/Bezier.jpg)
+* Slider 2D and Slider 3D widgets
+  ![Slider view Image](images/Slider2D3D.jpg)
+* ImSpectrogram (Audio spectrogram widget)
+  ![ImSpectrogram view Image](images/ImSpectrogram.jpg)
+* Color Selector widgets
+  ![Color Selector view Image](images/colorselect.jpg)
+* Color Band widgets
+  ![Color Band view Image](images/colorband.jpg)
+* Color Ring widgets
+  ![Color Ring view Image](images/colorring.jpg)
+* Many Knob widgets
+  ![Knob view Image](images/knob.gif)
+* immat for simulation OpenCV Mat(Tanlu team)
+  ![immat view Image](images/immat_draw.gif)
+* mono Chinese fonts small (hei/kai/song/sarasa).
+  ![chinese1 view Image](images/chinese1.jpg)
+  ![chinese2 view Image](images/chinese2.jpg)
+* kalman algorithm test
+  ![kalman view Image](images/kalman.gif)
+* Other widgets
+  ![Other1 view Image](images/other1.jpg)
+  ![Other2 view Image](images/other2.gif)
+* ImGui::Piano (MIDI keyboard)
+  ![Piano view Image](images/piano.jpg)
+* ImGui::ImSpline
+  ![Piano view Image](images/spline.jpg)
+* ImVulkanShader
+  ![Vkshader Image](images/vkshader.jpg)
+* Virtual Keyboard(https://github.com/Flix01/imgui)
+  ![Virtual Keyboard full Image](images/vk1.jpg)
+  ![Virtual Keyboard key Image](images/vk2.jpg)
+  ![Virtual Keyboard number Image](images/vk3.jpg)
+
+- Add multi-language(text internationalized with language ini file) support
+- Add msgbox widget
+- Add many Vertical Text Helper API
+- Add many Extensions to ImDrawList
+- Add VkShader for vulkan compute(Tanlu team).
+- Add Icon collection(https://github.com/juliettef/IconFontCppHeaders).
+- Add Application framework to create app simply few function
+- Add power saving mode for imgui, Configurable by coding.
+- Add vulkan texture support(ugly)
+- New method to handle multi-monitor with different DPI setting
+- Add newest std_image code, including read/write/resize
+- Add dll load wrap
+- Add dir iterate wrap
+- Add many helper utils in imgui_helper.cpp
+
+=====
 Dear ImGui
 =====
 
