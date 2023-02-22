@@ -768,7 +768,7 @@ bool Application_Frame(void* handle, bool app_will_quit)
     // Show TexInspect Window
     if (example->show_tex_inspect_window)
     {
-        ImGuiTexInspect::ShowImGuiTexInspectDemo();
+        ImGuiTexInspect::ShowImGuiTexInspectDemo(&example->show_tex_inspect_window);
     }
 
 #if IMGUI_VULKAN_SHADER

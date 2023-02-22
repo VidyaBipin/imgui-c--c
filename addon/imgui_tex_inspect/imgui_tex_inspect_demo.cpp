@@ -340,7 +340,7 @@ void Demo_TextureAnnotations()
 // [SECTION] MAIN DEMO WINDOW FUNCTION
 //-------------------------------------------------------------------------
 
-void ShowImGuiTexInspectDemo()
+void ShowImGuiTexInspectDemo(bool* p_open)
 {
     if (!testInitted)
     {
@@ -363,7 +363,7 @@ void ShowImGuiTexInspectDemo()
         {"Wrap & Filter", Demo_WrapAndFilter},
     };
 
-    if (ImGui::Begin("ImGuiTexInspect Demo"))
+    if (ImGui::Begin("ImGuiTexInspect Demo", p_open))
     {
         ImGui::Text("Select Demo:");
         ImGui::Spacing();

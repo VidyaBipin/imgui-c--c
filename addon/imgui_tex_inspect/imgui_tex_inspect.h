@@ -306,6 +306,6 @@ void DrawAnnotations(T drawer, ImU64 maxAnnotatedTexels)
     }
 }
 #if IMGUI_BUILD_EXAMPLE
-    IMGUI_API void ShowImGuiTexInspectDemo();
+    IMGUI_API void ShowImGuiTexInspectDemo(bool* p_open = NULL);
 #endif
 } // namespace ImGuiTexInspect
