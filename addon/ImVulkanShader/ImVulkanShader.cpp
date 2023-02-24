@@ -54,6 +54,24 @@ void ImVulkanVkMatToVkImageMat(const VkMat &src, VkImageMat &dst)
     vkdev->reclaim_staging_allocator(opt.staging_vkallocator);
 }
 
+void* ImVulkanVkMatMapping(const VkMat &src)
+{
+    Option opt;
+    VkMat dst_staging;
+    const VkAllocator* allocator = (VkAllocator*)src.allocator;
+    const VulkanDevice* vkdev = allocator->vkdev;
+    opt.blob_vkallocator = vkdev->acquire_blob_allocator();
+    opt.staging_vkallocator = vkdev->acquire_staging_allocator();
+    VkCompute cmd(vkdev, "VkMatToVkImageMat");
+    cmd.record_download(src, dst_staging, opt);
+    cmd.submit_and_wait();
+    vkdev->reclaim_blob_allocator(opt.blob_vkallocator);
+    vkdev->reclaim_staging_allocator(opt.staging_vkallocator);
+    if (!dst_staging.empty())
+        return dst_staging.mapped_ptr();
+    return nullptr;
+}
+
 void ImVulkanShaderInit()
 {
     create_gpu_instance();

@@ -21,6 +21,8 @@ public:
 
     void record_download(const VkMat& src, ImMat& dst, const Option& opt);
 
+    void record_download(const VkMat& src, VkMat& dst, const Option& opt);
+
     void record_download(const VkImageMat& src, ImMat& dst, const Option& opt);
 
     void record_buffer_to_image(const VkMat& src, VkImageMat& dst, const Option& opt);

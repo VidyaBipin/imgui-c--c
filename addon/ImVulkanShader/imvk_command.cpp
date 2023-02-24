@@ -761,6 +761,16 @@ void VkCompute::record_download(const VkImageMat& src, ImMat& dst, const Option&
     }
 }
 
+void VkCompute::record_download(const VkMat& src, VkMat& dst, const Option& opt)
+{
+    // host to staging
+    Option opt_staging = opt;
+    opt_staging.blob_vkallocator = opt.staging_vkallocator;
+    record_clone(src, dst, opt_staging);
+    // stash staging
+    d->upload_staging_buffers.push_back(dst);
+}
+
 void VkCompute::record_buffer_to_image(const VkMat& src, VkImageMat& dst, const Option& opt)
 {
     // resolve dst_elempack

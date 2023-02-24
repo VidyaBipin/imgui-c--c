@@ -2001,14 +2001,8 @@ ImTextureID ImGui_ImplVulkan_CreateTexture(const void * pixels, int width, int h
         throw std::runtime_error("failed to create graphics command pool!");
     }
 
-    //transitionImageLayout(v, commandPool, texture->textureImage, 
-    //                    VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, 
-    //                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     copyBufferToImage(v, commandPool, stagingBuffer, 0, texture->textureImage, 
                     static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-    //transitionImageLayout(v, commandPool, texture->textureImage, 
-    //                    VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
-    //                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     vkDestroyBuffer(v->Device, stagingBuffer, nullptr);
     vkFreeMemory(v->Device, stagingBufferMemory, nullptr);
@@ -2049,14 +2043,8 @@ ImTextureID ImGui_ImplVulkan_CreateTexture(VkBuffer buffer, size_t buffer_offset
         throw std::runtime_error("failed to create graphics command pool!");
     }
 
-    //transitionImageLayout(v, commandPool, texture->textureImage, 
-    //                    VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, 
-    //                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     copyBufferToImage(v, commandPool, buffer, buffer_offset, texture->textureImage, 
                     static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-    //transitionImageLayout(v, commandPool, texture->textureImage, 
-    //                    VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
-    //                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     vkDestroyCommandPool(v->Device, commandPool, nullptr);
     texture->textureDescriptor = (VkDescriptorSet)ImGui_ImplVulkan_AddTexture(texture->textureSampler, texture->textureView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -2085,14 +2073,8 @@ void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, VkBuffer stagingBuffe
         throw std::runtime_error("failed to create graphics command pool!");
     }
 
-    //transitionImageLayout(v, commandPool, texture->textureImage, 
-    //                    VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, 
-    //                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     copyBufferToImage(v, commandPool, stagingBuffer, buffer_offset, texture->textureImage, 
                     static_cast<uint32_t>(texture->textureWidth), static_cast<uint32_t>(texture->textureHeight));
-    //transitionImageLayout(v, commandPool, texture->textureImage, 
-    //                    VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
-    //                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     vkDestroyCommandPool(v->Device, commandPool, nullptr);
 }
@@ -2133,14 +2115,8 @@ void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, const void * pixels)
         throw std::runtime_error("failed to create graphics command pool!");
     }
 
-    //transitionImageLayout(v, commandPool, texture->textureImage, 
-    //                    VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, 
-    //                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     copyBufferToImage(v, commandPool, stagingBuffer, 0, texture->textureImage, 
                     static_cast<uint32_t>(texture->textureWidth), static_cast<uint32_t>(texture->textureHeight));
-    //transitionImageLayout(v, commandPool, texture->textureImage, 
-    //                    VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
-    //                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     vkDestroyBuffer(v->Device, stagingBuffer, nullptr);
     vkFreeMemory(v->Device, stagingBufferMemory, nullptr);
