@@ -101,6 +101,7 @@ _OPTION(IMGUI_FREETYPE              "Build ImGui with FreeType support" OFF)
 _OPTION(IMGUI_ICONS                 "Internal Icons build in library" ON)
 _OPTION(IMGUI_APPS                  "build apps base on imgui" ON)
 _OPTION(IMGUI_APPLE_APP             "build apple app base on imgui(Apple only)" OFF IF APPLE)
+_OPTION(IMGUI_SKIP_INSTALL          "Skip imgui install" ON)
 
 if(IOS AND CMAKE_OSX_ARCHITECTURES MATCHES "arm")
     message(STATUS "Target arch: arm-ios")
@@ -1598,4 +1599,11 @@ if(hasParent)
     set(IMGUI_INCLUDES ${IMGUI_INCS} PARENT_SCOPE )
     set(IMGUI_INCLUDE_DIRS ${IMGUI_INC_DIRS} PARENT_SCOPE )
     set(IMGUI_APP_ENTRY_SRC imgui/${IMGUI_APP_SRC} PARENT_SCOPE )
+endif()
+if(UNIX AND NOT IMGUI_SKIP_INSTALL)
+install(TARGETS imgui
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
 endif()

@@ -33,9 +33,9 @@ option(VKSHADER_VULKAN_BENCHMARK      "Enable Vulkan Shader Benchmark" ON)
 option(VKSHADER_VULKAN_PREBUILD       "Enable Vulkan Shader prebuild check" OFF)
 option(VKSHADER_VULKAN_FP16           "Enable Vulkan Shader support 16bits float" ON)
 option(VKSHADER_STATIC                "Build Vulkan Shader as static library" OFF)
+option(VKSHADER_SKIP_INSTALL          "Skip Vulkan install" ON)
 
 find_package(PkgConfig)
-#find_package(Vulkan)
 find_package(OpenMP)
 
 set(LINK_LIBS)
@@ -739,4 +739,11 @@ if(hasParent)
     set(VKSHADER_LIBRARYS VkShader ${LINK_LIBS} PARENT_SCOPE )
     set(VKSHADER_INCLUDES ${VKSHADER_INCS} PARENT_SCOPE )
     set(VKSHADER_INCLUDE_DIRS ${VKSHADER_INC_DIRS} PARENT_SCOPE )
+endif()
+if(UNIX AND NOT VKSHADER_SKIP_INSTALL)
+install(TARGETS VkShader
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
 endif()
