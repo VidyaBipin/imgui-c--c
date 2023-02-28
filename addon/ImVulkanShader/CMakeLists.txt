@@ -35,7 +35,7 @@ option(VKSHADER_VULKAN_FP16           "Enable Vulkan Shader support 16bits float
 option(VKSHADER_STATIC                "Build Vulkan Shader as static library" OFF)
 
 find_package(PkgConfig)
-find_package(Vulkan)
+#find_package(Vulkan)
 find_package(OpenMP)
 
 set(LINK_LIBS)
@@ -72,10 +72,10 @@ if (APPLE AND OPENMP_FOUND)
     include_directories(${OpenMP_CXX_INCLUDE_DIR})
     set(LINK_LIBS ${LINK_LIBS} ${OpenMP_libomp_LIBRARY})
 elseif(OPENMP_FOUND)
-    if(NOT TARGET OpenMP::OpenMP_CXX)
-    set_property(TARGET OpenMP::OpenMP_CXX
-                PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
-    endif()
+    #if(NOT TARGET OpenMP::OpenMP_CXX)
+    #set_property(TARGET OpenMP::OpenMP_CXX
+    #            PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
+    #endif()
     if(WIN32 OR MINGW)
         message(STATUS "VkShader(Windows) Use OpenMP")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -90,13 +90,10 @@ elseif(OPENMP_FOUND)
 endif()
 
 if(PKG_CONFIG_FOUND)
-    if(NOT VULKAN_FOUND)
-        pkg_search_module(VULKAN REQUIRED vulkan)
-        if (VULKAN_FOUND)
-            message("[ImVulkanShader] vulkan found")
-            set (Vulkan_LIBRARY vulkan)
-        endif(VULKAN_FOUND)
-    endif(NOT VULKAN_FOUND)
+    pkg_search_module(VULKAN REQUIRED vulkan)
+    if (VULKAN_FOUND)
+        message(STATUS "[ImVulkanShader] vulkan found")
+    endif(VULKAN_FOUND)
 endif(PKG_CONFIG_FOUND)
 
 set(VKSHADER_INC_DIRS
@@ -105,7 +102,7 @@ set(VKSHADER_INC_DIRS
 
 set(LINK_LIBS
     ${LINK_LIBS}
-    ${Vulkan_LIBRARY}
+    ${VULKAN_LDFLAGS}
 )
 
 
