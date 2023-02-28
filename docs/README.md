@@ -46,7 +46,7 @@ Add following addon collection also：
   ![Color Ring view Image](images/colorring.jpg)
 * Many Knob widgets
   ![Knob view Image](images/knob.gif)
-* immat for simulation OpenCV Mat(Tanlu team)
+* immat for simulation OpenCV Mat(CodeWin team)
   ![immat view Image](images/immat_draw.gif)
 * mono Chinese fonts small (hei/kai/song/sarasa).
   ![chinese1 view Image](images/chinese1.jpg)
@@ -71,7 +71,7 @@ Add following addon collection also：
 - Add msgbox widget
 - Add many Vertical Text Helper API
 - Add many Extensions to ImDrawList
-- Add VkShader for vulkan compute(Tanlu team).
+- Add VkShader for vulkan compute(CodeWin team).
 - Add Icon collection(https://github.com/juliettef/IconFontCppHeaders).
 - Add Application framework to create app simply few function
 - Add power saving mode for imgui, Configurable by coding.
