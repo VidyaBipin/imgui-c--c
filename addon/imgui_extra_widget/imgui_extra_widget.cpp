@@ -2008,6 +2008,8 @@ bool ImGui::SliderScalar2D(char const* pLabel, float* fValueX, float* fValueY, c
     IM_ASSERT(fMinX < fMaxX);
     IM_ASSERT(fMinY < fMaxY);
     static bool drag_mouse = false;
+    ImGuiContext& g = *GImGui;
+    bool was_disabled = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
     ImGuiID const iID = ImGui::GetID(pLabel);
     ImVec2 const vSizeSubstract = bHandle ? ImGui::CalcTextSize(std::to_string(1.0f).c_str()) * 1.1f : ImVec2(8, 8);
     float const w = ImGui::CalcItemWidth();
@@ -2037,7 +2039,7 @@ bool ImGui::SliderScalar2D(char const* pLabel, float* fValueX, float* fValueY, c
 
     bool bModified = false;
     ImVec2 const vSecurity(15.0f, 15.0f);
-    if (ImGui::IsMouseHoveringRect(oRect.Min - vSecurity, oRect.Max + vSecurity) && ImGui::IsMouseDown(ImGuiMouseButton_Left))
+    if (!was_disabled && ImGui::IsMouseHoveringRect(oRect.Min - vSecurity, oRect.Max + vSecurity) && ImGui::IsMouseDown(ImGuiMouseButton_Left))
     {
         ImVec2 const vCursorPos = ImGui::GetMousePos() - oRect.Min;
 
@@ -2090,7 +2092,7 @@ bool ImGui::SliderScalar2D(char const* pLabel, float* fValueX, float* fValueY, c
 
     ImVec2 vXSize = {0, 0};
     ImVec2 vYSize = {0, 0};
-    if (bHandle)
+    if (bHandle && !was_disabled)
     {
         char pBufferX[16];
         char pBufferY[16];
