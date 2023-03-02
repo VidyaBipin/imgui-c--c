@@ -1818,6 +1818,7 @@ enum ImGuiSliderFlags_
     ImGuiSliderFlags_NoInput                = 1 << 7,       // Disable CTRL+Click or Enter key allowing to input text directly into the widget
     // add By Dicky
     ImGuiSliderFlags_NoLabel                = 1 << 8,       // Disable widget label show
+    ImGuiSliderFlags_Mark                   = 1 << 9,       // add mark on handle
     // add By Dicky end
     ImGuiSliderFlags_InvalidMask_           = 0x7000000F,   // [Internal] We treat using those bits as being potentially a 'float power' argument from the previous API that has got miscast to this enum, and will trigger an assert if needed.
 
