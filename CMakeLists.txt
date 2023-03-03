@@ -943,6 +943,16 @@ set(IMGUI_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/MemoryEditor
 )
 
+# Portable File Dialogs
+set(IMGUI_INCS
+    ${IMGUI_INCS}
+    addon/PortableFileDialogs/portable-file-dialogs.h
+)
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/PortableFileDialogs
+)
+
 # Simple Markdown
 set(IMGUI_INCS
     ${IMGUI_INCS}

@@ -22,6 +22,7 @@
 #include <ImGuiZmo.h>
 #include <imgui_toggle.h>
 #include <imgui_tex_inspect.h>
+#include <portable-file-dialogs.h>
 
 #if IMGUI_VULKAN_SHADER
 #include <ImVulkanShader.h>
@@ -236,6 +237,7 @@ public:
     bool show_zmo_window = false;
     bool show_toggle_window = false;
     bool show_tex_inspect_window = false;
+    bool show_portable_file_dialogs = false;
 
 public:
     void DrawLineDemo();
@@ -520,23 +522,24 @@ bool Application_Frame(void* handle, bool app_will_quit)
         ImGui::Checkbox("Another Window", &example->show_another_window);
         ImGui::Checkbox("ImPlot Window", &example->show_implot_window);
         ImGui::Checkbox("File Dialog Window", &example->show_file_dialog_window);
+        ImGui::Checkbox("Portable File Dialogs", &example->show_portable_file_dialogs);
         ImGui::Checkbox("Memory Edit Window", &example->mem_edit.Open);
-        ImGui::Checkbox("Show Markdown Window", &example->show_markdown_window);
-        ImGui::Checkbox("Show Extra Widget Window", &example->show_widget_window);
-        ImGui::Checkbox("Show Kalman Window", &example->show_kalman_window);
-        ImGui::Checkbox("Show FFT Window", &example->show_fft_window);
-        ImGui::Checkbox("Show STFT Window", &example->show_stft_window);
-        ImGui::Checkbox("Show ImMat Draw Window", &example->show_mat_draw_window);
-        ImGui::Checkbox("Show ImMat Warp Matrix", &example->show_mat_warp_matrix);
-        ImGui::Checkbox("Show Text Edit Window", &example->show_text_editor_window);
-        ImGui::Checkbox("Show Tab Window", &example->show_tab_window);
-        ImGui::Checkbox("Show Node Editor Window", &example->show_node_editor_window);
-        ImGui::Checkbox("Show Curve Demo Window", &example->show_curve_demo_window);
-        ImGui::Checkbox("Show Spline Demo Window", &example->show_spline_demo_window);
-        ImGui::Checkbox("Show ZmoQuat Demo Window", &example->show_zmoquat_window);
-        ImGui::Checkbox("Show Zmo Demo Window", &example->show_zmo_window);
-        ImGui::Checkbox("Show Toggle Demo Window", &example->show_toggle_window);
-        ImGui::Checkbox("Show TexInspect Window", &example->show_tex_inspect_window);
+        ImGui::Checkbox("Markdown Window", &example->show_markdown_window);
+        ImGui::Checkbox("Extra Widget Window", &example->show_widget_window);
+        ImGui::Checkbox("Kalman Window", &example->show_kalman_window);
+        ImGui::Checkbox("FFT Window", &example->show_fft_window);
+        ImGui::Checkbox("STFT Window", &example->show_stft_window);
+        ImGui::Checkbox("ImMat Draw Window", &example->show_mat_draw_window);
+        ImGui::Checkbox("ImMat Warp Matrix", &example->show_mat_warp_matrix);
+        ImGui::Checkbox("Text Edit Window", &example->show_text_editor_window);
+        ImGui::Checkbox("Tab Window", &example->show_tab_window);
+        ImGui::Checkbox("Node Editor Window", &example->show_node_editor_window);
+        ImGui::Checkbox("Curve Demo Window", &example->show_curve_demo_window);
+        ImGui::Checkbox("Spline Demo Window", &example->show_spline_demo_window);
+        ImGui::Checkbox("ZmoQuat Demo Window", &example->show_zmoquat_window);
+        ImGui::Checkbox("Zmo Demo Window", &example->show_zmo_window);
+        ImGui::Checkbox("Toggle Demo Window", &example->show_toggle_window);
+        ImGui::Checkbox("TexInspect Window", &example->show_tex_inspect_window);
 
 #if IMGUI_VULKAN_SHADER
         ImGui::Checkbox("Show Vulkan Shader Test Window", &example->show_shader_window);
@@ -602,6 +605,97 @@ bool Application_Frame(void* handle, bool app_will_quit)
     if (example->show_file_dialog_window)
     {
         show_file_dialog_demo_window(&example->filedialog, &example->show_file_dialog_window);
+    }
+
+    // Show Portable File Dialogs
+    if (example->show_portable_file_dialogs)
+    {
+        ImGui::SetNextWindowSize(ImVec2(640, 300), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Portable FileDialog window",&example->show_portable_file_dialogs, ImGuiWindowFlags_NoScrollbar);
+        // select folder
+        if (ImGui::Button("Select Folder"))
+        {
+            auto dir = pfd::select_folder("Select any directory", pfd::path::home()).result();
+            // std::cout << "Selected dir: " << dir << "\n";
+        }
+
+        // open file
+        if (ImGui::Button("Open File"))
+        {
+            auto f = pfd::open_file("Choose files to read", pfd::path::home(),
+                                { "Text Files (.txt .text)", "*.txt *.text",
+                                    "All Files", "*" },
+                                    pfd::opt::multiselect);
+            // for (auto const &name : f.result()) std::cout << " " + name; std::cout << "\n";
+        }
+
+        // save file
+        if (ImGui::Button("Save File"))
+        {
+            auto f = pfd::save_file("Choose file to save",
+                                    pfd::path::home() + pfd::path::separator() + "readme.txt",
+                                    { "Text Files (.txt .text)", "*.txt *.text" },
+                                    pfd::opt::force_overwrite);
+            // std::cout << "Selected file: " << f.result() << "\n";
+        }
+
+        // show Notification
+        static int notify_type = 0;
+        if (ImGui::Button("Notification"))
+        {
+            switch (notify_type)
+            {
+                case 0: pfd::notify("Info Notification", "Notification from imgui example!", pfd::icon::info); break;
+                case 1: pfd::notify("Warning Notification", "Notification from imgui example!", pfd::icon::warning); break;
+                case 2: pfd::notify("Error Notification", "Notification from imgui example!", pfd::icon::error); break;
+                case 3: pfd::notify("Question Notification", "Notification from imgui example!", pfd::icon::question); break;
+                default: break;
+            }
+        }
+        ImGui::SameLine(); ImGui::RadioButton("Info", &notify_type, 0);
+        ImGui::SameLine(); ImGui::RadioButton("Warning", &notify_type, 1);
+        ImGui::SameLine(); ImGui::RadioButton("Error", &notify_type, 2);
+        ImGui::SameLine(); ImGui::RadioButton("Question", &notify_type, 3);
+
+        // show Message
+        static int message_type = 0;
+        static int message_icon = 0;
+        if (ImGui::Button("Message"))
+        {
+            auto m = pfd::message("Personal Message", "You are an amazing person, don't let anyone make you think otherwise.",
+                                    (pfd::choice)message_type,
+                                    (pfd::icon)message_icon);
+    
+            // Optional: do something while waiting for user action
+            for (int i = 0; i < 10 && !m.ready(1000); ++i);
+            //    std::cout << "Waited 1 second for user input...\n";
+
+            // Do something according to the selected button
+            if (m.ready())
+            {
+                switch (m.result())
+                {
+                    case pfd::button::yes: std::cout << "User agreed.\n"; break;
+                    case pfd::button::no: std::cout << "User disagreed.\n"; break;
+                    case pfd::button::cancel: std::cout << "User freaked out.\n"; break;
+                    default: break; // Should not happen
+                }
+            }
+            else
+                m.kill();
+        }
+        ImGui::SameLine(); ImGui::RadioButton("Ok", &message_type, 0);
+        ImGui::SameLine(); ImGui::RadioButton("Ok_Cancel", &message_type, 1);
+        ImGui::SameLine(); ImGui::RadioButton("Yes_no", &message_type, 2);
+        ImGui::SameLine(); ImGui::RadioButton("Yes_no_cancel", &message_type, 3);
+        ImGui::SameLine(); ImGui::RadioButton("Abort_retry_ignore", &message_type, 4);
+        ImGui::Indent(64);
+        ImGui::RadioButton("Info##icon", &message_icon, 0); ImGui::SameLine();
+        ImGui::RadioButton("Warning##icon", &message_icon, 1); ImGui::SameLine();
+        ImGui::RadioButton("Error##icon", &message_icon, 2); ImGui::SameLine();
+        ImGui::RadioButton("Question##icon", &message_icon, 3);
+
+        ImGui::End();
     }
 
     // Show Memory Edit window
