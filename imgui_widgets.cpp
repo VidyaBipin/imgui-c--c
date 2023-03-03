@@ -3044,9 +3044,28 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
     if (value_changed)
         MarkItemEdited(id);
 
-    // Render grab
+    // Render grab modify by dicky
     if (grab_bb.Max.x > grab_bb.Min.x)
-        window->DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab), style.GrabRounding);
+    {
+        if (flags & ImGuiSliderFlags_Mark)
+        {
+            grab_bb.Expand(ImVec2(16, 4));
+            window->DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab));
+            float gap_x = grab_bb.GetSize().x / 8;
+            float offset_y = grab_bb.GetSize().y / 4;
+            float mark_height = grab_bb.GetSize().y / 2;
+            for (int i = 1; i < 8; i++)
+            {
+                ImVec2 p1 = grab_bb.Min + ImVec2(i * gap_x, offset_y);
+                ImVec2 p2 = grab_bb.Min + ImVec2(i * gap_x, offset_y + mark_height);
+                window->DrawList->AddLine(p1, p2, IM_COL32(255, 255, 255, 255), 1.f);
+                window->DrawList->AddLine(p1 + ImVec2(1, 0), p2 + ImVec2(1, 0), IM_COL32(128, 128, 128, 255), 1.f);
+            }
+        }
+        else
+            window->DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab), style.GrabRounding);
+    }
+    // modify by dicky end
 
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     char value_buf[64];

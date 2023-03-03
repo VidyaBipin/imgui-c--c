@@ -112,9 +112,9 @@ void ShowExtraWidgetDemoWindow()
         ShowKnobDemoWindow();
         ImGui::TreePop();
     }
-    if (ImGui::TreeNode("Extended Buttons"))
+    if (ImGui::TreeNode("Extended Widgets"))
     {
-        // Check Buttons
+        // Check Widgets
         ImGui::Spacing();
         ImGui::AlignTextToFramePadding();ImGui::Text("Check Buttons:");
         ImGui::SameLine();
@@ -152,6 +152,15 @@ void ShowExtraWidgetDemoWindow()
         {
             // choice OK here
         }
+
+        // SliderBar with Marks
+        ImGui::Spacing();
+        static float slider_vol = 0.0f;
+        static int slider_int = 0;
+        ImGui::SliderFloat("##slider_with_mark", &slider_vol, -1.f, 1.0f, "%.1f", ImGuiSliderFlags_Mark);
+        ImGui::VSliderFloat("##vslider_with_mark_float", ImVec2(32, 160), &slider_vol, -1.f, 1.0f, "%.1f", ImGuiSliderFlags_Mark);
+        ImGui::SameLine();
+        ImGui::VSliderInt("##vslider_with_mark_int", ImVec2(32, 160), &slider_int, -100, 100, "%d", ImGuiSliderFlags_Mark);
 
         // CheckboxFlags Overload
         ImGui::Spacing();
