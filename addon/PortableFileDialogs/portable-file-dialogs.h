@@ -59,7 +59,7 @@
 // Versions of mingw64 g++ up to 9.3.0 do not have a complete IFileDialog
 #ifndef PFD_HAS_IFILEDIALOG
 #   define PFD_HAS_IFILEDIALOG 1
-#   if (defined __MINGW64__ || defined __MINGW32__) && defined __GXX_ABI_VERSION
+#   if (defined __MINGW64__ || defined __MINGW32__) && !defined(__clang__) && defined __GXX_ABI_VERSION
 #       if __GXX_ABI_VERSION <= 1013
 #           undef PFD_HAS_IFILEDIALOG
 #           define PFD_HAS_IFILEDIALOG 0
