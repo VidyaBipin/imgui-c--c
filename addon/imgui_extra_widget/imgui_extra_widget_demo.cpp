@@ -511,6 +511,8 @@ void ShowExtraWidgetDemoWindow()
                     case 141: ImGui::SpinnerDotsLoading("SpinnerDotsLoading", 16, 4.f, ImColor(255, 255, 255), ImColor(255, 255, 255, 124), 2.f * velocity); ImGui::ShowTooltipOnHover("SpinnerDotsLoading"); break;
                     case 142: ImGui::SpinnerDotsToPoints("SpinnerDotsToPoints", 16, 3, 0.5f, ImColor::HSV(0.31f, 0.8f, 0.8f), 1.8 * velocity, 5); ImGui::ShowTooltipOnHover("SpinnerDotsToPoints"); break;
                     case 143: ImGui::SpinnerThreeDots("SpinnerThreeDots", 16, 6, ImColor(255, 255, 255), 4 * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerThreeDots"); break;
+                    case 144: ImGui::Spinner4Caleidospcope("Spinner4Caleidospcope", 16, 6, ImColor::HSV(hue * 0.0031f, 0.8f, 0.8f), 4 * velocity, 8); ImGui::ShowTooltipOnHover("Spinner4Caleidospcope"); break;
+                    case 145: ImGui::SpinnerFiveDots("SpinnerSixDots", 16, 6, ImColor(255, 255, 255), 4 * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerSixDots"); break;
 
                     // ...
                     default: break;
