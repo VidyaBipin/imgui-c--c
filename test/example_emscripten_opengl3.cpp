@@ -10,7 +10,7 @@
 #include <imgui.h>
 #include <immat.h>
 #include <imgui_helper.h>
-#include <imgui_impl_sdl.h>
+#include <imgui_impl_sdl2.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_extra_widget.h>
 #include <implot.h>
@@ -27,6 +27,11 @@
 #include <imgui_node_editor.h>
 #include <imgui_curve.h>
 #include <imgui_spline.h>
+#include <ImGuiZMOquat.h>
+#include <ImGuiZmo.h>
+#include <imgui_toggle.h>
+#include <imgui_tex_inspect.h>
+#include <portable-file-dialogs.h>
 
 #include <fstream>
 #include <sstream>
@@ -304,6 +309,7 @@ int main(int, char**)
     // For an Emscripten build we are disabling file-system access, so let's not attempt to do a fopen() of the imgui.ini file.
     // You may manually call LoadIniSettingsFromMemory() to load settings from your own storage.
     io.IniFilename = NULL;
+    io.FontGlobalScale = 0.5;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -360,6 +366,11 @@ static void main_loop(void* arg)
     static bool show_node_editor_window = false;
     static bool show_curve_demo_window = false;
     static bool show_spline_demo_window = false;
+    static bool show_zmoquat_window = false;
+    static bool show_zmo_window = false;
+    static bool show_toggle_window = false;
+    static bool show_tex_inspect_window = false;
+    static bool show_portable_file_dialogs = false;
 
     static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -395,6 +406,7 @@ static void main_loop(void* arg)
         ImGui::Checkbox("Demo Window", &show_demo_window);            // Edit bools storing our window open/close state
         ImGui::Checkbox("Another Window", &show_another_window);
         ImGui::Checkbox("File Dialog Window", &show_file_dialog_window);
+        ImGui::Checkbox("Portable File Dialogs", &show_portable_file_dialogs);
         ImGui::Checkbox("Memory Edit Window", &mem_edit.Open);
         ImGui::Checkbox("Show Markdown Window", &show_markdown_window);
         ImGui::Checkbox("Show Extra Widget Window", &show_widget_window);
@@ -408,6 +420,10 @@ static void main_loop(void* arg)
         ImGui::Checkbox("Show Node Editor Window", &show_node_editor_window);
         ImGui::Checkbox("Show Curve Demo Window", &show_curve_demo_window);
         ImGui::Checkbox("Show Spline Demo Window", &show_spline_demo_window);
+        ImGui::Checkbox("ZmoQuat Demo Window", &show_zmoquat_window);
+        ImGui::Checkbox("Zmo Demo Window", &show_zmo_window);
+        ImGui::Checkbox("Toggle Demo Window", &show_toggle_window);
+        ImGui::Checkbox("TexInspect Window", &show_tex_inspect_window);
 
         // show hotkey window
         if (ImGui::Button("Edit Hotkeys"))
@@ -464,6 +480,97 @@ static void main_loop(void* arg)
     if (show_file_dialog_window)
     {
         show_file_dialog_demo_window(&filedialog, &show_file_dialog_window);
+    }
+
+        // Show Portable File Dialogs
+    if (show_portable_file_dialogs)
+    {
+        ImGui::SetNextWindowSize(ImVec2(640, 300), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Portable FileDialog window",&show_portable_file_dialogs, ImGuiWindowFlags_NoScrollbar);
+        // select folder
+        if (ImGui::Button("Select Folder"))
+        {
+            auto dir = pfd::select_folder("Select any directory", pfd::path::home()).result();
+            // std::cout << "Selected dir: " << dir << "\n";
+        }
+
+        // open file
+        if (ImGui::Button("Open File"))
+        {
+            auto f = pfd::open_file("Choose files to read", pfd::path::home(),
+                                { "Text Files (.txt .text)", "*.txt *.text",
+                                    "All Files", "*" },
+                                    pfd::opt::multiselect);
+            // for (auto const &name : f.result()) std::cout << " " + name; std::cout << "\n";
+        }
+
+        // save file
+        if (ImGui::Button("Save File"))
+        {
+            auto f = pfd::save_file("Choose file to save",
+                                    pfd::path::home() + pfd::path::separator() + "readme.txt",
+                                    { "Text Files (.txt .text)", "*.txt *.text" },
+                                    pfd::opt::force_overwrite);
+            // std::cout << "Selected file: " << f.result() << "\n";
+        }
+
+        // show Notification
+        static int notify_type = 0;
+        if (ImGui::Button("Notification"))
+        {
+            switch (notify_type)
+            {
+                case 0: pfd::notify("Info Notification", "Notification from imgui example!", pfd::icon::info); break;
+                case 1: pfd::notify("Warning Notification", "Notification from imgui example!", pfd::icon::warning); break;
+                case 2: pfd::notify("Error Notification", "Notification from imgui example!", pfd::icon::error); break;
+                case 3: pfd::notify("Question Notification", "Notification from imgui example!", pfd::icon::question); break;
+                default: break;
+            }
+        }
+        ImGui::SameLine(); ImGui::RadioButton("Info", &notify_type, 0);
+        ImGui::SameLine(); ImGui::RadioButton("Warning", &notify_type, 1);
+        ImGui::SameLine(); ImGui::RadioButton("Error", &notify_type, 2);
+        ImGui::SameLine(); ImGui::RadioButton("Question", &notify_type, 3);
+
+        // show Message
+        static int message_type = 0;
+        static int message_icon = 0;
+        if (ImGui::Button("Message"))
+        {
+            auto m = pfd::message("Personal Message", "You are an amazing person, don't let anyone make you think otherwise.",
+                                    (pfd::choice)message_type,
+                                    (pfd::icon)message_icon);
+    
+            // Optional: do something while waiting for user action
+            for (int i = 0; i < 10 && !m.ready(1000); ++i);
+            //    std::cout << "Waited 1 second for user input...\n";
+
+            // Do something according to the selected button
+            if (m.ready())
+            {
+                switch (m.result())
+                {
+                    case pfd::button::yes: std::cout << "User agreed.\n"; break;
+                    case pfd::button::no: std::cout << "User disagreed.\n"; break;
+                    case pfd::button::cancel: std::cout << "User freaked out.\n"; break;
+                    default: break; // Should not happen
+                }
+            }
+            else
+                m.kill();
+        }
+        ImGui::SameLine(); ImGui::RadioButton("Ok", &message_type, 0);
+        ImGui::SameLine(); ImGui::RadioButton("Ok_Cancel", &message_type, 1);
+        ImGui::SameLine(); ImGui::RadioButton("Yes_no", &message_type, 2);
+        ImGui::SameLine(); ImGui::RadioButton("Yes_no_cancel", &message_type, 3);
+        ImGui::SameLine(); ImGui::RadioButton("Abort_retry_ignore", &message_type, 4);
+        ImGui::Indent(64);
+        ImGui::RadioButton("Info##icon", &message_icon, 0); ImGui::SameLine();
+        ImGui::RadioButton("Warning##icon", &message_icon, 1); ImGui::SameLine();
+        ImGui::RadioButton("Error##icon", &message_icon, 2); ImGui::SameLine();
+        ImGui::RadioButton("Question##icon", &message_icon, 3);
+
+        ImGui::End();
     }
 
     // Show Memory Edit window
@@ -593,6 +700,41 @@ static void main_loop(void* arg)
             ImGui::ShowSplineDemo();   // see its code for further info         
         }
         ImGui::End();
+    }
+
+    // Show Zmo Quat Window
+    if (show_zmoquat_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(1280, 900), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("ZMOQuat", &show_zmoquat_window, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar))
+        {
+            ImGui::ShowQuatDemo();
+        }
+        ImGui::End();
+    }
+
+    // Show Zmo Window
+    if (show_zmo_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(1280, 800), ImGuiCond_FirstUseEver);
+        ImGui::Begin("##ZMO", &show_zmo_window, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar);
+        ImGuizmo::ShowImGuiZmoDemo();
+        ImGui::End();
+    }
+
+    // Show Toggle Window
+    if (show_toggle_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(1280, 800), ImGuiCond_FirstUseEver);
+        ImGui::Begin("##Toggle", &show_toggle_window, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar);
+        ImGui::imgui_toggle_example();
+        ImGui::End();
+    }
+
+    // Show TexInspect Window
+    if (show_tex_inspect_window)
+    {
+        ImGuiTexInspect::ShowImGuiTexInspectDemo(&show_tex_inspect_window);
     }
 
     // Rendering

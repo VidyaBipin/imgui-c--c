@@ -27,11 +27,12 @@ static bool show_another_window = false;
 static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 // Forward declarations
-static bool init_wgpu();
-static void main_loop(void* window);
+static void MainLoopStep(void* window);
+static bool InitWGPU();
 static void print_glfw_error(int error, const char* description);
 static void print_wgpu_error(WGPUErrorType error_type, const char* message, void*);
 
+// Main code
 int main(int, char**)
 {
     glfwSetErrorCallback(print_glfw_error);
@@ -39,9 +40,8 @@ int main(int, char**)
         return 1;
 
     // Make sure GLFW does not initialize any graphics context.
-    // This needs to be done explicitly later
+    // This needs to be done explicitly later.
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
     GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+WebGPU example", NULL, NULL);
     if (!window)
     {
@@ -50,7 +50,7 @@ int main(int, char**)
     }
 
     // Initialize the WebGPU environment
-    if (!init_wgpu())
+    if (!InitWGPU())
     {
         if (window)
             glfwDestroyWindow(window);
@@ -69,6 +69,7 @@ int main(int, char**)
     // For an Emscripten build we are disabling file-system access, so let's not attempt to do a fopen() of the imgui.ini file.
     // You may manually call LoadIniSettingsFromMemory() to load settings from your own storage.
     io.IniFilename = NULL;
+    io.FontGlobalScale = 0.5;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -101,12 +102,12 @@ int main(int, char**)
     // This function will directly return and exit the main function.
     // Make sure that no required objects get cleaned up.
     // This way we can use the browsers 'requestAnimationFrame' to control the rendering.
-    emscripten_set_main_loop_arg(main_loop, window, 0, false);
+    emscripten_set_main_loop_arg(MainLoopStep, window, 0, false);
 
     return 0;
 }
 
-static bool init_wgpu()
+static bool InitWGPU()
 {
     wgpu_device = emscripten_webgpu_get_device();
     if (!wgpu_device)
@@ -130,24 +131,21 @@ static bool init_wgpu()
     return true;
 }
 
-static void main_loop(void* window)
+static void MainLoopStep(void* window)
 {
     glfwPollEvents();
 
     int width, height;
-    glfwGetFramebufferSize((GLFWwindow*) window, &width, &height);
+    glfwGetFramebufferSize((GLFWwindow*)window, &width, &height);
 
     // React to changes in screen size
     if (width != wgpu_swap_chain_width && height != wgpu_swap_chain_height)
     {
         ImGui_ImplWGPU_InvalidateDeviceObjects();
-
         if (wgpu_swap_chain)
             wgpuSwapChainRelease(wgpu_swap_chain);
-
         wgpu_swap_chain_width = width;
         wgpu_swap_chain_height = height;
-
         WGPUSwapChainDescriptor swap_chain_desc = {};
         swap_chain_desc.usage = WGPUTextureUsage_RenderAttachment;
         swap_chain_desc.format = WGPUTextureFormat_RGBA8Unorm;
@@ -155,7 +153,6 @@ static void main_loop(void* window)
         swap_chain_desc.height = height;
         swap_chain_desc.presentMode = WGPUPresentMode_Fifo;
         wgpu_swap_chain = wgpuDeviceCreateSwapChain(wgpu_device, wgpu_surface, &swap_chain_desc);
-
         ImGui_ImplWGPU_CreateDeviceObjects();
     }
 
@@ -229,7 +226,7 @@ static void main_loop(void* window)
 
 static void print_glfw_error(int error, const char* description)
 {
-    printf("Glfw Error %d: %s\n", error, description);
+    printf("GLFW Error %d: %s\n", error, description);
 }
 
 static void print_wgpu_error(WGPUErrorType error_type, const char* message, void*)

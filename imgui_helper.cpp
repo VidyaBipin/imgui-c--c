@@ -701,7 +701,7 @@ int ImGetTextureData(ImTextureID texture, void* data)
 
 #if IMGUI_RENDERING_VULKAN
     ret = ImGui_ImplVulkan_GetTextureData(textureIt->TextureID, data, width, height, channels);
-#elif IMGUI_RENDERING_GL3 || IMGUI_RENDERING_GL2
+#elif !IMGUI_EMSCRIPTEN && (IMGUI_RENDERING_GL3 || IMGUI_RENDERING_GL2)
     glEnable(GL_TEXTURE_2D);
     GLint last_texture = 0;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);

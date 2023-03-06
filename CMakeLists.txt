@@ -213,7 +213,8 @@ set(IMGUI_DX12 OFF CACHE BOOL "Disable ImGui Windows DX12 support" FORCE)
 set(IMGUI_FREETYPE OFF CACHE BOOL "Disable ImGui with FreeType support" FORCE)
 set(IMGUI_APPS OFF CACHE BOOL "Disable apps base on imgui" FORCE)
 set(IMGUI_APPLE_APP OFF CACHE BOOL "Disable apple app base on imgui" FORCE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=2  -s USE_GLFW=3 -s USE_WEBGPU=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=128MB -s DISABLE_EXCEPTION_CATCHING=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1 -Wno-unused-command-line-argument")
+set(IMGUI_EMSCRIPTEN ON CACHE BOOL "Set Emscripten on by force" FORCE)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=2  -s USE_GLFW=3 -s USE_WEBGPU=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s DISABLE_EXCEPTION_CATCHING=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1 -Wno-unused-command-line-argument")
 endif()
 
 # base include
@@ -1581,7 +1582,7 @@ if (IMGUI_BUILD_EXAMPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     )
 endif()
 
-if (IMGUI_BUILD_EXAMPLE AND IMGUI_VULKAN_SHADER)
+if (IMGUI_BUILD_EXAMPLE AND IMGUI_VULKAN_SHADER AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 add_executable(
     vulkan_shader_test
     test/vulkan_shader_test.cpp
@@ -1590,9 +1591,9 @@ target_link_libraries(
     vulkan_shader_test
     ${VKSHADER_LIBRARYS}
 )
-endif(IMGUI_BUILD_EXAMPLE AND IMGUI_VULKAN_SHADER)
+endif()
 
-if (IMGUI_BUILD_EXAMPLE)
+if (IMGUI_BUILD_EXAMPLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 add_executable(
     immat_test
     test/immat_test.cpp
@@ -1601,7 +1602,7 @@ target_link_libraries(
     immat_test
     imgui
 )
-endif(IMGUI_BUILD_EXAMPLE)
+endif()
 
 get_directory_property(hasParent PARENT_DIRECTORY)
 if(hasParent)
