@@ -1540,8 +1540,9 @@ if (IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
 endif(IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
 
 if (IMGUI_BUILD_EXAMPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-    set(IMGUI_WEB_SDL2_OPENGL3_DIR ${PROJECT_BINARY_DIR}/web_sdl2_opengl3/)
     set(IMGUI_SHELL_FILE ${PROJECT_SOURCE_DIR}/test/shell_minimal.html)
+
+    set(IMGUI_WEB_SDL2_OPENGL3_DIR ${PROJECT_BINARY_DIR}/web_sdl2_opengl3/)
     add_executable(
         example_emscripten_sdl2_opengl3
         test/example_emscripten_sdl2_opengl3.cpp
@@ -1555,6 +1556,26 @@ if (IMGUI_BUILD_EXAMPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
         PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${IMGUI_WEB_SDL2_OPENGL3_DIR}
         RUNTIME_OUTPUT_DIRECTORY ${IMGUI_WEB_SDL2_OPENGL3_DIR}
+        OUTPUT_NAME "index"
+        PREFIX ""
+        SUFFIX ".html"
+        LINK_FLAGS "--shell-file ${IMGUI_SHELL_FILE}"
+    )
+
+    set(IMGUI_WEB_GLFW_OPENGL3_DIR ${PROJECT_BINARY_DIR}/web_glfw_opengl3/)
+    add_executable(
+        example_emscripten_glfw_opengl3
+        test/example_emscripten_glfw_opengl3.cpp
+    )
+    target_link_libraries(
+        example_emscripten_glfw_opengl3
+        imgui
+    )
+    set_target_properties(
+        example_emscripten_glfw_opengl3
+        PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${IMGUI_WEB_GLFW_OPENGL3_DIR}
+        RUNTIME_OUTPUT_DIRECTORY ${IMGUI_WEB_GLFW_OPENGL3_DIR}
         OUTPUT_NAME "index"
         PREFIX ""
         SUFFIX ".html"
