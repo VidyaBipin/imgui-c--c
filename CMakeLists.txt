@@ -121,8 +121,9 @@ elseif(CMAKE_OSX_ARCHITECTURES MATCHES "x86" OR CMAKE_SYSTEM_PROCESSOR MATCHES "
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2 /arch:AVX /arch:FMA /arch:SSE /arch:SSE2 /arch:SSSE3 /arch:SSE4.1 /arch:SSE4.2")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /arch:AVX2 /arch:AVX /arch:FMA /arch:SSE /arch:SSE2 /arch:SSSE3 /arch:SSE4.1 /arch:SSE4.2")
     elseif (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -msse4.1 -mssse3 -msse2 -msse -mrelaxed-simd")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4.2 -msse4.1 -mssse3 -msse2 -msse -mrelaxed-simd")
+        ### we disable wasm simd support because safari isn't support it yet
+        #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -msse4.1 -mssse3 -msse2 -msse -mrelaxed-simd")
+        #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4.2 -msse4.1 -mssse3 -msse2 -msse -mrelaxed-simd")
     else()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mavx")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -mavx")
@@ -1539,47 +1540,47 @@ if (IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
 endif(IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
 
 if (IMGUI_BUILD_EXAMPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-    set(IMGUI_WEB_OPENGL3_DIR ${PROJECT_BINARY_DIR}/web_opengl3/)
-    SET(IMGUI_SHELL_OPENGL3_FILE ${PROJECT_SOURCE_DIR}/test/shell_minimal.html)
+    set(IMGUI_WEB_SDL2_OPENGL3_DIR ${PROJECT_BINARY_DIR}/web_sdl2_opengl3/)
+    set(IMGUI_SHELL_FILE ${PROJECT_SOURCE_DIR}/test/shell_minimal.html)
     add_executable(
-        example_emscripten_opengl3
-        test/example_emscripten_opengl3.cpp
+        example_emscripten_sdl2_opengl3
+        test/example_emscripten_sdl2_opengl3.cpp
     )
     target_link_libraries(
-        example_emscripten_opengl3
+        example_emscripten_sdl2_opengl3
         imgui
     )
     set_target_properties(
-        example_emscripten_opengl3
+        example_emscripten_sdl2_opengl3
         PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${IMGUI_WEB_OPENGL3_DIR}
-        RUNTIME_OUTPUT_DIRECTORY ${IMGUI_WEB_OPENGL3_DIR}
+        LIBRARY_OUTPUT_DIRECTORY ${IMGUI_WEB_SDL2_OPENGL3_DIR}
+        RUNTIME_OUTPUT_DIRECTORY ${IMGUI_WEB_SDL2_OPENGL3_DIR}
         OUTPUT_NAME "index"
         PREFIX ""
         SUFFIX ".html"
-        LINK_FLAGS "--shell-file ${IMGUI_SHELL_OPENGL3_FILE}"
+        LINK_FLAGS "--shell-file ${IMGUI_SHELL_FILE}"
     )
 
-    set(IMGUI_WEB_WGPU_DIR ${PROJECT_BINARY_DIR}/web_wgpu/)
-    SET(IMGUI_SHELL_WGPU_FILE ${PROJECT_SOURCE_DIR}/test/wgpu_index.html)
-    add_executable(
-        example_emscripten_wgpu
-        test/example_emscripten_wgpu.cpp
-    )
-    target_link_libraries(
-        example_emscripten_wgpu
-        imgui
-    )
-    set_target_properties(
-        example_emscripten_wgpu
-        PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${IMGUI_WEB_WGPU_DIR}
-        RUNTIME_OUTPUT_DIRECTORY ${IMGUI_WEB_WGPU_DIR}
-        OUTPUT_NAME "index"
-        PREFIX ""
-        SUFFIX ".html"
-        LINK_FLAGS "--shell-file ${IMGUI_SHELL_WGPU_FILE}"
-    )
+    #set(IMGUI_WEB_WGPU_DIR ${PROJECT_BINARY_DIR}/web_wgpu/)
+    #SET(IMGUI_SHELL_WGPU_FILE ${PROJECT_SOURCE_DIR}/test/wgpu_index.html)
+    #add_executable(
+    #    example_emscripten_wgpu
+    #    test/example_emscripten_wgpu.cpp
+    #)
+    #target_link_libraries(
+    #    example_emscripten_wgpu
+    #    imgui
+    #)
+    #set_target_properties(
+    #    example_emscripten_wgpu
+    #    PROPERTIES
+    #    LIBRARY_OUTPUT_DIRECTORY ${IMGUI_WEB_WGPU_DIR}
+    #    RUNTIME_OUTPUT_DIRECTORY ${IMGUI_WEB_WGPU_DIR}
+    #    OUTPUT_NAME "index"
+    #    PREFIX ""
+    #    SUFFIX ".html"
+    #    LINK_FLAGS "--shell-file ${IMGUI_SHELL_WGPU_FILE}"
+    #)
 endif()
 
 if (IMGUI_BUILD_EXAMPLE AND IMGUI_VULKAN_SHADER AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
