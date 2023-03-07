@@ -2,7 +2,6 @@
 #define IMGUI_SPLINE_H
 #include <vector>
 #include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
 
 namespace ImGui

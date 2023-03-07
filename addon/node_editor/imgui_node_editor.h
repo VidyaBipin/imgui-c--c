@@ -14,7 +14,6 @@
 
 //------------------------------------------------------------------------------
 # include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
 # include <imgui_internal.h>
 # include <cstdint> // std::uintXX_t
 # include <utility> // std::move
