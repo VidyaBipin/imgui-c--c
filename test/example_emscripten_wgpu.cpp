@@ -21,11 +21,6 @@ static WGPUSwapChain wgpu_swap_chain = NULL;
 static int           wgpu_swap_chain_width = 0;
 static int           wgpu_swap_chain_height = 0;
 
-// States tracked across render frames
-static bool show_demo_window = true;
-static bool show_another_window = false;
-static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
 // Forward declarations
 static void MainLoopStep(void* window);
 static bool InitWGPU();
@@ -160,6 +155,12 @@ static void MainLoopStep(void* window)
     ImGui_ImplWGPU_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+
+    // Our state
+    // (we use static, which essentially makes the variable globals, as a convenience to keep the example code easy to follow)
+    static bool show_demo_window = true;
+    static bool show_another_window = false;
+    static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
     if (show_demo_window)
