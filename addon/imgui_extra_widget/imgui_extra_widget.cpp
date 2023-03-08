@@ -465,7 +465,7 @@ bool ImGui::Fader(const char *label, const ImVec2 &size, int *v, const int v_min
         format = "%d";
 
     const bool hovered = ItemHoverable(frame_bb, id);
-    if ((hovered && g.IO.MouseClicked[0]) || g.NavActivateId == id || g.NavActivateInputId == id)
+    if ((hovered && g.IO.MouseClicked[0]) || g.NavActivateId == id)
     {
         SetActiveID(id, window);
         SetFocusID(id, window);
@@ -2558,16 +2558,16 @@ bool ImGui::DragTimeMS(const char* label, float* p_data, float v_speed, float p_
         const bool input_requested_by_tabbing = temp_input_allowed && (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
         const bool clicked = (hovered && g.IO.MouseClicked[0]);
         const bool double_clicked = (hovered && g.IO.MouseClickedCount[0] == 2);
-        const bool make_active = (input_requested_by_tabbing || clicked || double_clicked || g.NavActivateId == id || g.NavActivateInputId == id);
+        const bool make_active = (input_requested_by_tabbing || clicked || double_clicked || g.NavActivateId == id);
         if (make_active && temp_input_allowed)
-            if (input_requested_by_tabbing || (clicked && g.IO.KeyCtrl) || double_clicked || g.NavActivateInputId == id)
+            if (input_requested_by_tabbing || (clicked && g.IO.KeyCtrl) || double_clicked || (g.NavActivateId == id && (g.NavActivateFlags & ImGuiActivateFlags_PreferInput)))
                 temp_input_is_active = true;
 
         // (Optional) simple click (without moving) turns Drag into an InputText
         if (g.IO.ConfigDragClickToInputText && temp_input_allowed && !temp_input_is_active)
             if (g.ActiveId == id && hovered && g.IO.MouseReleased[0] && !IsMouseDragPastThreshold(0, g.IO.MouseDragThreshold * 0.5f)) // DRAG_MOUSE_THRESHOLD_FACTOR
             {
-                g.NavActivateId = g.NavActivateInputId = id;
+                g.NavActivateId = id;
                 g.NavActivateFlags = ImGuiActivateFlags_PreferInput;
                 temp_input_is_active = true;
             }
