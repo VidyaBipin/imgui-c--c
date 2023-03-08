@@ -19,6 +19,19 @@
 #include <SDL_opengl.h>
 #endif
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <functional>
+static std::function<void()>            MainLoopForEmscriptenP;
+static void MainLoopForEmscripten()     { MainLoopForEmscriptenP(); }
+#define EMSCRIPTEN_MAINLOOP_BEGIN       MainLoopForEmscriptenP = [&]()
+#define EMSCRIPTEN_MAINLOOP_END         ; emscripten_set_main_loop(MainLoopForEmscripten, 0, true)
+#else
+#define EMSCRIPTEN_MAINLOOP_BEGIN
+#define EMSCRIPTEN_MAINLOOP_END
+#endif
+
+
 void Application_FullScreen(bool on)
 {
     ImGui_ImplSDL2_FullScreen(ImGui::GetMainViewport(), on);
@@ -181,7 +194,12 @@ int main(int argc, char** argv)
     bool done = false;
     bool app_done = false;
     bool show = true;
+#ifdef __EMSCRIPTEN__
+    io.IniFilename = NULL;
+    EMSCRIPTEN_MAINLOOP_BEGIN
+#else
     while (!app_done)
+#endif
     {
         ImGui_ImplSDL2_WaitForEvent();
         SDL_Event event;
@@ -213,12 +231,13 @@ int main(int argc, char** argv)
                 show = true;
             }
         }
-
+#ifndef __EMSCRIPTEN__
         if (!show && !(io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable))
         {
             ImGui::sleep(10);
             continue;
         }
+#endif
         if (!paths.empty())
         {
             Application_DropFromSystem(paths);
@@ -261,6 +280,9 @@ int main(int argc, char** argv)
 
         SDL_GL_SwapWindow(window);
     }
+#ifdef __EMSCRIPTEN__
+    EMSCRIPTEN_MAINLOOP_END;
+#endif
 
     Application_Finalize(&property.handle);
 

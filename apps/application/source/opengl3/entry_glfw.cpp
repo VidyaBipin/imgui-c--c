@@ -19,6 +19,18 @@
 #endif
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <functional>
+static std::function<void()>            MainLoopForEmscriptenP;
+static void MainLoopForEmscripten()     { MainLoopForEmscriptenP(); }
+#define EMSCRIPTEN_MAINLOOP_BEGIN       MainLoopForEmscriptenP = [&]()
+#define EMSCRIPTEN_MAINLOOP_END         ; emscripten_set_main_loop(MainLoopForEmscripten, 0, true)
+#else
+#define EMSCRIPTEN_MAINLOOP_BEGIN
+#define EMSCRIPTEN_MAINLOOP_END
+#endif
+
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
 // Your own project should not be affected, as you are likely to link with a newer binary of GLFW that is adequate for your version of Visual Studio.
@@ -206,7 +218,12 @@ int main(int argc, char** argv)
     // Main loop
     bool done = false;
     bool app_done = false;
+#ifdef __EMSCRIPTEN__
+    io.IniFilename = NULL;
+    EMSCRIPTEN_MAINLOOP_BEGIN
+#else
     while (!app_done)
+#endif
     {
         ImGui_ImplGlfw_WaitForEvent();
         glfwPollEvents();
@@ -244,7 +261,9 @@ int main(int argc, char** argv)
         }
         glfwSwapBuffers(window);
     }
-
+#ifdef __EMSCRIPTEN__
+    EMSCRIPTEN_MAINLOOP_END;
+#endif
     Application_Finalize(&property.handle);
 
     // Cleanup
