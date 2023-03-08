@@ -3288,7 +3288,7 @@ static float s_ZoomLevels[ZOOM_LEVELCOUNT];
 ed::NavigateAction::NavigateAction(EditorContext* editor, ImGuiEx::Canvas& canvas):
     EditorAction(editor),
     m_IsActive(false),
-    m_Zoom(0.75),
+    m_Zoom(1.0),
     m_VisibleRect(),
     m_Scroll(0, 0),
     m_ScrollStart(0, 0),
