@@ -180,8 +180,8 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     if (clippingRect)
         draw_list->PushClipRect(clippingRect->Min, clippingRect->Max, true);
 
-    ImVec2 edit_size = size - ImVec2(0, 4);
-    const ImVec2 offset = window_pos + ImVec2(0.f, edit_size.y + 2);
+    ImVec2 edit_size = size - ImVec2(0, 4) - (draw_timeline ? ImVec2(0, timeline_height) : ImVec2(0, 0));
+    const ImVec2 offset = window_pos + ImVec2(0.f, edit_size.y + 2) + (draw_timeline ? ImVec2(0, timeline_height) : ImVec2(0, 0));
     const ImVec2 ssize(edit_size.x, -edit_size.y);
     const ImRect container(offset + ImVec2(0.f, ssize.y), offset + ImVec2(ssize.x, 0.f));
     ImVec2& vmin = delegate->GetMin();
