@@ -4581,9 +4581,9 @@ void ImGui::ImRenderTextVertical(const ImFont* font,ImDrawList* draw_list, float
     const float line_height = font->FontSize * scale;
 
     // Align to be pixel perfect
-    const ImVec2 text_size = ImCalcVerticalTextSize(text_begin, text_end, false, 0.0f);
+    //const ImVec2 text_size = ImCalcVerticalTextSize(text_begin, text_end, false, 0.0f);
     pos.x = (float)(int)pos.x;
-    pos.y = (float)(int)pos.y + (rotateCCW ? text_size.y : 0);
+    pos.y = (float)(int)pos.y;// + (rotateCCW ? text_size.y : 0);
 
     float x = pos.x;
     float y = pos.y;
