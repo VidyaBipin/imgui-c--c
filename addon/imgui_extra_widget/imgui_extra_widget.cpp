@@ -4573,7 +4573,7 @@ ImVec2 ImGui::ImCalcVerticalTextSize(const char* text, const char* text_end, boo
     return ImVec2(rv.y,rv.x);
 }
 
-void ImGui::ImRenderTextVertical(const ImFont* font,ImDrawList* draw_list, float size, ImVec2 pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin,  const char* text_end, float wrap_width, bool cpu_fine_clip, bool rotateCCW) 
+void ImGui::ImRenderTextVertical(const ImFont* font,ImDrawList* draw_list, float size, ImVec2 pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin,  const char* text_end, float wrap_width, bool cpu_fine_clip, bool rotateCCW, bool char_no_rotate) 
 {
     if (!text_end) text_end = text_begin + strlen(text_begin);
 
@@ -4581,8 +4581,9 @@ void ImGui::ImRenderTextVertical(const ImFont* font,ImDrawList* draw_list, float
     const float line_height = font->FontSize * scale;
 
     // Align to be pixel perfect
-    pos.x = (float)(int)pos.x;// + (rotateCCW ? (font->FontSize-font->DisplayOffset.y) : 0);  // Not sure it's correct
-    pos.y = (float)(int)pos.y;// + font->DisplayOffset.x;  [+ImFontConfig::GlyphOffset.x?]
+    const ImVec2 text_size = ImCalcVerticalTextSize(text_begin, text_end, false, 0.0f);
+    pos.x = (float)(int)pos.x;
+    pos.y = (float)(int)pos.y + (rotateCCW ? text_size.y : 0);
 
     float x = pos.x;
     float y = pos.y;
@@ -4733,6 +4734,19 @@ void ImGui::ImRenderTextVertical(const ImFont* font,ImDrawList* draw_list, float
 
                     // We are NOT calling PrimRectUV() here because non-inlined causes too much overhead in a debug build.
                     // Inlined here:
+                    if (char_no_rotate)
+                    {
+                        vtx_write[0].pos.x = x1; vtx_write[0].pos.y = y1; vtx_write[0].col = col; vtx_write[0].uv.x = u1; vtx_write[0].uv.y = v1;
+                        vtx_write[1].pos.x = x2; vtx_write[1].pos.y = y1; vtx_write[1].col = col; vtx_write[1].uv.x = u2; vtx_write[1].uv.y = v1;
+                        vtx_write[2].pos.x = x2; vtx_write[2].pos.y = y2; vtx_write[2].col = col; vtx_write[2].uv.x = u2; vtx_write[2].uv.y = v2;
+                        vtx_write[3].pos.x = x1; vtx_write[3].pos.y = y2; vtx_write[3].col = col; vtx_write[3].uv.x = u1; vtx_write[3].uv.y = v2;
+                        idx_write[0] = (ImDrawIdx)(vtx_current_idx); idx_write[1] = (ImDrawIdx)(vtx_current_idx + 1); idx_write[2] = (ImDrawIdx)(vtx_current_idx + 2);
+                        idx_write[3] = (ImDrawIdx)(vtx_current_idx); idx_write[4] = (ImDrawIdx)(vtx_current_idx + 2); idx_write[5] = (ImDrawIdx)(vtx_current_idx + 3);
+                        vtx_write += 4;
+                        vtx_current_idx += 4;
+                        idx_write += 6;
+                    }
+                    else
                     {
                         idx_write[0] = (ImDrawIdx)(vtx_current_idx); idx_write[1] = (ImDrawIdx)(vtx_current_idx+1); idx_write[2] = (ImDrawIdx)(vtx_current_idx+2);
                         idx_write[3] = (ImDrawIdx)(vtx_current_idx); idx_write[4] = (ImDrawIdx)(vtx_current_idx+2); idx_write[5] = (ImDrawIdx)(vtx_current_idx+3);
@@ -4777,7 +4791,7 @@ void ImGui::ImRenderTextVertical(const ImFont* font,ImDrawList* draw_list, float
     draw_list->_VtxCurrentIdx = (unsigned int)draw_list->VtxBuffer.Size;
 }
 
-void ImGui::ImAddTextVertical(ImDrawList* drawList,const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect,bool rotateCCW)
+void ImGui::ImAddTextVertical(ImDrawList* drawList,const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect, bool rotateCCW, bool char_no_rotate)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -4786,6 +4800,21 @@ void ImGui::ImAddTextVertical(ImDrawList* drawList,const ImFont* font, float fon
         text_end = text_begin + strlen(text_begin);
     if (text_begin == text_end)
         return;
+
+    // add by Dicky for multi-language support
+    const char * _text_begin = text_begin;
+    const char * _text_end = text_end;
+    ImGuiContext& g = *GImGui;
+    if (g.Style.TextInternationalize)
+    {
+        auto changed = ImGui::InternationalizedText(_text_begin, _text_end);
+        if (changed > 0)
+        {
+            _text_begin = g.InternationalizedBuffer;
+            _text_end = _text_begin + changed;
+        }
+    }
+    // add by Dicky end
 
     // Note: This is one of the few instance of breaking the encapsulation of ImDrawList, as we pull this from ImGui state, but it is just SO useful.
     // Might just move Font/FontSize to ImDrawList?
@@ -4804,15 +4833,16 @@ void ImGui::ImAddTextVertical(ImDrawList* drawList,const ImFont* font, float fon
         clip_rect.z = ImMin(clip_rect.z, cpu_fine_clip_rect->z);
         clip_rect.w = ImMin(clip_rect.w, cpu_fine_clip_rect->w);
     }
-    ImRenderTextVertical(font, drawList, font_size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip_rect != NULL,rotateCCW);
+    // modify by Dicky for multi-language 
+    ImRenderTextVertical(font, drawList, font_size, pos, col, clip_rect, _text_begin, _text_end, wrap_width, cpu_fine_clip_rect != NULL, rotateCCW, char_no_rotate);
 }
 
-void ImGui::ImAddTextVertical(ImDrawList* drawList,const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end,bool rotateCCW)
+void ImGui::ImAddTextVertical(ImDrawList* drawList,const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end,bool rotateCCW, bool char_no_rotate)
 {
-    ImAddTextVertical(drawList,GImGui->Font, GImGui->FontSize, pos, col, text_begin, text_end, 0.0f, NULL, rotateCCW);
+    ImAddTextVertical(drawList,GImGui->Font, GImGui->FontSize, pos, col, text_begin, text_end, 0.0f, NULL, rotateCCW, char_no_rotate);
 }
 
-void ImGui::ImRenderTextVerticalClipped(const ImVec2& pos_min, const ImVec2& pos_max, const char* text, const char* text_end, const ImVec2* text_size_if_known, const ImVec2& align, const ImVec2* clip_min, const ImVec2* clip_max,bool rotateCCW)
+void ImGui::ImRenderTextVerticalClipped(const ImVec2& pos_min, const ImVec2& pos_max, const char* text, const char* text_end, const ImVec2* text_size_if_known, const ImVec2& align, const ImVec2* clip_min, const ImVec2* clip_max, bool rotateCCW, bool char_no_rotate)
 {
     // Hide anything after a '##' string
     const char* text_display_end = FindRenderedTextEnd(text, text_end);
@@ -4849,11 +4879,11 @@ void ImGui::ImRenderTextVerticalClipped(const ImVec2& pos_min, const ImVec2& pos
     if (need_clipping)
     {
         ImVec4 fine_clip_rect(clip_min->x, clip_min->y, clip_max->x, clip_max->y);
-        ImAddTextVertical(window->DrawList,g.Font, g.FontSize, pos, GetColorU32(ImGuiCol_Text), text, text_display_end, 0.0f, &fine_clip_rect,rotateCCW);
+        ImAddTextVertical(window->DrawList,g.Font, g.FontSize, pos, GetColorU32(ImGuiCol_Text), text, text_display_end, 0.0f, &fine_clip_rect, rotateCCW, char_no_rotate);
     }
     else
     {
-        ImAddTextVertical(window->DrawList,g.Font, g.FontSize, pos, GetColorU32(ImGuiCol_Text), text, text_display_end, 0.0f, NULL,rotateCCW);
+        ImAddTextVertical(window->DrawList,g.Font, g.FontSize, pos, GetColorU32(ImGuiCol_Text), text, text_display_end, 0.0f, NULL, rotateCCW, char_no_rotate);
     }
 }
 
