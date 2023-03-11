@@ -347,6 +347,7 @@ void ShowExtraWidgetDemoWindow()
         constexpr int sidex = 11, sidey = 14;
 
         float widget_size = 50.f;
+        static ImColor spinner_filling_meb_bg;
         ImGuiStyle &style = GImGui->Style;
         ImVec2 lastSpacing = style.ItemSpacing, lastPadding = style.WindowPadding;
         style.ItemSpacing = style.WindowPadding = {0.f, 0.f};
@@ -509,6 +510,7 @@ void ShowExtraWidgetDemoWindow()
                     case 143: ImGui::SpinnerThreeDots("SpinnerThreeDots", 16, 6, ImColor(255, 255, 255), 4 * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerThreeDots"); break;
                     case 144: ImGui::Spinner4Caleidospcope("Spinner4Caleidospcope", 16, 6, ImColor::HSV(hue * 0.0031f, 0.8f, 0.8f), 4 * velocity, 8); ImGui::ShowTooltipOnHover("Spinner4Caleidospcope"); break;
                     case 145: ImGui::SpinnerFiveDots("SpinnerSixDots", 16, 6, ImColor(255, 255, 255), 4 * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerSixDots"); break;
+                    case 146: ImGui::SpinnerFillingMem("SpinnerFillingMem", 16, 6, ImColor::HSV(hue * 0.001f, 0.8f, 0.8f), spinner_filling_meb_bg, 4 * velocity); break;
 
                     // ...
                     default: break;
