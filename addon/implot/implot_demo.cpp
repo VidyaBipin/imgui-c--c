@@ -2407,8 +2407,7 @@ void PlotCandlestick(const char* label_id, const double* xs, const double* opens
         // find mouse location index
         int idx = BinarySearch(xs, 0, count - 1, mouse.x);
         // render tool tip (won't be affected by plot clip rect)
-        if (idx != -1) {
-            ImGui::BeginTooltip();
+        if (idx != -1 && ImGui::BeginTooltip()) {
             char buff[32];
             ImPlot::FormatDate(ImPlotTime::FromDouble(xs[idx]),buff,32,ImPlotDateFmt_DayMoYr,ImPlot::GetStyle().UseISO8601);
             ImGui::Text("Day:   %s",  buff);

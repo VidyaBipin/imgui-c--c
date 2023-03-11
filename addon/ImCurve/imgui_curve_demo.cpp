@@ -56,10 +56,9 @@ void ImGui::ShowCurveDemo()
     ImVec2 item_pos = ImGui::GetCursorScreenPos();
     float current_pos = -1.f;
     ImGui::ImCurveEdit::Edit(nullptr, &rampEdit, ImVec2(size_x, 300), ImGui::GetID("##bezier_view"), true, current_pos, curvs_flags, nullptr, nullptr);
-    if (ImGui::IsItemHovered())
+    if (ImGui::IsItemHovered() && ImGui::BeginTooltip())
     {
         float pos = io.MousePos.x - item_pos.x;
-        ImGui::BeginTooltip();
         for (int i = 0; i < rampEdit.GetCurveCount(); i++)
         {
             auto value = rampEdit.GetValue(i, pos);

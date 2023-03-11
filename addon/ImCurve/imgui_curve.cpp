@@ -453,9 +453,8 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
                 const CurveType t = delegate->originalPoints[originalIndex].type;
                 p.y = (p.y * value_range) + delegate->GetCurveMin(sel.curveIndex);
                 const int newIndex = delegate->EditPoint(sel.curveIndex, sel.pointIndex, p, t);
-                if (localOverPoint == -1)
+                if (localOverPoint == -1 && ImGui::BeginTooltip())
                 {
-                    ImGui::BeginTooltip();
                     ImGui::Text("%.2f", p.y);
                     ImGui::EndTooltip();
                 }
@@ -496,12 +495,11 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     }
 
     // draw value in tooltip
-    if (localOverCurve != -1 && localOverPoint != -1)
+    if (localOverCurve != -1 && localOverPoint != -1 && ImGui::BeginTooltip())
     {
         auto value_range = fabs(delegate->GetCurveMax(localOverCurve) - delegate->GetCurveMin(localOverCurve)); 
         const KeyPoint* pts = delegate->GetPoints(localOverCurve);
         const ImVec2 p = pointToRange(pts[localOverPoint].point);
-        ImGui::BeginTooltip();
         ImGui::Text("%.2f", p.y * value_range + delegate->GetCurveMin(localOverCurve));
         ImGui::EndTooltip();
     }

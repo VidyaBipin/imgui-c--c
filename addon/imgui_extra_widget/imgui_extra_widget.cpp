@@ -3190,15 +3190,12 @@ bool ImGui::BezierSelect(const char *label, const ImVec2 size, float P[5])
     DrawList->AddCircleFilled(p2, GRAB_RADIUS, ImColor(white));
     DrawList->AddCircleFilled(p2, GRAB_RADIUS - GRAB_BORDER, ImColor(cyan));
     ImGui::EndGroup();
-    if (hovered)
+    if (hovered && ImGui::BeginTooltip())
     {
-        ImGui::BeginTooltip();
-        {
-            ImVec2 mouse = ImGui::GetIO().MousePos;
-            float delta = (mouse.x - bb.Min.x) / bb.GetWidth();
-            auto evaly = ImGui::BezierValue(delta, P);
-            ImGui::Text("%f", evaly);
-        }
+        ImVec2 mouse = ImGui::GetIO().MousePos;
+        float delta = (mouse.x - bb.Min.x) / bb.GetWidth();
+        auto evaly = ImGui::BezierValue(delta, P);
+        ImGui::Text("%f", evaly);
         ImGui::EndTooltip();
     }
     return changed;
@@ -3954,88 +3951,90 @@ void ImGui::ImageInspect(const int width,
                         bool histogram_full,
                         int zoom_size)
 {
-    ImGui::BeginTooltip();
-    ImGui::BeginGroup();
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    static const float zoomRectangleWidth = 80.f;
-    // bitmap zoom
-    ImGui::InvisibleButton("AnotherInvisibleMan", ImVec2(zoomRectangleWidth, zoomRectangleWidth));
-    const ImRect pickRc(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
-    draw_list->AddRectFilled(pickRc.Min, pickRc.Max, 0xFF000000);
-    static int zoomSize = zoom_size / 2;
-    uint32_t zoomData[(zoomSize * 2 + 1) * (zoomSize * 2 + 1)];
-    const float quadWidth = zoomRectangleWidth / float(zoomSize * 2 + 1);
-    const ImVec2 quadSize(quadWidth, quadWidth);
-    const int basex = ImClamp(int(mouseUVCoord.x * width), zoomSize, width - zoomSize);
-    const int basey = ImClamp(int(mouseUVCoord.y * height), zoomSize, height - zoomSize);
-    for (int y = -zoomSize; y <= zoomSize; y++)
+    if (ImGui::BeginTooltip())
     {
-        for (int x = -zoomSize; x <= zoomSize; x++)
-        {
-            uint32_t texel = ((uint32_t*)bits)[(basey - y) * width + x + basex];
-            ImVec2 pos = pickRc.Min + ImVec2(float(x + zoomSize), float(zoomSize - y)) * quadSize;
-            draw_list->AddRectFilled(pos, pos + quadSize, texel);
-        }
-    }
-    //ImGui::SameLine();
-    // center quad
-    const ImVec2 pos = pickRc.Min + ImVec2(float(zoomSize), float(zoomSize)) * quadSize;
-    draw_list->AddRect(pos, pos + quadSize, 0xFF0000FF, 0.f, 15, 2.f);
-    // normal direction
-    ImGui::InvisibleButton("AndOneMore", ImVec2(zoomRectangleWidth, zoomRectangleWidth));
-    ImRect normRc(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
-    for (int y = -zoomSize; y <= zoomSize; y++)
-    {
-        for (int x = -zoomSize; x <= zoomSize; x++)
-        {
-            uint32_t texel = ((uint32_t*)bits)[(basey - y) * width + x + basex];
-            const ImVec2 posQuad = normRc.Min + ImVec2(float(x + zoomSize), float(zoomSize - y)) * quadSize;
-            //draw_list->AddRectFilled(pos, pos + quadSize, texel);
-            const float nx = float(texel & 0xFF) / 128.f - 1.f;
-            const float ny = float((texel & 0xFF00)>>8) / 128.f - 1.f;
-            const ImRect rc(posQuad, posQuad + quadSize);
-            drawNormal(draw_list, rc, nx, ny);
-        }
-    }
-    ImGui::EndGroup();
-    ImGui::SameLine();
-    ImGui::BeginGroup();
-    uint32_t texel = ((uint32_t*)bits)[basey * width + basex];
-    ImVec4 color = ImColor(texel);
-    ImVec4 colHSV;
-    ImGui::ColorConvertRGBtoHSV(color.x, color.y, color.z, colHSV.x, colHSV.y, colHSV.z);
-    ImGui::Text("U %1.3f V %1.3f", mouseUVCoord.x, mouseUVCoord.y);
-    ImGui::Text("Coord %d %d", int(mouseUVCoord.x * width), int(mouseUVCoord.y * height));
-    ImGui::Separator();
-    ImGui::Text("R 0x%02x  G 0x%02x  B 0x%02x", int(color.x * 255.f), int(color.y * 255.f), int(color.z * 255.f));
-    ImGui::Text("R %1.3f G %1.3f B %1.3f", color.x, color.y, color.z);
-    ImGui::Separator();
-    ImGui::Text(
-        "H 0x%02x  S 0x%02x  V 0x%02x", int(colHSV.x * 255.f), int(colHSV.y * 255.f), int(colHSV.z * 255.f));
-    ImGui::Text("H %1.3f S %1.3f V %1.3f", colHSV.x, colHSV.y, colHSV.z);
-    ImGui::Separator();
-    ImGui::Text("Alpha 0x%02x", int(color.w * 255.f));
-    ImGui::Text("Alpha %1.3f", color.w);
-    ImGui::Separator();
-    ImGui::Text("Size %d, %d", int(displayedTextureSize.x), int(displayedTextureSize.y));
-    ImGui::EndGroup();
-    if (histogram_full)
-    {
-        histogram(width, height, bits);
-    }
-    else
-    {
+        ImGui::BeginGroup();
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        static const float zoomRectangleWidth = 80.f;
+        // bitmap zoom
+        ImGui::InvisibleButton("AnotherInvisibleMan", ImVec2(zoomRectangleWidth, zoomRectangleWidth));
+        const ImRect pickRc(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+        draw_list->AddRectFilled(pickRc.Min, pickRc.Max, 0xFF000000);
+        static int zoomSize = zoom_size / 2;
+        uint32_t zoomData[(zoomSize * 2 + 1) * (zoomSize * 2 + 1)];
+        const float quadWidth = zoomRectangleWidth / float(zoomSize * 2 + 1);
+        const ImVec2 quadSize(quadWidth, quadWidth);
+        const int basex = ImClamp(int(mouseUVCoord.x * width), zoomSize, width - zoomSize);
+        const int basey = ImClamp(int(mouseUVCoord.y * height), zoomSize, height - zoomSize);
         for (int y = -zoomSize; y <= zoomSize; y++)
         {
             for (int x = -zoomSize; x <= zoomSize; x++)
             {
                 uint32_t texel = ((uint32_t*)bits)[(basey - y) * width + x + basex];
-                zoomData[(y + zoomSize) * zoomSize * 2 + x + zoomSize] = texel;
+                ImVec2 pos = pickRc.Min + ImVec2(float(x + zoomSize), float(zoomSize - y)) * quadSize;
+                draw_list->AddRectFilled(pos, pos + quadSize, texel);
             }
         }
-        histogram(zoomSize * 2, zoomSize * 2, (const unsigned char*)zoomData);
+        //ImGui::SameLine();
+        // center quad
+        const ImVec2 pos = pickRc.Min + ImVec2(float(zoomSize), float(zoomSize)) * quadSize;
+        draw_list->AddRect(pos, pos + quadSize, 0xFF0000FF, 0.f, 15, 2.f);
+        // normal direction
+        ImGui::InvisibleButton("AndOneMore", ImVec2(zoomRectangleWidth, zoomRectangleWidth));
+        ImRect normRc(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+        for (int y = -zoomSize; y <= zoomSize; y++)
+        {
+            for (int x = -zoomSize; x <= zoomSize; x++)
+            {
+                uint32_t texel = ((uint32_t*)bits)[(basey - y) * width + x + basex];
+                const ImVec2 posQuad = normRc.Min + ImVec2(float(x + zoomSize), float(zoomSize - y)) * quadSize;
+                //draw_list->AddRectFilled(pos, pos + quadSize, texel);
+                const float nx = float(texel & 0xFF) / 128.f - 1.f;
+                const float ny = float((texel & 0xFF00)>>8) / 128.f - 1.f;
+                const ImRect rc(posQuad, posQuad + quadSize);
+                drawNormal(draw_list, rc, nx, ny);
+            }
+        }
+        ImGui::EndGroup();
+        ImGui::SameLine();
+        ImGui::BeginGroup();
+        uint32_t texel = ((uint32_t*)bits)[basey * width + basex];
+        ImVec4 color = ImColor(texel);
+        ImVec4 colHSV;
+        ImGui::ColorConvertRGBtoHSV(color.x, color.y, color.z, colHSV.x, colHSV.y, colHSV.z);
+        ImGui::Text("U %1.3f V %1.3f", mouseUVCoord.x, mouseUVCoord.y);
+        ImGui::Text("Coord %d %d", int(mouseUVCoord.x * width), int(mouseUVCoord.y * height));
+        ImGui::Separator();
+        ImGui::Text("R 0x%02x  G 0x%02x  B 0x%02x", int(color.x * 255.f), int(color.y * 255.f), int(color.z * 255.f));
+        ImGui::Text("R %1.3f G %1.3f B %1.3f", color.x, color.y, color.z);
+        ImGui::Separator();
+        ImGui::Text(
+            "H 0x%02x  S 0x%02x  V 0x%02x", int(colHSV.x * 255.f), int(colHSV.y * 255.f), int(colHSV.z * 255.f));
+        ImGui::Text("H %1.3f S %1.3f V %1.3f", colHSV.x, colHSV.y, colHSV.z);
+        ImGui::Separator();
+        ImGui::Text("Alpha 0x%02x", int(color.w * 255.f));
+        ImGui::Text("Alpha %1.3f", color.w);
+        ImGui::Separator();
+        ImGui::Text("Size %d, %d", int(displayedTextureSize.x), int(displayedTextureSize.y));
+        ImGui::EndGroup();
+        if (histogram_full)
+        {
+            histogram(width, height, bits);
+        }
+        else
+        {
+            for (int y = -zoomSize; y <= zoomSize; y++)
+            {
+                for (int x = -zoomSize; x <= zoomSize; x++)
+                {
+                    uint32_t texel = ((uint32_t*)bits)[(basey - y) * width + x + basex];
+                    zoomData[(y + zoomSize) * zoomSize * 2 + x + zoomSize] = texel;
+                }
+            }
+            histogram(zoomSize * 2, zoomSize * 2, (const unsigned char*)zoomData);
+        }
+        ImGui::EndTooltip();
     }
-    ImGui::EndTooltip();
 }
 
 // Extensions to ImDrawList

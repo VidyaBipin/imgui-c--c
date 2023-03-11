@@ -434,8 +434,7 @@ void ImGui::ShowNodeEditorWindow()
                 ImGui::SetTooltip("I am a tooltip");
 
             // Handle the advanced tooltip
-            if (do_adv_tooltip) {
-                ImGui::BeginTooltip();
+            if (do_adv_tooltip && ImGui::BeginTooltip()) {
                 ImGui::Text("I am a fancy tooltip");
                 static float arr[] = { 0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f };
                 ImGui::PlotLines("Curve", arr, IM_ARRAYSIZE(arr));

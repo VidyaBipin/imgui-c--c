@@ -998,9 +998,8 @@ void TextEditor::Render()
 				auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
 				drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::ErrorMarker]);
 
-				if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+				if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end) && ImGui::BeginTooltip())
 				{
-					ImGui::BeginTooltip();
 					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
 					ImGui::Text("Error at line %d:", errorIt->first);
 					ImGui::PopStyleColor();
@@ -1171,18 +1170,16 @@ void TextEditor::Render()
 				if (!id.empty())
 				{
 					auto it = mLanguageDefinition.mIdentifiers.find(id);
-					if (it != mLanguageDefinition.mIdentifiers.end())
+					if (it != mLanguageDefinition.mIdentifiers.end() && ImGui::BeginTooltip())
 					{
-						ImGui::BeginTooltip();
 						ImGui::TextUnformatted(it->second.mDeclaration.c_str());
 						ImGui::EndTooltip();
 					}
 					else
 					{
 						auto pi = mLanguageDefinition.mPreprocIdentifiers.find(id);
-						if (pi != mLanguageDefinition.mPreprocIdentifiers.end())
+						if (pi != mLanguageDefinition.mPreprocIdentifiers.end() && ImGui::BeginTooltip())
 						{
-							ImGui::BeginTooltip();
 							ImGui::TextUnformatted(pi->second.mDeclaration.c_str());
 							ImGui::EndTooltip();
 						}
