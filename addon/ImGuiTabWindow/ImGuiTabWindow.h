@@ -322,9 +322,9 @@ public:
         if (label) {ImGui::MemFree(label);label=NULL;}
         const char e = '\0';if (!lbl) lbl=&e;
         const int sz = strlen(lbl)+1;       // we allocate one char more (optimization for appending an asterisk)
-        label = (char*) ImGui::MemAlloc(sz+1);strcpy(label,lbl);
+        label = (char*) ImGui::MemAlloc(sz+1);strncpy(label,lbl,sz);
         if (appendAnAsteriskAndMarkAsModified)  {
-            modified = true;strcat(label,"*");
+            modified = true;strncat(label,"*",sz);
         }
         else modified = false;
     }
@@ -344,7 +344,7 @@ public:
     inline void setModified(bool flag) {
         if (modified == flag) return;
         modified = flag;int sz = strlen(label);
-        if (modified)   {if (sz==0 || label[sz-1]!='*') strcat(label,"*");}
+        if (modified)   {if (sz==0 || label[sz-1]!='*') strncat(label,"*",sz);}
         else            {if (sz>0 && label[sz-1]=='*') label[sz-1]='\0';}
     }
     inline const char* getTooltip() const {return tooltip;}
@@ -352,13 +352,13 @@ public:
         if (tooltip) {ImGui::MemFree(tooltip);tooltip=NULL;}
         const char e = '\0';if (!tt) tt=&e;
         const int sz = strlen(tt);
-        tooltip = (char*) ImGui::MemAlloc(sz+1);strcpy(tooltip,tt);
+        tooltip = (char*) ImGui::MemAlloc(sz+1);strncpy(tooltip,tt,sz);
     }
     void setUserText(const char* _userText)  {
         if (userText) {ImGui::MemFree(userText);userText=NULL;}
         if (_userText)  {
             const int sz = strlen(_userText);
-            userText = (char*) ImGui::MemAlloc(sz+1);strcpy(userText,_userText);
+            userText = (char*) ImGui::MemAlloc(sz+1);strncpy(userText,_userText,sz);
         }
     }
     inline const char* getUserText() const {return userText;}
