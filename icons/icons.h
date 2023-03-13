@@ -9,5 +9,5 @@
 
 namespace ImGui
 {
-    IMGUI_API bool LoadInternalIcons(ImFontAtlas* atlas);
+    IMGUI_API bool LoadInternalIcons(ImFontAtlas* atlas, float scale = 1.0f);
 }

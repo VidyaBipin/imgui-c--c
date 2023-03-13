@@ -458,6 +458,7 @@ void Example::WarpMatrixDemo()
 void Application_GetWindowProperties(ApplicationWindowProperty& property)
 {
     property.name = "Application_Example";
+    property.font_scale = 1.5f;
 }
 
 void Application_SetupContext(ImGuiContext* ctx)

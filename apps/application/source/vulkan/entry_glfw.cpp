@@ -146,8 +146,8 @@ int main(int argc, char** argv)
 
     ImGuiContext& g = *GImGui;
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.Fonts->AddFontDefault();
-    io.FontGlobalScale = property.scale;
+    io.Fonts->AddFontDefault(property.font_scale);
+    io.FontGlobalScale = 1.0f / property.font_scale;
     io.DisplayFramebufferScale = display_scale;
     if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
