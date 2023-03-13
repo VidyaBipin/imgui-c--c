@@ -1488,6 +1488,29 @@ inline notify::notify(std::string const &title,
                       std::string const &message,
                       icon _icon /* = icon::info */)
 {
+    ImGuiContext& g = *GImGui;
+    std::string _title = title;
+    std::string _message = message;
+    if (g.Style.TextInternationalize)
+    {
+        const char * title_begin = title.data();
+        const char * title_end = title.data() + title.length();
+        auto changed = ImGui::InternationalizedText(title_begin, title_end);
+        if (changed > 0)
+        {
+            title_begin = g.InternationalizedBuffer;
+            _title.assign(title_begin, changed);
+        }
+        const char * message_begin = message.data();
+        const char * message_end = message.data() + message.length();
+        changed = ImGui::InternationalizedText(message_begin, message_end);
+        if (changed > 0)
+        {
+            message_begin = g.InternationalizedBuffer;
+            _message.assign(message_begin, changed);
+        }
+    }
+
     if (_icon == icon::question) // Not supported by notifications
         _icon = icon::info;
 
@@ -1547,23 +1570,23 @@ inline notify::notify(std::string const &title,
 
     nid->uTimeout = 5000;
 
-    StringCchCopyW(nid->szInfoTitle, ARRAYSIZE(nid->szInfoTitle), internal::str2wstr(title).c_str());
-    StringCchCopyW(nid->szInfo, ARRAYSIZE(nid->szInfo), internal::str2wstr(message).c_str());
+    StringCchCopyW(nid->szInfoTitle, ARRAYSIZE(nid->szInfoTitle), internal::str2wstr(_title).c_str());
+    StringCchCopyW(nid->szInfo, ARRAYSIZE(nid->szInfo), internal::str2wstr(_message).c_str());
 
     // Display the new icon
     Shell_NotifyIconW(NIM_ADD, nid.get());
 #elif __EMSCRIPTEN__
     // FIXME: do something
-    (void)title;
-    (void)message;
+    (void)_title;
+    (void)_message;
 #else
     auto command = desktop_helper();
 
     if (is_osascript())
     {
         command.push_back("-e");
-        command.push_back("display notification " + osascript_quote(message) +
-                          " with title " + osascript_quote(title));
+        command.push_back("display notification " + osascript_quote(_message) +
+                          " with title " + osascript_quote(_title));
     }
     else if (is_zenity())
     {
@@ -1571,16 +1594,16 @@ inline notify::notify(std::string const &title,
         command.push_back("--window-icon");
         command.push_back(get_icon_name(_icon));
         command.push_back("--text");
-        command.push_back(title + "\n" + message);
+        command.push_back(_title + "\n" + _message);
     }
     else if (is_kdialog())
     {
         command.push_back("--icon");
         command.push_back(get_icon_name(_icon));
         command.push_back("--title");
-        command.push_back(title);
+        command.push_back(_title);
         command.push_back("--passivepopup");
-        command.push_back(message);
+        command.push_back(_message);
         command.push_back("5");
     }
 
