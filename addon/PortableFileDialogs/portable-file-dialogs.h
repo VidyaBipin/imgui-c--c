@@ -1598,6 +1598,28 @@ inline message::message(std::string const &title,
                         choice _choice /* = choice::ok_cancel */,
                         icon _icon /* = icon::info */)
 {
+    ImGuiContext& g = *GImGui;
+    std::string _title = title;
+    std::string _text = text;
+    if (g.Style.TextInternationalize)
+    {
+        const char * title_begin = title.data();
+        const char * title_end = title.data() + title.length();
+        auto changed = ImGui::InternationalizedText(title_begin, title_end);
+        if (changed > 0)
+        {
+            title_begin = g.InternationalizedBuffer;
+            _title.assign(title_begin, changed);
+        }
+        const char * text_begin = text.data();
+        const char * text_end = text.data() + text.length();
+        changed = ImGui::InternationalizedText(text_begin, text_end);
+        if (changed > 0)
+        {
+            text_begin = g.InternationalizedBuffer;
+            _text.assign(text_begin, changed);
+        }
+    }
 #if _WIN32
     // Use MB_SYSTEMMODAL rather than MB_TOPMOST to ensure the message window is brought
     // to front. See https://github.com/samhocevar/portable-file-dialogs/issues/52
@@ -1628,10 +1650,10 @@ inline message::message(std::string const &title,
     m_mappings[IDRETRY] = button::retry;
     m_mappings[IDIGNORE] = button::ignore;
 
-    m_async->start_func([text, title, style](int* exit_code) -> std::string
+    m_async->start_func([_text, _title, style](int* exit_code) -> std::string
     {
-        auto wtext = internal::str2wstr(text);
-        auto wtitle = internal::str2wstr(title);
+        auto wtext = internal::str2wstr(_text);
+        auto wtitle = internal::str2wstr(_title);
         // Apply new visual style (required for all Windows versions)
         new_style_context ctx;
         *exit_code = MessageBoxW(GetActiveWindow(), wtext.c_str(), wtitle.c_str(), style);
@@ -1648,7 +1670,7 @@ inline message::message(std::string const &title,
         /* case icon::info: */ default: full_message = "ℹ"; break;
     }
 
-    full_message += ' ' + title + "\n\n" + text;
+    full_message += ' ' + _title + "\n\n" + _text;
 
     // This does not really start an async task; it just passes the
     // EM_ASM_INT return value to a fake start() function.
@@ -1664,8 +1686,8 @@ inline message::message(std::string const &title,
 
     if (is_osascript())
     {
-        std::string script = "display dialog " + osascript_quote(text) +
-                             " with title " + osascript_quote(title);
+        std::string script = "display dialog " + osascript_quote(_text) +
+                             " with title " + osascript_quote(_title);
         auto if_cancel = button::cancel;
         switch (_choice)
         {
@@ -1746,10 +1768,10 @@ inline message::message(std::string const &title,
                 }
         }
 
-        command.insert(command.end(), { "--title", title,
+        command.insert(command.end(), { "--title", _title,
                                         "--width=300", "--height=0", // sensible defaults
                                         "--no-markup", // do not interpret text as Pango markup
-                                        "--text", text,
+                                        "--text", _text,
                                         "--icon-name=dialog-" + get_icon_name(_icon) });
     }
     else if (is_kdialog())
@@ -1779,9 +1801,9 @@ inline message::message(std::string const &title,
             }
         }
 
-        command.push_back(text);
+        command.push_back(_text);
         command.push_back("--title");
-        command.push_back(title);
+        command.push_back(_title);
 
         // Must be after the above part
         if (_choice == choice::ok_cancel)
