@@ -766,13 +766,18 @@ bool ImTextureToFile(ImTextureID texture, std::string path)
     int height = ImGui::ImGetTextureHeight(texture);
     int channels = 4; // TODO::Dicky need check
     
-    if (ret != 0 || !width || !height || !channels)
+    if (!width || !height || !channels)
     {
         return false;
     }
 
     void* data = IM_ALLOC(width * height * channels);
     ret = ImGetTextureData(texture, data);
+    if (ret != 0)
+    {
+        IM_FREE(data);
+        return false;
+    }
 
     auto file_suffix = ImGuiHelper::path_suffix(path);
     if (!file_suffix.empty())
