@@ -1,4 +1,4 @@
-// dear imgui, v1.89.4 WIP
+// dear imgui, v1.89.4
 // (demo code)
 
 // Help:
@@ -535,6 +535,15 @@ void ImGui::ShowDemoWindow(bool* p_open)
             ImGui::Checkbox("io.ConfigWindowsMoveFromTitleBarOnly", &io.ConfigWindowsMoveFromTitleBarOnly);
             ImGui::Checkbox("io.ConfigMacOSXBehaviors", &io.ConfigMacOSXBehaviors);
             ImGui::Text("Also see Style->Rendering for rendering options.");
+
+            ImGui::SeparatorText("Debug");
+            ImGui::BeginDisabled();
+            ImGui::Checkbox("io.ConfigDebugBeginReturnValueOnce", &io.ConfigDebugBeginReturnValueOnce); // .
+            ImGui::EndDisabled();
+            ImGui::SameLine(); HelpMarker("First calls to Begin()/BeginChild() will return false.\n\nTHIS OPTION IS DISABLED because it needs to be set at application boot-time to make sense. Showing the disabled option is a way to make this feature easier to discover");
+            ImGui::Checkbox("io.ConfigDebugBeginReturnValueLoop", &io.ConfigDebugBeginReturnValueLoop);
+            ImGui::SameLine(); HelpMarker("Some calls to Begin()/BeginChild() will return false.\n\nWill cycle through window depths then repeat. Windows should be flickering while running.");
+
             ImGui::TreePop();
             ImGui::Spacing();
         }
@@ -1071,7 +1080,7 @@ static void ShowDemoWindowWidgets()
             // Note that characters values are preserved even by InputText() if the font cannot be displayed,
             // so you can safely copy & paste garbled characters into another application.
             ImGui::TextWrapped(
-                "CJK text will only appears if the font was loaded with the appropriate CJK character ranges. "
+                "CJK text will only appear if the font was loaded with the appropriate CJK character ranges. "
                 "Call io.Fonts->AddFontFromFileTTF() manually to load extra character ranges. "
                 "Read docs/FONTS.md for details.");
             //ImGui::Text(u8"Font Test"); // Normally we would use u8"blah blah" with the proper characters directly in the string.
