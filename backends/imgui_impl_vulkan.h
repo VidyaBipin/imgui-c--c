@@ -195,6 +195,7 @@ IMGUI_IMPL_API ImTextureID  ImGui_ImplVulkan_CreateTexture(VkBuffer buffer, size
 IMGUI_IMPL_API void         ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, const void * pixels);
 IMGUI_IMPL_API void         ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, VkBuffer stagingBuffer, size_t buffer_offset);
 IMGUI_IMPL_API int          ImGui_ImplVulkan_GetTextureData(ImTextureVk texture, void *data, int& width, int& height, int& channels); // Add By Dicky
+IMGUI_IMPL_API ImVec4       ImGui_ImplVulkan_GetTexturePixel(ImTextureVk texture, int x, int y); // Add By Dicky
 IMGUI_IMPL_API void         ImGui_ImplVulkan_DestroyTexture(ImTextureVk * texture);
 IMGUI_IMPL_API ImGui_ImplVulkan_InitInfo* ImGui_ImplVulkan_GetInitInfo();
 // add By Dicky end

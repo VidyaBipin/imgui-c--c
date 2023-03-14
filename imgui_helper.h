@@ -26,6 +26,7 @@ IMGUI_API void ImDestroyTexture(ImTextureID texture);
 IMGUI_API int ImGetTextureWidth(ImTextureID texture);
 IMGUI_API int ImGetTextureHeight(ImTextureID texture);
 IMGUI_API int ImGetTextureData(ImTextureID texture, void* data);
+IMGUI_API ImPixel ImGetTexturePixel(ImTextureID texture, float x, float y);
 IMGUI_API double ImGetTextureTimeStamp(ImTextureID texture);
 IMGUI_API bool ImTextureToFile(ImTextureID texture, std::string path);
 IMGUI_API void ImMatToTexture(ImGui::ImMat mat, ImTextureID& texture);
@@ -59,6 +60,8 @@ IMGUI_API bool GetTexCoordsFromGlyph(unsigned short glyph,ImVec2& uv0,ImVec2& uv
 // Returns the height of the main menu based on the current font and style
 // Warning: according to https://github.com/ocornut/imgui/issues/252 this approach can fail [Better call ImGui::GetWindowSize().y from inside the menu and store the result somewhere]
 IMGUI_API float CalcMainMenuHeight();
+
+IMGUI_API void RenderMouseCursor(const char* mouse_cursor, ImVec2 offset = ImVec2(0 ,0), float base_scale = 1.0, int rotate = 0, ImU32 col_fill = IM_COL32_WHITE, ImU32 col_border = IM_COL32_BLACK, ImU32 col_shadow = IM_COL32(0, 0, 0, 48));
 
 // These two methods are inspired by imguidock.cpp
 // if optionalRootWindowName==NULL, they refer to the current window

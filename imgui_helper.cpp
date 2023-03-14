@@ -718,6 +718,45 @@ int ImGetTextureData(ImTextureID texture, void* data)
     return 0;
 }
 
+ImPixel ImGetTexturePixel(ImTextureID texture, float x, float y)
+{
+    ImPixel pixel = {};
+    auto textureIt = ImFindTexture(texture);
+    if (textureIt == g_Textures.end())
+        return pixel;
+    if (!textureIt->TextureID)
+        return pixel;
+
+    int width = ImGui::ImGetTextureWidth(texture);
+    int height = ImGui::ImGetTextureHeight(texture);
+    int channels = 4; // TODO::Dicky need check
+
+    if (width <= 0 || height <= 0 || channels <= 0)
+        return pixel;
+
+    if (x < 0 || y < 0 || x > width || y > height)
+        return pixel;
+
+#if IMGUI_RENDERING_VULKAN
+    auto color = ImGui_ImplVulkan_GetTexturePixel(textureIt->TextureID, x, y);
+    pixel = {color.x, color.y, color.z, color.w};
+#elif !IMGUI_EMSCRIPTEN && (IMGUI_RENDERING_GL3 || IMGUI_RENDERING_GL2)
+    // ulgy using full texture data to pick one pixel
+    void* data = IM_ALLOC(width * height * channels);
+    int ret = ImGetTextureData(texture, data);
+    if (ret == 0)
+    {
+        unsigned char * pixels = (unsigned char *)data;
+        pixel.r = *(pixels + ((int)y * width + (int)x) * channels + 0) / 255.f;
+        pixel.g = *(pixels + ((int)y * width + (int)x) * channels + 1) / 255.f;
+        pixel.b = *(pixels + ((int)y * width + (int)x) * channels + 2) / 255.f;
+        pixel.a = *(pixels + ((int)y * width + (int)x) * channels + 3) / 255.f;
+    }
+    if (data) IM_FREE(data);
+#endif
+    return pixel;
+}
+
 bool ImTextureToFile(ImTextureID texture, std::string path)
 {
     int ret = -1;
@@ -725,15 +764,15 @@ bool ImTextureToFile(ImTextureID texture, std::string path)
     int width = ImGui::ImGetTextureWidth(texture);
     int height = ImGui::ImGetTextureHeight(texture);
     int channels = 4; // TODO::Dicky need check
-    void* data = IM_ALLOC(width * height * channels);
-
-    ret = ImGetTextureData(texture, data);
     
     if (ret != 0 || !width || !height || !channels)
     {
-        if (data) IM_FREE(data);
         return false;
     }
+
+    void* data = IM_ALLOC(width * height * channels);
+    ret = ImGetTextureData(texture, data);
+
     auto file_suffix = ImGuiHelper::path_suffix(path);
     if (!file_suffix.empty())
     {
@@ -929,6 +968,39 @@ float CalcMainMenuHeight()  {
             else return (14)+style.FramePadding.y * 2.0f;
         }
         return (io.FontGlobalScale * font->Scale * font->FontSize) + style.FramePadding.y * 2.0f;
+    }
+}
+
+void RenderMouseCursor(const char* mouse_cursor, ImVec2 offset, float base_scale, int rotate, ImU32 col_fill, ImU32 col_border, ImU32 col_shadow)
+{
+    ImGuiViewportP* viewport = (ImGuiViewportP*)ImGui::GetWindowViewport();
+    ImDrawList* draw_list = ImGui::GetForegroundDrawList(viewport);
+    ImGuiIO& io = ImGui::GetIO();
+    const float FontSize = draw_list->_Data->FontSize;
+    ImVec2 size(FontSize, FontSize);
+    const ImVec2 pos = io.MousePos - offset;
+    const float scale = base_scale * viewport->DpiScale;
+    if (!viewport->GetMainRect().Overlaps(ImRect(pos, pos + ImVec2(size.x + 2, size.y + 2) * scale)))
+        return;
+
+    ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+    int rotation_start_index = draw_list->VtxBuffer.Size;
+    draw_list->AddText(pos + ImVec2(-1, -1), col_border, mouse_cursor);
+    draw_list->AddText(pos + ImVec2(1, 1), col_shadow, mouse_cursor);
+    draw_list->AddText(pos, col_fill, mouse_cursor);
+    if (rotate != 0)
+    {
+        float rad = M_PI / 180 * (90 - rotate);
+        ImVec2 l(FLT_MAX, FLT_MAX), u(-FLT_MAX, -FLT_MAX); // bounds
+        auto& buf = draw_list->VtxBuffer;
+        float s = sin(rad), c = cos(rad);
+        for (int i = rotation_start_index; i < buf.Size; i++)
+            l = ImMin(l, buf[i].pos), u = ImMax(u, buf[i].pos);
+        ImVec2 center = ImVec2((l.x + u.x) / 2, (l.y + u.y) / 2);
+        center = ImRotate(center, s, c) - center;
+        
+        for (int i = rotation_start_index; i < buf.Size; i++)
+            buf[i].pos = ImRotate(buf[i].pos, s, c) - center;
     }
 }
 
