@@ -1316,6 +1316,13 @@ ImGuiIO::ImGuiIO()
     AppAcceptingEvents = true;
     BackendUsingLegacyKeyArrays = (ImS8)-1;
     BackendUsingLegacyNavInputArray = true; // assume using legacy array until proven wrong
+
+    // Add By Dicky
+    MouseType = 0;
+    MouseStrawed = false;
+    MouseStrawValue = {};
+    FrameCountSinceLastInput = 0;
+    // Add By Dicky end
 }
 
 // Pass in translated ASCII characters for text input.
@@ -8934,6 +8941,28 @@ ImVec2 ImGui::GetMousePos()
     ImGuiContext& g = *GImGui;
     return g.IO.MousePos;
 }
+
+// add by Dicky
+bool ImGui::GetMouseStraw(ImVec4& data)
+{
+    ImGuiContext& g = *GImGui;
+    if (g.IO.MouseType != 1)
+        return false;
+    if (!g.IO.MouseStrawed)
+        return false;
+    data = g.IO.MouseStrawValue;
+    g.IO.MouseStrawed = false;
+    return true;
+}
+
+void ImGui::ClearMouseStraw()
+{
+    ImGuiContext& g = *GImGui;
+    g.IO.MouseType = 0;
+    g.IO.MouseStrawed = false;
+    g.IO.MouseStrawValue = {};
+}
+// add by Dicky end
 
 // NB: prefer to call right after BeginPopup(). At the time Selectable/MenuItem is activated, the popup is already closed!
 ImVec2 ImGui::GetMousePosOnOpeningCurrentPopup()

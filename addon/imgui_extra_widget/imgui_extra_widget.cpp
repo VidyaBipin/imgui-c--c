@@ -1333,25 +1333,10 @@ bool ImGui::InputInt64(const char* label, int64_t* v, int step, int step_fast, I
 }
 
 // CheckButton
-bool ImGui::CheckButton(const char* label, bool* pvalue, bool useSmallButton, float checkedStateAlphaMult) {
+bool ImGui::CheckButton(const char* label, bool* pvalue, ImVec4 CheckButtonColor, bool useSmallButton, float checkedStateAlphaMult) {
     bool rv = false;
     const bool tmp = pvalue ? *pvalue : false;
-    if (tmp)
-    {
-        ImVec4 CheckButtonColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive);
-        ImGui::PushStyleColor(ImGuiCol_Button, CheckButtonColor);
-        /*
-        ImVec4 CheckButtonColor = ImGui::GetStyleColorVec4(ImGuiCol_Button);
-        ImVec4 CheckButtonHoveredColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered);
-        ImVec4 CheckButtonActiveColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive);
-        CheckButtonColor.w = checkedStateAlphaMult;
-        CheckButtonHoveredColor.w = checkedStateAlphaMult;
-        CheckButtonActiveColor.w = checkedStateAlphaMult;
-        ImGui::PushStyleColor(ImGuiCol_Button, CheckButtonColor);
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, CheckButtonHoveredColor);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, CheckButtonActiveColor);
-        */
-    }
+    if (tmp) ImGui::PushStyleColor(ImGuiCol_Button, CheckButtonColor);
     if (useSmallButton) {if (ImGui::SmallButton(label)) {if (pvalue) *pvalue=!(*pvalue);rv=true;}}
     else if (ImGui::Button(label)) {if (pvalue) *pvalue=!(*pvalue);rv=true;}
     if (tmp) ImGui::PopStyleColor();

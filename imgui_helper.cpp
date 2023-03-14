@@ -742,6 +742,7 @@ ImPixel ImGetTexturePixel(ImTextureID texture, float x, float y)
     pixel = {color.x, color.y, color.z, color.w};
 #elif !IMGUI_EMSCRIPTEN && (IMGUI_RENDERING_GL3 || IMGUI_RENDERING_GL2)
     // ulgy using full texture data to pick one pixel
+    // if GlVersion is greater then 4.5, maybe we can using glGetTextureSubImage
     void* data = IM_ALLOC(width * height * channels);
     int ret = ImGetTextureData(texture, data);
     if (ret == 0)

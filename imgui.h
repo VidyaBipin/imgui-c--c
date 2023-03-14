@@ -1025,6 +1025,10 @@ namespace ImGui
     IMGUI_API ImGuiViewport*    FindViewportByID(ImGuiID id);                                   // this is a helper for backends.
     IMGUI_API ImGuiViewport*    FindViewportByPlatformHandle(void* platform_handle);            // this is a helper for backends. the type platform_handle is decided by the backend (e.g. HWND, MyWindow*, GLFWwindow* etc.)
 
+    // add by Dicky for mouse straw
+    IMGUI_API bool              GetMouseStraw(ImVec4& data);                                    // this is get straw mouse status value, return false means no mouse straw
+    IMGUI_API void              ClearMouseStraw(); 
+    // add by Dicky end
 } // namespace ImGui
 
 //-----------------------------------------------------------------------------
@@ -2227,7 +2231,10 @@ struct ImGuiIO
     ImWchar16   InputQueueSurrogate;                // For AddInputCharacterUTF16()
     ImVector<ImWchar> InputQueueCharacters;         // Queue of _characters_ input (obtained by platform backend). Fill using AddInputCharacter() helper.
     // Add By Dicky
-    int         FrameCountSinceLastInput;       // How many frames since the last input event; a value of 0 indicates that the current frame was triggered by an input.
+    int         MouseType;                          // type of current mouse status, 0 = normal, 1 = straw ...
+    bool        MouseStrawed;                       // mouse is straw something
+    ImVec4      MouseStrawValue;                    // value of mouse straw, usually straw color 
+    int         FrameCountSinceLastInput;           // How many frames since the last input event; a value of 0 indicates that the current frame was triggered by an input.
     // Add By Dicky end
     IMGUI_API   ImGuiIO();
 };

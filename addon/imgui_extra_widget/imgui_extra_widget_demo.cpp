@@ -115,10 +115,10 @@ void ShowExtraWidgetDemoWindow()
         ImGui::AlignTextToFramePadding();ImGui::Text("Check Buttons:");
         ImGui::SameLine();
         static bool checkButtonState1=false;
-        if (ImGui::CheckButton("CheckButton",&checkButtonState1)) {}
+        if (ImGui::CheckButton("CheckButton",&checkButtonState1, ImVec4(0.5, 0.0, 0.0, 1.0))) {}
         ImGui::SameLine();
         static bool checkButtonState2=false;
-        if (ImGui::CheckButton("SmallCheckButton",&checkButtonState2, true)) {}
+        if (ImGui::CheckButton("SmallCheckButton",&checkButtonState2, ImVec4(0.0, 0.5, 0.0, 1.0), true)) {}
         
         ImGui::Spacing();
         ImGui::TextUnformatted("ToggleButton:");ImGui::SameLine();
@@ -143,7 +143,7 @@ void ShowExtraWidgetDemoWindow()
 
         ImGui::SameLine();
         static bool color_choose = false;
-        ImGui::CheckButton("+",&color_choose);
+        ImGui::CheckButton("+",&color_choose, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
         if (ImGui::ColorChooser(&color_choose, &chosenColor))
         {
             // choice OK here
