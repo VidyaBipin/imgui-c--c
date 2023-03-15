@@ -92,7 +92,7 @@ elseif(OPENMP_FOUND)
 endif()
 
 if(PKG_CONFIG_FOUND)
-    pkg_search_module(VULKAN REQUIRED vulkan)
+    pkg_search_module(VULKAN REQUIRED vulkan glslang spirv)
     if (VULKAN_FOUND)
         message(STATUS "[ImVulkanShader] vulkan found")
     endif(VULKAN_FOUND)
@@ -288,22 +288,20 @@ endif(VKSHADER_VULKAN_PREBUILD)
 
 compile_shader(fusions/CircleBlur_shader.h CircleBlur_data)
 
-find_package(Glslang COMPONENTS Glslang SPIRV)
-find_package(SpirvTools)
-if(TARGET Glslang::Glslang)
+if (Glslang_LIBRARY_RELEASE)
     message(STATUS "VkShader Found system glslang library")
     set(GLSLANG_LIBRARY
         ${GLSLANG_LIBRARY}
-        Glslang::Glslang
+        ${Glslang_LIBRARY_RELEASE}
+        ${Glslang_GenericCodeGen_LIBRARY_RELEASE}
+        ${Glslang_HLSL_LIBRARY_RELEASE}
+        ${Glslang_MachineIndependent_LIBRARY_RELEASE}
+        ${Glslang_OGLCompiler_LIBRARY_RELEASE}
+        ${Glslang_OSDependent_LIBRARY_RELEASE}
+        ${Glslang_SPIRV_LIBRARY_RELEASE}
     )
 endif()
-if(TARGET Glslang::SPIRV)
-    message(STATUS "VkShader Found system SPIRV library")
-    set(GLSLANG_LIBRARY
-        ${GLSLANG_LIBRARY}
-        Glslang::SPIRV
-    )
-endif()
+find_package(SpirvTools)
 if (TARGET SpirvTools::SpirvTools)
     message(STATUS "VkShader Found system SPRIV-Tools library")
     set(GLSLANG_LIBRARY
@@ -312,6 +310,31 @@ if (TARGET SpirvTools::SpirvTools)
         SpirvTools::Opt
     )
 endif()
+
+#find_package(Glslang COMPONENTS Glslang SPIRV)
+#find_package(SpirvTools)
+#if(TARGET Glslang::Glslang)
+#    message(STATUS "VkShader Found system glslang library")
+#    set(GLSLANG_LIBRARY
+#        ${GLSLANG_LIBRARY}
+#        #Glslang::Glslang
+#    )
+#endif()
+#if(TARGET Glslang::SPIRV)
+#    message(STATUS "VkShader Found system SPIRV library")
+#    set(GLSLANG_LIBRARY
+#        ${GLSLANG_LIBRARY}
+#        #Glslang::SPIRV
+#    )
+#endif()
+#if (TARGET SpirvTools::SpirvTools)
+#    message(STATUS "VkShader Found system SPRIV-Tools library")
+#    set(GLSLANG_LIBRARY
+#        ${GLSLANG_LIBRARY}
+#        SpirvTools::SpirvTools
+#        SpirvTools::Opt
+#    )
+#endif()
 
 if(VKSHADER_VULKAN_BENCHMARK)
     add_definitions(-DVULKAN_SHADER_BENCHMARK)
