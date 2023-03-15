@@ -312,31 +312,6 @@ if (TARGET SpirvTools::SpirvTools)
     )
 endif()
 
-#find_package(Glslang COMPONENTS Glslang SPIRV)
-#find_package(SpirvTools)
-#if(TARGET Glslang::Glslang)
-#    message(STATUS "VkShader Found system glslang library")
-#    set(GLSLANG_LIBRARY
-#        ${GLSLANG_LIBRARY}
-#        #Glslang::Glslang
-#    )
-#endif()
-#if(TARGET Glslang::SPIRV)
-#    message(STATUS "VkShader Found system SPIRV library")
-#    set(GLSLANG_LIBRARY
-#        ${GLSLANG_LIBRARY}
-#        #Glslang::SPIRV
-#    )
-#endif()
-#if (TARGET SpirvTools::SpirvTools)
-#    message(STATUS "VkShader Found system SPRIV-Tools library")
-#    set(GLSLANG_LIBRARY
-#        ${GLSLANG_LIBRARY}
-#        SpirvTools::SpirvTools
-#        SpirvTools::Opt
-#    )
-#endif()
-
 if(VKSHADER_VULKAN_BENCHMARK)
     add_definitions(-DVULKAN_SHADER_BENCHMARK)
     message(STATUS "VkShader Support benchmark")
