@@ -288,6 +288,7 @@ endif(VKSHADER_VULKAN_PREBUILD)
 
 compile_shader(fusions/CircleBlur_shader.h CircleBlur_data)
 
+find_package(Glslang COMPONENTS Glslang SPIRV)
 if (Glslang_LIBRARY_RELEASE)
     message(STATUS "VkShader Found system glslang library")
     set(GLSLANG_LIBRARY
