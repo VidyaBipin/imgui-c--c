@@ -3050,17 +3050,19 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
     {
         if (flags & ImGuiSliderFlags_Mark)
         {
+            const bool disabled_global = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
+            ImU32 col = GetColorU32(disabled_global ? ImGuiCol_TextDisabled : ImGuiCol_Text);
             grab_bb.Expand(ImVec2(16, 4));
             window->DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab));
-            float gap_x = grab_bb.GetSize().x / 8;
+            float gap_x = (grab_bb.GetSize().x - 2) / 8;
             float offset_y = grab_bb.GetSize().y / 4;
             float mark_height = grab_bb.GetSize().y / 2;
             for (int i = 1; i < 8; i++)
             {
                 ImVec2 p1 = grab_bb.Min + ImVec2(i * gap_x, offset_y);
                 ImVec2 p2 = grab_bb.Min + ImVec2(i * gap_x, offset_y + mark_height);
-                window->DrawList->AddLine(p1, p2, IM_COL32(255, 255, 255, 255), 1.f);
-                window->DrawList->AddLine(p1 + ImVec2(1, 0), p2 + ImVec2(1, 0), IM_COL32(128, 128, 128, 255), 1.f);
+                window->DrawList->AddLine(p1, p2, col, 1.f);
+                window->DrawList->AddLine(p1 + ImVec2(2, 1), p2 + ImVec2(2, 1), IM_COL32(128, 128, 128, 255), 1.f);
             }
         }
         else
@@ -3218,17 +3220,19 @@ bool ImGui::VSliderScalar(const char* label, const ImVec2& size, ImGuiDataType d
     {
         if (flags & ImGuiSliderFlags_Mark)
         {
+            const bool disabled_global = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
+            ImU32 col = GetColorU32(disabled_global ? ImGuiCol_TextDisabled : ImGuiCol_Text);
             grab_bb.Expand(ImVec2(4, 16));
             window->DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab));
-            float gap_y = grab_bb.GetSize().y / 8;
+            float gap_y = (grab_bb.GetSize().y - 2) / 8;
             float offset_x = grab_bb.GetSize().x / 4;
             float mark_width = grab_bb.GetSize().x / 2;
             for (int i = 1; i < 8; i++)
             {
                 ImVec2 p1 = grab_bb.Min + ImVec2(offset_x, i * gap_y);
                 ImVec2 p2 = grab_bb.Min + ImVec2(offset_x + mark_width, i * gap_y);
-                window->DrawList->AddLine(p1, p2, IM_COL32(255, 255, 255, 255), 1.f);
-                window->DrawList->AddLine(p1 + ImVec2(0, 1), p2 + ImVec2(0, 1), IM_COL32(128, 128, 128, 255), 1.f);
+                window->DrawList->AddLine(p1, p2, col, 1.f);
+                window->DrawList->AddLine(p1 + ImVec2(1, 2), p2 + ImVec2(1, 2), IM_COL32(64, 64, 64, 255), 1.f);
             }
         }
         else
