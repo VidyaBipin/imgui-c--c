@@ -1,4 +1,4 @@
-// dear imgui, v1.89.4
+// dear imgui, v1.89.5 WIP
 // (main code and documentation)
 
 // Help:
@@ -5012,7 +5012,6 @@ static void SetupViewportDrawData(ImGuiViewportP* viewport, ImVector<ImDrawList*
     draw_data->TotalVtxCount = draw_data->TotalIdxCount = 0;
     draw_data->DisplayPos = viewport->Pos;
     draw_data->DisplaySize = is_minimized ? ImVec2(0.0f, 0.0f) : viewport->Size;
-    //draw_data->FramebufferScale = io.DisplayFramebufferScale; // FIXME-VIEWPORT: This may vary on a per-monitor/viewport basis?
     // Modify By Dicky, choice right scale
     if (viewport->PlatformMonitor == 0)
         draw_data->FramebufferScale = io.DisplayFramebufferScale;
