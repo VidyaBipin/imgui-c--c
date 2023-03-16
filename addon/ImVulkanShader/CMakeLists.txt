@@ -74,15 +74,13 @@ if (APPLE AND OPENMP_FOUND)
     include_directories(${OpenMP_CXX_INCLUDE_DIR})
     set(LINK_LIBS ${LINK_LIBS} ${OpenMP_libomp_LIBRARY})
 elseif(OPENMP_FOUND)
-    #if(NOT TARGET OpenMP::OpenMP_CXX)
-    #set_property(TARGET OpenMP::OpenMP_CXX
-    #            PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
-    #endif()
     if(WIN32 OR MINGW)
-        message(STATUS "VkShader(Windows) Use OpenMP")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-        set(LINK_LIBS ${LINK_LIBS} gmp pthread)
+        if (NOT VKSHADER_STATIC)
+            message(STATUS "VkShader(Windows) Use OpenMP")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+            set(LINK_LIBS ${LINK_LIBS} gmp pthread)
+        endif()
     else()
         message(STATUS "VkShader Use OpenMP")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -295,12 +293,16 @@ if (Glslang_LIBRARY_RELEASE)
         ${GLSLANG_LIBRARY}
         ${Glslang_LIBRARY_RELEASE}
         ${Glslang_GenericCodeGen_LIBRARY_RELEASE}
-        ${Glslang_HLSL_LIBRARY_RELEASE}
-        ${Glslang_MachineIndependent_LIBRARY_RELEASE}
         ${Glslang_OGLCompiler_LIBRARY_RELEASE}
         ${Glslang_OSDependent_LIBRARY_RELEASE}
         ${Glslang_SPIRV_LIBRARY_RELEASE}
     )
+    if(NOT WIN32 AND NOT MINGW)
+        set(GLSLANG_LIBRARY
+            ${GLSLANG_LIBRARY}
+            ${Glslang_MachineIndependent_LIBRARY_RELEASE}
+        )
+    endif()
 endif()
 find_package(SpirvTools)
 if (TARGET SpirvTools::SpirvTools)
