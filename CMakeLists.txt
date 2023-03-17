@@ -645,6 +645,12 @@ if (IMGUI_GLUT AND GLUT_FOUND)
         ${GLUT_LDFLAGS}
         ${GLUT_LIBRARY}
     )
+    if (APPLE)
+        set(LINK_LIBS
+            ${LINK_LIBS}
+            "-framework GLUT"
+        )
+    endif(APPLE)
     if (NOT APPLE AND NOT LINUX)
         set(LINK_LIBS
             ${LINK_LIBS}
@@ -1267,7 +1273,7 @@ endif(IMGUI_STATIC)
 set(IMGUI_VERSION_MAJOR 1)
 set(IMGUI_VERSION_MINOR 89)
 set(IMGUI_VERSION_PATCH 41)
-set(IMGUI_VERSION_BUILD 01)
+set(IMGUI_VERSION_BUILD 02)
 set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH}.${IMGUI_VERSION_BUILD})
 
 add_library(imgui ${LIBRARY} ${IMGUI_SRC} ${IMGUI_INCS})
@@ -1544,26 +1550,26 @@ endif()
 endif(IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
 
 if (IMGUI_BUILD_EXAMPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-    #set(IMGUI_WEB_WGPU_DIR ${PROJECT_BINARY_DIR}/web_wgpu/)
-    #SET(IMGUI_SHELL_WGPU_FILE ${PROJECT_SOURCE_DIR}/test/wgpu_index.html)
-    #add_executable(
-    #    example_emscripten_wgpu
-    #    test/example_emscripten_wgpu.cpp
-    #)
-    #target_link_libraries(
-    #    example_emscripten_wgpu
-    #    imgui
-    #)
-    #set_target_properties(
-    #    example_emscripten_wgpu
-    #    PROPERTIES
-    #    LIBRARY_OUTPUT_DIRECTORY ${IMGUI_WEB_WGPU_DIR}
-    #    RUNTIME_OUTPUT_DIRECTORY ${IMGUI_WEB_WGPU_DIR}
-    #    OUTPUT_NAME "index"
-    #    PREFIX ""
-    #    SUFFIX ".html"
-    #    LINK_FLAGS "--shell-file ${IMGUI_SHELL_WGPU_FILE}"
-    #)
+    set(IMGUI_WEB_WGPU_DIR ${PROJECT_BINARY_DIR}/web_wgpu/)
+    SET(IMGUI_SHELL_WGPU_FILE ${PROJECT_SOURCE_DIR}/test/wgpu_index.html)
+    add_executable(
+        example_emscripten_wgpu
+        test/example_emscripten_wgpu.cpp
+    )
+    target_link_libraries(
+        example_emscripten_wgpu
+        imgui
+    )
+    set_target_properties(
+        example_emscripten_wgpu
+        PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${IMGUI_WEB_WGPU_DIR}
+        RUNTIME_OUTPUT_DIRECTORY ${IMGUI_WEB_WGPU_DIR}
+        OUTPUT_NAME "index"
+        PREFIX ""
+        SUFFIX ".html"
+        LINK_FLAGS "--shell-file ${IMGUI_SHELL_WGPU_FILE}"
+    )
 endif()
 
 if (IMGUI_BUILD_EXAMPLE AND IMGUI_VULKAN_SHADER AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")

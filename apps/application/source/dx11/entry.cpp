@@ -19,7 +19,7 @@ struct IUnknown;
 #include <string>
 
 // Data
-ID3D11Device*            g_pd3dDevice = nullptr;
+ID3D11Device*                   g_pd3dDevice = nullptr;
 static ID3D11DeviceContext*     g_pd3dDeviceContext = nullptr;
 static IDXGISwapChain*          g_pSwapChain = nullptr;
 static ID3D11RenderTargetView*  g_mainRenderTargetView = nullptr;
@@ -151,7 +151,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 {
     const auto c_ClassName  = _T("Imgui Application Class");
     ApplicationWindowProperty property;
-    Application_GetWindowProperties(property);
+    Application_Setup(property);
     if (property.full_size)
     {
         UINT width = GetSystemMetrics(SM_CXSCREEN);
@@ -192,7 +192,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     auto ctx = ImGui::CreateContext();
-    Application_SetupContext(ctx);
+    if (property.application.Application_SetupContext)
+        property.application.Application_SetupContext(ctx);
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGuiContext& g = *GImGui;
     io.Fonts->AddFontDefault(property.font_scale);
@@ -254,8 +255,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
     ImVec4 clear_color = ImColor(32, 32, 32, 255);//style.Colors[ImGuiCol_TitleBg];
 
-    Application_Initialize(&property.handle);
+    if (property.application.Application_Initialize)
+        property.application.Application_Initialize(&property.handle);
+
     bool done = false;
+    bool splash_done = false;
     bool app_done = false;
     auto frame = [&]()
     {
@@ -266,7 +270,18 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
             ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
 
-        app_done = Application_Frame(property.handle, done);
+        if (property.application.Application_SplashScreen)
+        {
+            splash_done = property.application.Application_SplashScreen(property.handle, done);
+        }
+        else
+            splash_done = true;
+
+        if (splash_done && property.application.Application_Frame)
+            app_done = property.application.Application_Frame(property.handle, done);
+        else
+            app_done = done;
+        
         if (app_done)
             PostQuitMessage(0);
 
@@ -312,7 +327,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
             frame();
     }
 
-    Application_Finalize(&property.handle);
+    if (property.application.Application_Finalize)
+        property.application.Application_Finalize(&property.handle);
     
     // Cleanup
 #if IMGUI_VULKAN_SHADER

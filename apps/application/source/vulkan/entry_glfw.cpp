@@ -19,6 +19,8 @@
 #define GLFW_VERSION_COMBINED           (GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100 + GLFW_VERSION_REVISION)
 #define GLFW_HAS_MONITOR_WORK_AREA      (GLFW_VERSION_COMBINED >= 3300) // 3.3+ glfwGetMonitorWorkarea
 
+static ApplicationWindowProperty property;
+
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -31,9 +33,9 @@ static void DropCallback(GLFWwindow*, int count, const char** paths)
     {
         file_paths.push_back(paths[i]);
     }
-    if (!file_paths.empty())
+    if (!file_paths.empty() && property.application.Application_DropFromSystem)
     {
-        Application_DropFromSystem(file_paths);
+        property.application.Application_DropFromSystem(file_paths);
     }
 }
 
@@ -49,8 +51,9 @@ int main(int argc, char** argv)
     if (!glfwInit())
         return 1;
 
-    ApplicationWindowProperty property(argc, argv);
-    Application_GetWindowProperties(property);
+    property.argc = argc;
+    property.argv = argv;
+    Application_Setup(property);
 
     ImVec2 display_scale = ImVec2(1.0, 1.0);
 
@@ -136,7 +139,8 @@ int main(int argc, char** argv)
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     auto ctx = ImGui::CreateContext();
-    Application_SetupContext(ctx);
+    if (property.application.Application_SetupContext)
+        property.application.Application_SetupContext(ctx);
 
     // Create Framebuffers
     int w, h;
@@ -201,10 +205,12 @@ int main(int argc, char** argv)
     ImGui::ImVulkanShaderInit();
 #endif
 
-    Application_Initialize(&property.handle);
+    if (property.application.Application_Initialize)
+        property.application.Application_Initialize(&property.handle);
 
     // Main loop
     bool done = false;
+    bool splash_done = false;
     bool app_done = false;
     while (!app_done)
     {
@@ -234,7 +240,17 @@ int main(int argc, char** argv)
         if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
             ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
 
-        app_done = Application_Frame(property.handle, done);
+        if (property.application.Application_SplashScreen)
+        {
+            splash_done = property.application.Application_SplashScreen(property.handle, done);
+        }
+        else
+            splash_done = true;
+        
+        if (splash_done && property.application.Application_Frame)
+            app_done = property.application.Application_Frame(property.handle, done);
+        else
+            app_done = done;
 
         ImGui::EndFrame();
         // Rendering
@@ -242,7 +258,8 @@ int main(int argc, char** argv)
         FrameRendering(wd);
     }
 
-    Application_Finalize(&property.handle);
+    if (property.application.Application_Finalize)
+        property.application.Application_Finalize(&property.handle);
 
     // Cleanup
 #if IMGUI_VULKAN_SHADER

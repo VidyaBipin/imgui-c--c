@@ -21,6 +21,7 @@
 static ApplicationWindowProperty property;
 static ImVec4 clear_color = ImVec4(0.f, 0.f, 0.f, 1.f);
 static bool done = false;
+static bool splash_done = false;
 static bool app_done = false;
 
 void glut_display_func()
@@ -33,8 +34,18 @@ void glut_display_func()
     if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
         ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
 
-    app_done = Application_Frame(property.handle, done);
-
+    if (property.application.Application_SplashScreen)
+    {
+        splash_done = property.application.Application_SplashScreen(property.handle, done);
+    }
+    else
+        splash_done = true;
+    
+    if (splash_done && property.application.Application_Frame)
+        app_done = property.application.Application_Frame(property.handle, done);
+    else
+        app_done = done;
+    
     ImGui::EndFrame();
     // Rendering
     ImGui::Render();
@@ -46,6 +57,8 @@ void glut_display_func()
     ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
     glutSwapBuffers();
     glutPostRedisplay();
+    if (app_done)
+        exit(0);
 }
 
 void Application_FullScreen(bool on)
@@ -67,7 +80,9 @@ int main(int argc, char** argv)
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 #endif
     
-    Application_GetWindowProperties(property);
+    property.argc = argc;
+    property.argv = argv;
+    Application_Setup(property);
     
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH | GLUT_MULTISAMPLE);
     glutInitWindowSize(property.width, property.height);
@@ -84,7 +99,9 @@ int main(int argc, char** argv)
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     auto ctx = ImGui::CreateContext();
-    Application_SetupContext(ctx);
+    if (property.application.Application_SetupContext)
+        property.application.Application_SetupContext(ctx);
+    
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGuiContext& g = *GImGui;
     io.Fonts->AddFontDefault(property.font_scale);
@@ -122,11 +139,13 @@ int main(int argc, char** argv)
 #endif
 
     // init application
-    Application_Initialize(&property.handle);
+    if (property.application.Application_Initialize)
+        property.application.Application_Initialize(&property.handle);
 
     glutMainLoop();
 
-    Application_Finalize(&property.handle);
+    if (property.application.Application_Finalize)
+        property.application.Application_Finalize(&property.handle);
 
     // Cleanup
 #if IMGUI_VULKAN_SHADER

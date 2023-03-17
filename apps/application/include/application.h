@@ -19,6 +19,23 @@
 #define FULLSCREEN_HEIGHT_ADJ  32
 #endif
 
+typedef void (*SetupContext)(ImGuiContext* ctx);
+typedef void (*Initialize)(void** handle);
+typedef void (*Finalize)(void** handle);
+typedef bool (*SplashScreen)(void* handle, bool app_will_quit);
+typedef bool (*Frame)(void* handle, bool app_will_quit);
+typedef void (*DropFromSystem)(std::vector<std::string>& drops);
+
+typedef struct ApplicationFrameworks
+{
+    SetupContext        Application_SetupContext    {nullptr};
+    Initialize          Application_Initialize      {nullptr};
+    Finalize            Application_Finalize        {nullptr};
+    SplashScreen        Application_SplashScreen    {nullptr};
+    Frame               Application_Frame           {nullptr};
+    DropFromSystem      Application_DropFromSystem  {nullptr};
+} ApplicationFrameworks;
+
 typedef struct ApplicationWindowProperty
 {
     ApplicationWindowProperty() {}
@@ -44,15 +61,13 @@ typedef struct ApplicationWindowProperty
     bool window_border {true};
     std::string language_path;
     std::string icon_path;
+    int splash_screen_width {0};
+    int splash_screen_height {0};
     void* handle    {nullptr};
+    ApplicationFrameworks application;
     int argc    {0};
     char ** argv {nullptr};
 } ApplicationWindowProperty;
 
-void Application_GetWindowProperties(ApplicationWindowProperty& property);
-void Application_SetupContext(ImGuiContext* ctx);
-void Application_Initialize(void** handle = nullptr);
-void Application_Finalize(void** handle = nullptr);
-bool Application_Frame(void* handle = nullptr, bool app_will_quit = false);
+void Application_Setup(ApplicationWindowProperty& property);
 void Application_FullScreen(bool on);
-void Application_DropFromSystem(std::vector<std::string>& drops);

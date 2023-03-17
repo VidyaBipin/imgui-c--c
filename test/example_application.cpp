@@ -455,17 +455,7 @@ void Example::WarpMatrixDemo()
     }
 }
 
-void Application_GetWindowProperties(ApplicationWindowProperty& property)
-{
-    property.name = "Application_Example";
-    property.font_scale = 1.5f;
-}
-
-void Application_SetupContext(ImGuiContext* ctx)
-{
-}
-
-void Application_Initialize(void** handle)
+void Example_Initialize(void** handle)
 {
     srand((unsigned int)time(0));
     *handle = new Example();
@@ -473,7 +463,7 @@ void Application_Initialize(void** handle)
     ImPlot::CreateContext();
 }
 
-void Application_Finalize(void** handle)
+void Example_Finalize(void** handle)
 {
     if (handle && *handle)
     {
@@ -484,12 +474,7 @@ void Application_Finalize(void** handle)
     ImPlot::DestroyContext();
 }
 
-void Application_DropFromSystem(std::vector<std::string>& drops)
-{
-
-}
-
-bool Application_Frame(void* handle, bool app_will_quit)
+bool Example_Frame(void* handle, bool app_will_quit)
 {
     bool app_done = false;
     auto& io = ImGui::GetIO();
@@ -875,4 +860,13 @@ bool Application_Frame(void* handle, bool app_will_quit)
     if (app_will_quit)
         app_done = true;
     return app_done;
+}
+
+void Application_Setup(ApplicationWindowProperty& property)
+{
+    property.name = "Application_Example";
+    property.font_scale = 1.5f;
+    property.application.Application_Initialize = Example_Initialize;
+    property.application.Application_Finalize = Example_Finalize;
+    property.application.Application_Frame = Example_Frame;
 }
