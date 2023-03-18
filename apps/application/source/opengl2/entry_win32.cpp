@@ -24,6 +24,51 @@
 #define WM_DPICHANGED 0x02E0 // From Windows SDK 8.1+ headers
 #endif
 
+// Data
+static HDC                      g_HDC = NULL;
+static HGLRC                    g_HGLRC = NULL;
+bool CreateGLContext(HWND hWnd)
+{
+    // Setup pixelformat descriptor
+    constexpr PIXELFORMATDESCRIPTOR pfd =
+    {
+        sizeof(PIXELFORMATDESCRIPTOR),
+        1,
+        PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+        PFD_TYPE_RGBA,
+        32,
+        0, 0, 0, 0, 0, 0,
+        0,
+        0,
+        0,
+        0, 0, 0, 0,
+        24,
+        8,
+        0,
+        PFD_MAIN_PLANE,
+        0,
+        0, 0, 0
+    };
+
+    // Setup device context
+    g_HDC = GetDC(hWnd);
+    int pixelFormat = 0;
+    pixelFormat = ChoosePixelFormat(g_HDC, &pfd);
+    if (!pixelFormat) return false;
+    if (!SetPixelFormat(g_HDC, pixelFormat, &pfd)) return false;
+    g_HGLRC = wglCreateContext(g_HDC);
+    if (!g_HGLRC) return false;
+    if (!wglMakeCurrent(g_HDC, g_HGLRC)) return false;
+    return true;
+}
+
+void CleanupGLContext(HWND hWnd)
+{
+    wglMakeCurrent(g_HDC, nullptr);
+    wglDeleteContext(g_HGLRC);
+    ReleaseDC(hWnd, g_HDC);
+}
+
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -75,8 +120,6 @@ void Application_FullScreen(bool on)
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
-    PIXELFORMATDESCRIPTOR pfd;
-    ZeroMemory(&pfd, sizeof(PIXELFORMATDESCRIPTOR));
     const auto c_ClassName  = _T("Imgui Application Class");
     ApplicationWindowProperty property;
     Application_Setup(property);
@@ -90,9 +133,16 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         property.height = height - FULLSCREEN_HEIGHT_ADJ;
         property.center = false;
     }
+    if (property.center)
+    {
+        UINT width = GetSystemMetrics(SM_CXSCREEN);
+        UINT height = GetSystemMetrics(SM_CYSCREEN);
+        property.pos_x = (width - property.width) / 2;
+        property.pos_y = (height - property.height) / 2;
+    }
 
 # if defined(_UNICODE)
-    const std::wstring c_WindowName = widen(property.name);
+    const std::wstring c_WindowName = widen(property.name + std::string(" Win32_GL2");
 # else
     const std::string c_WindowName = property.name + std::string(" Win32_GL2");
 # endif
@@ -106,55 +156,24 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     RegisterClassEx(&wc);
 
     auto hwnd = CreateWindow(c_ClassName, c_WindowName.c_str(), WS_OVERLAPPEDWINDOW,
-                            property.center ? 100 : property.pos_x, property.center ? 100 : property.pos_y, property.width, property.height,
+                            property.pos_x, property.pos_y, property.width, property.height,
                             nullptr, nullptr, wc.hInstance, nullptr);
     if (hwnd == nullptr)
     {
         fprintf(stderr, "Failed to Open window! %s\n", c_WindowName.c_str());
         return 1;
     }
-    if (hwnd == nullptr)
-    {
-        fprintf(stderr, "Failed to Open window! %s\n", c_WindowName.c_str());
-        return 1;
-    }
-    if (property.top_most)
-    {
-        ::SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-    }
     if (!property.window_border)
     {
         ::SetWindowLong(hwnd, GWL_STYLE, WS_BORDER); 
     }
-    auto dc = GetDC(hwnd);
-    if (dc == nullptr)
+    
+    // Initialize OpenGL
+    const char* glsl_version = "#version 130";
+    if (!CreateGLContext(hwnd))
     {
-        fprintf(stderr, "Failed to get window DC! %s\n", c_WindowName.c_str());
-        return 1;
-    }
-    pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-    pfd.nVersion = 1;
-    pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
-    auto visual = ChoosePixelFormat(dc, &pfd);
-    if (0 == visual)
-    {
-        fprintf(stderr, "Failed to Choose PixelFormat! %s\n", c_WindowName.c_str());
-        return 1;
-    }
-    if (FALSE == SetPixelFormat(dc, visual, &pfd))
-    {
-        fprintf(stderr, "Failed to Set PixelFormat! %s\n", c_WindowName.c_str());
-        return 1;
-    }
-    auto rc = wglCreateContext(dc);
-    if (rc == nullptr)
-    {
-        fprintf(stderr, "Failed to create context! %s\n", c_WindowName.c_str());
-        return 1;
-    }
-    if (FALSE == wglMakeCurrent(dc, rc))
-    {
-        fprintf(stderr, "Failed to Make Current context! %s\n", c_WindowName.c_str());
+        CleanupGLContext(hwnd);
+        ::UnregisterClass(wc.lpszClassName, wc.hInstance);
         return 1;
     }
 
@@ -168,7 +187,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     io.Fonts->AddFontDefault(property.font_scale);
     io.FontGlobalScale = 1.0f / property.font_scale;
     if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     if (property.docking) io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
     if (property.viewport)io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
     if (!property.auto_merge) io.ConfigViewportsNoAutoMerge = true;
@@ -221,7 +240,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     {
         ImGui_ImplWin32_FullScreen(ImGui::GetMainViewport(), true);
     }
-    ::SetWindowPos(hwnd, NULL, property.pos_x, property.pos_y, 0, 0, flags);
+    ::SetWindowPos(hwnd, property.top_most ? HWND_TOPMOST : NULL, property.pos_x, property.pos_y, property.width, property.height, flags);
     ::UpdateWindow(hwnd);
 
     if (property.application.Application_Initialize)
@@ -229,7 +248,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
     // Main loop
     bool done = false;
-    bool splash_done = false;
     bool app_done = false;
     while (!app_done)
     {
@@ -252,15 +270,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
         if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
             ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
-
-        if (property.application.Application_SplashScreen)
-        {
-            splash_done = property.application.Application_SplashScreen(property.handle, done);
-        }
-        else
-            splash_done = true;
         
-        if (splash_done && property.application.Application_Frame)
+        if (property.application.Application_Frame)
             app_done = property.application.Application_Frame(property.handle, done);
         else
             app_done = done;
@@ -278,11 +289,13 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         // Update and Render additional Platform Windows
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
+            auto backup_context = wglGetCurrentContext();
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
+            wglMakeCurrent(g_HDC, backup_context);
         }
 
-        SwapBuffers(dc);
+        SwapBuffers(g_HDC);
     }
 
     if (property.application.Application_Finalize)
@@ -298,7 +311,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
     wglMakeCurrent(NULL, NULL);
     wglDeleteContext(wglGetCurrentContext());
-    ReleaseDC(hwnd, dc);
+    CleanupGLContext(hwnd);
     ::DestroyWindow(hwnd);
     ::UnregisterClass(wc.lpszClassName, wc.hInstance);
 
