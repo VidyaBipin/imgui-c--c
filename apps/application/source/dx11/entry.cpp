@@ -193,7 +193,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     IMGUI_CHECKVERSION();
     auto ctx = ImGui::CreateContext();
     if (property.application.Application_SetupContext)
-        property.application.Application_SetupContext(ctx);
+        property.application.Application_SetupContext(ctx, false);
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGuiContext& g = *GImGui;
     io.Fonts->AddFontDefault(property.font_scale);
@@ -259,7 +259,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         property.application.Application_Initialize(&property.handle);
 
     bool done = false;
-    bool splash_done = false;
     bool app_done = false;
     auto frame = [&]()
     {
@@ -270,14 +269,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
             ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
 
-        if (property.application.Application_SplashScreen)
-        {
-            splash_done = property.application.Application_SplashScreen(property.handle, done);
-        }
-        else
-            splash_done = true;
-
-        if (splash_done && property.application.Application_Frame)
+        if (property.application.Application_Frame)
             app_done = property.application.Application_Frame(property.handle, done);
         else
             app_done = done;

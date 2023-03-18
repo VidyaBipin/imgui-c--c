@@ -862,11 +862,50 @@ bool Example_Frame(void* handle, bool app_will_quit)
     return app_done;
 }
 
+bool Example_Splash_Screen(void* handle, bool app_will_quit)
+{
+    static int x = 0;
+    auto& io = ImGui::GetIO();
+    ImGuiCond cond = ImGuiCond_None;
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                            ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | 
+                            ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus;
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(io.DisplaySize, cond);
+    ImGui::Begin("Content", nullptr, flags);
+    ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(0, 0), io.DisplaySize, IM_COL32_WHITE);
+    ImGui::SetWindowFontScale(2.0);
+    std::string str = "Example Splash";
+    auto mark_size = ImGui::CalcTextSize(str.c_str());
+    float xoft = (io.DisplaySize.x - mark_size.x) / 2;
+    float yoft = (io.DisplaySize.y - mark_size.y) / 2;
+    ImGui::GetWindowDrawList()->AddText(ImVec2(xoft, yoft), IM_COL32_BLACK, str.c_str());
+    ImGui::SetWindowFontScale(1.0);
+
+    ImGui::SetCursorPos(ImVec2(4, io.DisplaySize.y - 32));
+    float progress = (float)x / 100.f;
+    ImGui::ProgressBar("##esplash_progress", progress, 0.f, 1.f, "", ImVec2(io.DisplaySize.x - 16, 8), 
+                                ImVec4(0.f, 0.f, 0.f, 1.f), ImVec4(1.f, 1.f, 1.f, 1.f), ImVec4(0.f, 0.f, 0.f, 1.f));
+    ImGui::End();
+
+    if (x < 100)
+    {
+        ImGui::sleep(1);
+        x++;
+        return false;
+    }
+    return true;
+}
+
 void Application_Setup(ApplicationWindowProperty& property)
 {
     property.name = "Application_Example";
     property.font_scale = 1.5f;
+    property.splash_screen_width = 600;
+    property.splash_screen_height = 300;
+    property.splash_screen_alpha = 0.8;
     property.application.Application_Initialize = Example_Initialize;
     property.application.Application_Finalize = Example_Finalize;
     property.application.Application_Frame = Example_Frame;
+    property.application.Application_SplashScreen = Example_Splash_Screen;
 }

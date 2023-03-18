@@ -19,7 +19,7 @@
 #define FULLSCREEN_HEIGHT_ADJ  32
 #endif
 
-typedef void (*SetupContext)(ImGuiContext* ctx);
+typedef void (*SetupContext)(ImGuiContext* ctx, bool in_splash);
 typedef void (*Initialize)(void** handle);
 typedef void (*Finalize)(void** handle);
 typedef bool (*SplashScreen)(void* handle, bool app_will_quit);
@@ -63,6 +63,7 @@ typedef struct ApplicationWindowProperty
     std::string icon_path;
     int splash_screen_width {0};
     int splash_screen_height {0};
+    float splash_screen_alpha {1.0};
     void* handle    {nullptr};
     ApplicationFrameworks application;
     int argc    {0};

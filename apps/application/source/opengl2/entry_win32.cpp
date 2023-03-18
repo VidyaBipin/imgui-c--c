@@ -162,7 +162,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     IMGUI_CHECKVERSION();
     auto ctx = ImGui::CreateContext();
     if (property.application.Application_SetupContext)
-        property.application.Application_SetupContext(ctx);
+        property.application.Application_SetupContext(ctx, false);
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGuiContext& g = *GImGui;
     io.Fonts->AddFontDefault(property.font_scale);

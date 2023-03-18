@@ -66,6 +66,121 @@ void Application_FullScreen(bool on)
     ImGui_ImplGlfw_FullScreen(ImGui::GetMainViewport(), on);
 }
 
+static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext* ctx)
+{
+    std::string title = property.name + " Splash";
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+    // GL ES 2.0 + GLSL 100
+    const char* glsl_version = "#version 100";
+#elif defined(__APPLE__)
+    // GL 3.2 + GLSL 150
+    const char* glsl_version = "#version 150";
+#elif defined(__arm__) || defined(__aarch64__)
+    // GL 2.1 + GLSL 120
+    const char* glsl_version = "#version 120";
+#else
+    // GL 3.0 + GLSL 130
+    const char* glsl_version = "#version 130";
+#endif
+
+    glfwWindowHint(GLFW_RESIZABLE, false);
+    glfwWindowHint(GLFW_FLOATING, true);
+    glfwWindowHint(GLFW_DECORATED, false);
+
+    GLFWwindow* window = glfwCreateWindow(property.splash_screen_width, property.splash_screen_height, title.c_str(), NULL, NULL);
+    if (!window)
+    {
+        printf("GLFW: Create Splash window Error!!!\n");
+        return;
+    }
+
+    // Set window icon
+    if (!property.icon_path.empty())
+    {
+        ImGui_ImplGlfw_SetWindowIcon(window, property.icon_path.c_str());
+    }
+
+    // Set window alpha
+    glfwSetWindowOpacity(window, property.splash_screen_alpha);
+
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(1); // Enable vsync
+#if !defined(__APPLE__) && GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >=3
+    float x_scale, y_scale;
+    glfwGetWindowContentScale(window, &x_scale, &y_scale);
+    if (x_scale != 1.0 || y_scale != 1.0)
+    {
+        property.scale = x_scale == 1.0 ? x_scale : y_scale;
+        display_scale = ImVec2(x_scale, y_scale);
+    }
+#endif
+
+    // Setup ImGui binding
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    ImVec4 clear_color = ImVec4(0.f, 0.f, 0.f, 1.f);
+
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    if (property.application.Application_SetupContext)
+        property.application.Application_SetupContext(ctx, true);
+
+    // Main loop
+    bool done = false;
+    bool splash_done = false;
+#ifdef __EMSCRIPTEN__
+    io.IniFilename = NULL;
+    EMSCRIPTEN_MAINLOOP_BEGIN
+#else
+    while (!splash_done)
+#endif
+    {
+        ImGui_ImplGlfw_WaitForEvent();
+        glfwPollEvents();
+        if (glfwWindowShouldClose(window))
+            done = true;
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
+            ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
+
+        splash_done = property.application.Application_SplashScreen(property.handle, done);
+
+        ImGui::EndFrame();
+        // Rendering
+        ImGui::Render();
+        glfwMakeContextCurrent(window);
+        int display_w, display_h;
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // Update and Render additional Platform Windows
+        // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
+        //  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            GLFWwindow* backup_current_context = glfwGetCurrentContext();
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+            glfwMakeContextCurrent(backup_current_context);
+        }
+        glfwSwapBuffers(window);
+    }
+#ifdef __EMSCRIPTEN__
+    EMSCRIPTEN_MAINLOOP_END;
+#endif
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    glfwDestroyWindow(window);
+    ImGui::UpdatePlatformWindows();
+}
+
 int main(int argc, char** argv)
 {
     // Setup window
@@ -105,6 +220,42 @@ int main(int argc, char** argv)
     Application_Setup(property);
 
     ImVec2 display_scale = ImVec2(1.0, 1.0);
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    auto ctx = ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGuiContext& g = *GImGui;
+    io.Fonts->AddFontDefault(property.font_scale);
+    io.FontGlobalScale = 1.0f / property.font_scale;
+    io.DisplayFramebufferScale = display_scale;
+    if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    // Setup App setting file path
+    auto setting_path = property.using_setting_path ? ImGuiHelper::settings_path(property.name) : "";
+    auto ini_name = property.name;
+    std::replace(ini_name.begin(), ini_name.end(), ' ', '_');
+    setting_path += ini_name + ".ini";
+    io.IniFilename = setting_path.c_str();
+    auto language_path = property.language_path + ini_name + "_language.ini";
+    if (property.internationalize)
+    {
+        io.LanguageFileName = language_path.c_str();
+        g.Style.TextInternationalize = 1;
+        g.LanguageName = "Default";
+    }
+    
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    // start splash screen if setting
+    bool splash_done = false;
+    if (property.application.Application_SplashScreen &&
+        property.splash_screen_width > 0 &&
+        property.splash_screen_height > 0)
+    {
+        Show_Splash_Window(property, ctx);
+        splash_done = true;
+    }
 
     std::string title = property.name;
     title += " GLFW_GL3";
@@ -132,9 +283,17 @@ int main(int argc, char** argv)
         {
             glfwWindowHint(GLFW_FLOATING, true);
         }
+        else
+        {
+            glfwWindowHint(GLFW_FLOATING, false);
+        }
         if (!property.window_border)
         {
             glfwWindowHint(GLFW_DECORATED, false);
+        }
+        else
+        {
+            glfwWindowHint(GLFW_DECORATED, true);
         }
     }
 
@@ -168,39 +327,12 @@ int main(int argc, char** argv)
     {
         glfwSetWindowPos(window, property.pos_x, property.pos_y);
     }
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    auto ctx = ImGui::CreateContext();
-    if (property.application.Application_SetupContext)
-        property.application.Application_SetupContext(ctx);
-
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    ImGuiContext& g = *GImGui;
-    io.Fonts->AddFontDefault(property.font_scale);
-    io.FontGlobalScale = 1.0f / property.font_scale;
-    io.DisplayFramebufferScale = display_scale;
-    if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    
     if (property.docking) io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
     if (property.viewport)io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
     if (!property.auto_merge) io.ConfigViewportsNoAutoMerge = true;
-    // Setup App setting file path
-    auto setting_path = property.using_setting_path ? ImGuiHelper::settings_path(property.name) : "";
-    auto ini_name = property.name;
-    std::replace(ini_name.begin(), ini_name.end(), ' ', '_');
-    setting_path += ini_name + ".ini";
-    io.IniFilename = setting_path.c_str();
-    auto language_path = property.language_path + ini_name + "_language.ini";
-    if (property.internationalize)
-    {
-        io.LanguageFileName = language_path.c_str();
-        g.Style.TextInternationalize = 1;
-        g.LanguageName = "Default";
-    }
-    
-    // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    if (!splash_done && property.application.Application_SetupContext)
+        property.application.Application_SetupContext(ctx, false);
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
     ImGuiStyle& style = ImGui::GetStyle();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -224,7 +356,6 @@ int main(int argc, char** argv)
 
     // Main loop
     bool done = false;
-    bool splash_done = false;
     bool app_done = false;
 #ifdef __EMSCRIPTEN__
     io.IniFilename = NULL;
@@ -244,15 +375,8 @@ int main(int argc, char** argv)
 
         if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
             ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
-
-        if (property.application.Application_SplashScreen)
-        {
-            splash_done = property.application.Application_SplashScreen(property.handle, done);
-        }
-        else
-            splash_done = true;
         
-        if (splash_done && property.application.Application_Frame)
+        if (property.application.Application_Frame)
             app_done = property.application.Application_Frame(property.handle, done);
         else
             app_done = done;

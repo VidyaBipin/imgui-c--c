@@ -21,7 +21,6 @@
 static ApplicationWindowProperty property;
 static ImVec4 clear_color = ImVec4(0.f, 0.f, 0.f, 1.f);
 static bool done = false;
-static bool splash_done = false;
 static bool app_done = false;
 
 void glut_display_func()
@@ -33,15 +32,8 @@ void glut_display_func()
 
     if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
         ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
-
-    if (property.application.Application_SplashScreen)
-    {
-        splash_done = property.application.Application_SplashScreen(property.handle, done);
-    }
-    else
-        splash_done = true;
     
-    if (splash_done && property.application.Application_Frame)
+    if (property.application.Application_Frame)
         app_done = property.application.Application_Frame(property.handle, done);
     else
         app_done = done;
@@ -100,7 +92,7 @@ int main(int argc, char** argv)
     IMGUI_CHECKVERSION();
     auto ctx = ImGui::CreateContext();
     if (property.application.Application_SetupContext)
-        property.application.Application_SetupContext(ctx);
+        property.application.Application_SetupContext(ctx, false);
     
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGuiContext& g = *GImGui;

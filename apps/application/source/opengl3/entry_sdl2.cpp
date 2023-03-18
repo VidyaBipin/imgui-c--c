@@ -37,6 +37,141 @@ void Application_FullScreen(bool on)
     ImGui_ImplSDL2_FullScreen(ImGui::GetMainViewport(), on);
 }
 
+static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext* ctx)
+{
+    std::string title = property.name + " Splash";
+    // Decide GL+GLSL versions
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+    // GL ES 2.0 + GLSL 100
+    const char* glsl_version = "#version 100";
+#elif defined(__APPLE__)
+    // GL 3.2 Core + GLSL 150
+    const char* glsl_version = "#version 150";
+#else
+    // GL 3.0 + GLSL 130
+    const char* glsl_version = "#version 130";
+#endif
+
+    int window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
+    window_flags |= SDL_WINDOW_ALWAYS_ON_TOP;
+    window_flags |= SDL_WINDOW_BORDERLESS;
+    SDL_Window* window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                        property.splash_screen_width, property.splash_screen_height, window_flags);
+    if (!window)
+    {
+        fprintf(stderr, "Failed to Create Splash Window: %s\n", SDL_GetError());
+        return;
+    }
+
+    // Set window icon
+    if (!property.icon_path.empty())
+    {
+        ImGui_ImplSDL2_SetWindowIcon(window, property.icon_path.c_str());
+    }
+
+    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+    SDL_GL_MakeCurrent(window, gl_context);
+    SDL_GL_SetSwapInterval(1); // Enable vsync
+
+    // Set window alpha
+    SDL_SetWindowOpacity(window, property.splash_screen_alpha);
+
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    if (property.application.Application_SetupContext)
+        property.application.Application_SetupContext(ctx, true);
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    ImVec4 clear_color = ImVec4(0.f, 0.f, 0.f, 1.f);
+    
+    bool done = false;
+    bool splash_done = false;
+    bool show = true;
+#ifdef __EMSCRIPTEN__
+    io.IniFilename = NULL;
+    EMSCRIPTEN_MAINLOOP_BEGIN
+#else
+    while (!splash_done)
+#endif
+    {
+        ImGui_ImplSDL2_WaitForEvent();
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            ImGui_ImplSDL2_ProcessEvent(&event);
+            if (event.type == SDL_QUIT)
+                done = true;
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+                done = true;
+
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_SHOWN)
+            {
+                show = true;
+            }
+            if (event.type == SDL_WINDOWEVENT && (event.window.event == SDL_WINDOWEVENT_HIDDEN || event.window.event == SDL_WINDOWEVENT_MINIMIZED))
+            {
+                show = false;
+            }
+            if (event.type == SDL_WINDOWEVENT && (event.window.event == SDL_WINDOWEVENT_EXPOSED || event.window.event == SDL_WINDOWEVENT_RESTORED))
+            {
+                show = true;
+            }
+        }
+#ifndef __EMSCRIPTEN__
+        if (!show && !(io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable))
+        {
+            ImGui::sleep(10);
+            continue;
+        }
+#endif
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+
+        ImGui::NewFrame();
+
+        if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
+            ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
+
+        splash_done = property.application.Application_SplashScreen(property.handle, done);
+
+        ImGui::EndFrame();
+
+        // Rendering
+        ImGui::Render();
+        SDL_GL_MakeCurrent(window, gl_context);
+        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        // Update and Render additional Platform Windows
+        // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
+        //  For this specific demo app we could also call SDL_GL_MakeCurrent(window, gl_context) directly)
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            SDL_Window* backup_current_window = SDL_GL_GetCurrentWindow();
+            SDL_GLContext backup_current_context = SDL_GL_GetCurrentContext();
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+            SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
+        }
+
+        SDL_GL_SwapWindow(window);
+    }
+#ifdef __EMSCRIPTEN__
+    EMSCRIPTEN_MAINLOOP_END;
+#endif
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    SDL_GL_DeleteContext(gl_context);
+    SDL_DestroyWindow(window);
+    ImGui::UpdatePlatformWindows();
+}
+
 int main(int argc, char** argv)
 {
     // Setup SDL
@@ -116,45 +251,17 @@ int main(int argc, char** argv)
             window_flags |= SDL_WINDOW_BORDERLESS;
         }
     }
-    std::string title = property.name;
-    title += " SDL_GL3";
-    SDL_Window* window = SDL_CreateWindow(title.c_str(), property.center ? SDL_WINDOWPOS_CENTERED : property.pos_x,
-                                                        property.center ? SDL_WINDOWPOS_CENTERED : property.pos_y,
-                                                        property.width, property.height, window_flags);
-    if (!window)
-    {
-        fprintf(stderr, "Failed to Create Window: %s\n", SDL_GetError());
-        return -1;
-    }
-
-    // Set window icon
-    if (!property.icon_path.empty())
-    {
-        ImGui_ImplSDL2_SetWindowIcon(window, property.icon_path.c_str());
-    }
-    // Hook IME effect windows only
-    //ImGui_ImplSDL2_HookIme(window);
-    
-    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
-    SDL_GL_MakeCurrent(window, gl_context);
-    SDL_GL_SetSwapInterval(1); // Enable vsync
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     auto ctx = ImGui::CreateContext();
-    if (property.application.Application_SetupContext)
-        property.application.Application_SetupContext(ctx);
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGuiContext& g = *GImGui;
     io.Fonts->AddFontDefault(property.font_scale);
     io.FontGlobalScale = 1.0f / property.font_scale;
     if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-    if (property.docking) io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-    if (property.viewport)io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-    if (!property.auto_merge) io.ConfigViewportsNoAutoMerge = true;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     // Setup App setting file path
     auto setting_path = property.using_setting_path ? ImGuiHelper::settings_path(property.name) : "";
     auto ini_name = property.name;
@@ -171,7 +278,45 @@ int main(int argc, char** argv)
     
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
+
+    // start splash screen if setting
+    bool splash_done = false;
+    if (property.application.Application_SplashScreen &&
+        property.splash_screen_width > 0 &&
+        property.splash_screen_height > 0)
+    {
+        Show_Splash_Window(property, ctx);
+        splash_done = true;
+    }
+
+    std::string title = property.name;
+    title += " SDL_GL3";
+    SDL_Window* window = SDL_CreateWindow(title.c_str(), property.center ? SDL_WINDOWPOS_CENTERED : property.pos_x,
+                                                        property.center ? SDL_WINDOWPOS_CENTERED : property.pos_y,
+                                                        property.width, property.height, window_flags);
+    if (!window)
+    {
+        fprintf(stderr, "Failed to Create Window: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    // Set window icon
+    if (!property.icon_path.empty())
+    {
+        ImGui_ImplSDL2_SetWindowIcon(window, property.icon_path.c_str());
+    }
+    
+    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+    SDL_GL_MakeCurrent(window, gl_context);
+    SDL_GL_SetSwapInterval(1); // Enable vsync
+
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+    if (property.docking) io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+    if (property.viewport)io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+    if (!property.auto_merge) io.ConfigViewportsNoAutoMerge = true;
+    if (!splash_done && property.application.Application_SetupContext)
+        property.application.Application_SetupContext(ctx, false);
     ImGuiStyle& style = ImGui::GetStyle();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
@@ -194,7 +339,6 @@ int main(int argc, char** argv)
 
     // Main loop
     bool done = false;
-    bool splash_done = false;
     bool app_done = false;
     bool show = true;
 #ifdef __EMSCRIPTEN__
@@ -249,7 +393,6 @@ int main(int argc, char** argv)
         }
 
         // Start the Dear ImGui frame
-        
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
 
@@ -257,15 +400,8 @@ int main(int argc, char** argv)
 
         if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
             ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
-
-        if (property.application.Application_SplashScreen)
-        {
-            splash_done = property.application.Application_SplashScreen(property.handle, done);
-        }
-        else
-            splash_done = true;
         
-        if (splash_done && property.application.Application_Frame)
+        if (property.application.Application_Frame)
             app_done = property.application.Application_Frame(property.handle, done);
         else
             app_done = done;

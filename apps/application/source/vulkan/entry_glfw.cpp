@@ -44,6 +44,124 @@ void Application_FullScreen(bool on)
     ImGui_ImplGlfw_FullScreen(ImGui::GetMainViewport(), on);
 }
 
+static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext* ctx)
+{
+    std::string title = property.name + " Splash";
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, false);
+    glfwWindowHint(GLFW_FLOATING, true);
+    glfwWindowHint(GLFW_DECORATED, false);
+
+    GLFWwindow* window = glfwCreateWindow(property.splash_screen_width, property.splash_screen_height, title.c_str(), NULL, NULL);
+    if (!window)
+    {
+        printf("GLFW: Create Splash window Error!!!\n");
+        return;
+    }
+
+    // Set window icon
+    if (!property.icon_path.empty())
+    {
+        ImGui_ImplGlfw_SetWindowIcon(window, property.icon_path.c_str());
+    }
+
+    // Set window alpha
+    glfwSetWindowOpacity(window, property.splash_screen_alpha);
+
+    // Setup Vulkan
+    if (!glfwVulkanSupported())
+    {
+        printf("GLFW: Vulkan Not Supported\n");
+        return;
+    }
+    uint32_t extensions_count = 0;
+    const char** ext = glfwGetRequiredInstanceExtensions(&extensions_count);
+    std::vector<const char*> extensions;
+    for (int i = 0; i < extensions_count; i++)
+        extensions.push_back(ext[i]);
+    SetupVulkan(extensions);
+
+    // Create Window Surface
+    VkSurfaceKHR surface;
+    VkResult err = glfwCreateWindowSurface(g_Instance, window, g_Allocator, &surface);
+    check_vk_result(err);
+
+    // Create Framebuffers
+    int w, h;
+    glfwGetWindowSize(window, &w, &h);
+    ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
+    SetupVulkanWindow(wd, surface, w, h);
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForVulkan(window, true);
+    ImGui_ImplVulkan_InitInfo init_info = {};
+    init_info.Instance = g_Instance;
+    init_info.PhysicalDevice = g_PhysicalDevice;
+    init_info.Device = g_Device;
+    init_info.QueueFamily = g_QueueFamily;
+    init_info.Queue = g_Queue;
+    init_info.PipelineCache = g_PipelineCache;
+    init_info.DescriptorPool = g_DescriptorPool;
+    init_info.Allocator = g_Allocator;
+    init_info.MinImageCount = g_MinImageCount;
+    init_info.ImageCount = wd->ImageCount;
+    init_info.CheckVkResultFn = check_vk_result;
+    // Setup ImGui binding
+    ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
+
+    UpdateVulkanFont(wd);
+
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    if (property.application.Application_SetupContext)
+        property.application.Application_SetupContext(ctx, true);
+    
+    bool done = false;
+    bool splash_done = false;
+    bool show = true;
+    while (!splash_done)
+    {
+        ImGui_ImplGlfw_WaitForEvent();
+        glfwPollEvents();
+        if (glfwWindowShouldClose(window))
+            done = true;
+        // Resize swap chain?
+        if (g_SwapChainRebuild)
+        {
+            int width, height;
+            glfwGetWindowSize(window, &width, &height);
+            if (width > 0 && height > 0)
+            {
+                ImGui_ImplVulkan_SetMinImageCount(g_MinImageCount);
+                ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, &g_MainWindowData, g_QueueFamily, g_Allocator, width, height, g_MinImageCount);
+                g_MainWindowData.FrameIndex = 0;
+                g_SwapChainRebuild = false;
+            }
+        }
+        // Start the Dear ImGui frame
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
+            ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
+
+        splash_done = property.application.Application_SplashScreen(property.handle, done);
+
+        ImGui::EndFrame();
+        // Rendering
+        ImGui::Render();
+        FrameRendering(wd);
+    }
+    err = vkDeviceWaitIdle(g_Device);
+    check_vk_result(err);
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    CleanupVulkanWindow();
+    CleanupVulkan();
+    glfwDestroyWindow(window);
+    ImGui::UpdatePlatformWindows();
+}
+
 int main(int argc, char** argv)
 {
     // Setup window
@@ -54,8 +172,43 @@ int main(int argc, char** argv)
     property.argc = argc;
     property.argv = argv;
     Application_Setup(property);
-
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    auto ctx = ImGui::CreateContext();
+    ImGuiContext& g = *GImGui;
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImVec2 display_scale = ImVec2(1.0, 1.0);
+    io.Fonts->AddFontDefault(property.font_scale);
+    io.FontGlobalScale = 1.0f / property.font_scale;
+    io.DisplayFramebufferScale = display_scale;
+    if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    // Setup App setting file path
+    auto setting_path = property.using_setting_path ? ImGuiHelper::settings_path(property.name) : "";
+    auto ini_name = property.name;
+    std::replace(ini_name.begin(), ini_name.end(), ' ', '_');
+    setting_path += ini_name + ".ini";
+    io.IniFilename = setting_path.c_str();
+    auto language_path = property.language_path + ini_name + "_language.ini";
+    if (property.internationalize)
+    {
+        io.LanguageFileName = language_path.c_str();
+        g.Style.TextInternationalize = 1;
+        g.LanguageName = "Default";
+    }
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+
+    // start splash screen if setting
+    bool splash_done = false;
+    if (property.application.Application_SplashScreen &&
+        property.splash_screen_width > 0 &&
+        property.splash_screen_height > 0)
+    {
+        Show_Splash_Window(property, ctx);
+        splash_done = true;
+    }
 
     std::string title = property.name;
     title += " Vulkan GLFW";
@@ -83,9 +236,17 @@ int main(int argc, char** argv)
         {
             glfwWindowHint(GLFW_FLOATING, true);
         }
+        else
+        {
+            glfwWindowHint(GLFW_FLOATING, false);
+        }
         if (!property.window_border)
         {
             glfwWindowHint(GLFW_DECORATED, false);
+        }
+        else
+        {
+            glfwWindowHint(GLFW_DECORATED, true);
         }
     }
 
@@ -136,44 +297,17 @@ int main(int argc, char** argv)
     VkResult err = glfwCreateWindowSurface(g_Instance, window, g_Allocator, &surface);
     check_vk_result(err);
 
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    auto ctx = ImGui::CreateContext();
-    if (property.application.Application_SetupContext)
-        property.application.Application_SetupContext(ctx);
-
     // Create Framebuffers
     int w, h;
     glfwGetWindowSize(window, &w, &h);
     ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
     SetupVulkanWindow(wd, surface, w, h);
 
-    ImGuiContext& g = *GImGui;
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.Fonts->AddFontDefault(property.font_scale);
-    io.FontGlobalScale = 1.0f / property.font_scale;
-    io.DisplayFramebufferScale = display_scale;
-    if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     if (property.docking) io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
     if (property.viewport)io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
     if (!property.auto_merge) io.ConfigViewportsNoAutoMerge = true;
-    // Setup App setting file path
-    auto setting_path = property.using_setting_path ? ImGuiHelper::settings_path(property.name) : "";
-    auto ini_name = property.name;
-    std::replace(ini_name.begin(), ini_name.end(), ' ', '_');
-    setting_path += ini_name + ".ini";
-    io.IniFilename = setting_path.c_str();
-    auto language_path = property.language_path + ini_name + "_language.ini";
-    if (property.internationalize)
-    {
-        io.LanguageFileName = language_path.c_str();
-        g.Style.TextInternationalize = 1;
-        g.LanguageName = "Default";
-    }
-    // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    if (!splash_done && property.application.Application_SetupContext)
+        property.application.Application_SetupContext(ctx, false);
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
     ImGuiStyle& style = ImGui::GetStyle();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -210,7 +344,6 @@ int main(int argc, char** argv)
 
     // Main loop
     bool done = false;
-    bool splash_done = false;
     bool app_done = false;
     while (!app_done)
     {
@@ -239,15 +372,8 @@ int main(int argc, char** argv)
 
         if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
             ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
-
-        if (property.application.Application_SplashScreen)
-        {
-            splash_done = property.application.Application_SplashScreen(property.handle, done);
-        }
-        else
-            splash_done = true;
         
-        if (splash_done && property.application.Application_Frame)
+        if (property.application.Application_Frame)
             app_done = property.application.Application_Frame(property.handle, done);
         else
             app_done = done;
