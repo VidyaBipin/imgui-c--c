@@ -253,6 +253,7 @@ int main(int argc, char** argv)
     ImGui::StyleColorsDark();
     // start splash screen if setting
     bool splash_done = false;
+#ifndef __EMSCRIPTEN__
     if (property.application.Application_SplashScreen &&
         property.splash_screen_width > 0 &&
         property.splash_screen_height > 0)
@@ -260,6 +261,7 @@ int main(int argc, char** argv)
         Show_Splash_Window(property, ctx);
         splash_done = true;
     }
+#endif
 
     std::string title = property.name;
     title += " GLFW_GL3";

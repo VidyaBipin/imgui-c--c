@@ -278,6 +278,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
     // start splash screen if setting
     bool splash_done = false;
+#ifndef __EMSCRIPTEN__
     if (property.application.Application_SplashScreen &&
         property.splash_screen_width > 0 &&
         property.splash_screen_height > 0)
@@ -285,6 +286,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         Show_Splash_Window(property, ctx);
         splash_done = true;
     }
+#endif
 
 # if defined(_DEBUG)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
