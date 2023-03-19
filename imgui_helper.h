@@ -14,6 +14,14 @@
 #include <memory>
 #include <algorithm>
 
+struct IMGUI_API codewin
+{
+    static const int codewin_width {64};
+    static const int codewin_height {64};
+    static const int codewin_depth {32};
+    static const unsigned char codewin_pixels[];
+};
+
 namespace ImGui {
 // ImGui Info
 IMGUI_API void ShowImGuiInfo();

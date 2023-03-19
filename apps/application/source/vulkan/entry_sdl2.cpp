@@ -88,6 +88,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     if (property.application.Application_SetupContext)
         property.application.Application_SetupContext(ctx, true);
     
+    static int32_t frame_count = 0;
     bool done = false;
     bool splash_done = false;
     bool show = true;
@@ -145,7 +146,11 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
             ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
         
-        splash_done = property.application.Application_SplashScreen(property.handle, done);
+        auto _splash_done = property.application.Application_SplashScreen(&property, done);
+        
+        // work around with context assert frame_count
+        frame_count ++;
+        if (frame_count > 1) splash_done = _splash_done;
         
         ImGui::EndFrame();
         // Rendering
@@ -183,6 +188,37 @@ int main(int argc, char** argv)
 
     // Init IME effect windows only
     ImGui_ImplSDL2_InitIme();
+
+    int window_flags = SDL_WINDOW_VULKAN | SDL_WINDOW_ALLOW_HIGHDPI;
+    if (property.resizable) window_flags |= SDL_WINDOW_RESIZABLE;
+    if (property.full_size)
+    {
+        SDL_DisplayMode DM;
+        SDL_GetCurrentDisplayMode(0, &DM);
+        SDL_Rect r;
+        SDL_GetDisplayUsableBounds(0, &r);
+        property.pos_x = (r.x > 0 && r.x < 100) ? r.x : r.x + FULLSCREEN_OFFSET_X;
+        property.pos_y = r.y + FULLSCREEN_OFFSET_Y;
+        property.width = DM.w - FULLSCREEN_WIDTH_ADJ;
+        property.height = DM.h - r.y;
+        property.center = false;
+        window_flags |= SDL_WINDOW_BORDERLESS;
+    }
+    else if (property.full_screen)
+    {
+        window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    }
+    else
+    {
+        if (property.top_most)
+        {
+            window_flags |= SDL_WINDOW_ALWAYS_ON_TOP;
+        }
+        if (!property.window_border)
+        {
+            window_flags |= SDL_WINDOW_BORDERLESS;
+        }
+    }
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -222,37 +258,6 @@ int main(int argc, char** argv)
 
     std::string title = property.name;
     title += " Vulkan SDL";
-    int window_flags = SDL_WINDOW_VULKAN | SDL_WINDOW_ALLOW_HIGHDPI;
-    if (property.resizable) window_flags |= SDL_WINDOW_RESIZABLE;
-    if (property.full_size)
-    {
-        SDL_DisplayMode DM;
-        SDL_GetCurrentDisplayMode(0, &DM);
-        SDL_Rect r;
-        SDL_GetDisplayUsableBounds(0, &r);
-        property.pos_x = (r.x > 0 && r.x < 100) ? r.x : r.x + FULLSCREEN_OFFSET_X;
-        property.pos_y = r.y + FULLSCREEN_OFFSET_Y;
-        property.width = DM.w - FULLSCREEN_WIDTH_ADJ;
-        property.height = DM.h - r.y;
-        property.center = false;
-        window_flags |= SDL_WINDOW_BORDERLESS;
-    }
-    else if (property.full_screen)
-    {
-        window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-    }
-    else
-    {
-        if (property.top_most)
-        {
-            window_flags |= SDL_WINDOW_ALWAYS_ON_TOP;
-        }
-        if (!property.window_border)
-        {
-            window_flags |= SDL_WINDOW_BORDERLESS;
-        }
-    }
-
     SDL_Window* window = SDL_CreateWindow(title.c_str(), property.center ? SDL_WINDOWPOS_CENTERED : property.pos_x, 
                                                         property.center ? SDL_WINDOWPOS_CENTERED : property.pos_y, 
                                                         property.width, property.height, window_flags);
@@ -267,9 +272,6 @@ int main(int argc, char** argv)
     {
         ImGui_ImplSDL2_SetWindowIcon(window, property.icon_path.c_str());
     }
-
-    // Hook IME effect windows only
-    //ImGui_ImplSDL2_HookIme(window);
 
     // Setup Vulkan
     uint32_t extensions_count = 0;
@@ -406,13 +408,6 @@ int main(int argc, char** argv)
 
         if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
             ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
-        
-        //if (property.application.Application_SplashScreen)
-        //{
-        //    splash_done = property.application.Application_SplashScreen(property.handle, done);
-        //}
-        //else
-        //    splash_done = true;
 
         if (property.application.Application_Frame)
             app_done = property.application.Application_Frame(property.handle, done);

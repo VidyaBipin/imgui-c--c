@@ -34,7 +34,8 @@ void writePixels( FILE* f, char* _symbolNameBase, SDL_Surface* image, int* _pTot
 			if (!is_indexed && has_alpha)
             {
                 a = pixels[ rofs + 3 ];
-                fprintf( f, "0x%02x,0x%02x,0x%02x,0x%02x,", a, b, g, r );
+                //fprintf( f, "0x%02x,0x%02x,0x%02x,0x%02x,", a, b, g, r );
+				fprintf( f, "0x%02x,0x%02x,0x%02x,0x%02x,", b, g, r, a ); // for texture display order
             }
             else if (!is_indexed)
             {

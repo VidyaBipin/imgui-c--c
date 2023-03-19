@@ -126,6 +126,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         property.application.Application_SetupContext(ctx, true);
 
     // Main loop
+    static int frame_count = 0;
     bool done = false;
     bool splash_done = false;
 #ifdef __EMSCRIPTEN__
@@ -147,7 +148,10 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
             ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
 
-        splash_done = property.application.Application_SplashScreen(property.handle, done);
+        auto _splash_done = property.application.Application_SplashScreen(&property, done);
+        // work around with context assert frame_count
+        frame_count ++;
+        if (frame_count > 1) splash_done = _splash_done;
 
         ImGui::EndFrame();
         // Rendering
