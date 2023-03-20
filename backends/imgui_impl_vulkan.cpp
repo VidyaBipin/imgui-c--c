@@ -461,6 +461,8 @@ static void ImGui_ImplVulkan_SetupRenderState(ImDrawData* draw_data, VkPipeline 
     // Setup scale and translation:
     // Our visible imgui space lies from draw_data->DisplayPps (top left) to draw_data->DisplayPos+data_data->DisplaySize (bottom right). DisplayPos is (0,0) for single viewport apps.
     {
+        // modify by Dicky, combined two ps commands to one
+        /*
         float scale[2];
         scale[0] = 2.0f / draw_data->DisplaySize.x;
         scale[1] = 2.0f / draw_data->DisplaySize.y;
@@ -469,6 +471,14 @@ static void ImGui_ImplVulkan_SetupRenderState(ImDrawData* draw_data, VkPipeline 
         translate[1] = -1.0f - draw_data->DisplayPos.y * scale[1];
         vkCmdPushConstants(command_buffer, bd->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(float) * 0, sizeof(float) * 2, scale);
         vkCmdPushConstants(command_buffer, bd->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(float) * 2, sizeof(float) * 2, translate);
+        */
+        float Transform[4];
+        Transform[0] = 2.0f / draw_data->DisplaySize.x;
+        Transform[1] = 2.0f / draw_data->DisplaySize.y;
+        Transform[2] = -1.0f - draw_data->DisplayPos.x * Transform[0];
+        Transform[3] = -1.0f - draw_data->DisplayPos.y * Transform[1];
+        vkCmdPushConstants(command_buffer, bd->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(float) * 4, Transform);
+        // modify by Dicky end
     }
 }
 
@@ -875,6 +885,12 @@ static void ImGui_ImplVulkan_CreatePipeline(VkDevice device, const VkAllocationC
     blend_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     blend_info.attachmentCount = 1;
     blend_info.pAttachments = color_attachment;
+    // add by Dicky, Fixed memory access violation
+    blend_info.blendConstants[0] = 0.0;
+    blend_info.blendConstants[1] = 0.0;
+    blend_info.blendConstants[2] = 0.0;
+    blend_info.blendConstants[3] = 0.0;
+    // add by Dicky end
 
     VkDynamicState dynamic_states[2] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
     VkPipelineDynamicStateCreateInfo dynamic_state = {};

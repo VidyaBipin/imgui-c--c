@@ -3491,6 +3491,12 @@ enum ImGuiModFlags_ { ImGuiModFlags_None = 0, ImGuiModFlags_Ctrl = ImGuiMod_Ctrl
 #include "imgui_user.h"
 #endif
 
+// add By Dicky for version
+namespace ImGui
+{
+IMGUI_API void GetVersion(int& major, int& minor, int& patch, int& build);
+}
+// add By Dicky end
 // add By Dicky for internal icons
 #if IMGUI_ICONS
 #include "icons/icons.h"

@@ -13,6 +13,7 @@
 
 namespace ImGui
 {
+    VKSHADER_API void  ImVulkanGetVersion(int& major, int& minor, int& patch, int& build);
     VKSHADER_API void  ImVulkanImMatToVkMat(const ImMat &src, VkMat &dst);
     VKSHADER_API void  ImVulkanVkMatToImMat(const VkMat &src, ImMat &dst);
     VKSHADER_API void  ImVulkanVkMatToVkImageMat(const VkMat &src, VkImageMat &dst);

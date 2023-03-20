@@ -4250,6 +4250,16 @@ const char* ImGui::GetVersion()
     return IMGUI_VERSION;
 }
 
+// add by Dicky to get Version number
+void ImGui::GetVersion(int& major, int& minor, int& patch, int& build)
+{
+    major = IMGUI_VERSION_MAJOR;
+    minor = IMGUI_VERSION_MINOR;
+    patch = IMGUI_VERSION_PATCH;
+    build = IMGUI_VERSION_BUILD;
+}
+// add by Dicky end
+
 ImGuiIO& ImGui::GetIO()
 {
     IM_ASSERT(GImGui != NULL && "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?");

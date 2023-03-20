@@ -12,6 +12,14 @@ static void check_vk_result(VkResult err)
         abort();
 }
 
+void ImVulkanGetVersion(int& major, int& minor, int& patch, int& build)
+{
+    major = VKSHADER_VERSION_MAJOR;
+    minor = VKSHADER_VERSION_MINOR;
+    patch = VKSHADER_VERSION_PATCH;
+    build = VKSHADER_VERSION_BUILD;
+}
+
 void ImVulkanImMatToVkMat(const ImMat &src, VkMat &dst)
 {
     Option opt;
