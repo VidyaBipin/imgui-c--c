@@ -2413,7 +2413,7 @@ static inline __attribute__((unused)) void sub_int8_avx(int8_t* dst, const int8_
     for (i = 0; i < (long)len - 31; i += 32)
     {
         X = _mm256_loadu_si256((__m256i const *)(src + i)); // load chunk of 32 char
-        X = _mm256_sub_epi8(X, V);
+        X = _mm256_subs_epu8(X, V);
         _mm256_storeu_si256((__m256i *)(dst + i), X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
@@ -2426,7 +2426,7 @@ static inline __attribute__((unused)) void sub_int16_avx(int16_t* dst, const int
     for (i = 0; i < (long)len - 15; i += 16)
     {
         X = _mm256_loadu_si256((__m256i const *)(src + i)); // load chunk of 16 short
-        X = _mm256_sub_epi16(X, V);
+        X = _mm256_subs_epu16(X, V);
         _mm256_storeu_si256((__m256i *)(dst + i), X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
@@ -2505,7 +2505,7 @@ static inline __attribute__((unused)) void sub_int8_sse(int8_t* dst, const int8_
     for (i = 0; i < (long)len - 15; i += 16)
     {
         X = _mm_loadu_si128((__m128i const *)(src + i)); // load chunk of 16 char
-        X = _mm_sub_epi8(X, V);
+        X = _mm_subs_epi8(X, V);
         _mm_storeu_si128((__m128i *)(dst + i), X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
@@ -2518,7 +2518,7 @@ static inline __attribute__((unused)) void sub_int16_sse(int16_t* dst, const int
     for (i = 0; i < (long)len - 7; i += 8)
     {
         X = _mm_loadu_si128((__m128i const *)(src + i)); // load chunk of 8 short
-        X = _mm_sub_epi16(X, V);
+        X = _mm_subs_epi16(X, V);
         _mm_storeu_si128((__m128i *)(dst + i), X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
@@ -2597,7 +2597,7 @@ static inline __attribute__((unused)) void sub_int8_neon(int8_t* dst, const int8
     for (i = 0; i < (long)len - 15; i += 16)
     {
         X = vld1q_s8(src + i); // load chunk of 16 char
-        X = vsubq_s8(X, V);
+        X = vqsubq_s8(X, V);
         vst1q_s8(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
@@ -2610,7 +2610,7 @@ static inline __attribute__((unused)) void sub_int16_neon(int16_t* dst, const in
     for (i = 0; i < (long)len - 7; i += 8)
     {
         X = vld1q_s16(src + i); // load chunk of 8 short
-        X = vsubq_s16(X, V);
+        X = vqsubq_s16(X, V);
         vst1q_s16(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
@@ -2722,6 +2722,7 @@ static inline __attribute__((unused)) void sub_float16_c(uint16_t* dst, const ui
 #if __AVX__
 static inline __attribute__((unused)) void mul_int8_avx(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
 {
+    // TODO::Dicky need optimize
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
@@ -2753,6 +2754,7 @@ static inline __attribute__((unused)) void mul_int32_avx(int32_t* dst, const int
 }
 static inline __attribute__((unused)) void mul_int64_avx(int64_t* dst, const int64_t* src, const size_t len, const int64_t v)
 {
+    // TODO::Dicky need optimize
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
@@ -2798,6 +2800,7 @@ static inline __attribute__((unused)) void mul_float16_avx(uint16_t* dst, const 
 #elif __SSE__
 static inline __attribute__((unused)) void mul_int8_sse(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
 {
+    // TODO::Dicky need optimize
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
@@ -2829,6 +2832,7 @@ static inline __attribute__((unused)) void mul_int32_sse(int32_t* dst, const int
 }
 static inline __attribute__((unused)) void mul_int64_sse(int64_t* dst, const int64_t* src, const size_t len, const int64_t v)
 {
+    // TODO::Dicky need optimize
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
