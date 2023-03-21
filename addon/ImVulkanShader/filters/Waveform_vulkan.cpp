@@ -138,6 +138,7 @@ double Waveform_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int le
     cmd->submit_and_wait();
 #ifdef VULKAN_SHADER_BENCHMARK
     ret = cmd->benchmark();
+    //cmd->benchmark_print();
 #endif
     cmd->reset();
     dst.copy_attribute(src);

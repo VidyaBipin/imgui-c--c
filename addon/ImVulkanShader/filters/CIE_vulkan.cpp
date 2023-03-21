@@ -1278,6 +1278,7 @@ double CIE_vulkan::scope(const ImMat& src, ImMat& dst, float intensity, bool sho
     cmd->submit_and_wait();
 #ifdef VULKAN_SHADER_BENCHMARK
     ret = cmd->benchmark();
+    //cmd->benchmark_print();
 #endif
     cmd->reset();
     dst.copy_attribute(src);
