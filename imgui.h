@@ -23,7 +23,7 @@
 // Library Version
 // (Integer encoded as XYYZZ for use in #if preprocessor conditionals, e.g. '#if IMGUI_VERSION_NUM > 12345')
 #define IMGUI_VERSION               "1.89.5 WIP"
-#define IMGUI_VERSION_NUM           18941
+#define IMGUI_VERSION_NUM           18943
 #define IMGUI_HAS_TABLE
 #define IMGUI_HAS_VIEWPORT          // Viewport WIP branch
 #define IMGUI_HAS_DOCK              // Docking WIP branch
@@ -1744,12 +1744,12 @@ enum ImGuiStyleVar_
     ImGuiStyleVar_SeparatorTextBorderSize,// float  SeparatorTextBorderSize
     ImGuiStyleVar_SeparatorTextAlign,  // ImVec2    SeparatorTextAlign
     ImGuiStyleVar_SeparatorTextPadding,// ImVec2    SeparatorTextPadding
-// add By Dicky
+	// add By Dicky
     ImGuiStyleVar_LayoutAlign,         // float     LayoutAlign
     ImGuiStyleVar_TexGlyphShadowOffset,// ImVec2    TexGlyphShadowOffset
     ImGuiStyleVar_TexGlyphOutlineWidth,// float     TexGlyphOutlineWidth
     ImGuiStyleVar_TextInternationalize,// int       TextInternationalize 
-// add By Dicky end
+	// add By Dicky end
     ImGuiStyleVar_COUNT
 };
 
@@ -3491,13 +3491,11 @@ enum ImGuiModFlags_ { ImGuiModFlags_None = 0, ImGuiModFlags_Ctrl = ImGuiMod_Ctrl
 #include "imgui_user.h"
 #endif
 
-// add By Dicky for version
+// add By Dicky for version and internal icons
 namespace ImGui
 {
 IMGUI_API void GetVersion(int& major, int& minor, int& patch, int& build);
 }
-// add By Dicky end
-// add By Dicky for internal icons
 #if IMGUI_ICONS
 #include "icons/icons.h"
 #endif

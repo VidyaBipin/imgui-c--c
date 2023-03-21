@@ -64,7 +64,7 @@ static bool OldBeginChild(const char* str_id, const ImVec2& size_arg = ImVec2(0,
         ImGui::FocusWindow(child_window);
         ImGui::NavInitWindow(child_window, false);
         ImGui::SetActiveID(id+1, child_window); // Steal ActiveId with a dummy id so that key-press won't activate child item
-        GImGui->ActiveIdSource = ImGuiInputSource_Nav;
+        GImGui->ActiveIdSource = GImGui->NavInputSource;
     }
 
     return ret;
