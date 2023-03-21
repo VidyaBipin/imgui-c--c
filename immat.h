@@ -2597,7 +2597,7 @@ static inline __attribute__((unused)) void sub_int8_neon(int8_t* dst, const int8
     for (i = 0; i < (long)len - 15; i += 16)
     {
         X = vld1q_s8(src + i); // load chunk of 16 char
-        X = vqsubq_s8(X, V);
+        X = vqsubq_u8(X, V);
         vst1q_s8(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
@@ -2610,7 +2610,7 @@ static inline __attribute__((unused)) void sub_int16_neon(int16_t* dst, const in
     for (i = 0; i < (long)len - 7; i += 8)
     {
         X = vld1q_s16(src + i); // load chunk of 8 short
-        X = vqsubq_s16(X, V);
+        X = vqsubq_u16(X, V);
         vst1q_s16(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
