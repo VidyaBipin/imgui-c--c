@@ -2047,7 +2047,7 @@ int VkCompute::submit_and_wait(uint64_t timeout)
         VkResult ret = vkQueueSubmit(compute_queue, 1, &submitInfo, d->compute_command_fence);
         if (ret != VK_SUCCESS)
         {
-            fprintf(stderr, "vkQueueSubmit failed %d", ret);
+            fprintf(stderr, "vkQueueSubmit failed %d\n", ret);
             vkdev->reclaim_queue(vkdev->info.compute_queue_family_index(), compute_queue);
             return -1;
         }
@@ -2235,7 +2235,7 @@ int VkCompute::get_query_pool_results(uint32_t first_query, uint32_t query_count
                                          query_count * sizeof(uint64_t), results.data() + first_query, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
     if (ret != VK_SUCCESS && ret != VK_NOT_READY)
     {
-        fprintf(stderr, "vkGetQueryPoolResults failed %d", ret);
+        fprintf(stderr, "vkGetQueryPoolResults failed %d\n", ret);
         return -1;
     }
 
@@ -3054,7 +3054,7 @@ int VkTransfer::submit_and_wait(uint64_t timeout)
             VkResult ret = vkQueueSubmit(compute_queue, 1, &submitInfo, d->compute_command_fence);
             if (ret != VK_SUCCESS)
             {
-                fprintf(stderr, "vkQueueSubmit failed %d", ret);
+                fprintf(stderr, "vkQueueSubmit failed %d\n", ret);
                 vkdev->reclaim_queue(vkdev->info.compute_queue_family_index(), compute_queue);
                 return -1;
             }
@@ -3086,7 +3086,7 @@ int VkTransfer::submit_and_wait(uint64_t timeout)
             VkResult ret = vkQueueSubmit(transfer_queue, 1, &submitInfo, d->upload_command_fence);
             if (ret != VK_SUCCESS)
             {
-                fprintf(stderr, "vkQueueSubmit failed %d", ret);
+                fprintf(stderr, "vkQueueSubmit failed %d\n", ret);
                 vkdev->reclaim_queue(vkdev->info.transfer_queue_family_index(), transfer_queue);
                 vkdev->reclaim_queue(vkdev->info.compute_queue_family_index(), compute_queue);
                 return -1;
@@ -3109,7 +3109,7 @@ int VkTransfer::submit_and_wait(uint64_t timeout)
             VkResult ret = vkQueueSubmit(compute_queue, 1, &submitInfo, d->compute_command_fence);
             if (ret != VK_SUCCESS)
             {
-                fprintf(stderr, "vkQueueSubmit failed %d", ret);
+                fprintf(stderr, "vkQueueSubmit failed %d\n", ret);
                 vkdev->reclaim_queue(vkdev->info.transfer_queue_family_index(), transfer_queue);
                 vkdev->reclaim_queue(vkdev->info.compute_queue_family_index(), compute_queue);
                 return -1;
