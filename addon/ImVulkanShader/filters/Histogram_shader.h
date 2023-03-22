@@ -27,11 +27,15 @@ void main() \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
     sfpvec4 rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
-    rgba.a = sfp(0.299) * rgba.r + sfp(0.587) * rgba.g + sfp(0.114) * rgba.b; \n\
-    uint rid = clamp(uint(floor(rgba.r * sfp(p.out_w - 1))), 0, p.out_w - 1) + 0 * p.out_cstep; \n\
-    uint gid = clamp(uint(floor(rgba.g * sfp(p.out_w - 1))), 0, p.out_w - 1) + 1 * p.out_cstep; \n\
-    uint bid = clamp(uint(floor(rgba.b * sfp(p.out_w - 1))), 0, p.out_w - 1) + 2 * p.out_cstep; \n\
-    uint yid = clamp(uint(floor(rgba.a * sfp(p.out_w - 1))), 0, p.out_w - 1) + 3 * p.out_cstep; \n\
+    sfpvec4 histogram = abs(rgba); \n\
+    histogram.r = rgba.r + sfp(0.001); \n\
+    histogram.g = rgba.g + sfp(0.001); \n\
+    histogram.b = rgba.b + sfp(0.001); \n\
+    histogram.a = sfp(0.299) * histogram.r + sfp(0.587) * histogram.g + sfp(0.114) * histogram.b; \n\
+    uint rid = clamp(uint(floor(histogram.r * sfp(p.out_w - 1))), 0, p.out_w - 1) + 0 * p.out_cstep; \n\
+    uint gid = clamp(uint(floor(histogram.g * sfp(p.out_w - 1))), 0, p.out_w - 1) + 1 * p.out_cstep; \n\
+    uint bid = clamp(uint(floor(histogram.b * sfp(p.out_w - 1))), 0, p.out_w - 1) + 2 * p.out_cstep; \n\
+    uint yid = clamp(uint(floor(histogram.a * sfp(p.out_w - 1))), 0, p.out_w - 1) + 3 * p.out_cstep; \n\
     memoryBarrierBuffer(); \n\
     atomicAdd(histogram_int32_data[rid], 1); \n\
     atomicAdd(histogram_int32_data[gid], 1); \n\
@@ -100,6 +104,7 @@ layout (push_constant) uniform parameter \n\
 } p;\
 "
 
+#if 0
 #define CONV_MAIN \
 " \n\
 void main() \n\
@@ -158,6 +163,30 @@ void main() \n\
     { \n\
         histogram_float32_data[data_offset.a] = (p.log_view == 1 ? log2(float(v_y + 1)) : float(v_y)) * p.scale; \n\
     } \n\
+} \
+"
+#endif
+#define CONV_MAIN \
+" \n\
+void main() \n\
+{ \n\
+    int gx = int(gl_GlobalInvocationID.x); \n\
+    int gy = int(gl_GlobalInvocationID.y); \n\
+    if (gx >= p.w || gy >= p.h) \n\
+        return; \n\
+    ivec4 data_offset = (gy * p.w + gx) + ivec4(0, 1, 2, 3) * p.cstep; \n\
+    // R Conv \n\
+    int v_r = histogram_int32_data[data_offset.r]; \n\
+    histogram_float32_data[data_offset.r] = (p.log_view == 1 ? log2(float(v_r + 1)) : float(v_r)) * p.scale; \n\
+    // G Conv \n\
+    int v_g = histogram_int32_data[data_offset.g]; \n\
+    histogram_float32_data[data_offset.g] = (p.log_view == 1 ? log2(float(v_g + 1)) : float(v_g)) * p.scale; \n\
+    // B Conv \n\
+    int v_b = histogram_int32_data[data_offset.b]; \n\
+    histogram_float32_data[data_offset.b] = (p.log_view == 1 ? log2(float(v_b + 1)) : float(v_b)) * p.scale; \n\
+    // Y Conv \n\
+    int v_y = histogram_int32_data[data_offset.a]; \n\
+    histogram_float32_data[data_offset.a] = (p.log_view == 1 ? log2(float(v_y + 1)) : float(v_y)) * p.scale; \n\
 } \
 "
 

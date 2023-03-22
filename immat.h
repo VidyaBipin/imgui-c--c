@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <iostream>
 #include <memory>
 #include <mutex>
 #include <random>
@@ -651,6 +652,8 @@ public:
             return *(const _Tp*)((unsigned char*)data + (y * w + x) * elemsize * c + _c); 
     };
 
+    // debug
+    void print(std::string name = {});
 
     // convenient access float vec element
     float& operator[](size_t i);
@@ -4980,6 +4983,79 @@ inline void ImMat::draw_circle(float x1, float y1, float r, float t, ImPixel col
 inline void ImMat::draw_circle(ImPoint p, float r, float t, ImPixel color)
 {
     draw_circle(p.x, p.y, r, t, color);
+}
+
+inline void ImMat::print(std::string name)
+{
+    std::cout << name << std::endl << "[" << std::endl;
+    if (dims == 1)
+    {
+        for (int _w = 0; _w < w; _w++)
+        {
+            switch(type)
+            {
+                case IM_DT_INT8:    std::cout << at<int8_t> (_w) << " "; break;
+                case IM_DT_INT16:   std::cout << at<int16_t>(_w) << " "; break;
+                case IM_DT_INT32:   std::cout << at<int32_t>(_w) << " "; break;
+                case IM_DT_INT64:   std::cout << at<int64_t>(_w) << " "; break;
+                case IM_DT_FLOAT32: std::cout << at<float>  (_w) << " "; break;
+                case IM_DT_FLOAT64: std::cout << at<double> (_w) << " "; break;
+                case IM_DT_FLOAT16: std::cout << im_float16_to_float32(at<uint16_t>  (_w)) << " "; break;
+                default: break;
+            }
+        }
+    }
+    else if (dims == 2)
+    {
+        for (int _h = 0; _h < h; _h++)
+        {
+            std::cout << "    [ ";
+            for (int _w = 0; _w < w; _w++)
+            {
+                switch(type)
+                {
+                    case IM_DT_INT8:    std::cout << at<int8_t> (_w, _h) << " "; break;
+                    case IM_DT_INT16:   std::cout << at<int16_t>(_w, _h) << " "; break;
+                    case IM_DT_INT32:   std::cout << at<int32_t>(_w, _h) << " "; break;
+                    case IM_DT_INT64:   std::cout << at<int64_t>(_w, _h) << " "; break;
+                    case IM_DT_FLOAT32: std::cout << at<float>  (_w, _h) << " "; break;
+                    case IM_DT_FLOAT64: std::cout << at<double> (_w, _h) << " "; break;
+                    case IM_DT_FLOAT16: std::cout << im_float16_to_float32(at<uint16_t>  (_w, _h)) << " "; break;
+                    default: break;
+                }
+            }
+            std::cout << "]" << std::endl;
+        }
+    }
+    else if (dims == 3)
+    {
+        for (int _c = 0; _c < c; _c++)
+        {
+            std::cout << "  [ " << std::endl;
+            for (int _h = 0; _h < h; _h++)
+            {
+                std::cout << "    [ ";
+                for (int _w = 0; _w < w; _w++)
+                {
+                    switch(type)
+                    {
+                        case IM_DT_INT8:    std::cout << at<int8_t> (_w, _h, _c) << " "; break;
+                        case IM_DT_INT16:   std::cout << at<int16_t>(_w, _h, _c) << " "; break;
+                        case IM_DT_INT32:   std::cout << at<int32_t>(_w, _h, _c) << " "; break;
+                        case IM_DT_INT64:   std::cout << at<int64_t>(_w, _h, _c) << " "; break;
+                        case IM_DT_FLOAT32: std::cout << at<float>  (_w, _h, _c) << " "; break;
+                        case IM_DT_FLOAT64: std::cout << at<double> (_w, _h, _c) << " "; break;
+                        case IM_DT_FLOAT16: std::cout << im_float16_to_float32(at<uint16_t>  (_w, _h, _c)) << " "; break;
+                        default: break;
+                    }
+                }
+                std::cout << "]" << std::endl;
+            }
+            std::cout << "  ]" << std::endl;
+        }
+    }
+    
+    std::cout << "]" << std::endl;
 }
 
 } // namespace ImGui 
