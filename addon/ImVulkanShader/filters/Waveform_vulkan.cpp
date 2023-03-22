@@ -53,7 +53,7 @@ Waveform_vulkan::~Waveform_vulkan()
     }
 }
 
-void Waveform_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, float fintensity, bool separate)
+void Waveform_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, float fintensity, bool separate, bool show_y)
 {
     ImGui::VkMat dst_gpu_int32;
     dst_gpu_int32.create_type(dst.w, dst.h, dst.c, IM_DT_INT32, opt.blob_vkallocator);
@@ -72,7 +72,7 @@ void Waveform_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, f
     else if (src.type == IM_DT_FLOAT16)  bindings[2] = src;
     else if (src.type == IM_DT_FLOAT32)  bindings[3] = src;
     bindings[4] = dst_gpu_int32;
-    std::vector<vk_constant_type> constants(11);
+    std::vector<vk_constant_type> constants(12);
     constants[0].i = src.w;
     constants[1].i = src.h;
     constants[2].i = src.c;
@@ -84,6 +84,7 @@ void Waveform_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, f
     constants[8].i = dst_gpu_int32.color_format;
     constants[9].i = dst_gpu_int32.type;
     constants[10].i = separate ? 1 : 0;
+    constants[11].i = show_y ? 1 : 0;
     cmd->record_pipeline(pipe, bindings, constants, src);
 
     std::vector<VkMat> conv_bindings(2);
@@ -100,7 +101,7 @@ void Waveform_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, f
     cmd->record_pipeline(pipe_conv, conv_bindings, conv_constants, dst);
 }
 
-double Waveform_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int level, float fintensity, bool separate)
+double Waveform_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int level, float fintensity, bool separate, bool show_y)
 {
     double ret = 0.0;
     if (!vkdev || !pipe || !pipe_zero || !pipe_conv || !cmd)
@@ -124,7 +125,7 @@ double Waveform_vulkan::scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int le
     cmd->benchmark_start();
 #endif
 
-    upload_param(src_gpu, dst_gpu, fintensity, separate);
+    upload_param(src_gpu, dst_gpu, fintensity, separate, show_y);
 
 #ifdef VULKAN_SHADER_BENCHMARK
     cmd->benchmark_end();

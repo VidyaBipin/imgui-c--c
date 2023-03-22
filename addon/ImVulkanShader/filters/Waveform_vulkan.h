@@ -11,7 +11,7 @@ public:
     Waveform_vulkan(int gpu = 0);
     ~Waveform_vulkan();
 
-    double scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int level = 256, float fintensity = 0.1, bool separate = false);
+    double scope(const ImGui::ImMat& src, ImGui::ImMat& dst, int level = 256, float fintensity = 0.1, bool separate = false, bool show_y = false);
 
 private:
     ImGui::VulkanDevice* vkdev      {nullptr};
@@ -22,6 +22,6 @@ private:
     ImGui::Pipeline* pipe_conv      {nullptr};
 
 private:
-    void upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, float fintensity, bool separate);
+    void upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, float fintensity, bool separate, bool show_y);
 };
 } // namespace ImGui

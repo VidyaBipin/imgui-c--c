@@ -28,9 +28,9 @@ void main() \n\
         return; \n\
     sfpvec4 rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     sfpvec4 histogram = abs(rgba); \n\
-    histogram.r = rgba.r + sfp(0.001); \n\
-    histogram.g = rgba.g + sfp(0.001); \n\
-    histogram.b = rgba.b + sfp(0.001); \n\
+    histogram.r += sfp(0.001); \n\
+    histogram.g += sfp(0.001); \n\
+    histogram.b += sfp(0.001); \n\
     histogram.a = sfp(0.299) * histogram.r + sfp(0.587) * histogram.g + sfp(0.114) * histogram.b; \n\
     uint rid = clamp(uint(floor(histogram.r * sfp(p.out_w - 1))), 0, p.out_w - 1) + 0 * p.out_cstep; \n\
     uint gid = clamp(uint(floor(histogram.g * sfp(p.out_w - 1))), 0, p.out_w - 1) + 1 * p.out_cstep; \n\
@@ -104,68 +104,6 @@ layout (push_constant) uniform parameter \n\
 } p;\
 "
 
-#if 0
-#define CONV_MAIN \
-" \n\
-void main() \n\
-{ \n\
-    int gx = int(gl_GlobalInvocationID.x); \n\
-    int gy = int(gl_GlobalInvocationID.y); \n\
-    if (gx >= p.w || gy >= p.h) \n\
-        return; \n\
-    ivec4 data_offset = (gy * p.w + gx) + ivec4(0, 1, 2, 3) * p.cstep; \n\
-    ivec4 data_nestest = (gy * p.w + (gx == 0 ? gx : gx - 1)) + ivec4(0, 1, 2, 3) * p.cstep; \n\
-    // R Conv \n\
-    int v_r = histogram_int32_data[data_offset.r]; \n\
-    if (v_r == 0) \n\
-    { \n\
-        v_r = histogram_int32_data[data_nestest.r] / 2; \n\
-        histogram_float32_data[data_nestest.r] = \n\
-        histogram_float32_data[data_offset.r] = (p.log_view == 1 ? log2(float(v_r + 1)) : float(v_r)) * p.scale; \n\
-    } \n\
-    else \n\
-    { \n\
-        histogram_float32_data[data_offset.r] = (p.log_view == 1 ? log2(float(v_r + 1)) : float(v_r)) * p.scale; \n\
-    } \n\
-    // G Conv \n\
-    int v_g = histogram_int32_data[data_offset.g]; \n\
-    if (v_g == 0) \n\
-    { \n\
-        v_g = histogram_int32_data[data_nestest.g] / 2; \n\
-        histogram_float32_data[data_nestest.g] = \n\
-        histogram_float32_data[data_offset.g] = (p.log_view == 1 ? log2(float(v_g + 1)) : float(v_g)) * p.scale; \n\
-    } \n\
-    else \n\
-    { \n\
-        histogram_float32_data[data_offset.g] = (p.log_view == 1 ? log2(float(v_g + 1)) : float(v_g)) * p.scale; \n\
-    } \n\
-    // B Conv \n\
-    int v_b = histogram_int32_data[data_offset.b]; \n\
-    if (v_b == 0) \n\
-    { \n\
-        v_b = histogram_int32_data[data_nestest.b] / 2; \n\
-        histogram_float32_data[data_nestest.b] = \n\
-        histogram_float32_data[data_offset.b] = (p.log_view == 1 ? log2(float(v_b + 1)) : float(v_b)) * p.scale; \n\
-    } \n\
-    else \n\
-    { \n\
-        histogram_float32_data[data_offset.b] = (p.log_view == 1 ? log2(float(v_b + 1)) : float(v_b)) * p.scale; \n\
-    } \n\
-    // Y Conv \n\
-    int v_y = histogram_int32_data[data_offset.a]; \n\
-    if (v_y == 0) \n\
-    { \n\
-        v_y = histogram_int32_data[data_nestest.a] / 2; \n\
-        histogram_float32_data[data_nestest.a] = \n\
-        histogram_float32_data[data_offset.a] = (p.log_view == 1 ? log2(float(v_y + 1)) : float(v_y)) * p.scale; \n\
-    } \n\
-    else \n\
-    { \n\
-        histogram_float32_data[data_offset.a] = (p.log_view == 1 ? log2(float(v_y + 1)) : float(v_y)) * p.scale; \n\
-    } \n\
-} \
-"
-#endif
 #define CONV_MAIN \
 " \n\
 void main() \n\

@@ -63,6 +63,7 @@ void main() \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
     sfpvec4 rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.format, p.type); \n\
+    rgba += sfpvec4(sfp(0.001f), sfp(0.001f), sfp(0.001f), sfp(0.001f)); \n\
     sfpvec4 hs = rgb_to_hsl(rgba); \n\
     sfpvec2 vector_point = hs_to_point(hs); \n\
     int length = int(hs.z * sfp(20.f)); \n\
