@@ -110,7 +110,10 @@ layout (push_constant) uniform parameter \n\
     int cstep; \n\
     int out_cstep; \n\
     int out_format; \n\
+    \n\
     float intensity; \n\
+    int separate; \n\
+    int show_y; \n\
 } p;\
 "
 
@@ -122,24 +125,39 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
+    int separate_in_y = gx >= (p.w * 3 / 4) ? 1 : 0; \n\
     ivec4 in_offset = (gy * p.w + gx) * p.cstep + ivec4(0, 1, 2, 3); \n\
     ivec4 out_offset = (gy * p.w + gx) * p.out_cstep + (p.out_format == CF_ABGR ? ivec4(0, 1, 2, 3) : ivec4(2, 1, 0, 3)); \n\
-    // R Conv \n\
-    int v_r = waveform_int32_data[in_offset.r]; \n\
-    waveform_int8_data[out_offset.r] = uint8_t(clamp(v_r * p.intensity, 0, 255)); \n\
-    // G Conv \n\
-    int v_g = waveform_int32_data[in_offset.g]; \n\
-    waveform_int8_data[out_offset.g] = uint8_t(clamp(v_g * p.intensity, 0, 255)); \n\
-    // B Conv \n\
-    int v_b = waveform_int32_data[in_offset.b]; \n\
-    waveform_int8_data[out_offset.b] = uint8_t(clamp(v_b * p.intensity, 0, 255)); \n\
-    waveform_int8_data[out_offset.a] = uint8_t(255); \n\
-    // Y Conv \n\
-    //int v_y = waveform_int32_data[in_offset.a]; \n\
-    //waveform_int8_data[out_offset.r] = uint8_t(clamp(v_y * p.intensity, 0, 255)); \n\
-    //waveform_int8_data[out_offset.g] = uint8_t(clamp(v_y * p.intensity, 0, 255)); \n\
-    //waveform_int8_data[out_offset.b] = uint8_t(clamp(v_y * p.intensity, 0, 255)); \n\
-    //waveform_int8_data[out_offset.a] = uint8_t(255); \n\
+    if (p.show_y == 0 || p.separate == 1) \n\
+    { \n\
+        // R Conv \n\
+        int v_r = waveform_int32_data[in_offset.r]; \n\
+        waveform_int8_data[out_offset.r] = uint8_t(clamp(v_r * p.intensity, 0, 255)); \n\
+        // G Conv \n\
+        int v_g = waveform_int32_data[in_offset.g]; \n\
+        waveform_int8_data[out_offset.g] = uint8_t(clamp(v_g * p.intensity, 0, 255)); \n\
+        // B Conv \n\
+        int v_b = waveform_int32_data[in_offset.b]; \n\
+        waveform_int8_data[out_offset.b] = uint8_t(clamp(v_b * p.intensity, 0, 255)); \n\
+        waveform_int8_data[out_offset.a] = uint8_t(255); \n\
+    } \n\
+    else if (p.show_y == 1 && p.separate == 0) \n\
+    { \n\
+        // Y Conv \n\
+        int v_y = waveform_int32_data[in_offset.a]; \n\
+        waveform_int8_data[out_offset.r] = uint8_t(clamp(v_y * p.intensity, 0, 255)); \n\
+        waveform_int8_data[out_offset.g] = uint8_t(clamp(v_y * p.intensity, 0, 255)); \n\
+        waveform_int8_data[out_offset.b] = uint8_t(clamp(v_y * p.intensity, 0, 255)); \n\
+        waveform_int8_data[out_offset.a] = uint8_t(255); \n\
+    } \n\
+    if (p.show_y == 1 && p.separate == 1 && separate_in_y == 1) \n\
+    { \n\
+        int v_y = waveform_int32_data[in_offset.a]; \n\
+        waveform_int8_data[out_offset.r] = uint8_t(clamp(v_y * p.intensity, 0, 255)); \n\
+        waveform_int8_data[out_offset.g] = uint8_t(clamp(v_y * p.intensity, 0, 255)); \n\
+        waveform_int8_data[out_offset.b] = uint8_t(clamp(v_y * p.intensity, 0, 255)); \n\
+        waveform_int8_data[out_offset.a] = uint8_t(255); \n\
+    } \n\
 } \
 "
 

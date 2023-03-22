@@ -91,13 +91,15 @@ void Waveform_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, f
     conv_bindings[0] = dst_gpu_int32;
     conv_bindings[1] = dst;
 
-    std::vector<vk_constant_type> conv_constants(6);
+    std::vector<vk_constant_type> conv_constants(8);
     conv_constants[0].i = dst_gpu_int32.w;
     conv_constants[1].i = dst_gpu_int32.h;
     conv_constants[2].i = dst_gpu_int32.c;
     conv_constants[3].i = dst.c;
     conv_constants[4].i = dst.color_format;
     conv_constants[5].f = fintensity;
+    conv_constants[6].i = separate ? 1 : 0;
+    conv_constants[7].i = show_y ? 1 : 0;
     cmd->record_pipeline(pipe_conv, conv_bindings, conv_constants, dst);
 }
 
