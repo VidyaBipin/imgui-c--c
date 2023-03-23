@@ -13771,12 +13771,12 @@ void ImGui::LoadIniLanguagesFromMemory(const char* ini_data, size_t ini_size)
 
 void ImGui::SaveIniLanguagesToDisk(const char* ini_filename)
 {
-    // TODO::Dicky
+    // TODO::Dicky SaveIniLanguagesToDisk
 }
 
 const char* ImGui::SaveIniLanguagesToMemory(size_t* out_ini_size)
 {
-    // TODO::Dicky
+    // TODO::Dicky SaveIniLanguagesToMemory
     return nullptr;
 }
 // Add by Dicky end

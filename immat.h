@@ -2725,7 +2725,7 @@ static inline __attribute__((unused)) void sub_float16_c(uint16_t* dst, const ui
 #if __AVX__
 static inline __attribute__((unused)) void mul_int8_avx(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
 {
-    // TODO::Dicky need optimize
+    // TODO::Dicky need optimize int8 mul for avx
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
@@ -2757,7 +2757,7 @@ static inline __attribute__((unused)) void mul_int32_avx(int32_t* dst, const int
 }
 static inline __attribute__((unused)) void mul_int64_avx(int64_t* dst, const int64_t* src, const size_t len, const int64_t v)
 {
-    // TODO::Dicky need optimize
+    // TODO::Dicky need optimize mul int64 for avc
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
@@ -2803,7 +2803,7 @@ static inline __attribute__((unused)) void mul_float16_avx(uint16_t* dst, const 
 #elif __SSE__
 static inline __attribute__((unused)) void mul_int8_sse(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
 {
-    // TODO::Dicky need optimize
+    // TODO::Dicky need optimize nul int8 for sse
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
@@ -2835,7 +2835,7 @@ static inline __attribute__((unused)) void mul_int32_sse(int32_t* dst, const int
 }
 static inline __attribute__((unused)) void mul_int64_sse(int64_t* dst, const int64_t* src, const size_t len, const int64_t v)
 {
-    // TODO::Dicky need optimize
+    // TODO::Dicky need optimize mul int64 for sse
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
@@ -4724,7 +4724,7 @@ inline void ImMat::clean(ImPixel color)
         }
         break;
         case IM_DT_FLOAT16:
-        // TODO::Dicky
+        // TODO::Dicky add float16 clean with ImPixel
         break;
         default: break;
     }
@@ -4762,7 +4762,7 @@ inline void ImMat::get_pixel(int x, int y, ImPixel& color)
             if (c > 3) color.a = (float)at<uint64_t>(x, y, 3) / (float)UINT64_MAX;
         break;
         case IM_DT_FLOAT16:
-            // TODO::Dicky
+            // TODO::Dicky add FLOAT16 get pixel from ImPixel
         break;
         case IM_DT_FLOAT32:
             if (c > 0) color.r = at<float>(x, y, 0);
@@ -4819,7 +4819,7 @@ inline void ImMat::draw_dot(int x, int y, ImPixel color)
             if (c > 3) at<uint64_t>(x, y, 3) = color.a * (float)UINT64_MAX;
         break;
         case IM_DT_FLOAT16:
-            // TODO::Dicky
+            // TODO::Dicky add FLOAT16 draw dot
         break;
         case IM_DT_FLOAT32:
             if (c > 0) at<float>(x, y, 0) = color.r;
@@ -4871,7 +4871,7 @@ inline void ImMat::alphablend(int x, int y, float alpha, ImPixel color)
             if (c > 3) at<uint64_t>(x, y, 3) = (uint64_t)(color.a * (float)UINT64_MAX);
         break;
         case IM_DT_FLOAT16:
-            // TODO::Dicky
+            // TODO::Dicky add FLOAT16 alphablend
         break;
         case IM_DT_FLOAT32:
             if (c > 0) at<float>(x, y, 0) = at<float>(x, y, 0) * (1 - alpha) + color.r * alpha;

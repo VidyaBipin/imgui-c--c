@@ -595,7 +595,7 @@ private:
             //JSON_ASSERT(c < 128);
             // disable check character is ascii in case we using UTF-8
             // this will cause problem when UTF-8 character contain '"'
-            // TODO::Dicky
+            // TODO::Dicky json accept_characters for UTF-8
             result.push_back(static_cast<char>(c));
         }
 
