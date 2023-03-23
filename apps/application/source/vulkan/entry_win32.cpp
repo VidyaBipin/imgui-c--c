@@ -276,6 +276,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
 
+    // first call application initialize
+    if (property.application.Application_Initialize)
+        property.application.Application_Initialize(&property.handle);
+
     // start splash screen if setting
     bool splash_done = false;
 #ifndef __EMSCRIPTEN__
@@ -370,9 +374,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 #if IMGUI_VULKAN_SHADER
     ImGui::ImVulkanShaderInit();
 #endif
-
-    if (property.application.Application_Initialize)
-        property.application.Application_Initialize(&property.handle);
 
     // Show the window
     UINT flags = SWP_SHOWWINDOW;

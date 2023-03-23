@@ -204,6 +204,10 @@ int main(int argc, char** argv)
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
 
+    // first call application initialize
+    if (property.application.Application_Initialize)
+        property.application.Application_Initialize(&property.handle);
+
     // start splash screen if setting
     bool splash_done = false;
 #ifndef __EMSCRIPTEN__
@@ -344,9 +348,6 @@ int main(int argc, char** argv)
 #if IMGUI_VULKAN_SHADER
     ImGui::ImVulkanShaderInit();
 #endif
-
-    if (property.application.Application_Initialize)
-        property.application.Application_Initialize(&property.handle);
 
     // Main loop
     bool done = false;

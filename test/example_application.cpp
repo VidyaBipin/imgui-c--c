@@ -180,7 +180,6 @@ public:
         // init color inspact
         color_bar(image, 0, 0, 255, 191);
         gray_bar(image, 0, 192, 255, 255, 13);
-        ImageTexture = ImGui::ImCreateTexture(image.data, image.w, image.h);
         // init draw mat
         draw_mat.clean(ImPixel(0.f, 0.f, 0.f, 1.f));
     };
@@ -481,6 +480,10 @@ bool Example_Frame(void* handle, bool app_will_quit)
     Example * example = (Example *)handle;
     if (!example)
         return true;
+    if (!example->ImageTexture) 
+    {
+        example->ImageTexture = ImGui::ImCreateTexture(example->image.data, example->image.w, example->image.h);
+    }
     // Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
     if (example->show_demo_window)
         ImGui::ShowDemoWindow(&example->show_demo_window);
