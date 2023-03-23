@@ -434,20 +434,20 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
                 delegate->AlignValue(p);
                 if (flags & CURVE_EDIT_FLAG_VALUE_LIMITED)
                 {
-                    if (p.x < _vmin.x) p.x = _vmin.x;
-                    if (p.y < _vmin.y) p.y = _vmin.y;
-                    if (p.x > _vmax.x) p.x = _vmax.x;
-                    if (p.y > _vmax.y) p.y = _vmax.y;
+                    if (p.x < vmin.x) p.x = vmin.x;
+                    if (p.y < vmin.y) p.y = vmin.y;
+                    if (p.x > vmax.x) p.x = vmax.x;
+                    if (p.y > vmax.y) p.y = vmax.y;
                 }
                 if (flags & CURVE_EDIT_FLAG_DOCK_BEGIN_END)
                 {
                     if (sel.pointIndex == 0)
                     {
-                        p.x = _vmin.x;
+                        p.x = vmin.x;
                     }
                     else if (sel.pointIndex == ptCount - 1)
                     {
-                        p.x = _vmax.x;
+                        p.x = vmax.x;
                     }
                 }
                 const CurveType t = delegate->originalPoints[originalIndex].type;
@@ -553,20 +553,20 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
                     ImVec2 pt = rangeToPoint(pointToRange(delegate->originalPoints[p].point) + (io.MousePos - delegate->mousePosOrigin) * sizeOfPixel);
                     if (flags & CURVE_EDIT_FLAG_VALUE_LIMITED)
                     {
-                        if (pt.x < _vmin.x) pt.x = _vmin.x;
-                        if (pt.y < _vmin.y) pt.y = _vmin.y;
-                        if (pt.x > _vmax.x) pt.x = _vmax.x;
-                        if (pt.y > _vmax.y) pt.y = _vmax.y;
+                        if (pt.x < vmin.x) pt.x = vmin.x;
+                        if (pt.y < vmin.y) pt.y = vmin.y;
+                        if (pt.x > vmax.x) pt.x = vmax.x;
+                        if (pt.y > vmax.y) pt.y = vmax.y;
                     }
                     if (flags & CURVE_EDIT_FLAG_DOCK_BEGIN_END)
                     {
                         if (p == 0)
                         {
-                            pt.x = _vmin.x;
+                            pt.x = vmin.x;
                         }
                         else if (p == ptCount - 1)
                         {
-                            pt.x = _vmax.x;
+                            pt.x = vmax.x;
                         }
                     }
                     pt.y = pt.y * value_range + delegate->GetCurveMin(delegate->movingCurve);
