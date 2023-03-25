@@ -803,6 +803,7 @@ if (IMGUI_ICONS)
         icons/material_icons.cpp
         icons/kenney.cpp
         icons/StepMath.cpp
+        icons/Code.cpp
     )
     set(IMGUI_INC_DIRS
         ${IMGUI_INC_DIRS}
@@ -1535,6 +1536,16 @@ if (IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
     )
     target_link_libraries(
         example_application
+        imgui
+        ${LINK_LIBS}
+    )
+    add_executable(
+        show_fonts
+        test/show_fonts.cpp
+        ${IMGUI_APP_SRC}
+    )
+    target_link_libraries(
+        show_fonts
         imgui
         ${LINK_LIBS}
     )

@@ -40,7 +40,7 @@ bool ImGui::LoadInternalIcons(ImFontAtlas* atlas, float scale)
 	atlas->AddFontFromMemoryCompressedBase85TTF(fork_webfont_compressed_data_base85, icons_size, &icons_config, fk_icons_ranges);
 
     // Fork Material Design Icons
-    static const ImWchar md_icons_ranges[] = { ICON_MIN_MD, ICON_MAX_MD, 0 };
+    static const ImWchar md_icons_ranges[] = { ICON_MIN_MD, ICON_MAX_16_MD, 0 };
 	atlas->AddFontFromMemoryCompressedBase85TTF(MaterialIcons_compressed_data_base85, icons_size, &icons_config, md_icons_ranges);
 
     // Kenney Game icons
@@ -50,6 +50,10 @@ bool ImGui::LoadInternalIcons(ImFontAtlas* atlas, float scale)
     // StepMath
     static const ImWchar math_icons_ranges[] = { ICON_MIN_MATH, ICON_MAX_MATH, 0 };
 	atlas->AddFontFromMemoryCompressedBase85TTF(StepMath_compressed_data_base85, icons_size, &icons_config, math_icons_ranges);
+
+    // Code icon
+    static const ImWchar code_icons_ranges[] = { ICON_MIN_CI, ICON_MAX_CI, 0 };
+	atlas->AddFontFromMemoryCompressedBase85TTF(Code_compressed_data_base85, icons_size, &icons_config, code_icons_ranges);
 
     return true;
 }

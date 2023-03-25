@@ -6,6 +6,7 @@
 #include "IconsForkAwesome.h"
 #include "IconsMaterialDesign.h"
 #include "IconsKenney.h"
+#include "IconsCodicons.h"
 
 namespace ImGui
 {
