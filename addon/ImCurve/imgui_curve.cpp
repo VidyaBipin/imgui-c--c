@@ -147,7 +147,7 @@ int ImGui::ImCurveEdit::DrawPoint(ImDrawList* draw_list, ImVec2 pos, const ImVec
     if (anchor.Contains(io.MousePos))
     {
         ret = 1;
-        if (io.MouseDown[0])
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
             ret = 2;
     }
     if (edited)
@@ -192,6 +192,8 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     const ImVec2 viewSize(edit_size.x, -edit_size.y);
     const size_t curveCount = delegate->GetCurveCount();
     const ImVec2 sizeOfPixel = ImVec2(1.f, 1.f) / viewSize;
+    bool point_selected = delegate->overSelectedPoint && ImGui::IsMouseDown(ImGuiMouseButton_Left);
+    bool curve_selected = (flags & CURVE_EDIT_FLAG_MOVE_CURVE) && (delegate->movingCurve != -1) && ImGui::IsMouseDown(ImGuiMouseButton_Left);
 
     // draw timeline and mark
     if (draw_timeline)
@@ -202,7 +204,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
         ImGui::InvisibleButton("CurveTimelineBar", headerSize);
         draw_list->AddRectFilled(window_pos, window_pos + headerSize, IM_COL32( 33,  33,  38, 255), 0);
         ImRect movRect(window_pos, window_pos + headerSize);
-        if (!delegate->MovingCurrentTime && movRect.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        if (!delegate->MovingCurrentTime && movRect.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left) && !point_selected && !curve_selected)
         {
             delegate->MovingCurrentTime = true;
         }
@@ -406,7 +408,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
         delegate->overCurve = -1;
 
     // move selection
-    if (delegate->overSelectedPoint && io.MouseDown[0])
+    if (delegate->overSelectedPoint && ImGui::IsMouseDown(ImGuiMouseButton_Left))
     {
         if ((fabsf(io.MouseDelta.x) > 0.f || fabsf(io.MouseDelta.y) > 0.f) && !delegate->selectedPoints.empty())
         {
@@ -469,7 +471,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
         }
     }
 
-    if (delegate->overSelectedPoint && !io.MouseDown[0])
+    if (delegate->overSelectedPoint && !ImGui::IsMouseDown(ImGuiMouseButton_Left))
     {
         delegate->overSelectedPoint = false;
         if (delegate->pointsMoved)
@@ -501,6 +503,8 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
         const KeyPoint* pts = delegate->GetPoints(localOverCurve);
         const ImVec2 p = pointToRange(pts[localOverPoint].point);
         ImGui::Text("%.2f", p.y * value_range + delegate->GetCurveMin(localOverCurve));
+        if (localOverPoint != 0 && localOverPoint != delegate->GetCurvePointCount(localOverCurve) - 1)
+            ImGui::TextUnformatted("Delete key with L-shift and L-click");
         ImGui::EndTooltip();
     }
 
@@ -575,7 +579,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
                 hold = true;
                 curve_changed = true;
             }
-            if (!io.MouseDown[0])
+            if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
             {
                 delegate->movingCurve = -1;
                 delegate->pointsMoved = false;
@@ -597,7 +601,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
         draw_list->AddRectFilled(bmin, bmax, IM_COL32(255, 255, 0, 64), 1.f);
         draw_list->AddRect(bmin, bmax, IM_COL32(255,255,0,255), 1.f);
         const ImRect selectionQuad(bmin, bmax);
-        if (!io.MouseDown[0])
+        if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
         {
             if (!io.KeyShift)
                 delegate->selectedPoints.clear();
