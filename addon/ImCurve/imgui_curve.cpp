@@ -259,23 +259,24 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
         drawLine(0, timeline_height);
         drawLine(duration, timeline_height);
         // cursor Arrow
+        draw_list->PushClipRect(movRect.Min - ImVec2(32, 0), movRect.Max + ImVec2(32, 0));
         const float arrowWidth = draw_list->_Data->FontSize;
         float arrowOffset = window_pos.x + (cursor_pos - vmin.x) * msPixelWidth - arrowWidth * 0.5f;
-        ImGui::RenderArrow(draw_list, ImVec2(arrowOffset, window_pos.y), IM_COL32(0, 255, 0, 224), ImGuiDir_Down);
+        ImGui::RenderArrow(draw_list, ImVec2(arrowOffset, window_pos.y), IM_COL32(255, 255, 255, 192), ImGuiDir_Down);
         ImGui::SetWindowFontScale(0.8);
         auto time_str = ImGuiHelper::MillisecToString(cursor_pos, 2);
         ImVec2 str_size = ImGui::CalcTextSize(time_str.c_str(), nullptr, true);
         float strOffset = window_pos.x + (cursor_pos - _vmin.x) * msPixelWidth - str_size.x * 0.5f;
         ImVec2 str_pos = ImVec2(strOffset, window_pos.y + 10);
-        draw_list->AddRectFilled(str_pos + ImVec2(-3, 0), str_pos + str_size + ImVec2(3, 3), IM_COL32(  0, 128,   0, 144), 2.0, ImDrawFlags_RoundCornersAll);
-        draw_list->AddText(str_pos, IM_COL32(  0, 255,   0, 255), time_str.c_str());
+        draw_list->AddRectFilled(str_pos + ImVec2(-3, 0), str_pos + str_size + ImVec2(3, 3), IM_COL32(128, 128, 128, 144), 2.0, ImDrawFlags_RoundCornersAll);
+        draw_list->AddText(str_pos, IM_COL32(255, 255, 255, 255), time_str.c_str());
         ImGui::SetWindowFontScale(1.0);
-
+        draw_list->PopClipRect();
         // draw cursor line
         if (cursor_pos >= _vmin.x && cursor_pos <= _vmax.x)
         {
             auto pt = pointToRange(ImVec2(cursor_pos, 0)) * viewSize + offset;
-            draw_list->AddLine(pt - ImVec2(0.5, 0), pt - ImVec2(0.5, edit_size.y), IM_COL32(0, 255, 0, 224), 2);
+            draw_list->AddLine(pt - ImVec2(0.5, 0), pt - ImVec2(0.5, edit_size.y), IM_COL32(255, 255, 255, 128), 2);
         }
     }
 
