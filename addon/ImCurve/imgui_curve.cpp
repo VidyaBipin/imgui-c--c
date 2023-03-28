@@ -194,6 +194,8 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     const ImVec2 sizeOfPixel = ImVec2(1.f, 1.f) / viewSize;
     bool point_selected = delegate->overSelectedPoint && ImGui::IsMouseDown(ImGuiMouseButton_Left);
     bool curve_selected = (flags & CURVE_EDIT_FLAG_MOVE_CURVE) && (delegate->movingCurve != -1) && ImGui::IsMouseDown(ImGuiMouseButton_Left);
+    auto pointToRange = [&](ImVec2 pt) { return (pt - _vmin) / _range; };
+    auto rangeToPoint = [&](ImVec2 pt) { return (pt * _range) + _vmin; };
 
     // draw timeline and mark
     if (draw_timeline)
@@ -268,6 +270,13 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
         draw_list->AddRectFilled(str_pos + ImVec2(-3, 0), str_pos + str_size + ImVec2(3, 3), IM_COL32(  0, 128,   0, 144), 2.0, ImDrawFlags_RoundCornersAll);
         draw_list->AddText(str_pos, IM_COL32(  0, 255,   0, 255), time_str.c_str());
         ImGui::SetWindowFontScale(1.0);
+
+        // draw cursor line
+        if (cursor_pos >= _vmin.x && cursor_pos <= _vmax.x)
+        {
+            auto pt = pointToRange(ImVec2(cursor_pos, 0)) * viewSize + offset;
+            draw_list->AddLine(pt - ImVec2(0.5, 0), pt - ImVec2(0.5, edit_size.y), IM_COL32(0, 255, 0, 224), 2);
+        }
     }
 
     // handle zoom and VScroll
@@ -313,16 +322,6 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     for (int i = 0; i <= 10; i++)
     {
         draw_list->AddLine(offset + ImVec2(0, - graticule_height * i), offset + ImVec2(edit_size.x, - graticule_height * i), delegate->GetGraticuleColor(), 1.0f);
-    }
-
-    auto pointToRange = [&](ImVec2 pt) { return (pt - _vmin) / _range; };
-    auto rangeToPoint = [&](ImVec2 pt) { return (pt * _range) + _vmin; };
-
-    // draw cursor line
-    if (cursor_pos >= _vmin.x && cursor_pos <= _vmax.x)
-    {
-        auto pt = pointToRange(ImVec2(cursor_pos, 0)) * viewSize + offset;
-        draw_list->AddLine(pt - ImVec2(0.5, 0), pt - ImVec2(0.5, edit_size.y), IM_COL32(0, 255, 0, 224), 2);
     }
 
     bool overCurveOrPoint = false;
