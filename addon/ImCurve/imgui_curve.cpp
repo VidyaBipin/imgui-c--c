@@ -1160,6 +1160,7 @@ bool ImGui::ImCurveEditKey(std::string button_lable, ImGui::ImCurveEdit::keys * 
         key->m_default = _default;
         return true;
     }
+    ImGui::ShowTooltipOnHover("Add Curve");
     return false;
 }
 
@@ -1177,6 +1178,7 @@ bool ImGui::ImCurveCheckEditKey(std::string button_lable, ImGui::ImCurveEdit::ke
             check = false;
             return true;
         }
+        ImGui::ShowTooltipOnHover("Remove Curve");
     }
     else
     {
@@ -1189,6 +1191,7 @@ bool ImGui::ImCurveCheckEditKey(std::string button_lable, ImGui::ImCurveEdit::ke
             check = true;
             return true;
         }
+        ImGui::ShowTooltipOnHover("Add Curve");
     }
     return false;
 }
