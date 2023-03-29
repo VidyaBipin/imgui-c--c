@@ -26,6 +26,13 @@ ColorConvert_vulkan::ColorConvert_vulkan(int gpu)
         spirv_data.clear();
     }
 
+    if (compile_spirv_module(Y_U_V2RGB_data, opt, spirv_data) == 0)
+    {
+        pipeline_y_u_v_rgb = new Pipeline(vkdev);
+        pipeline_y_u_v_rgb->create(spirv_data.data(), spirv_data.size() * 4, specializations);
+        spirv_data.clear();
+    }
+
     if (compile_spirv_module(RGB2YUV_data, opt, spirv_data) == 0)
     {
         pipeline_rgb_yuv = new Pipeline(vkdev);
@@ -58,6 +65,7 @@ ColorConvert_vulkan::~ColorConvert_vulkan()
         if (pipeline_rgb_yuv) { delete pipeline_rgb_yuv; pipeline_rgb_yuv = nullptr; }
         if (pipeline_gray_rgb) { delete pipeline_gray_rgb; pipeline_gray_rgb = nullptr; }
         if (pipeline_conv) { delete pipeline_conv; pipeline_conv = nullptr; }
+        if (pipeline_y_u_v_rgb) { delete pipeline_y_u_v_rgb; pipeline_y_u_v_rgb = nullptr; }
 
         if (cmd) { delete cmd; cmd = nullptr; }
         if (opt.blob_vkallocator) { vkdev->reclaim_blob_allocator(opt.blob_vkallocator); opt.blob_vkallocator = nullptr; }
@@ -313,7 +321,7 @@ bool ColorConvert_vulkan::UploadParam(const VkMat& src, VkMat& dst, ImInterpolat
 }
 
 // YUV to RGBA functions
-void ColorConvert_vulkan::upload_param(const VkMat& Im_YUV, VkMat& dst, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int video_depth, int video_shift) const
+void ColorConvert_vulkan::upload_param(const VkMat& Im_YUV, VkMat& dst, ImInterpolateMode type, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int video_depth) const
 {
     VkMat matrix_y2r_gpu;
     const ImMat conv_mat_y2r = *color_table[0][color_range][color_space];
@@ -331,21 +339,31 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_YUV, VkMat& dst, ImColorF
 
     bindings[8] = matrix_y2r_gpu;
 
-    std::vector<vk_constant_type> constants(10);
+    bool resize = false;
+    if (dst.w != 0 && dst.h != 0 && (dst.w != Im_YUV.w || dst.h != Im_YUV.h))
+        resize = true;
+
+    int bitDepth = Im_YUV.depth != 0 ? Im_YUV.depth : Im_YUV.type == IM_DT_INT8 ? 8 : Im_YUV.type == IM_DT_INT16 ? 16 : 8;
+    std::vector<vk_constant_type> constants(15);
     constants[0].i = Im_YUV.w;
     constants[1].i = Im_YUV.h;
     constants[2].i = dst.c;
-    constants[3].i = color_format;
+    constants[3].i = Im_YUV.color_format;
     constants[4].i = Im_YUV.type;
-    constants[5].i = color_space;
-    constants[6].i = color_range;
-    constants[7].f = (float)((1 << video_shift) - 1);
-    constants[8].i = dst.color_format;
-    constants[9].i = dst.type;
+    constants[5].i = Im_YUV.color_space;
+    constants[6].i = Im_YUV.color_range;
+    constants[7].f = (float)((1 << bitDepth) - 1);
+    constants[8].i = dst.w;
+    constants[9].i = dst.h;
+    constants[10].i = dst.c;
+    constants[11].i = dst.color_format;
+    constants[12].i = dst.type;
+    constants[13].i = resize ? 1 : 0;
+    constants[14].i = type;
     cmd->record_pipeline(pipeline_yuv_rgb, bindings, constants, dst);
 }
 
-double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int video_depth, int video_shift) const
+double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInterpolateMode type) const
 {
     double ret = 0.0;
     if (!vkdev || !pipeline_yuv_rgb || !cmd)
@@ -371,7 +389,124 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImColo
     cmd->benchmark_start();
 #endif
 
-    upload_param(src_gpu, dst_gpu, color_format, color_space, color_range, video_depth, video_shift);
+    upload_param(src_gpu, dst_gpu, type, im_YUV.color_format, im_YUV.color_space, im_YUV.color_range, im_YUV.depth);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
+
+    // download
+    if (im_RGB.device == IM_DD_CPU)
+        cmd->record_clone(dst_gpu, im_RGB, opt);
+    else if (im_RGB.device == IM_DD_VULKAN)
+        im_RGB = dst_gpu;
+    cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
+    cmd->reset();
+    return ret;
+}
+
+void ColorConvert_vulkan::upload_param(const VkMat& Im_Y, const VkMat& Im_U, const VkMat& Im_V, VkMat& dst, ImInterpolateMode type) const
+{
+    VkMat matrix_y2r_gpu;
+    const ImMat conv_mat_y2r = *color_table[0][Im_Y.color_range][Im_Y.color_space];
+    cmd->record_clone(conv_mat_y2r, matrix_y2r_gpu, opt);
+    std::vector<VkMat> bindings(17);
+    if      (dst.type == IM_DT_INT8)     bindings[ 0] = dst;
+    else if (dst.type == IM_DT_INT16)    bindings[ 1] = dst;
+    else if (dst.type == IM_DT_FLOAT16)  bindings[ 2] = dst;
+    else if (dst.type == IM_DT_FLOAT32)  bindings[ 3] = dst;
+
+    if      (Im_Y.type == IM_DT_INT8)    bindings[ 4] = Im_Y;
+    else if (Im_Y.type == IM_DT_INT16)   bindings[ 5] = Im_Y;
+    else if (Im_Y.type == IM_DT_FLOAT16) bindings[ 6] = Im_Y;
+    else if (Im_Y.type == IM_DT_FLOAT32) bindings[ 7] = Im_Y;
+
+    if      (Im_U.type == IM_DT_INT8)    bindings[ 8] = Im_U;
+    else if (Im_U.type == IM_DT_INT16)   bindings[ 9] = Im_U;
+    else if (Im_U.type == IM_DT_FLOAT16) bindings[10] = Im_U;
+    else if (Im_U.type == IM_DT_FLOAT32) bindings[11] = Im_U;
+
+    if      (Im_V.type == IM_DT_INT8)    bindings[12] = Im_V;
+    else if (Im_V.type == IM_DT_INT16)   bindings[13] = Im_V;
+    else if (Im_V.type == IM_DT_FLOAT16) bindings[14] = Im_V;
+    else if (Im_V.type == IM_DT_FLOAT32) bindings[15] = Im_V;
+
+    bindings[16] = matrix_y2r_gpu;
+
+    bool resize = false;
+    if (dst.w != 0 && dst.h != 0 && (dst.w != Im_Y.w || dst.h != Im_Y.h))
+        resize = true;
+
+    int bitDepth = Im_Y.depth != 0 ? Im_Y.depth : Im_Y.type == IM_DT_INT8 ? 8 : Im_Y.type == IM_DT_INT16 ? 16 : 8;
+    std::vector<vk_constant_type> constants(15);
+    constants[0].i = Im_Y.w;
+    constants[1].i = Im_Y.h;
+    constants[2].i = dst.c;
+    constants[3].i = Im_Y.color_format;
+    constants[4].i = Im_Y.type;
+    constants[5].i = Im_Y.color_space;
+    constants[6].i = Im_Y.color_range;
+    constants[7].f = (float)((1 << bitDepth) - 1);
+    constants[8].i = dst.w;
+    constants[9].i = dst.h;
+    constants[10].i = dst.c;
+    constants[11].i = dst.color_format;
+    constants[12].i = dst.type;
+    constants[13].i = resize ? 1 : 0;
+    constants[14].i = type;
+    cmd->record_pipeline(pipeline_y_u_v_rgb, bindings, constants, dst);
+}
+
+double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const ImMat& im_V, ImMat & im_RGB, ImInterpolateMode type) const
+{
+    double ret = 0.0;
+    if (!vkdev || !pipeline_y_u_v_rgb || !cmd)
+    {
+        return ret;
+    }
+
+    VkMat dst_gpu;
+    dst_gpu.create_type(im_Y.w, im_Y.h, 4, im_RGB.type, opt.blob_vkallocator);
+    im_RGB.copy_attribute(im_Y);
+
+    VkMat src_y_gpu, src_u_gpu, src_v_gpu;
+    if (im_Y.device == IM_DD_VULKAN)
+    {
+        src_y_gpu = im_Y;
+    }
+    else if (im_Y.device == IM_DD_CPU)
+    {
+        cmd->record_clone(im_Y, src_y_gpu, opt);
+    }
+
+    if (im_U.device == IM_DD_VULKAN)
+    {
+        src_u_gpu = im_U;
+    }
+    else if (im_U.device == IM_DD_CPU)
+    {
+        cmd->record_clone(im_U, src_u_gpu, opt);
+    }
+    if (!im_V.empty())
+    {
+        if (im_V.device == IM_DD_VULKAN)
+        {
+            src_v_gpu = im_V;
+        }
+        else if (im_V.device == IM_DD_CPU)
+        {
+            cmd->record_clone(im_V, src_v_gpu, opt);
+        }
+    }
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
+    upload_param(src_y_gpu, src_u_gpu, src_v_gpu, dst_gpu, type);
 
 #ifdef VULKAN_SHADER_BENCHMARK
     cmd->benchmark_end();

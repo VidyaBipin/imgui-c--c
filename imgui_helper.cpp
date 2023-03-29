@@ -290,6 +290,7 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
 #if IMGUI_RENDERING_VULKAN
     VkBuffer buffer {nullptr};
     size_t offset {0};
+#if IMGUI_VULKAN_SHADER
     if (vulkan)
     {
         ImGui::VkMat* vkmat = (ImGui::VkMat*)pixels;
@@ -300,6 +301,7 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
         if (!buffer)
             return;
     }
+#endif
     if (imtexid == 0)
     {
         // TODO::Dicky Need deal with 3 channels Image(link RGB / BGR)
@@ -322,9 +324,11 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
         g_tex_mutex.unlock();
         return;
     }
+#if IMGUI_VULKAN_SHADER
     if (vulkan)
         ImGui_ImplVulkan_UpdateTexture(imtexid, buffer, offset);
     else
+#endif
         ImGui_ImplVulkan_UpdateTexture(imtexid, pixels);
 #elif IMGUI_RENDERING_DX11
     auto textureID = (ID3D11ShaderResourceView *)imtexid;

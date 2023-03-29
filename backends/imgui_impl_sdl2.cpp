@@ -76,6 +76,12 @@
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 
+// Clang warnings with -Weverything
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"  // warning: implicit conversion from 'xxx' to 'float' may lose precision
+#endif
+
 // SDL
 // (the multi-viewports feature requires SDL features supported from SDL 2.0.4+. SDL 2.0.5+ is highly recommended)
 #include <SDL.h>
@@ -1165,4 +1171,8 @@ void ImGui_ImplSDL2_SetWindowIcon(SDL_Window* window, const char * icon_path)
     }
 
 }
-// Add By Dicky
+// Add By Dicky end
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
