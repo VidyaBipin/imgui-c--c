@@ -1,10 +1,10 @@
-#include "warpPerspective_vulkan.h"
-#include "warpPerspective_shader.h"
+#include "warpAffine_vulkan.h"
+#include "warpAffine_shader.h"
 #include "ImVulkanShader.h"
 
 namespace ImGui 
 {
-warpPerspective_vulkan::warpPerspective_vulkan(int gpu)
+warpAffine_vulkan::warpAffine_vulkan(int gpu)
 {
     vkdev = get_gpu_device(gpu);
     opt.blob_vkallocator = vkdev->acquire_blob_allocator();
@@ -13,7 +13,7 @@ warpPerspective_vulkan::warpPerspective_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev, "warpPerspective");
+    cmd = new VkCompute(vkdev, "warpAffine");
 
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
@@ -27,7 +27,7 @@ warpPerspective_vulkan::warpPerspective_vulkan(int gpu)
     cmd->reset();
 }
 
-warpPerspective_vulkan::~warpPerspective_vulkan()
+warpAffine_vulkan::~warpAffine_vulkan()
 {
     if (vkdev)
     {
@@ -38,7 +38,7 @@ warpPerspective_vulkan::~warpPerspective_vulkan()
     }
 }
 
-void warpPerspective_vulkan::upload_param(const VkMat& src, VkMat& dst, const VkMat& M, ImInterpolateMode type, ImPixel border_col, ImPixel crop) const
+void warpAffine_vulkan::upload_param(const VkMat& src, VkMat& dst, const VkMat& M, ImInterpolateMode type, ImPixel border_col, ImPixel crop) const
 {
     std::vector<VkMat> bindings(9);
     if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
@@ -76,7 +76,7 @@ void warpPerspective_vulkan::upload_param(const VkMat& src, VkMat& dst, const Vk
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-double warpPerspective_vulkan::filter(const ImMat& src, ImMat& dst, const ImMat& M, ImInterpolateMode type, ImPixel border_col, ImPixel crop) const
+double warpAffine_vulkan::warp(const ImMat& src, ImMat& dst, const ImMat& M, ImInterpolateMode type, ImPixel border_col, ImPixel crop) const
 {
     double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
@@ -85,7 +85,10 @@ double warpPerspective_vulkan::filter(const ImMat& src, ImMat& dst, const ImMat&
     }
 
     VkMat dst_gpu;
-    dst_gpu.create_type(src.w, src.h, 4, dst.type, opt.blob_vkallocator);
+    if (dst.w != 0 && dst.h != 0)
+        dst_gpu.create_type(dst.w, dst.h, 4, dst.type, opt.blob_vkallocator);
+    else
+        dst_gpu.create_type(src.w, src.h, 4, dst.type, opt.blob_vkallocator);
 
     VkMat src_gpu;
     if (src.device == IM_DD_VULKAN)

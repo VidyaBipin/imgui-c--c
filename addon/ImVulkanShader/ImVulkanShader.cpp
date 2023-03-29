@@ -23,9 +23,21 @@ void ImVulkanGetVersion(int& major, int& minor, int& patch, int& build)
 void ImVulkanImMatToVkMat(const ImMat &src, VkMat &dst)
 {
     Option opt;
-    const VkAllocator* allocator = (VkAllocator*)src.allocator;
-    const VulkanDevice* vkdev = allocator->vkdev;
-    opt.blob_vkallocator = vkdev->acquire_blob_allocator();
+    const VulkanDevice* vkdev = nullptr;
+    VkAllocator* allocator = (VkAllocator*)dst.allocator;
+    if (!allocator || !allocator->vkdev)
+    {
+        vkdev = get_gpu_device(dst.device_number);
+        if (!vkdev) return;
+        allocator = vkdev->acquire_blob_allocator();
+        opt.blob_vkallocator = allocator;
+    }
+    else
+    {
+        vkdev = allocator->vkdev;
+        opt.blob_vkallocator = vkdev->acquire_blob_allocator();
+    }
+    dst.create_like(src, allocator);
     opt.staging_vkallocator = vkdev->acquire_staging_allocator();
     VkCompute cmd(vkdev, "ImMatToVkMat");
     cmd.record_clone(src, dst, opt);

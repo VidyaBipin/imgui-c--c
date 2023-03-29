@@ -1,10 +1,10 @@
-#include "imvk_substract_mean_normalize.h"
+#include "Copy_make_border.h"
 #include "imvk_command.h"
-#include "imvk_substract_mean_normalize_shader.h"
+#include "Copy_make_border_shader.h"
 
 namespace ImGui 
 {
-Substract_Mean_Normalize_vulkan::Substract_Mean_Normalize_vulkan(int gpu)
+Copy_Make_Border_vulkan::Copy_Make_Border_vulkan(int gpu)
 {
     vkdev = get_gpu_device(gpu);
     opt.blob_vkallocator = vkdev->acquire_blob_allocator();
@@ -13,7 +13,7 @@ Substract_Mean_Normalize_vulkan::Substract_Mean_Normalize_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev, "Substract_Mean_Normalize");
+    cmd = new VkCompute(vkdev, "Copy_Make_Border");
 
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
@@ -21,13 +21,14 @@ Substract_Mean_Normalize_vulkan::Substract_Mean_Normalize_vulkan(int gpu)
     if (compile_spirv_module(Filter_data, opt, spirv_data) == 0)
     {
         pipe = new Pipeline(vkdev);
+        pipe->set_optimal_local_size_xyz(16, 16, 1);
         pipe->create(spirv_data.data(), spirv_data.size() * 4, specializations);
     }
     
     cmd->reset();
 }
 
-Substract_Mean_Normalize_vulkan::~Substract_Mean_Normalize_vulkan()
+Copy_Make_Border_vulkan::~Copy_Make_Border_vulkan()
 {
     if (vkdev)
     {
@@ -38,18 +39,20 @@ Substract_Mean_Normalize_vulkan::~Substract_Mean_Normalize_vulkan()
     }
 }
 
-void Substract_Mean_Normalize_vulkan::upload_param(const VkMat& src, VkMat& dst, std::vector<float> mean_vals, std::vector<float> norm_vals)
+void Copy_Make_Border_vulkan::upload_param(const VkMat& src, VkMat& dst, int top, int bottom, int left, int right, float value)
 {
-    std::vector<VkMat> bindings(6);
-    if      (src.type == IM_DT_INT8)     bindings[0] = src;
-    else if (src.type == IM_DT_INT16)    bindings[1] = src;
-    else if (src.type == IM_DT_FLOAT16)  bindings[2] = src;
-    else if (src.type == IM_DT_FLOAT32)  bindings[3] = src;
+    std::vector<VkMat> bindings(8);
+    if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
+    else if (dst.type == IM_DT_INT16)    bindings[1] = dst; 
+    else if (dst.type == IM_DT_FLOAT16)  bindings[2] = dst;
+    else if (dst.type == IM_DT_FLOAT32)  bindings[3] = dst;
 
-    if      (dst.type == IM_DT_FLOAT16)  bindings[4] = dst;
-    else if (dst.type == IM_DT_FLOAT32)  bindings[5] = dst;
+    if      (src.type == IM_DT_INT8)     bindings[4] = src;
+    else if (src.type == IM_DT_INT16)    bindings[5] = src;
+    else if (src.type == IM_DT_FLOAT16)  bindings[6] = src;
+    else if (src.type == IM_DT_FLOAT32)  bindings[7] = src;
 
-    std::vector<vk_constant_type> constants(18);
+    std::vector<vk_constant_type> constants(15);
     constants[0].i = src.w;
     constants[1].i = src.h;
     constants[2].i = src.c;
@@ -57,31 +60,29 @@ void Substract_Mean_Normalize_vulkan::upload_param(const VkMat& src, VkMat& dst,
     constants[4].i = src.type;
     constants[5].i = dst.w;
     constants[6].i = dst.h;
-    constants[7].i = dst.cstep;
+    constants[7].i = dst.c;
     constants[8].i = dst.color_format;
     constants[9].i = dst.type;
-    constants[10].f = mean_vals[0];
-    constants[11].f = mean_vals[1];
-    constants[12].f = mean_vals[2];
-    constants[13].f = mean_vals[3];
-    constants[14].f = norm_vals[0];
-    constants[15].f = norm_vals[1];
-    constants[16].f = norm_vals[2];
-    constants[17].f = norm_vals[3];
+    constants[10].i = top;
+    constants[11].i = bottom;
+    constants[12].i = left;
+    constants[13].i = right;
+    constants[14].f = value;
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-double  Substract_Mean_Normalize_vulkan::forward(const ImMat& bottom_blob, ImMat& top_blob, std::vector<float> mean_vals, std::vector<float> norm_vals)
+double Copy_Make_Border_vulkan::forward(const ImMat& bottom_blob, ImMat& top_blob, int top, int bottom, int left, int right, float value)
 {
     double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
     {
         return ret;
     }
+
     auto color_format = top_blob.color_format;
     int channels = IM_ISALPHA(color_format) ? 4 : IM_ISRGB(color_format) ? 3 : IM_ISMONO(color_format) ? 1 : 4;
     VkMat dst_gpu;
-    dst_gpu.create_type(bottom_blob.w, bottom_blob.h, channels, top_blob.type, opt.blob_vkallocator);
+    dst_gpu.create_type(bottom_blob.w + left + right, bottom_blob.h + top + bottom, channels, bottom_blob.type, opt.blob_vkallocator);
     dst_gpu.color_format = color_format;
 
     VkMat src_gpu;
@@ -98,7 +99,7 @@ double  Substract_Mean_Normalize_vulkan::forward(const ImMat& bottom_blob, ImMat
     cmd->benchmark_start();
 #endif
 
-    upload_param(src_gpu, dst_gpu, mean_vals, norm_vals);
+    upload_param(src_gpu, dst_gpu, top, bottom, left, right, value);
 
 #ifdef VULKAN_SHADER_BENCHMARK
     cmd->benchmark_end();

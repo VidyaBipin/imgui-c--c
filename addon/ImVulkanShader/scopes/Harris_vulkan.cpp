@@ -260,7 +260,7 @@ void Harris_vulkan::upload_param(const VkMat& src, VkMat& dst, int _blurRadius, 
     cmd->record_pipeline(pipe_nms, nms_bindings, nms_constants, dst);
 }
 
-double Harris_vulkan::filter(const ImMat& src, ImMat& dst, int _blurRadius, float edgeStrength, float threshold, float harris, float sensitivity)
+double Harris_vulkan::scope(const ImMat& src, ImMat& dst, int _blurRadius, float edgeStrength, float threshold, float harris, float sensitivity)
 {
     double ret = 0.0;
     if (!vkdev || !pipe_harris || !cmd)

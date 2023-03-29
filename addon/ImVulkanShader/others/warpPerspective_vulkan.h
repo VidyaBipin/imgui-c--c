@@ -11,7 +11,7 @@ public:
     warpPerspective_vulkan(int gpu = -1);
     ~warpPerspective_vulkan();
 
-    double filter(const ImMat& src, ImMat& dst, const ImMat& M, ImInterpolateMode type = IM_INTERPOLATE_NEAREST, ImPixel border_col = {0, 0, 0, 0}, ImPixel crop = {0, 0, 0, 0}) const;
+    double warp(const ImMat& src, ImMat& dst, const ImMat& M, ImInterpolateMode type = IM_INTERPOLATE_NEAREST, ImPixel border_col = {0, 0, 0, 0}, ImPixel crop = {0, 0, 0, 0}) const;
 
 public:
     const VulkanDevice* vkdev {nullptr};

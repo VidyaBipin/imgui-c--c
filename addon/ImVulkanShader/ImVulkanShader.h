@@ -5,10 +5,6 @@
 #include "immat.h"
 #define NO_STB_IMAGE
 #include "imgui.h"
-#include "imvk_substract_mean_normalize.h"
-#include "imvk_copy_make_border.h"
-#include "filters/ColorConvert_vulkan.h"
-#include "filters/Resize_vulkan.h"
 #include <vulkan/vulkan.h>
 
 namespace ImGui

@@ -11,7 +11,7 @@ public:
     Harris_vulkan(int gpu = 0);
     ~Harris_vulkan();
     
-    double filter(const ImMat& src, ImMat& dst, int _blurRadius, float edgeStrength, float threshold, float harris, float sensitivity);
+    double scope(const ImMat& src, ImMat& dst, int _blurRadius, float edgeStrength, float threshold, float harris, float sensitivity);
 
 private:
     VulkanDevice* vkdev      {nullptr};

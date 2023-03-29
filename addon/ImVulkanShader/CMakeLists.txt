@@ -33,6 +33,7 @@ option(VKSHADER_VULKAN_BENCHMARK      "Enable Vulkan Shader Benchmark" ON)
 option(VKSHADER_VULKAN_PREBUILD       "Enable Vulkan Shader prebuild check" OFF)
 option(VKSHADER_VULKAN_FP16           "Enable Vulkan Shader support 16bits float" ON)
 option(VKSHADER_STATIC                "Build Vulkan Shader as static library" OFF)
+option(VKSHADER_BUILD_TESTS           "Build Vulkan Shader Tests" OFF)
 option(VKSHADER_SKIP_INSTALL          "Skip Vulkan install" ON)
 
 find_package(PkgConfig)
@@ -333,8 +334,6 @@ set(VKSHADER_SRCS
     imvk_pipelinecache.cpp
     imvk_Cast_vulkan.cpp
     imvk_Packing_vulkan.cpp
-    imvk_substract_mean_normalize.cpp
-    imvk_copy_make_border.cpp
     ImVulkanShader.cpp
 )
 set(VKSHADER_INCS
@@ -354,23 +353,12 @@ set(VKSHADER_INCS
     imvk_Cast_vulkan.h
     imvk_Packing_shader.h
     imvk_Packing_vulkan.h
-    imvk_substract_mean_normalize_shader.h
-    imvk_substract_mean_normalize.h
-    imvk_copy_make_border_shader.h
-    imvk_copy_make_border.h
     ImVulkanShader.h
 )
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
-    filters/colorspace_table.cpp
-    filters/ColorConvert_vulkan.cpp
-    filters/Resize_vulkan.cpp
-    filters/CopyTo_vulkan.cpp
     filters/Filter2D_vulkan.cpp
     filters/Filter2DS_vulkan.cpp
-    filters/Flip_vulkan.cpp
-    filters/Crop_vulkan.cpp
-    filters/Transpose_vulkan.cpp
     filters/Brightness_vulkan.cpp
     filters/Contrast_vulkan.cpp
     filters/Exposure_vulkan.cpp
@@ -385,44 +373,24 @@ set(VKSHADER_SRCS
     filters/Bilateral_vulkan.cpp
     filters/Sobel_vulkan.cpp
     filters/Canny_vulkan.cpp
-    filters/Harris_vulkan.cpp
     filters/USM_vulkan.cpp
     filters/ChromaKey_vulkan.cpp
     filters/GaussianBlur.cpp
     filters/Box.cpp
     filters/Laplacian.cpp
-    filters/Concat_vulkan.cpp
     filters/ALM_vulkan.cpp
     filters/CAS_vulkan.cpp
     filters/HQDN3D_vulkan.cpp
     filters/DeBand_vulkan.cpp
     filters/DeInterlace_vulkan.cpp
     filters/Guided_vulkan.cpp
-    filters/CIE_vulkan.cpp
-    filters/Histogram_vulkan.cpp
-    filters/Waveform_vulkan.cpp
-    filters/Vector_vulkan.cpp
-    filters/warpPerspective_vulkan.cpp
-    filters/warpAffine_vulkan.cpp
 )
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
-    filters/ColorConvert_shader.h
-    filters/ColorConvert_vulkan.h
-    filters/Resize_shader.h
-    filters/Resize_vulkan.h
-    filters/CopyTo_shader.h
-    filters/CopyTo_vulkan.h
     filters/Filter2D_shader.h
     filters/Filter2D_vulkan.h
     filters/Filter2DS_shader.h
     filters/Filter2DS_vulkan.h
-    filters/Flip_shader.h
-    filters/Flip_vulkan.h
-    filters/Crop_shader.h
-    filters/Crop_vulkan.h
-    filters/Transpose_shader.h
-    filters/Transpose_vulkan.h
     filters/Brightness_shader.h
     filters/Brightness_vulkan.h
     filters/Contrast_shader.h
@@ -451,8 +419,6 @@ set(VKSHADER_INCS
     filters/Sobel_vulkan.h
     filters/Canny_shader.h
     filters/Canny_vulkan.h
-    filters/Harris_vulkan.h
-    filters/Harris_shader.h
     filters/USM_shader.h
     filters/USM_vulkan.h
     filters/ChromaKey_shader.h
@@ -460,8 +426,6 @@ set(VKSHADER_INCS
     filters/GaussianBlur.h
     filters/Box.h
     filters/Laplacian.h
-    filters/Concat_shader.h
-    filters/Concat_vulkan.h
     filters/ALM_shader.h
     filters/ALM_vulkan.h
     filters/CAS_shader.h
@@ -474,18 +438,6 @@ set(VKSHADER_INCS
     filters/DeInterlace_vulkan.h
     filters/Guided_shader.h
     filters/Guided_vulkan.h
-    filters/CIE_shader.h
-    filters/CIE_vulkan.h
-    filters/Histogram_shader.h
-    filters/Histogram_vulkan.h
-    filters/Waveform_shader.h
-    filters/Waveform_vulkan.h
-    filters/Vector_shader.h
-    filters/Vector_vulkan.h
-    filters/warpPerspective_shader.h
-    filters/warpPerspective_vulkan.h
-    filters/warpAffine_shader.h
-    filters/warpAffine_vulkan.h
 )
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
@@ -705,6 +657,83 @@ set(VKSHADER_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/fusions
 )
 
+# add scopes
+set(VKSHADER_SRCS
+    ${VKSHADER_SRCS}
+    scopes/Harris_vulkan.cpp
+    scopes/CIE_vulkan.cpp
+    scopes/Histogram_vulkan.cpp
+    scopes/Waveform_vulkan.cpp
+    scopes/Vector_vulkan.cpp
+)
+
+set(VKSHADER_INCS
+    ${VKSHADER_INCS}
+    scopes/Harris_vulkan.h
+    scopes/Harris_shader.h
+    scopes/CIE_shader.h
+    scopes/CIE_vulkan.h
+    scopes/Histogram_shader.h
+    scopes/Histogram_vulkan.h
+    scopes/Waveform_shader.h
+    scopes/Waveform_vulkan.h
+    scopes/Vector_shader.h
+    scopes/Vector_vulkan.h
+)
+
+set(VKSHADER_INC_DIRS
+    ${VKSHADER_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/scopes
+)
+
+# add others
+set(VKSHADER_SRCS
+    ${VKSHADER_SRCS}
+    others/colorspace_table.cpp
+    others/ColorConvert_vulkan.cpp
+    others/Resize_vulkan.cpp
+    others/CopyTo_vulkan.cpp
+    others/Flip_vulkan.cpp
+    others/Crop_vulkan.cpp
+    others/Transpose_vulkan.cpp
+    others/Concat_vulkan.cpp
+    others/warpPerspective_vulkan.cpp
+    others/warpAffine_vulkan.cpp
+    others/Substract_mean_normalize.cpp
+    others/Copy_make_border.cpp
+)
+
+set(VKSHADER_INCS
+    ${VKSHADER_INCS}
+    others/ColorConvert_shader.h
+    others/ColorConvert_vulkan.h
+    others/Resize_shader.h
+    others/Resize_vulkan.h
+    others/CopyTo_shader.h
+    others/CopyTo_vulkan.h
+    others/Flip_shader.h
+    others/Flip_vulkan.h
+    others/Crop_shader.h
+    others/Crop_vulkan.h
+    others/Transpose_shader.h
+    others/Transpose_vulkan.h
+    others/Concat_shader.h
+    others/Concat_vulkan.h
+    others/warpPerspective_shader.h
+    others/warpPerspective_vulkan.h
+    others/warpAffine_shader.h
+    others/warpAffine_vulkan.h
+    others/Substract_mean_normalize_shader.h
+    others/Substract_mean_normalize.h
+    others/Copy_make_border_shader.h
+    others/Copy_make_border.h
+)
+
+set(VKSHADER_INC_DIRS
+    ${VKSHADER_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/others
+)
+
 include_directories(${VKSHADER_INC_DIRS})
 
 if(VKSHADER_STATIC)
@@ -727,8 +756,8 @@ add_dependencies(VkShader generate-comp)
 endif(VKSHADER_VULKAN_PREBUILD)
 
 set(VKSHADER_VERSION_MAJOR 1)
-set(VKSHADER_VERSION_MINOR 7)
-set(VKSHADER_VERSION_PATCH 8)
+set(VKSHADER_VERSION_MINOR 8)
+set(VKSHADER_VERSION_PATCH 0)
 string(TIMESTAMP VKSHADER_VERSION_BUILD "%y%m%d")
 set(VKSHADER_VERSION_STRING ${VKSHADER_VERSION_MAJOR}.${VKSHADER_VERSION_MINOR}.${VKSHADER_VERSION_PATCH})
 add_definitions(-DVKSHADER_VERSION_MAJOR=${VKSHADER_VERSION_MAJOR})
@@ -755,3 +784,15 @@ install(TARGETS VkShader
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 endif()
+
+if(VKSHADER_BUILD_TESTS)
+    add_executable(
+        ImVulkan_tests
+        test/ImVulkan_tests.cpp
+    )
+    target_link_libraries(
+        ImVulkan_tests
+        VkShader
+        ${LINK_LIBS}
+    )
+endif(VKSHADER_BUILD_TESTS)

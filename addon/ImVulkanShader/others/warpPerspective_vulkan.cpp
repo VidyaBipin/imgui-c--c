@@ -1,10 +1,10 @@
-#include "imvk_copy_make_border.h"
-#include "imvk_command.h"
-#include "imvk_copy_make_border_shader.h"
+#include "warpPerspective_vulkan.h"
+#include "warpPerspective_shader.h"
+#include "ImVulkanShader.h"
 
 namespace ImGui 
 {
-Copy_Make_Border_vulkan::Copy_Make_Border_vulkan(int gpu)
+warpPerspective_vulkan::warpPerspective_vulkan(int gpu)
 {
     vkdev = get_gpu_device(gpu);
     opt.blob_vkallocator = vkdev->acquire_blob_allocator();
@@ -13,7 +13,7 @@ Copy_Make_Border_vulkan::Copy_Make_Border_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev, "Copy_Make_Border");
+    cmd = new VkCompute(vkdev, "warpPerspective");
 
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
@@ -21,14 +21,13 @@ Copy_Make_Border_vulkan::Copy_Make_Border_vulkan(int gpu)
     if (compile_spirv_module(Filter_data, opt, spirv_data) == 0)
     {
         pipe = new Pipeline(vkdev);
-        pipe->set_optimal_local_size_xyz(16, 16, 1);
         pipe->create(spirv_data.data(), spirv_data.size() * 4, specializations);
     }
     
     cmd->reset();
 }
 
-Copy_Make_Border_vulkan::~Copy_Make_Border_vulkan()
+warpPerspective_vulkan::~warpPerspective_vulkan()
 {
     if (vkdev)
     {
@@ -39,11 +38,11 @@ Copy_Make_Border_vulkan::~Copy_Make_Border_vulkan()
     }
 }
 
-void Copy_Make_Border_vulkan::upload_param(const VkMat& src, VkMat& dst, int top, int bottom, int left, int right, float value)
+void warpPerspective_vulkan::upload_param(const VkMat& src, VkMat& dst, const VkMat& M, ImInterpolateMode type, ImPixel border_col, ImPixel crop) const
 {
-    std::vector<VkMat> bindings(8);
+    std::vector<VkMat> bindings(9);
     if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
-    else if (dst.type == IM_DT_INT16)    bindings[1] = dst; 
+    else if (dst.type == IM_DT_INT16)    bindings[1] = dst;
     else if (dst.type == IM_DT_FLOAT16)  bindings[2] = dst;
     else if (dst.type == IM_DT_FLOAT32)  bindings[3] = dst;
 
@@ -52,7 +51,9 @@ void Copy_Make_Border_vulkan::upload_param(const VkMat& src, VkMat& dst, int top
     else if (src.type == IM_DT_FLOAT16)  bindings[6] = src;
     else if (src.type == IM_DT_FLOAT32)  bindings[7] = src;
 
-    std::vector<vk_constant_type> constants(15);
+    bindings[8] = M;
+
+    std::vector<vk_constant_type> constants(19);
     constants[0].i = src.w;
     constants[1].i = src.h;
     constants[2].i = src.c;
@@ -63,15 +64,19 @@ void Copy_Make_Border_vulkan::upload_param(const VkMat& src, VkMat& dst, int top
     constants[7].i = dst.c;
     constants[8].i = dst.color_format;
     constants[9].i = dst.type;
-    constants[10].i = top;
-    constants[11].i = bottom;
-    constants[12].i = left;
-    constants[13].i = right;
-    constants[14].f = value;
+    constants[10].f = border_col.r; // board R
+    constants[11].f = border_col.g; // board G
+    constants[12].f = border_col.b; // board B
+    constants[13].f = border_col.a; // board A
+    constants[14].i = crop.r;       // crop l
+    constants[15].i = crop.g;       // crop t
+    constants[16].i = crop.b;       // crop r
+    constants[17].i = crop.a;       // crop b
+    constants[18].i = type;
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-double Copy_Make_Border_vulkan::forward(const ImMat& bottom_blob, ImMat& top_blob, int top, int bottom, int left, int right, float value)
+double warpPerspective_vulkan::warp(const ImMat& src, ImMat& dst, const ImMat& M, ImInterpolateMode type, ImPixel border_col, ImPixel crop) const
 {
     double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
@@ -79,43 +84,50 @@ double Copy_Make_Border_vulkan::forward(const ImMat& bottom_blob, ImMat& top_blo
         return ret;
     }
 
-    auto color_format = top_blob.color_format;
-    int channels = IM_ISALPHA(color_format) ? 4 : IM_ISRGB(color_format) ? 3 : IM_ISMONO(color_format) ? 1 : 4;
     VkMat dst_gpu;
-    dst_gpu.create_type(bottom_blob.w + left + right, bottom_blob.h + top + bottom, channels, bottom_blob.type, opt.blob_vkallocator);
-    dst_gpu.color_format = color_format;
+    dst_gpu.create_type(src.w, src.h, 4, dst.type, opt.blob_vkallocator);
 
     VkMat src_gpu;
-    if (bottom_blob.device == IM_DD_VULKAN)
+    if (src.device == IM_DD_VULKAN)
     {
-        src_gpu = bottom_blob;
+        src_gpu = src;
     }
-    else if (bottom_blob.device == IM_DD_CPU)
+    else if (src.device == IM_DD_CPU)
     {
-        cmd->record_clone(bottom_blob, src_gpu, opt);
+        cmd->record_clone(src, src_gpu, opt);
+    }
+
+    VkMat m_gpu;
+    if (M.device == IM_DD_VULKAN)
+    {
+        m_gpu = M;
+    }
+    else if(M.device == IM_DD_CPU)
+    {
+        cmd->record_clone(M, m_gpu, opt);
     }
 
 #ifdef VULKAN_SHADER_BENCHMARK
     cmd->benchmark_start();
 #endif
 
-    upload_param(src_gpu, dst_gpu, top, bottom, left, right, value);
+    upload_param(src_gpu, dst_gpu, m_gpu, type, border_col, crop);
 
 #ifdef VULKAN_SHADER_BENCHMARK
     cmd->benchmark_end();
 #endif
 
     // download
-    if (top_blob.device == IM_DD_CPU)
-        cmd->record_clone(dst_gpu, top_blob, opt);
-    else if (top_blob.device == IM_DD_VULKAN)
-        top_blob = dst_gpu;
+    if (dst.device == IM_DD_CPU)
+        cmd->record_clone(dst_gpu, dst, opt);
+    else if (dst.device == IM_DD_VULKAN)
+        dst = dst_gpu;
     cmd->submit_and_wait();
 #ifdef VULKAN_SHADER_BENCHMARK
     ret = cmd->benchmark();
 #endif
     cmd->reset();
-    top_blob.copy_attribute(bottom_blob);
+    dst.copy_attribute(src);
     return ret;
 }
-} // namespace ImGui
+} //namespace ImGui 
