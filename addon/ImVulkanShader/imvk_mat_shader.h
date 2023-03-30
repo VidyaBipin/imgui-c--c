@@ -885,8 +885,8 @@ void store_rgba(sfpvec4 val, int x, int y, int w, int h, int cstep, int format, 
 " \n\
 void store_rgba_int8_side_by_side(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    int planner = x % 2 == 0 ? x / 2 : x / 2 + p.w / 2; \n\
-    ivec4 o_offset = (y * w + planner) * cstep + color_format_mapping_vec4(format); \n\
+    int planar = x % 2 == 0 ? x / 2 : x / 2 + p.w / 2; \n\
+    ivec4 o_offset = (y * w + planar) * cstep + color_format_mapping_vec4(format); \n\
     dst_data_int8[o_offset.r] = uint8_t(clamp(uint(floor(val.r * sfp(255.0f))), 0, 255)); \n\
     dst_data_int8[o_offset.g] = uint8_t(clamp(uint(floor(val.g * sfp(255.0f))), 0, 255)); \n\
     dst_data_int8[o_offset.b] = uint8_t(clamp(uint(floor(val.b * sfp(255.0f))), 0, 255)); \n\
@@ -898,8 +898,8 @@ void store_rgba_int8_side_by_side(sfpvec4 val, int x, int y, int w, int cstep, i
 " \n\
 void store_rgba_int16_side_by_side(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    int planner = x % 2 == 0 ? x / 2 : x / 2 + p.w / 2; \n\
-    ivec4 o_offset = (y * w + planner) * cstep + color_format_mapping_vec4(format); \n\
+    int planar = x % 2 == 0 ? x / 2 : x / 2 + p.w / 2; \n\
+    ivec4 o_offset = (y * w + planar) * cstep + color_format_mapping_vec4(format); \n\
     dst_data_int16[o_offset.r] = uint16_t(clamp(uint(floor(val.r * sfp(65535.0f))), 0, 65535)); \n\
     dst_data_int16[o_offset.g] = uint16_t(clamp(uint(floor(val.g * sfp(65535.0f))), 0, 65535)); \n\
     dst_data_int16[o_offset.b] = uint16_t(clamp(uint(floor(val.b * sfp(65535.0f))), 0, 65535)); \n\
@@ -911,8 +911,8 @@ void store_rgba_int16_side_by_side(sfpvec4 val, int x, int y, int w, int cstep, 
 " \n\
 void store_rgba_float16_side_by_side(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    int planner = x % 2 == 0 ? x / 2 : x / 2 + p.w / 2; \n\
-    ivec4 o_offset = (y * w + planner) * cstep + color_format_mapping_vec4(format); \n\
+    int planar = x % 2 == 0 ? x / 2 : x / 2 + p.w / 2; \n\
+    ivec4 o_offset = (y * w + planar) * cstep + color_format_mapping_vec4(format); \n\
     dst_data_float16[o_offset.r] = float16_t(clamp(val.r, sfp(0.f), sfp(1.f))); \n\
     dst_data_float16[o_offset.g] = float16_t(clamp(val.g, sfp(0.f), sfp(1.f))); \n\
     dst_data_float16[o_offset.b] = float16_t(clamp(val.b, sfp(0.f), sfp(1.f))); \n\
@@ -924,8 +924,8 @@ void store_rgba_float16_side_by_side(sfpvec4 val, int x, int y, int w, int cstep
 " \n\
 void store_rgba_float32_side_by_side(sfpvec4 val, int x, int y, int w, int cstep, int format) \n\
 { \n\
-    int planner = x % 2 == 0 ? x / 2 : x / 2 + p.w / 2; \n\
-    ivec4 o_offset = (y * w + planner) * cstep + color_format_mapping_vec4(format); \n\
+    int planar = x % 2 == 0 ? x / 2 : x / 2 + p.w / 2; \n\
+    ivec4 o_offset = (y * w + planar) * cstep + color_format_mapping_vec4(format); \n\
     dst_data_float32[o_offset.r] = float(clamp(val.r, sfp(0.f), sfp(1.f))); \n\
     dst_data_float32[o_offset.g] = float(clamp(val.g, sfp(0.f), sfp(1.f))); \n\
     dst_data_float32[o_offset.b] = float(clamp(val.b, sfp(0.f), sfp(1.f))); \n\

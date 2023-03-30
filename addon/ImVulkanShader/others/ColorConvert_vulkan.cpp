@@ -372,7 +372,9 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInte
     }
 
     VkMat dst_gpu;
-    dst_gpu.create_type(im_YUV.w, im_YUV.h, 4, im_RGB.type, opt.blob_vkallocator);
+    int dst_width = im_RGB.w > 0 ? im_RGB.w : im_YUV.w;
+    int dst_height = im_RGB.h > 0 ? im_RGB.h : im_YUV.h;
+    dst_gpu.create_type(dst_width, dst_height, 4, im_RGB.type, opt.blob_vkallocator);
     im_RGB.copy_attribute(im_YUV);
 
     VkMat src_gpu;
@@ -469,7 +471,9 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const
     }
 
     VkMat dst_gpu;
-    dst_gpu.create_type(im_Y.w, im_Y.h, 4, im_RGB.type, opt.blob_vkallocator);
+    int dst_width = im_RGB.w > 0 ? im_RGB.w : im_Y.w;
+    int dst_height = im_RGB.h > 0 ? im_RGB.h : im_Y.h;
+    dst_gpu.create_type(dst_width, dst_height, 4, im_RGB.type, opt.blob_vkallocator);
     im_RGB.copy_attribute(im_Y);
 
     VkMat src_y_gpu, src_u_gpu, src_v_gpu;
