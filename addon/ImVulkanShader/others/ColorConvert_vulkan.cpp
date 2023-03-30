@@ -363,12 +363,11 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_YUV, VkMat& dst, ImInterp
     cmd->record_pipeline(pipeline_yuv_rgb, bindings, constants, dst);
 }
 
-double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInterpolateMode type) const
+bool ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInterpolateMode type) const
 {
-    double ret = 0.0;
     if (!vkdev || !pipeline_yuv_rgb || !cmd)
     {
-        return ret;
+        return false;
     }
 
     VkMat dst_gpu;
@@ -404,10 +403,10 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInte
         im_RGB = dst_gpu;
     cmd->submit_and_wait();
 #ifdef VULKAN_SHADER_BENCHMARK
-    ret = cmd->benchmark();
+    auto ret = cmd->benchmark();
 #endif
     cmd->reset();
-    return ret;
+    return true;
 }
 
 void ColorConvert_vulkan::upload_param(const VkMat& Im_Y, const VkMat& Im_U, const VkMat& Im_V, VkMat& dst, ImInterpolateMode type) const
@@ -462,12 +461,11 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_Y, const VkMat& Im_U, con
     cmd->record_pipeline(pipeline_y_u_v_rgb, bindings, constants, dst);
 }
 
-double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const ImMat& im_V, ImMat & im_RGB, ImInterpolateMode type) const
+bool ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const ImMat& im_V, ImMat & im_RGB, ImInterpolateMode type) const
 {
-    double ret = 0.0;
     if (!vkdev || !pipeline_y_u_v_rgb || !cmd)
     {
-        return ret;
+        return false;
     }
 
     VkMat dst_gpu;
@@ -523,10 +521,10 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const
         im_RGB = dst_gpu;
     cmd->submit_and_wait();
 #ifdef VULKAN_SHADER_BENCHMARK
-    ret = cmd->benchmark();
+    auto ret = cmd->benchmark();
 #endif
     cmd->reset();
-    return ret;
+    return true;
 }
 
 // RGBA to YUV functions
