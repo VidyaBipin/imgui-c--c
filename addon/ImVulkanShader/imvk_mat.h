@@ -225,8 +225,8 @@ inline void VkMat::create(int _w, size_t _elemsize, VkAllocator* _allocator)
     allocator = _allocator;
 
     dims = 1;
-    w = _w;
-    h = 1;
+    dw = w = _w;
+    dh = h = 1;
     c = 1;
     type = _elemsize == 1 ? IM_DT_INT8 : _elemsize == 2 ? IM_DT_INT16 : IM_DT_FLOAT32;
     color_space = IM_CS_SRGB;
@@ -259,8 +259,8 @@ inline void VkMat::create(int _w, int _h, size_t _elemsize, VkAllocator* _alloca
     allocator = _allocator;
 
     dims = 2;
-    w = _w;
-    h = _h;
+    dw = w = _w;
+    dh = h = _h;
     c = 1;
     type = _elemsize == 1 ? IM_DT_INT8 : _elemsize == 2 ? IM_DT_INT16 : IM_DT_FLOAT32;
     color_space = IM_CS_SRGB;
@@ -293,8 +293,8 @@ inline void VkMat::create(int _w, int _h, int _c, size_t _elemsize, VkAllocator*
     allocator = _allocator;
 
     dims = 3;
-    w = _w;
-    h = _h;
+    dw = w = _w;
+    dh = h = _h;
     c = _c;
     type = _elemsize == 1 ? IM_DT_INT8 : _elemsize == 2 ? IM_DT_INT16 : IM_DT_FLOAT32;
     color_space = IM_CS_SRGB;
@@ -327,8 +327,8 @@ inline void VkMat::create(int _w, size_t _elemsize, int _elempack, VkAllocator* 
     allocator = _allocator;
 
     dims = 1;
-    w = _w;
-    h = 1;
+    dw = w = _w;
+    dh = h = 1;
     c = 1;
     type = _elemsize == 1 ? IM_DT_INT8 : _elemsize == 2 ? IM_DT_INT16 : IM_DT_FLOAT32;
     color_space = IM_CS_SRGB;
@@ -361,8 +361,8 @@ inline void VkMat::create(int _w, int _h, size_t _elemsize, int _elempack, VkAll
     allocator = _allocator;
 
     dims = 2;
-    w = _w;
-    h = _h;
+    dw = w = _w;
+    dh = h = _h;
     c = 1;
     type = _elemsize == 1 ? IM_DT_INT8 : _elemsize == 2 ? IM_DT_INT16 : IM_DT_FLOAT32;
     color_space = IM_CS_SRGB;
@@ -395,8 +395,8 @@ inline void VkMat::create(int _w, int _h, int _c, size_t _elemsize, int _elempac
     allocator = _allocator;
 
     dims = 3;
-    w = _w;
-    h = _h;
+    dw = w = _w;
+    dh = h = _h;
     c = _c;
     type = _elemsize == 1 ? IM_DT_INT8 : _elemsize == 2 ? IM_DT_INT16 : IM_DT_FLOAT32;
     color_space = IM_CS_SRGB;
@@ -429,8 +429,8 @@ inline void VkMat::create_type(int _w, ImDataType _t, VkAllocator* _allocator)
     allocator = _allocator;
 
     dims = 1;
-    w = _w;
-    h = 1;
+    dw = w = _w;
+    dh = h = 1;
     c = 1;
 
     cstep = w;
@@ -463,8 +463,8 @@ inline void VkMat::create_type(int _w, int _h, ImDataType _t, VkAllocator* _allo
     allocator = _allocator;
 
     dims = 2;
-    w = _w;
-    h = _h;
+    dw = w = _w;
+    dh = h = _h;
     c = 1;
 
     cstep = (size_t)w * h;
@@ -497,8 +497,8 @@ inline void VkMat::create_type(int _w, int _h, int _c, ImDataType _t, VkAllocato
     allocator = _allocator;
 
     dims = 3;
-    w = _w;
-    h = _h;
+    dw = w = _w;
+    dh = h = _h;
     c = _c;
 
     cstep = Im_AlignSize((size_t)w * h * elemsize, 16) / elemsize;
@@ -528,6 +528,8 @@ inline void VkMat::create_like(const ImMat& m, VkAllocator* _allocator)
         create(m.w, m.h, m.elemsize, m.elempack, _allocator);
     if (_dims == 3)
         create(m.w, m.h, m.c, m.elemsize, m.elempack, _allocator);
+    dw = m.dw;
+    dh = m.dh;
     type = m.type;
     color_space = m.color_space;
     color_format = m.color_format;
@@ -551,6 +553,8 @@ inline void VkMat::create_like(const VkMat& m, VkAllocator* _allocator)
         create(m.w, m.h, m.elemsize, m.elempack, _allocator);
     if (_dims == 3)
         create(m.w, m.h, m.c, m.elemsize, m.elempack, _allocator);
+    dw = m.dw;
+    dh = m.dh;
     type = m.type;
     color_space = m.color_space;
     color_format = m.color_format;
