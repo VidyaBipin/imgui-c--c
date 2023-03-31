@@ -868,8 +868,15 @@ void ImGui::KeyPointEditor::AddPoint(size_t curveIndex, ImVec2 value, ImCurveEdi
 {
     if (curveIndex < mKeys.size())
     {
-        mKeys[curveIndex].points.push_back({ImVec2(value.x, value.y), type});
-        SortValues(curveIndex);
+        auto iter = std::find_if(mKeys[curveIndex].points.begin(), mKeys[curveIndex].points.end(), [value](const ImGui::ImCurveEdit::KeyPoint item)
+        {
+            return value.x == item.point.x;
+        });
+        if (iter == mKeys[curveIndex].points.end())
+        {
+            mKeys[curveIndex].points.push_back({ImVec2(value.x, value.y), type});
+            SortValues(curveIndex);
+        }
     }
 }
 
