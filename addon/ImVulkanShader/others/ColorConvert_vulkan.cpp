@@ -227,7 +227,7 @@ bool ColorConvert_vulkan::UploadParam(const VkMat& src, VkMat& dst, ImInterpolat
         else if (src.type == IM_DT_FLOAT32) bindings[7] = src;
         bindings[8] = vkCscCoefs;
 
-        std::vector<vk_constant_type> constants(15);
+        std::vector<vk_constant_type> constants(17);
         constants[0].i = src.w;
         constants[1].i = src.h;
         constants[2].i = dst.c;
@@ -236,13 +236,15 @@ bool ColorConvert_vulkan::UploadParam(const VkMat& src, VkMat& dst, ImInterpolat
         constants[5].i = src.color_space;
         constants[6].i = src.color_range;
         constants[7].f = (float)((1 << bitDepth) - 1);
-        constants[8].i = dst.w;
-        constants[9].i = dst.h;
-        constants[10].i = dst.c;
-        constants[11].i = dst.color_format;
-        constants[12].i = dst.type;
-        constants[13].i = resize ? 1 : 0;
-        constants[14].i = type;
+        constants[8].i = src.dw;
+        constants[9].i = src.dh;
+        constants[10].i = dst.w;
+        constants[11].i = dst.h;
+        constants[12].i = dst.c;
+        constants[13].i = dst.color_format;
+        constants[14].i = dst.type;
+        constants[15].i = resize ? 1 : 0;
+        constants[16].i = type;
 
         cmd->record_pipeline(pipeline_yuv_rgb, bindings, constants, dst);
     }
