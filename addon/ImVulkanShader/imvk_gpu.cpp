@@ -4006,7 +4006,7 @@ int resolve_shader_info(const uint32_t* spv_data, size_t spv_data_size, ShaderIn
         p += wordcount;
     }
 
-    if (binding_count > 18) // Dicky limited by Vulkan ?
+    if (binding_count > BINDING_MAX) // Dicky limited by Vulkan ?
     {
         fprintf(stderr, "too many binding %d", binding_count);
         return -1;

@@ -8,6 +8,8 @@
 #include "imvk_image_mat.h"
 #include "imvk_vulkan_header_fix.h"
 
+#define BINDING_MAX 32
+
 namespace ImGui 
 {
 // type for vulkan specialization constant and push constant
@@ -329,7 +331,7 @@ public:
     // 1 = storage buffer
     // 2 = storage image
     // 3 = combined image sampler
-    int binding_types[16]; // 16 is large enough I think ...
+    int binding_types[BINDING_MAX]; // 32 is large enough I think ...
 
     int reserved_0;
     int reserved_1;
