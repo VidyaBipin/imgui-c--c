@@ -23,7 +23,7 @@ layout (push_constant) uniform parameter \n\
 sfpvec2 hs_to_point(sfpvec4 hs) \n\
 { \n\
     sfpvec2 point = sfpvec2(0.f); \n\
-    sfp angle = hs.x * M_PI / sfp(180.f); \n\
+    sfp angle = hs.x * sfp(0.017453); \n\
     sfp length = clamp(hs.y, sfp(0.f), sfp(1.f)); \n\
     if (hs.z <= sfp(0.5)) \n\
     { \n\
@@ -62,15 +62,16 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
+    if (mod(float(gx), 4) != 0 || mod(float(gx), 4) != 0) // reduce to half size\n\
+        return; \n\
     sfpvec4 rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.format, p.type); \n\
-    rgba += sfpvec4(sfp(0.001f), sfp(0.001f), sfp(0.001f), sfp(0.001f)); \n\
     sfpvec4 hs = rgb_to_hsl(rgba); \n\
     sfpvec2 vector_point = hs_to_point(hs); \n\
     int length = int(hs.z * sfp(20.f)); \n\
     ivec2 point; \n\
     point.x = p.outw / 2 + int(vector_point.x * sfp(p.outw / 2)); \n\
     point.y = p.outh / 2 - int(vector_point.y * sfp(p.outh / 2)); \n\
-    if (point.x >= 0 && point.x < p.outw && point.y >= 0 && point.y < p.outh) \n\
+    if (point.x > 0 && point.x < p.outw && point.y >=0 && point.y < p.outh) \n\
     { \n\
         memoryBarrierBuffer(); \n\
         int offset = point.y * p.outw + point.x; \n\

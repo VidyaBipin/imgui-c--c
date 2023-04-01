@@ -60,7 +60,6 @@ void cie(int x, int y) \n\
     ivec2 ixy = {0, 0}; \n\
     sfpvec2 fxy = {sfp(0.f), sfp(0.f)}; \n\
     sfpvec4 rgba = load_rgba(x, y, p.w, p.h, p.cstep, p.format, p.type); \n\
-    rgba += sfpvec4(sfp(0.001f), sfp(0.001f), sfp(0.001f), sfp(0.001f)); \n\
     sfpvec3 xyz = rgb_to_xyz(rgba); \n\
     if (p.cie == LUV) \n\
     { \n\
@@ -93,6 +92,8 @@ void main() \n\
     int gx = int(gl_GlobalInvocationID.x); \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.w || gy >= p.h) \n\
+        return; \n\
+    if (mod(float(gx), 4) != 0 || mod(float(gx), 4) != 0) // reduce to half size\n\
         return; \n\
 \n\
     cie(gx, gy); \n\

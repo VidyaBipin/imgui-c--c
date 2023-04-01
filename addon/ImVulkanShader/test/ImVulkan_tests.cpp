@@ -1,5 +1,6 @@
 #include "ImVulkanShader.h"
 #include <iostream>
+#include <unistd.h>
 #include <ALM_vulkan.h>
 #include <Bilateral_vulkan.h>
 #include <Box.h>
@@ -274,10 +275,36 @@ static void test_others(int gpu, int times)
 
 int main(int argc, char ** argv)
 {
-    ImGui::ImVulkanShaderInit();
-    mat1.create_type(TEST_WIDTH, TEST_HEIGHT, 4, IM_DT_INT8);
+    int test_flags = argc > 1 ? 0 : 0xFFFFFFFF;
+    int test_gpu = TEST_GPU;
+    int test_loop = TEST_TIMES;
+    int o = -1;
+    const char *option_str = "aftsog:n:";
+    while ((o = getopt(argc, argv, option_str)) != -1)
+    {
+        switch (o)
+        {
+            case 'a': test_flags = 0xFFFFFFFF; break;
+            case 'f': test_flags |= 0x00000001; break;
+            case 't': test_flags |= 0x00000002; break;
+            case 's': test_flags |= 0x00000004; break;
+            case 'o': test_flags |= 0x00000008; break;
+            case 'g': test_gpu = atoi(optarg); break;
+            case 'n': test_loop = atoi(optarg); break;
+            default: break;
+        }
+    }
 
+    ImGui::ImVulkanShaderInit();
+    ImGui::VulkanDevice* vkdev = ImGui::get_gpu_device(test_gpu);
+    std::string device_name = vkdev->info.device_name();
+
+    mat1.create_type(TEST_WIDTH, TEST_HEIGHT, 4, IM_DT_INT8);
+    mat1.randn(128.f, 128.f);
+    
     // test ImMat to VkMat
+    std::cout << "Test GPU:" << test_gpu << "\t(" << device_name << ")" << std::endl;
+    std::cout << "Test Loop:" << test_loop << std::endl;
     std::cout << "Global:" << std::endl;
     ImGui::VkMat gmat;
     gmat.device_number = TEST_GPU;
@@ -301,10 +328,10 @@ int main(int argc, char ** argv)
     if (mat2.empty())
         mat2.create_type(TEST_WIDTH, TEST_HEIGHT, 4, IM_DT_INT8);
     
-    test_filters(TEST_GPU, TEST_TIMES);
-    test_fusions(TEST_GPU, TEST_TIMES);
-    test_scopes(TEST_GPU, TEST_TIMES);
-    test_others(TEST_GPU, TEST_TIMES);
+    if (test_flags & 0x00000001) test_filters(test_gpu, test_loop);
+    if (test_flags & 0x00000002) test_fusions(test_gpu, test_loop);
+    if (test_flags & 0x00000004) test_scopes(test_gpu, test_loop);
+    if (test_flags & 0x00000008) test_others(test_gpu, test_loop);
 
     ImGui::ImVulkanShaderClear();
     return 0;

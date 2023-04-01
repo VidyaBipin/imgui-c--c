@@ -23,6 +23,28 @@ layout (push_constant) uniform parameter \n\
 
 #define SHADER_MAIN \
 " \n\
+sfpmat3 matrix_mat_r2y = { \n\
+    {sfp(0.262700f), sfp(-0.139630f), sfp( 0.500000f)}, \n\
+    {sfp(0.678000f), sfp(-0.360370f), sfp(-0.459786f)}, \n\
+    {sfp(0.059300f), sfp( 0.500000f), sfp(-0.040214f)} \n\
+}; \n\
+sfpmat3 matrix_mat_y2r = { \n\
+    {sfp(1.000000f), sfp( 1.000000f),  sfp(1.000000f)}, \n\
+    {sfp(0.000000f), sfp(-0.164553f),  sfp(1.881400f)}, \n\
+    {sfp(1.474600f), sfp(-0.571353f),  sfp(0.000000f)} \n\
+}; \n\
+sfpvec3 rgb_to_yuv(sfpvec3 rgb) \n\
+{ \n\
+    sfpvec3 yuv_offset = {sfp(0.f), sfp(0.5f), sfp(0.5f)}; \n\
+    sfpvec3 yuv = yuv_offset + matrix_mat_r2y * rgb; \n\
+    return clamp(yuv, sfp(0.f), sfp(1.f)); \n\
+} \n\
+sfpvec3 yuv_to_rgb(sfpvec3 yuv) \n\
+{ \n\
+    sfpvec3 yuv_offset = {sfp(0.f), sfp(0.5f), sfp(0.5f)}; \n\
+    sfpvec3 rgb = matrix_mat_y2r * (yuv - yuv_offset); \n\
+    return clamp(rgb, sfp(0.f), sfp(1.f)); \n\
+} \n\
 void main() \n\
 { \n\
     int gx = int(gl_GlobalInvocationID.x); \n\
@@ -33,18 +55,15 @@ void main() \n\
     int dx = p.separate == 1 ? gx / part : gx; \n\
     int ox = p.separate == 1 ? p.out_w / part : 0; \n\
     sfpvec4 rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
-    sfpvec4 waveform = abs(rgba); \n\
-    waveform.r += sfp(0.001); \n\
-    waveform.g += sfp(0.001); \n\
-    waveform.b += sfp(0.001); \n\
-    waveform.a = sfp(0.299) * waveform.r + sfp(0.587) * waveform.g + sfp(0.114) * waveform.b; \n\
-    int dr = int(waveform.r * sfp(p.out_h - 1)); \n\
+    sfpvec3 yuv = rgb_to_yuv(rgba.rgb); \n\
+    sfpvec3 rgb = yuv_to_rgb(yuv); \n\
+    int dr = clamp(int(rgb.r * sfp(p.out_h - 1)), 0, p.out_h - 1); \n\
     ivec4 offset_r = (dr * p.out_w + dx) * p.out_cstep + ivec4(0, 1, 2, 3); \n\
-    int dg = int(waveform.g * sfp(p.out_h - 1)); \n\
+    int dg = clamp(int(rgb.g * sfp(p.out_h - 1)), 0, p.out_h - 1); \n\
     ivec4 offset_g = (dg * p.out_w + dx + ox) * p.out_cstep + ivec4(0, 1, 2, 3); \n\
-    int db = int(waveform.b * sfp(p.out_h - 1)); \n\
+    int db = clamp(int(rgb.b * sfp(p.out_h - 1)), 0, p.out_h - 1); \n\
     ivec4 offset_b = (db * p.out_w + dx + ox + ox) * p.out_cstep + ivec4(0, 1, 2, 3); \n\
-    int dy = int(waveform.a * sfp(p.out_h - 1)); \n\
+    int dy = int(yuv.x * sfp(p.out_h - 1)); \n\
     ivec4 offset_y = (dy * p.out_w + dx + ox + ox + ox) * p.out_cstep + ivec4(0, 1, 2, 3); \n\
     memoryBarrierBuffer(); \n\
     atomicAdd(waveform_int32_data[offset_r.r], 1); \n\

@@ -20,27 +20,48 @@ layout (push_constant) uniform parameter \n\
 
 #define SHADER_MAIN \
 " \n\
+sfpmat3 matrix_mat_r2y = { \n\
+    {sfp(0.262700f), sfp(-0.139630f), sfp( 0.500000f)}, \n\
+    {sfp(0.678000f), sfp(-0.360370f), sfp(-0.459786f)}, \n\
+    {sfp(0.059300f), sfp( 0.500000f), sfp(-0.040214f)} \n\
+}; \n\
+sfpmat3 matrix_mat_y2r = { \n\
+    {sfp(1.000000f), sfp( 1.000000f),  sfp(1.000000f)}, \n\
+    {sfp(0.000000f), sfp(-0.164553f),  sfp(1.881400f)}, \n\
+    {sfp(1.474600f), sfp(-0.571353f),  sfp(0.000000f)} \n\
+}; \n\
+sfpvec3 rgb_to_yuv(sfpvec3 rgb) \n\
+{ \n\
+    sfpvec3 yuv_offset = {sfp(0.f), sfp(0.5f), sfp(0.5f)}; \n\
+    sfpvec3 yuv = yuv_offset + matrix_mat_r2y * rgb; \n\
+    return clamp(yuv, sfp(0.f), sfp(1.f)); \n\
+} \n\
+sfpvec3 yuv_to_rgb(sfpvec3 yuv) \n\
+{ \n\
+    sfpvec3 yuv_offset = {sfp(0.f), sfp(0.5f), sfp(0.5f)}; \n\
+    sfpvec3 rgb = matrix_mat_y2r * (yuv - yuv_offset); \n\
+    return clamp(rgb, sfp(0.f), sfp(1.f)); \n\
+} \n\
 void main() \n\
 { \n\
     int gx = int(gl_GlobalInvocationID.x); \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
+    if (mod(float(gx), 2) != 0 || mod(float(gx), 2) != 0) // reduce to half size\n\
+        return; \n\
     sfpvec4 rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
-    sfpvec4 histogram = abs(rgba); \n\
-    histogram.r += sfp(0.001); \n\
-    histogram.g += sfp(0.001); \n\
-    histogram.b += sfp(0.001); \n\
-    histogram.a = sfp(0.299) * histogram.r + sfp(0.587) * histogram.g + sfp(0.114) * histogram.b; \n\
-    uint rid = clamp(uint(floor(histogram.r * sfp(p.out_w - 1))), 0, p.out_w - 1) + 0 * p.out_cstep; \n\
-    uint gid = clamp(uint(floor(histogram.g * sfp(p.out_w - 1))), 0, p.out_w - 1) + 1 * p.out_cstep; \n\
-    uint bid = clamp(uint(floor(histogram.b * sfp(p.out_w - 1))), 0, p.out_w - 1) + 2 * p.out_cstep; \n\
-    uint yid = clamp(uint(floor(histogram.a * sfp(p.out_w - 1))), 0, p.out_w - 1) + 3 * p.out_cstep; \n\
+    sfpvec3 yuv = rgb_to_yuv(rgba.rgb); \n\
+    sfpvec3 rgb = yuv_to_rgb(yuv) * sfp(p.out_w - 1); \n\
+    uint rid = clamp(uint(rgb.r), 0, p.out_w - 1) + 0 * p.out_cstep; \n\
+    uint gid = clamp(uint(rgb.g), 0, p.out_w - 1) + 1 * p.out_cstep; \n\
+    uint bid = clamp(uint(rgb.b), 0, p.out_w - 1) + 2 * p.out_cstep; \n\
+    uint yid = clamp(uint(yuv.x * sfp(p.out_w - 1)), 0, p.out_w - 1) + 3 * p.out_cstep; \n\
     memoryBarrierBuffer(); \n\
-    atomicAdd(histogram_int32_data[rid], 1); \n\
-    atomicAdd(histogram_int32_data[gid], 1); \n\
-    atomicAdd(histogram_int32_data[bid], 1); \n\
-    atomicAdd(histogram_int32_data[yid], 1); \n\
+    if (rgb.r > sfp(0)) atomicAdd(histogram_int32_data[rid], 1); \n\
+    if (rgb.g > sfp(0)) atomicAdd(histogram_int32_data[gid], 1); \n\
+    if (rgb.b > sfp(0)) atomicAdd(histogram_int32_data[bid], 1); \n\
+    if (yuv.x > sfp(0)) atomicAdd(histogram_int32_data[yid], 1); \n\
     memoryBarrierBuffer(); \n\
 } \
 "

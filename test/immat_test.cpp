@@ -5,9 +5,10 @@ int main(int argc, char ** argv)
 {
     int mw = 4;
     int mh = 4;
-    ImGui::ImMat A, B, C;
+    ImGui::ImMat A, B, C, X;
     A.create_type(mw, mh, IM_DT_FLOAT32);
     B.create_type(mw, mh, IM_DT_FLOAT32);
+    X.create_type(mw, mh, IM_DT_INT8);
 
     for (int y = 0; y < A.h; y++)
     {
@@ -89,6 +90,9 @@ int main(int argc, char ** argv)
     // mat matrix math
     C = n.inv<float>();
     C.print("C=A.randn.i");
+
+    X = X.randn(128.f, 128.f);
+    X.print("INT8 randn");
 
     // fp16
     ImGui::ImMat A16, B16, C16;

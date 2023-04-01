@@ -535,6 +535,7 @@ bool ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const I
     cmd->submit_and_wait();
 #ifdef VULKAN_SHADER_BENCHMARK
     auto ret = cmd->benchmark();
+    //cmd->benchmark_print();
 #endif
     cmd->reset();
     return true;

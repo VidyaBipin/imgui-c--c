@@ -5004,7 +5004,7 @@ inline void ImMat::print(std::string name)
         {
             switch(type)
             {
-                case IM_DT_INT8:    std::cout << at<int8_t> (_w) << " "; break;
+                case IM_DT_INT8:    std::cout << (int)at<int8_t> (_w) << " "; break;
                 case IM_DT_INT16:   std::cout << at<int16_t>(_w) << " "; break;
                 case IM_DT_INT32:   std::cout << at<int32_t>(_w) << " "; break;
                 case IM_DT_INT64:   std::cout << at<int64_t>(_w) << " "; break;
@@ -5024,7 +5024,7 @@ inline void ImMat::print(std::string name)
             {
                 switch(type)
                 {
-                    case IM_DT_INT8:    std::cout << at<int8_t> (_w, _h) << " "; break;
+                    case IM_DT_INT8:    std::cout << (int)at<int8_t> (_w, _h) << " "; break;
                     case IM_DT_INT16:   std::cout << at<int16_t>(_w, _h) << " "; break;
                     case IM_DT_INT32:   std::cout << at<int32_t>(_w, _h) << " "; break;
                     case IM_DT_INT64:   std::cout << at<int64_t>(_w, _h) << " "; break;
