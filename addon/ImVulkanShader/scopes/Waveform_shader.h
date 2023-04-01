@@ -51,6 +51,8 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
+    if (mod(float(gy), 2) != 0) // reduce to half size\n\
+        return; \n\
     int part = p.show_y == 1 ? 4 : 3; \n\
     int dx = p.separate == 1 ? gx / part : gx; \n\
     int ox = p.separate == 1 ? p.out_w / part : 0; \n\

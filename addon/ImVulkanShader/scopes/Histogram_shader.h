@@ -48,7 +48,7 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
-    if (mod(float(gx), 2) != 0 || mod(float(gx), 2) != 0) // reduce to half size\n\
+    if (mod(float(gx), 2) != 0 || mod(float(gy), 2) != 0) // reduce to half size\n\
         return; \n\
     sfpvec4 rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     sfpvec3 yuv = rgb_to_yuv(rgba.rgb); \n\

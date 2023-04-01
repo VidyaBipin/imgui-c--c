@@ -93,7 +93,7 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
-    if (mod(float(gx), 4) != 0 || mod(float(gx), 4) != 0) // reduce to half size\n\
+    if (mod(float(gx), 4) != 0 || mod(float(gy), 4) != 0) // reduce to half size\n\
         return; \n\
 \n\
     cie(gx, gy); \n\
