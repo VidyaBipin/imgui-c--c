@@ -99,8 +99,11 @@ int main(int argc, char** argv)
     io.Fonts->AddFontDefault(property.font_scale);
     io.FontGlobalScale = 1.0f / property.font_scale;
     if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    if (property.navigator)
+    {
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    }
     if (property.docking) io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
     if (property.viewport)io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
     if (!property.auto_merge) io.ConfigViewportsNoAutoMerge = true;

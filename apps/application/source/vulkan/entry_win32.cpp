@@ -258,7 +258,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     io.Fonts->AddFontDefault(property.font_scale);
     io.FontGlobalScale = 1.0f / property.font_scale;
     if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    if (property.navigator)
+    {
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    }
     // Setup App setting file path
     auto setting_path = property.using_setting_path ? ImGuiHelper::settings_path(property.name) : "";
     auto ini_name = property.name;

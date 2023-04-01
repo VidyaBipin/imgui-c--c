@@ -50,6 +50,7 @@ typedef struct ApplicationWindowProperty
     bool resizable  {true};
     bool docking    {true};
     bool viewport   {true};
+    bool navigator  {true};
     bool auto_merge {true};
     bool center     {true};
     bool power_save {true};
