@@ -502,7 +502,8 @@ bool Example_Frame(void* handle, bool app_will_quit)
             if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
             {
                 auto platformio = ImGui::GetPlatformIO();
-                if (platformio.Platform_FullScreen) platformio.Platform_FullScreen(ImGui::GetMainViewport(), example->show_viewport_fullscreen);
+                //if (platformio.Platform_FullScreen) platformio.Platform_FullScreen(ImGui::GetMainViewport(), example->show_viewport_fullscreen);
+                if (platformio.Platform_FullScreen) platformio.Platform_FullScreen(ImGui::GetWindowViewport(), example->show_viewport_fullscreen);
             }
             else
                 Application_FullScreen(example->show_viewport_fullscreen);
