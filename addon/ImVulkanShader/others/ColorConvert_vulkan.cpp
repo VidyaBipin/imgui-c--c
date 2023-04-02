@@ -73,16 +73,17 @@ ColorConvert_vulkan::~ColorConvert_vulkan()
     }
 }
 
-bool ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMat, ImInterpolateMode type)
+double ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMat, ImInterpolateMode type)
 {
+    double ret = -1.0;
     if (!vkdev || !pipeline_gray_rgb || !pipeline_yuv_rgb || !pipeline_rgb_yuv || !pipeline_conv)
-        return false;
+        return ret;
     if (dstMat.color_format < IM_CF_BGR)
     {
         std::ostringstream oss;
         oss << "Argument 'dstMat' has UNSUPPORTED color format " << srcMat.color_format << "!";
         mErrMsg = oss.str();
-        return false;
+        return ret;
     }
 
     dstMat.copy_attribute(srcMat);
@@ -99,7 +100,7 @@ bool ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMat,
             dstClrCatg != 1)
         {
             mErrMsg = "Only support rgb input format ABGR/ARGB/RGBA/BGRA!";
-            return false;
+            return ret;
         }
     }
     // destination is RGB
@@ -110,7 +111,7 @@ bool ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMat,
             dstMat.color_format != IM_CF_RGBA && dstMat.color_format != IM_CF_BGRA)
         {
             mErrMsg = "Only support rgb output format ABGR/ARGB/RGBA/BGRA!";
-            return false;
+            return ret;
         }
         dstMat.color_range = IM_CR_FULL_RANGE;
     }
@@ -145,8 +146,20 @@ bool ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMat,
         dstVkMat.create_like(dstMat, opt.blob_vkallocator);
     }
 
-    if (!UploadParam(srcVkMat, dstVkMat, type))
-        return false;
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
+    auto ret_update = UploadParam(srcVkMat, dstVkMat, type);
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
+
+    if (!ret_update)
+    {
+        return ret;
+    }
 
     if (dstMat.device == IM_DD_CPU)
         cmd->record_clone(dstVkMat, dstMat, opt);
@@ -157,9 +170,11 @@ bool ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMat,
     }
 
     cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#endif
     cmd->reset();
-    
-    return true;
+    return ret;
 }
 
 bool ColorConvert_vulkan::UploadParam(const VkMat& src, VkMat& dst, ImInterpolateMode type)
@@ -366,11 +381,12 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_YUV, VkMat& dst, ImInterp
     cmd->record_pipeline(pipeline_yuv_rgb, bindings, constants, dst);
 }
 
-bool ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInterpolateMode type) const
+double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInterpolateMode type) const
 {
+    double ret = -1.f;
     if (!vkdev || !pipeline_yuv_rgb || !cmd)
     {
-        return false;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -409,10 +425,10 @@ bool ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInterp
         im_RGB = dst_gpu;
     cmd->submit_and_wait();
 #ifdef VULKAN_SHADER_BENCHMARK
-    auto ret = cmd->benchmark();
+    ret = cmd->benchmark();
 #endif
     cmd->reset();
-    return true;
+    return ret;
 }
 
 void ColorConvert_vulkan::upload_param(const VkMat& Im_Y, const VkMat& Im_U, const VkMat& Im_V, VkMat& dst, ImInterpolateMode type) const
@@ -471,11 +487,12 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_Y, const VkMat& Im_U, con
     cmd->record_pipeline(pipeline_y_u_v_rgb, bindings, constants, dst);
 }
 
-bool ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const ImMat& im_V, ImMat & im_RGB, ImInterpolateMode type) const
+double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const ImMat& im_V, ImMat & im_RGB, ImInterpolateMode type) const
 {
+    double ret = -1.f;
     if (!vkdev || !pipeline_y_u_v_rgb || !cmd)
     {
-        return false;
+        return ret;
     }
 
     VkMat dst_gpu;
@@ -534,17 +551,18 @@ bool ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const I
         im_RGB = dst_gpu;
     cmd->submit_and_wait();
 #ifdef VULKAN_SHADER_BENCHMARK
-    auto ret = cmd->benchmark();
+    ret = cmd->benchmark();
     //cmd->benchmark_print();
 #endif
     cmd->reset();
-    return true;
+    return ret;
 }
 
 // RGBA to YUV functions
-void ColorConvert_vulkan::upload_param(const VkMat& Im_RGB, VkMat& dst, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int video_shift) const
+void ColorConvert_vulkan::upload_param(const VkMat& Im_RGB, VkMat& dst, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int depth) const
 {
     VkMat matrix_r2y_gpu;
+    int bitDepth = depth != 0 ? depth : Im_RGB.type == IM_DT_INT8 ? 8 : Im_RGB.type == IM_DT_INT16 ? 16 : 8;
     const ImMat conv_mat_r2y = *color_table[1][color_range][color_space];
     cmd->record_clone(conv_mat_r2y, matrix_r2y_gpu, opt);
     std::vector<VkMat> bindings(9);
@@ -572,11 +590,11 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_RGB, VkMat& dst, ImColorF
     constants[9].i = dst.type;
     constants[10].i = color_space;
     constants[11].i = color_range;
-    constants[12].f = (float)((1 << video_shift) - 1);
+    constants[12].f = (float)((1 << bitDepth) - 1);
     cmd->record_pipeline(pipeline_rgb_yuv, bindings, constants, dst);
 }
 
-double ColorConvert_vulkan::RGBA2YUV(const ImMat& im_RGB, ImMat & im_YUV, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int video_shift) const
+double ColorConvert_vulkan::RGBA2YUV(const ImMat& im_RGB, ImMat & im_YUV) const
 {
     double ret = 0.0;
     if (!vkdev || !pipeline_rgb_yuv || !cmd)
@@ -601,7 +619,7 @@ double ColorConvert_vulkan::RGBA2YUV(const ImMat& im_RGB, ImMat & im_YUV, ImColo
     cmd->benchmark_start();
 #endif
 
-    upload_param(src_gpu, dst_gpu, color_format, color_space, color_range, video_shift);
+    upload_param(src_gpu, dst_gpu, im_YUV.color_format, im_YUV.color_space, im_YUV.color_range, im_YUV.depth);
 
 #ifdef VULKAN_SHADER_BENCHMARK
     cmd->benchmark_end();

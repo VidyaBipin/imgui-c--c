@@ -38,7 +38,7 @@ ColorBalance_vulkan::~ColorBalance_vulkan()
     }
 }
 
-void ColorBalance_vulkan::upload_param(const VkMat& src, VkMat& dst, ImVec4& shadows, ImVec4& midtones, ImVec4& highlights, bool preserve_lightness) const
+void ColorBalance_vulkan::upload_param(const VkMat& src, VkMat& dst, ImVec4 shadows, ImVec4 midtones, ImVec4 highlights, bool preserve_lightness) const
 {
     std::vector<VkMat> bindings(8);
     if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
@@ -74,7 +74,7 @@ void ColorBalance_vulkan::upload_param(const VkMat& src, VkMat& dst, ImVec4& sha
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-double ColorBalance_vulkan::filter(const ImMat& src, ImMat& dst, ImVec4& shadows, ImVec4& midtones, ImVec4& highlights, bool preserve_lightness) const
+double ColorBalance_vulkan::filter(const ImMat& src, ImMat& dst, ImVec4 shadows, ImVec4 midtones, ImVec4 highlights, bool preserve_lightness) const
 {
     double ret = 0.0;
     if (!vkdev || !pipe || !cmd)

@@ -11,15 +11,15 @@ public:
     ColorConvert_vulkan(int gpu = -1);
     ~ColorConvert_vulkan();
 
-    bool ConvertColorFormat(const ImMat& srcMat, ImMat& dstMat, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC);
+    double ConvertColorFormat(const ImMat& srcMat, ImMat& dstMat, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC);
     std::string GetError() const { return mErrMsg; }
 
-    double RGBA2YUV(const ImMat& im_RGB, ImMat & im_YUV, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int video_shift) const;
+    double RGBA2YUV(const ImMat& im_RGB, ImMat & im_YUV) const;
     double GRAY2RGBA(const ImMat& im, ImMat & im_RGB, ImColorSpace color_space, ImColorRange color_range, int video_depth, int video_shift) const;
     double Conv(const ImMat& im, ImMat & om) const;
 
-    bool YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC) const;
-    bool YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const ImMat& im_V, ImMat & im_RGB, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC) const;
+    double YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC) const;
+    double YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const ImMat& im_V, ImMat & im_RGB, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC) const;
 
 public:
     const VulkanDevice* vkdev;

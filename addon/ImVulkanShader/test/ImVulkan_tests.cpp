@@ -5,6 +5,11 @@
 #include <Bilateral_vulkan.h>
 #include <Box.h>
 #include <Brightness_vulkan.h>
+#include <Canny_vulkan.h>
+#include <CAS_vulkan.h>
+#include <ChromaKey_vulkan.h>
+#include <ColorBalance_vulkan.h>
+#include <ColorCurve_vulkan.h>
 
 #include <AlphaBlending_vulkan.h>
 #include <BookFlip_vulkan.h>
@@ -17,11 +22,13 @@
 #include <Vector_vulkan.h>
 #include <Waveform_vulkan.h>
 
+#include <ColorConvert_vulkan.h>
+
 #define TEST_WIDTH  1920
 #define TEST_HEIGHT 1080
 #define TEST_GPU    0
 #define TEST_TIMES  10
-static ImGui::ImMat mat1, mat2, dstmat;
+static ImGui::ImMat mat1, mat2, mat3, dstmat;
 
 static void test_filters(int gpu, int times)
 {
@@ -94,6 +101,93 @@ static void test_filters(int gpu, int times)
         avg_time = total_time / times;
         std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (Brightness)" << std::endl;
         delete bright;
+    }
+
+    // test Canny
+    ImGui::Canny_vulkan* canny = new ImGui::Canny_vulkan(gpu);
+    if (canny)
+    {
+        double avg_time = 0, total_time = 0, max_time = -DBL_MAX, min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = canny->filter(mat1, dstmat, 3, 0.1, 0.45);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (Canny)" << std::endl;
+        delete canny;
+    }
+
+    // test Cas
+    ImGui::CAS_vulkan* cas = new ImGui::CAS_vulkan(gpu);
+    if (cas)
+    {
+        double avg_time = 0, total_time = 0, max_time = -DBL_MAX, min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = cas->filter(mat1, dstmat, 0.95);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (CAS)" << std::endl;
+        delete cas;
+    }
+
+    // test ChromaKey
+    ImGui::ChromaKey_vulkan* chromakey = new ImGui::ChromaKey_vulkan(gpu);
+    if (chromakey)
+    {
+        double avg_time = 0, total_time = 0, max_time = -DBL_MAX, min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = chromakey->filter(mat1, dstmat, 10.f, {0.0f, 1.0f, 0.0f, 1.0f}, 0.05f, 50.f, 1.0f, CHROMAKEY_OUTPUT_NORMAL);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (ChromaKey)" << std::endl;
+        delete chromakey;
+    }
+
+    // test ColorBalance
+    ImGui::ColorBalance_vulkan* color_balance = new ImGui::ColorBalance_vulkan(gpu);
+    if (color_balance)
+    {
+        double avg_time = 0, total_time = 0, max_time = -DBL_MAX, min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = color_balance->filter(mat1, dstmat, {0.5, 0.5, 0.5, 0.5}, {0.5, 0.5, 0.5, 0.5}, {0.5, 0.5, 0.5, 0.5}, true);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (ColorBalance)" << std::endl;
+        delete color_balance;
+    }
+
+    // test ColorCurve
+    ImGui::ColorCurve_vulkan* color_curve = new ImGui::ColorCurve_vulkan(gpu);
+    if (color_curve)
+    {
+        ImGui::ImMat mat_curve;
+        mat_curve.create_type(1024, 1, 4, IM_DT_FLOAT32);
+        double avg_time = 0, total_time = 0, max_time = -DBL_MAX, min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = color_curve->filter(mat1, dstmat, mat_curve);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (ColorCurve)" << std::endl;
+        delete color_curve;
     }
 
     // TODO::Dicky add more filter test
@@ -270,6 +364,276 @@ static void test_scopes(int gpu, int times)
 
 static void test_others(int gpu, int times)
 {
+    // color convert
+    if (mat1.empty())
+        return;
+    std::cout << "Others:" << std::endl;
+
+    ImGui::ColorConvert_vulkan* convert = new ImGui::ColorConvert_vulkan(gpu);
+    if (convert)
+    {
+        mat1.color_format = IM_CF_NV12;
+        dstmat.color_format = IM_CF_ABGR;
+        double avg_time = 0, total_time = 0, max_time = -DBL_MAX, min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->ConvertColorFormat(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (Convert NV12->RGBA)" << std::endl;
+        
+        mat1.color_format = IM_CF_YUV420;
+        dstmat.color_format = IM_CF_ABGR;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->ConvertColorFormat(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (Convert YUV420->RGBA)" << std::endl;
+
+        mat1.color_format = IM_CF_YUV422;
+        dstmat.color_format = IM_CF_ABGR;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->ConvertColorFormat(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (Convert YUV422->RGBA)" << std::endl;
+
+        mat1.color_format = IM_CF_YUV444;
+        dstmat.color_format = IM_CF_ABGR;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->ConvertColorFormat(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (Convert YUV444->RGBA)" << std::endl;
+
+        mat1.color_format = IM_CF_ABGR;
+        dstmat.color_format = IM_CF_NV12;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->ConvertColorFormat(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (Convert RGBA->NV12)" << std::endl;
+
+        mat1.color_format = IM_CF_ABGR;
+        dstmat.color_format = IM_CF_YUV420;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->ConvertColorFormat(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (Convert RGBA->YUV420)" << std::endl;
+
+        mat1.color_format = IM_CF_ABGR;
+        dstmat.color_format = IM_CF_YUV422;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->ConvertColorFormat(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (Convert RGBA->YUV422)" << std::endl;
+
+        mat1.color_format = IM_CF_ABGR;
+        dstmat.color_format = IM_CF_YUV444;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->ConvertColorFormat(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (Convert RGBA->YUV444)" << std::endl;
+
+        mat1.color_format = IM_CF_NV12;
+        dstmat.color_format = IM_CF_ABGR;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->YUV2RGBA(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (YUV2RGBA NV12)" << std::endl;
+
+        mat1.color_format = IM_CF_YUV420;
+        dstmat.color_format = IM_CF_ABGR;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->YUV2RGBA(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (YUV2RGBA YUV420)" << std::endl;
+
+        mat1.color_format = IM_CF_YUV422;
+        dstmat.color_format = IM_CF_ABGR;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->YUV2RGBA(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (YUV2RGBA YUV422)" << std::endl;
+
+        mat1.color_format = IM_CF_YUV444;
+        dstmat.color_format = IM_CF_ABGR;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->YUV2RGBA(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (YUV2RGBA YUV444)" << std::endl;
+
+        mat1.color_format = IM_CF_NV12;
+        dstmat.color_format = IM_CF_ABGR;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->YUV2RGBA(mat1, mat2, mat3, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (YUV2RGBA Planar NV12)" << std::endl;
+
+        mat1.color_format = IM_CF_YUV420;
+        dstmat.color_format = IM_CF_ABGR;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->YUV2RGBA(mat1, mat2, mat3, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (YUV2RGBA Planar YUV420)" << std::endl;
+
+        mat1.color_format = IM_CF_YUV422;
+        dstmat.color_format = IM_CF_ABGR;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->YUV2RGBA(mat1, mat2, mat3, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (YUV2RGBA Planar YUV422)" << std::endl;
+
+        mat1.color_format = IM_CF_YUV444;
+        dstmat.color_format = IM_CF_ABGR;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->YUV2RGBA(mat1, mat2, mat3, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (YUV2RGBA Planar YUV444)" << std::endl;
+
+        mat1.color_format = IM_CF_ABGR;
+        dstmat.color_format = IM_CF_NV12;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->RGBA2YUV(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (RGBA2YUV NV12)" << std::endl;
+
+        mat1.color_format = IM_CF_ABGR;
+        dstmat.color_format = IM_CF_YUV420;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->RGBA2YUV(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (RGBA2YUV YUV420)" << std::endl;
+
+        mat1.color_format = IM_CF_ABGR;
+        dstmat.color_format = IM_CF_YUV422;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->RGBA2YUV(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (RGBA2YUV YUV422)" << std::endl;
+
+        mat1.color_format = IM_CF_ABGR;
+        dstmat.color_format = IM_CF_YUV444;
+        avg_time = 0; total_time = 0; max_time = -DBL_MAX; min_time = DBL_MAX; 
+        for (int i = 0; i < times; i++)
+        {
+            auto shader_time = convert->RGBA2YUV(mat1, dstmat);
+            if (shader_time > max_time) max_time = shader_time;
+            if (shader_time < min_time) min_time = shader_time;
+            total_time += shader_time;
+        }
+        avg_time = total_time / times;
+        std::cout << "min:" << std::to_string(min_time) << "\tmax:" << std::to_string(max_time) << "\tavg:" << std::to_string(avg_time) << " (RGBA2YUV YUV444)" << std::endl;
+
+        delete convert;
+    }
     // TODO::Dicky add others test
 }
 
@@ -327,6 +691,9 @@ int main(int argc, char ** argv)
 
     if (mat2.empty())
         mat2.create_type(TEST_WIDTH, TEST_HEIGHT, 4, IM_DT_INT8);
+
+    if (mat3.empty())
+        mat3.create_type(TEST_WIDTH, TEST_HEIGHT, 4, IM_DT_INT8);
     
     if (test_flags & 0x00000001) test_filters(test_gpu, test_loop);
     if (test_flags & 0x00000002) test_fusions(test_gpu, test_loop);
