@@ -332,6 +332,7 @@ enum ImInterpolateMode {
 #define IM_MAT_FLAGS_CUSTOM_EOS         (1 << 26)
 #define IM_MAT_FLAGS_CUSTOM_INVALID     (1 << 27)
 #define IM_MAT_FLAGS_CUSTOM_UNSUPPORTED (1 << 28)
+#define IM_MAT_FLAGS_CUSTOM_UPDATED     (1 << 29)
 
 
 #define IM_ESIZE(a)    (a == IM_DT_INT8 ? (size_t)1u : (a == IM_DT_INT16 || a == IM_DT_FLOAT16) ? (size_t)2u : (a == IM_DT_INT32 || a == IM_DT_FLOAT32) ? (size_t)4u : (a == IM_DT_INT64 || a == IM_DT_FLOAT64) ? (size_t)8u : (size_t)0u)

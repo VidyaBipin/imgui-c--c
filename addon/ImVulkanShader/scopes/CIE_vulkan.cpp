@@ -1282,6 +1282,7 @@ double CIE_vulkan::scope(const ImMat& src, ImMat& dst, float intensity, bool sho
 #endif
     cmd->reset();
     dst.copy_attribute(src);
+    dst.flags |= IM_MAT_FLAGS_CUSTOM_UPDATED;
     return ret;
 }
 
