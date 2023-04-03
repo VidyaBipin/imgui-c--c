@@ -172,6 +172,8 @@ double ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMa
     cmd->submit_and_wait();
 #ifdef VULKAN_SHADER_BENCHMARK
     ret = cmd->benchmark();
+#else
+    ret = 1.f;
 #endif
     cmd->reset();
     return ret;
@@ -426,6 +428,8 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInte
     cmd->submit_and_wait();
 #ifdef VULKAN_SHADER_BENCHMARK
     ret = cmd->benchmark();
+#else
+    ret = 1.f;
 #endif
     cmd->reset();
     return ret;
@@ -553,6 +557,8 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const
 #ifdef VULKAN_SHADER_BENCHMARK
     ret = cmd->benchmark();
     //cmd->benchmark_print();
+#else
+    ret = 1.f;
 #endif
     cmd->reset();
     return ret;
@@ -596,7 +602,7 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_RGB, VkMat& dst, ImColorF
 
 double ColorConvert_vulkan::RGBA2YUV(const ImMat& im_RGB, ImMat & im_YUV) const
 {
-    double ret = 0.0;
+    double ret = -1.f;
     if (!vkdev || !pipeline_rgb_yuv || !cmd)
     {
         return ret;
@@ -633,6 +639,8 @@ double ColorConvert_vulkan::RGBA2YUV(const ImMat& im_RGB, ImMat & im_YUV) const
     cmd->submit_and_wait();
 #ifdef VULKAN_SHADER_BENCHMARK
     ret = cmd->benchmark();
+#else
+    ret = 1.f;
 #endif
     cmd->reset();
     return ret;
@@ -669,7 +677,7 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im, VkMat& dst, ImColorSpace
 
 double ColorConvert_vulkan::GRAY2RGBA(const ImMat& im, ImMat & im_RGB, ImColorSpace color_space, ImColorRange color_range, int video_depth, int video_shift) const
 {
-    double ret = 0.0;
+    double ret = -1.f;
     if (!vkdev || !pipeline_gray_rgb || !cmd)
     {
         return ret;
@@ -706,6 +714,8 @@ double ColorConvert_vulkan::GRAY2RGBA(const ImMat& im, ImMat & im_RGB, ImColorSp
     cmd->submit_and_wait();
 #ifdef VULKAN_SHADER_BENCHMARK
     ret = cmd->benchmark();
+#else
+    ret = 1.f;
 #endif
     cmd->reset();
     return ret;
@@ -741,7 +751,7 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im, VkMat& dst) const
 
 double ColorConvert_vulkan::Conv(const ImMat& im, ImMat & om) const
 {
-    double ret = 0.0;
+    double ret = -1.f;
     if (!vkdev || !pipeline_conv || !cmd)
     {
         return ret;
@@ -779,6 +789,8 @@ double ColorConvert_vulkan::Conv(const ImMat& im, ImMat & om) const
     cmd->submit_and_wait();
 #ifdef VULKAN_SHADER_BENCHMARK
     ret = cmd->benchmark();
+#else
+    ret = 1.f;
 #endif
     cmd->reset();
     return ret;
