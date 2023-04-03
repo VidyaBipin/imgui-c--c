@@ -1168,7 +1168,8 @@ void ed::EditorContext::Begin(const char* id, const ImVec2& size)
         previousVisibleRect.Min.y = centerY - 0.5f * height;
         previousVisibleRect.Max.y = centerY + 0.5f * height;
 
-        m_NavigateAction.NavigateTo(previousVisibleRect, Detail::NavigateAction::ZoomMode::Exact, 0.0f);
+        // Disabled by Dicky, for canvas size changed, I don't wanna zoom/origin change 
+        //m_NavigateAction.NavigateTo(previousVisibleRect, Detail::NavigateAction::ZoomMode::Exact, 0.0f);
     }
 #endif
     m_Canvas.SetView(m_NavigateAction.GetView());
