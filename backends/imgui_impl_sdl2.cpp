@@ -5,6 +5,7 @@
 
 // Implemented features:
 //  [X] Platform: Clipboard support.
+//  [X] Platform: Mouse support. Can discriminate Mouse/TouchScreen.
 //  [X] Platform: Keyboard support. Since 1.87 we are using the io.AddKeyEvent() function. Pass ImGuiKey values to all key functions e.g. ImGui::IsKeyPressed(ImGuiKey_Space). [Legacy SDL_SCANCODE_* values will also be supported unless IMGUI_DISABLE_OBSOLETE_KEYIO is set]
 //  [X] Platform: Gamepad support. Enabled with 'io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad'.
 //  [X] Platform: Mouse cursor shape and visibility. Disable with 'io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange'.
@@ -21,6 +22,7 @@
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
 //  2023-XX-XX: Platform: Added support for multiple windows via the ImGuiPlatformIO interface.
+//  2023-04-04: Inputs: Added support for io.AddMouseSourceEvent() to discriminate ImGuiMouseSource_Mouse/ImGuiMouseSource_TouchScreen. (#2702)
 //  2023-02-23: Accept SDL_GetPerformanceCounter() not returning a monotonically increasing value. (#6189, #6114, #3644)
 //  2023-02-07: Implement IME handler (io.SetPlatformImeDataFn will call SDL_SetTextInputRect()/SDL_StartTextInput()).
 //  2023-02-07: *BREAKING CHANGE* Renamed this backend file from imgui_impl_sdl.cpp/.h to imgui_impl_sdl2.cpp/.h in prevision for the future release of SDL3.
@@ -324,8 +326,9 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
                 mouse_pos.x += window_x;
                 mouse_pos.y += window_y;
             }
-            io.FrameCountSinceLastInput = 0; // add By Dicky
+            io.AddMouseSourceEvent(event->motion.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
             io.AddMousePosEvent(mouse_pos.x, mouse_pos.y);
+            io.FrameCountSinceLastInput = 0; // add By Dicky
             return true;
         }
         case SDL_MOUSEWHEEL:
@@ -342,8 +345,9 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
 #ifdef __EMSCRIPTEN__
             wheel_x /= 100.0f;
 #endif
-            io.FrameCountSinceLastInput = 0; // add By Dicky
+            io.AddMouseSourceEvent(event->wheel.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
             io.AddMouseWheelEvent(wheel_x, wheel_y);
+            io.FrameCountSinceLastInput = 0; // add By Dicky
             return true;
         }
         case SDL_MOUSEBUTTONDOWN:
@@ -357,8 +361,9 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             if (event->button.button == SDL_BUTTON_X2) { mouse_button = 4; }
             if (mouse_button == -1)
                 break;
-            io.FrameCountSinceLastInput = 0; // add By Dicky
+            io.AddMouseSourceEvent(event->button.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
             io.AddMouseButtonEvent(mouse_button, (event->type == SDL_MOUSEBUTTONDOWN));
+            io.FrameCountSinceLastInput = 0; // add By Dicky
             bd->MouseButtonsDown = (event->type == SDL_MOUSEBUTTONDOWN) ? (bd->MouseButtonsDown | (1 << mouse_button)) : (bd->MouseButtonsDown & ~(1 << mouse_button));
             return true;
         }
