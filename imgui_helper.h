@@ -443,8 +443,10 @@ IMGUI_API bool file_exists(const std::string& path);
 IMGUI_API std::string path_url(const std::string& path);
 // extract the filename of a full URI (e.g. file:://home/me/toto.mpg -> toto.mpg)
 IMGUI_API std::string path_filename(const std::string& path);
-// get file url suffix
-IMGUI_API std::string path_suffix(const std::string& path);
+// extract the filename prefix of a full URI (e.g. file:://home/me/toto.mpg -> toto)
+IMGUI_API std::string path_filename_prefix(const std::string& path);
+// get file url filename suffix of a full URI (e.g. file:://home/me/toto.mpg -> mpg)
+IMGUI_API std::string path_filename_suffix(const std::string& path);
 // get fixed length string (17 chars) YYYYMMDDHHmmssiii
 IMGUI_API std::string date_time_string();
 // get the OS dependent username

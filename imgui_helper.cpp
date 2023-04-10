@@ -783,7 +783,7 @@ bool ImTextureToFile(ImTextureID texture, std::string path)
         return false;
     }
 
-    auto file_suffix = ImGuiHelper::path_suffix(path);
+    auto file_suffix = ImGuiHelper::path_filename_suffix(path);
     if (!file_suffix.empty())
     {
         if (file_suffix.compare(".png") == 0 || file_suffix.compare(".PNG") == 0)
@@ -2160,7 +2160,19 @@ std::string path_filename(const std::string& path)
     return "";
 }
 
-std::string path_suffix(const std::string& path)
+std::string path_filename_prefix(const std::string& path)
+{
+    auto filename = path_filename(path);
+    if (!filename.empty())
+    {
+        auto pos = filename.find_last_of('.');
+        if (pos != std::string::npos)
+            return filename.substr(0, pos);
+    }
+    return "";
+}
+
+std::string path_filename_suffix(const std::string& path)
 {
     auto filename = path_filename(path);
     if (!filename.empty())
