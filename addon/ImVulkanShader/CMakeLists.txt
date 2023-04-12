@@ -91,9 +91,11 @@ elseif(OPENMP_FOUND)
 endif()
 
 if(PKG_CONFIG_FOUND)
-    pkg_search_module(VULKAN REQUIRED vulkan glslang spirv)
+    pkg_search_module(VULKAN REQUIRED vulkan glslang)
     if (VULKAN_FOUND)
         message(STATUS "[ImVulkanShader] vulkan found")
+    else()
+        find_package(Vulkan REQUIRED)
     endif(VULKAN_FOUND)
 endif(PKG_CONFIG_FOUND)
 
@@ -103,6 +105,7 @@ set(VKSHADER_INC_DIRS
 
 set(LINK_LIBS
     ${LINK_LIBS}
+    ${Vulkan_LIBRARY}
     ${VULKAN_LDFLAGS}
 )
 
