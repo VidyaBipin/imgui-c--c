@@ -105,7 +105,7 @@ set(VKSHADER_INC_DIRS
 
 set(LINK_LIBS
     ${LINK_LIBS}
-    ${Vulkan_LIBRARY}
+    #${Vulkan_LIBRARY}
     ${VULKAN_LDFLAGS}
 )
 

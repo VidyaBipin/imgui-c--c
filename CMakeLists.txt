@@ -430,6 +430,7 @@ if (VULKAN_FOUND)
     )
     set(LINK_LIBS
         ${LINK_LIBS}
+        #${Vulkan_LIBRARY}
         ${VULKAN_LDFLAGS}
     )
 if (IMGUI_VULKAN)
