@@ -90,25 +90,30 @@ elseif(OPENMP_FOUND)
     endif()
 endif()
 
-if(PKG_CONFIG_FOUND)
+if (VULKAN_FOUND)
+    message(STATUS "[ImVulkanShader] vulkan found by cmake")
+    set(VKSHADER_INC_DIRS
+        ${Vulkan_INCLUDE_DIR}
+    )
+    set(LINK_LIBS
+        ${LINK_LIBS}
+        ${Vulkan_LIBRARY}
+    )
+elseif(PKG_CONFIG_FOUND)
     pkg_search_module(VULKAN REQUIRED vulkan glslang)
     if (VULKAN_FOUND)
-        message(STATUS "[ImVulkanShader] vulkan found")
+        message(STATUS "[ImVulkanShader] vulkan found by pkg_config")
+        set(VKSHADER_INC_DIRS
+            ${Vulkan_INCLUDE_DIR}
+        )
+        set(LINK_LIBS
+            ${LINK_LIBS}
+            ${VULKAN_LDFLAGS}
+        )
     else()
-        find_package(Vulkan REQUIRED)
+        message(STATUS "[ImVulkanShader] vulkan not found")
     endif(VULKAN_FOUND)
-endif(PKG_CONFIG_FOUND)
-
-set(VKSHADER_INC_DIRS
-    ${Vulkan_INCLUDE_DIR}
-)
-
-set(LINK_LIBS
-    ${LINK_LIBS}
-    #${Vulkan_LIBRARY}
-    ${VULKAN_LDFLAGS}
-)
-
+endif(VULKAN_FOUND)
 
 find_program(GLSLANGVALIDATOR_EXECUTABLE NAMES glslangValidator PATHS $ENV{VULKAN_SDK}/bin NO_CMAKE_FIND_ROOT_PATH)
 message(STATUS "VkShader Found glslangValidator: ${GLSLANGVALIDATOR_EXECUTABLE}")
