@@ -64,13 +64,14 @@ static VkPhysicalDevice SetupVulkan_SelectPhysicalDevice(int gpu = -1)
     check_vk_result(err);
     IM_ASSERT(gpu_count > 0);
 
+    VkPhysicalDevice gpu_device = VK_NULL_HANDLE;
     ImVector<VkPhysicalDevice> gpus;
     gpus.resize(gpu_count);
     err = vkEnumeratePhysicalDevices(g_Instance, &gpu_count, gpus.Data);
     check_vk_result(err);
-
     if (gpu == -1 || gpu >= gpu_count)
     {
+
         // If a number >1 of GPUs got reported, find discrete GPU if present, or use first one available. This covers
         // most common cases (multi-gpu/integrated+dedicated graphics). Handling more complicated setups (multiple
         // dedicated GPUs) is out of scope of this sample.
@@ -79,15 +80,21 @@ static VkPhysicalDevice SetupVulkan_SelectPhysicalDevice(int gpu = -1)
             VkPhysicalDeviceProperties properties;
             vkGetPhysicalDeviceProperties(device, &properties);
             if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
-                return device;
+            {
+                gpu_device = device;
+                break;
+            }
         }
     }
     else
     {
-        VkPhysicalDevice& device = gpus[gpu];
-        return device;
+        gpu_device = gpus[gpu];
     }
-    return VK_NULL_HANDLE;
+
+    if (gpu_device == VK_NULL_HANDLE && !gpus.empty())
+        gpu_device = gpus[0];
+
+    return gpu_device;
 }
 
 static void SetupVulkan(ImVector<const char*>& instance_extensions, int gpu = -1)
