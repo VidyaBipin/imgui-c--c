@@ -42,15 +42,12 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     SDL_SetWindowOpacity(window, property.splash_screen_alpha);
 
     // Setup Vulkan
+    ImVector<const char*> extensions;
     uint32_t extensions_count = 0;
     SDL_Vulkan_GetInstanceExtensions(window, &extensions_count, NULL);
-    const char** ext = new const char*[extensions_count];
-    SDL_Vulkan_GetInstanceExtensions(window, &extensions_count, ext);
-    std::vector<const char*> extensions;
-    for (int i = 0; i < extensions_count; i++)
-        extensions.push_back(ext[i]);
+    extensions.resize(extensions_count);
+    SDL_Vulkan_GetInstanceExtensions(window, &extensions_count, extensions.Data);
     SetupVulkan(extensions);
-    delete[] ext;
 
     // Create Window Surface
     VkSurfaceKHR surface;
@@ -77,9 +74,11 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     init_info.Queue = g_Queue;
     init_info.PipelineCache = g_PipelineCache;
     init_info.DescriptorPool = g_DescriptorPool;
-    init_info.Allocator = g_Allocator;
+    init_info.Subpass = 0;
     init_info.MinImageCount = g_MinImageCount;
     init_info.ImageCount = wd->ImageCount;
+    init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    init_info.Allocator = g_Allocator;
     init_info.CheckVkResultFn = check_vk_result;
     ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
     UpdateVulkanFont(wd);
@@ -283,15 +282,12 @@ int main(int argc, char** argv)
     }
 
     // Setup Vulkan
+    ImVector<const char*> extensions;
     uint32_t extensions_count = 0;
     SDL_Vulkan_GetInstanceExtensions(window, &extensions_count, NULL);
-    const char** ext = new const char*[extensions_count];
-    SDL_Vulkan_GetInstanceExtensions(window, &extensions_count, ext);
-    std::vector<const char*> extensions;
-    for (int i = 0; i < extensions_count; i++)
-        extensions.push_back(ext[i]);
+    extensions.resize(extensions_count);
+    SDL_Vulkan_GetInstanceExtensions(window, &extensions_count, extensions.Data);
     SetupVulkan(extensions);
-    delete[] ext;
 
     // Create Window Surface
     VkSurfaceKHR surface;
@@ -332,9 +328,11 @@ int main(int argc, char** argv)
     init_info.Queue = g_Queue;
     init_info.PipelineCache = g_PipelineCache;
     init_info.DescriptorPool = g_DescriptorPool;
-    init_info.Allocator = g_Allocator;
+    init_info.Subpass = 0;
     init_info.MinImageCount = g_MinImageCount;
     init_info.ImageCount = wd->ImageCount;
+    init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    init_info.Allocator = g_Allocator;
     init_info.CheckVkResultFn = check_vk_result;
     ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
 

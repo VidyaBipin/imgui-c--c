@@ -74,11 +74,12 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         printf("GLFW: Vulkan Not Supported\n");
         return;
     }
+
+    ImVector<const char*> extensions;
     uint32_t extensions_count = 0;
-    const char** ext = glfwGetRequiredInstanceExtensions(&extensions_count);
-    std::vector<const char*> extensions;
-    for (int i = 0; i < extensions_count; i++)
-        extensions.push_back(ext[i]);
+    const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
+    for (uint32_t i = 0; i < extensions_count; i++)
+        extensions.push_back(glfw_extensions[i]);
     SetupVulkan(extensions);
 
     // Create Window Surface
@@ -102,9 +103,11 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     init_info.Queue = g_Queue;
     init_info.PipelineCache = g_PipelineCache;
     init_info.DescriptorPool = g_DescriptorPool;
-    init_info.Allocator = g_Allocator;
+    init_info.Subpass = 0;
     init_info.MinImageCount = g_MinImageCount;
     init_info.ImageCount = wd->ImageCount;
+    init_info.Allocator = g_Allocator;
+    init_info.CheckVkResultFn = check_vk_result;
     init_info.CheckVkResultFn = check_vk_result;
     // Setup ImGui binding
     ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
@@ -298,11 +301,11 @@ int main(int argc, char** argv)
         glfwSetWindowPos(window, property.pos_x, property.pos_y);
     }
 
+    ImVector<const char*> extensions;
     uint32_t extensions_count = 0;
-    const char** ext = glfwGetRequiredInstanceExtensions(&extensions_count);
-    std::vector<const char*> extensions;
-    for (int i = 0; i < extensions_count; i++)
-        extensions.push_back(ext[i]);
+    const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
+    for (uint32_t i = 0; i < extensions_count; i++)
+        extensions.push_back(glfw_extensions[i]);
     SetupVulkan(extensions);
 
     // Create Window Surface
@@ -339,9 +342,11 @@ int main(int argc, char** argv)
     init_info.Queue = g_Queue;
     init_info.PipelineCache = g_PipelineCache;
     init_info.DescriptorPool = g_DescriptorPool;
-    init_info.Allocator = g_Allocator;
+    init_info.Subpass = 0;
     init_info.MinImageCount = g_MinImageCount;
     init_info.ImageCount = wd->ImageCount;
+    init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    init_info.Allocator = g_Allocator;
     init_info.CheckVkResultFn = check_vk_result;
     // Setup ImGui binding
     ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
