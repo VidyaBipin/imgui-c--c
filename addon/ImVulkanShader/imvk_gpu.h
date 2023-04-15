@@ -157,6 +157,7 @@ public:
     int support_VK_KHR_8bit_storage() const;
     int support_VK_KHR_16bit_storage() const;
     int support_VK_KHR_bind_memory2() const;
+    int support_VK_KHR_buffer_device_address() const;
     int support_VK_KHR_create_renderpass2() const;
     int support_VK_KHR_dedicated_allocation() const;
     int support_VK_KHR_descriptor_update_template() const;
@@ -175,7 +176,9 @@ public:
     int support_VK_KHR_swapchain() const;
     int support_VK_EXT_descriptor_indexing() const;
     int support_VK_EXT_memory_budget() const;
+    int support_VK_EXT_memory_priority() const;
     int support_VK_EXT_queue_family_foreign() const;
+    int support_VK_AMD_device_coherent_memory() const;
     int support_VK_NV_cooperative_matrix() const;
 
 private:
