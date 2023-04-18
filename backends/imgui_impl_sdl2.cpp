@@ -130,6 +130,8 @@ struct ImGui_ImplSDL2_Data
     bool            MouseCanUseGlobalState;
     bool            MouseCanReportHoveredViewport;  // This is hard to use/unreliable on SDL so we'll set ImGuiBackendFlags_HasMouseHoveredViewport dynamically based on state.
     bool            UseVulkan;
+    bool            InputEditing;   // add by Dicky, if SDL shown IME window, and input activated, SDL will get SDL_TEXTEDITING(some platform isn't support SDL_IsTextInputShown),
+                                    // we need save status current input is in IME window or input window
 
     ImGui_ImplSDL2_Data()   { memset((void*)this, 0, sizeof(*this)); }
 };
@@ -363,10 +365,18 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             bd->MouseButtonsDown = (event->type == SDL_MOUSEBUTTONDOWN) ? (bd->MouseButtonsDown | (1 << mouse_button)) : (bd->MouseButtonsDown & ~(1 << mouse_button));
             return true;
         }
+        // add by Dicky, recoder TEXTEDITING event for IME window
+        case SDL_TEXTEDITING:
+        {
+            bd->InputEditing = true;
+            return true;
+        }
+        // add by Dicky end
         case SDL_TEXTINPUT:
         {
-            io.FrameCountSinceLastInput = 0; // add By Dicky
             io.AddInputCharactersUTF8(event->text.text);
+            bd->InputEditing = false; // add by Dicky, reset IME window event
+            io.FrameCountSinceLastInput = 0; // add By Dicky
             return true;
         }
         case SDL_KEYDOWN:
@@ -374,9 +384,14 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
         {
             ImGui_ImplSDL2_UpdateKeyModifiers((SDL_Keymod)event->key.keysym.mod);
             ImGuiKey key = ImGui_ImplSDL2_KeycodeToImGuiKey(event->key.keysym.sym);
+            // modify by Dicky, check if keyup/keydown event is NOT in IME window, otherwise we drop this event
+            if (!bd->InputEditing)
+            {
+                io.AddKeyEvent(key, (event->type == SDL_KEYDOWN));
+                io.SetKeyEventNativeData(key, event->key.keysym.sym, event->key.keysym.scancode, event->key.keysym.scancode); // To support legacy indexing (<1.87 user code). Legacy backend uses SDLK_*** as indices to IsKeyXXX() functions.
+            }
+            // modify by Dicky end
             io.FrameCountSinceLastInput = 0; // add By Dicky
-            io.AddKeyEvent(key, (event->type == SDL_KEYDOWN));
-            io.SetKeyEventNativeData(key, event->key.keysym.sym, event->key.keysym.scancode, event->key.keysym.scancode); // To support legacy indexing (<1.87 user code). Legacy backend uses SDLK_*** as indices to IsKeyXXX() functions.
             return true;
         }
         case SDL_WINDOWEVENT:
