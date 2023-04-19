@@ -368,8 +368,11 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
         // add by Dicky, recoder TEXTEDITING event for IME window
         case SDL_TEXTEDITING:
         {
-            // TODO::Dicky maybe need display input char for Mac because Mac IME isn't display input when IME window is shown
-            if (event->edit.start > 0) bd->InputEditing = true;
+            if (event->edit.start > 0)
+            {
+                bd->InputEditing = true;
+                // TODO::Dicky maybe need display input char for Mac because Mac IME isn't display input when IME window is shown
+            }
             else bd->InputEditing = false;
             return true;
         }
@@ -377,7 +380,6 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
         case SDL_TEXTINPUT:
         {
             io.AddInputCharactersUTF8(event->text.text);
-            bd->InputEditing = false;       // add by Dicky, reset IME window event
             io.FrameCountSinceLastInput = 0; // add By Dicky
             return true;
         }
