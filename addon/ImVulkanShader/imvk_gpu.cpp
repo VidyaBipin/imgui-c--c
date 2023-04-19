@@ -1317,6 +1317,7 @@ int create_gpu_instance()
         gpu_info.support_VK_EXT_queue_family_foreign = 0;
         gpu_info.support_VK_AMD_device_coherent_memory = 0;
         gpu_info.support_VK_NV_cooperative_matrix = 0;
+        gpu_info.support_VK_EXT_buffer_device_address = 0;
         for (uint32_t j = 0; j < deviceExtensionPropertyCount; j++)
         {
             const VkExtensionProperties& exp = deviceExtensionProperties[j];
