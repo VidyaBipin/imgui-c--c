@@ -1,5 +1,5 @@
 ## News
-⭐️⭐️⭐️ - 2023/4/20 Released open source software [MediaEditor Community](https://github.com/opencodewin/MediaEditor), which is based on imgui(this branch). ⭐️⭐️⭐️
+⭐️⭐️⭐️ - 2023/4/20 Released open source software [MediaEditor Community](https://github.com/opencodewin/MediaEditor), which is based on imgui(this branch).
 
 ## Features
 Fork from *Dear ImGui(https://github.com/ocornut/imgui)* docking/multiview branch and stack layout support and add CMake build script
