@@ -6,6 +6,7 @@
 # include <vector>
 # include <map>
 # include <cstddef>
+# include <cstdint>
 # include <algorithm>
 # include <sstream>
 
