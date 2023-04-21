@@ -128,6 +128,10 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         }
         SDL_GL_SwapWindow(window);
     }
+
+    if (property.application.Application_SplashFinalize)
+        property.application.Application_SplashFinalize(&property.handle);
+
     ImGui_ImplOpenGL2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     SDL_GL_DeleteContext(gl_context);

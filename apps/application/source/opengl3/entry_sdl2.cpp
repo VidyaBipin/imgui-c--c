@@ -169,6 +169,10 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
 #ifdef __EMSCRIPTEN__
     EMSCRIPTEN_MAINLOOP_END;
 #endif
+
+    if (property.application.Application_SplashFinalize)
+        property.application.Application_SplashFinalize(&property.handle);
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     SDL_GL_DeleteContext(gl_context);

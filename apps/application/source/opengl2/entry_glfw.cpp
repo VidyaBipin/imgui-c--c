@@ -134,6 +134,10 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         }
         glfwSwapBuffers(window);
     }
+
+    if (property.application.Application_SplashFinalize)
+        property.application.Application_SplashFinalize(&property.handle);
+
     ImGui_ImplOpenGL2_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     glfwDestroyWindow(window);

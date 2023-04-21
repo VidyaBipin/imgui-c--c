@@ -157,6 +157,9 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         FrameRendering(wd);
     }
 
+    if (property.application.Application_SplashFinalize)
+        property.application.Application_SplashFinalize(&property.handle);
+
     err = vkDeviceWaitIdle(g_Device);
     check_vk_result(err);
     ImGui_ImplVulkan_Shutdown();

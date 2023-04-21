@@ -23,6 +23,7 @@ typedef void (*SetupContext)(ImGuiContext* ctx, bool in_splash);
 typedef void (*Initialize)(void** handle);
 typedef void (*Finalize)(void** handle);
 typedef bool (*SplashScreen)(void* handle, bool app_will_quit);
+typedef void (*SplashFinalize)(void** handle);
 typedef bool (*Frame)(void* handle, bool app_will_quit);
 typedef void (*DropFromSystem)(std::vector<std::string>& drops);
 
@@ -32,6 +33,7 @@ typedef struct ApplicationFrameworks
     Initialize          Application_Initialize      {nullptr};
     Finalize            Application_Finalize        {nullptr};
     SplashScreen        Application_SplashScreen    {nullptr};
+    SplashFinalize      Application_SplashFinalize  {nullptr};
     Frame               Application_Frame           {nullptr};
     DropFromSystem      Application_DropFromSystem  {nullptr};
 } ApplicationFrameworks;

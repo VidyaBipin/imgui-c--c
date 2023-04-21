@@ -179,6 +179,9 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     EMSCRIPTEN_MAINLOOP_END;
 #endif
 
+    if (property.application.Application_SplashFinalize)
+        property.application.Application_SplashFinalize(&property.handle);
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     glfwDestroyWindow(window);
