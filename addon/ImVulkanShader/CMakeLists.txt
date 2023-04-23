@@ -534,6 +534,11 @@ set(VKSHADER_SRCS
     fusions/Move_vulkan.cpp
     fusions/Rolls_vulkan.cpp
     fusions/Edge_vulkan.cpp
+    fusions/StaticWipe_vulkan.cpp
+    fusions/DirectionalScaled_vulkan.cpp
+    fusions/Rectangle_vulkan.cpp
+    fusions/SimpleZoomOut_vulkan.cpp
+    fusions/RotateScaleVanish_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -662,6 +667,16 @@ set(VKSHADER_INCS
     fusions/Rolls_vulkan.h
     fusions/Edge_shader.h
     fusions/Edge_vulkan.h
+    fusions/StaticWipe_shader.h
+    fusions/StaticWipe_vulkan.h
+    fusions/DirectionalScaled_shader.h
+    fusions/DirectionalScaled_vulkan.h
+    fusions/Rectangle_shader.h
+    fusions/Rectangle_vulkan.h
+    fusions/SimpleZoomOut_shader.h
+    fusions/SimpleZoomOut_vulkan.h
+    fusions/RotateScaleVanish_shader.h
+    fusions/RotateScaleVanish_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}

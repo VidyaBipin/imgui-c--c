@@ -1,10 +1,10 @@
-#include "Edge_vulkan.h"
-#include "Edge_shader.h"
+#include "RotateScaleVanish_vulkan.h"
+#include "RotateScaleVanish_shader.h"
 #include "ImVulkanShader.h"
 
 namespace ImGui 
 {
-Edge_vulkan::Edge_vulkan(int gpu)
+RotateScaleVanish_vulkan::RotateScaleVanish_vulkan(int gpu)
 {
     vkdev = get_gpu_device(gpu);
     opt.blob_vkallocator = vkdev->acquire_blob_allocator();
@@ -13,12 +13,12 @@ Edge_vulkan::Edge_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev, "Edge");
+    cmd = new VkCompute(vkdev, "RotateScaleVanish");
 
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
 
-    if (compile_spirv_module(Edge_data, opt, spirv_data) == 0)
+    if (compile_spirv_module(RotateScaleVanish_data, opt, spirv_data) == 0)
     {
         pipe = new Pipeline(vkdev);
         pipe->create(spirv_data.data(), spirv_data.size() * 4, specializations);
@@ -27,7 +27,7 @@ Edge_vulkan::Edge_vulkan(int gpu)
     cmd->reset();
 }
 
-Edge_vulkan::~Edge_vulkan()
+RotateScaleVanish_vulkan::~RotateScaleVanish_vulkan()
 {
     if (vkdev)
     {
@@ -38,7 +38,7 @@ Edge_vulkan::~Edge_vulkan()
     }
 }
 
-void Edge_vulkan::upload_param(const VkMat& src1, const VkMat& src2, VkMat& dst, float progress, float thickness, float brightness) const
+void RotateScaleVanish_vulkan::upload_param(const VkMat& src1, const VkMat& src2, VkMat& dst, float progress, bool FadeInSecond, bool ReverseEffect, bool ReverseRotation) const
 {
     std::vector<VkMat> bindings(12);
     if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
@@ -56,7 +56,7 @@ void Edge_vulkan::upload_param(const VkMat& src1, const VkMat& src2, VkMat& dst,
     else if (src2.type == IM_DT_FLOAT16)   bindings[10] = src2;
     else if (src2.type == IM_DT_FLOAT32)   bindings[11] = src2;
 
-    std::vector<vk_constant_type> constants(18);
+    std::vector<vk_constant_type> constants(19);
     constants[0].i = src1.w;
     constants[1].i = src1.h;
     constants[2].i = src1.c;
@@ -73,12 +73,13 @@ void Edge_vulkan::upload_param(const VkMat& src1, const VkMat& src2, VkMat& dst,
     constants[13].i = dst.color_format;
     constants[14].i = dst.type;
     constants[15].f = progress;
-    constants[16].f = thickness;
-    constants[17].f = brightness;
+    constants[16].i = FadeInSecond ? 1 : 0;
+    constants[17].i = ReverseEffect ? 1 : 0;
+    constants[18].i = ReverseRotation ? 1 : 0;
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-double Edge_vulkan::transition(const ImMat& src1, const ImMat& src2, ImMat& dst, float progress, float thickness, float brightness) const
+double RotateScaleVanish_vulkan::transition(const ImMat& src1, const ImMat& src2, ImMat& dst, float progress, bool FadeInSecond, bool ReverseEffect, bool ReverseRotation) const
 {
     double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
@@ -113,7 +114,7 @@ double Edge_vulkan::transition(const ImMat& src1, const ImMat& src2, ImMat& dst,
     cmd->benchmark_start();
 #endif
 
-    upload_param(src1_gpu, src2_gpu, dst_gpu, progress, thickness, brightness);
+    upload_param(src1_gpu, src2_gpu, dst_gpu, progress, FadeInSecond, ReverseEffect, ReverseRotation);
 
 #ifdef VULKAN_SHADER_BENCHMARK
     cmd->benchmark_end();
