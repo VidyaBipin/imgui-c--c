@@ -2256,6 +2256,7 @@ struct ImGuiIO
     bool        MouseStrawed;                       // mouse is straw something
     ImVec4      MouseStrawValue;                    // value of mouse straw, usually straw color 
     int         FrameCountSinceLastInput;           // How many frames since the last input event; a value of 0 indicates that the current frame was triggered by an input.
+    ImVector<char> PreEditCharacters;               // IME PreEdit input characters, for MacOS it need show preEdit characters by user
     // Add By Dicky end
     IMGUI_API   ImGuiIO();
 };

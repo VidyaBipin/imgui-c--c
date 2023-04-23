@@ -4970,7 +4970,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             bool cursor_is_visible = (!g.IO.ConfigInputTextCursorBlink) || (state->CursorAnim <= 0.0f) || ImFmod(state->CursorAnim, 1.20f) <= 0.80f;
             ImVec2 cursor_screen_pos = ImFloor(draw_pos + cursor_offset - draw_scroll);
             ImRect cursor_screen_rect(cursor_screen_pos.x, cursor_screen_pos.y - g.FontSize + 0.5f, cursor_screen_pos.x + 1.0f, cursor_screen_pos.y - 1.5f);
-#if 0   // Modify By Dicky For Power Save
+#if 0   // Modify By Dicky For Power Save and show preedit
             if (cursor_is_visible && cursor_screen_rect.Overlaps(clip_rect))
                 draw_window->DrawList->AddLine(cursor_screen_rect.Min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text));
 #else
@@ -4992,6 +4992,20 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                 if (cursor_is_visible)
                     draw_window->DrawList->AddLine(cursor_screen_rect.Min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text));
             }
+#ifdef __APPLE__
+            // we need display IME preedit character by ourself for MacOS 
+            if (io.PreEditCharacters.Size)
+            {
+                ImGui::SetNextWindowViewport(GetWindowViewport()->ID);
+                ImGui::SetNextWindowPos(cursor_screen_pos - ImVec2(0, g.FontSize));
+                ImGui::SetNextWindowBgAlpha(0.5);
+                if (BeginTooltip())
+                {
+                    TextEx(io.PreEditCharacters.Data, io.PreEditCharacters.Data + io.PreEditCharacters.Size);
+                    EndTooltip();
+                }
+            }
+#endif
 #endif  // Modify By Dicky end
             // Notify OS of text input position for advanced IME (-1 x offset so that Windows IME can cover our cursor. Bit of an extra nicety.)
             if (!is_readonly)
