@@ -533,6 +533,7 @@ set(VKSHADER_SRCS
     fusions/Wipe_vulkan.cpp
     fusions/Move_vulkan.cpp
     fusions/Rolls_vulkan.cpp
+    fusions/Edge_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -659,6 +660,8 @@ set(VKSHADER_INCS
     fusions/Move_vulkan.h
     fusions/Rolls_shader.h
     fusions/Rolls_vulkan.h
+    fusions/Edge_shader.h
+    fusions/Edge_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
