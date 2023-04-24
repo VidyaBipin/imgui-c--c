@@ -4992,8 +4992,8 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                 if (cursor_is_visible)
                     draw_window->DrawList->AddLine(cursor_screen_rect.Min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text));
             }
-#ifdef __APPLE__
-            // we need display IME preedit character by ourself for MacOS 
+#if defined(__APPLE__) || defined(_WIN32)
+            // we need display IME preedit character by ourself for MacOS and Windows
             if (io.PreEditCharacters.Size)
             {
                 ImGui::SetNextWindowViewport(GetWindowViewport()->ID);
