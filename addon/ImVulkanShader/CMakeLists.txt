@@ -392,6 +392,7 @@ set(VKSHADER_SRCS
     filters/DeBand_vulkan.cpp
     filters/DeInterlace_vulkan.cpp
     filters/Guided_vulkan.cpp
+    filters/Star_vulkan.cpp
 )
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
@@ -446,6 +447,8 @@ set(VKSHADER_INCS
     filters/DeInterlace_vulkan.h
     filters/Guided_shader.h
     filters/Guided_vulkan.h
+    filters/Star_shader.h
+    filters/Star_vulkan.h
 )
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
