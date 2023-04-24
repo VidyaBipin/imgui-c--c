@@ -18,6 +18,11 @@ layout (push_constant) uniform parameter \n\
     int out_type; \n\
     \n\
     float time; \n\
+    \n\
+    float red; \n\
+    float green; \n\
+    float blue; \n\
+    float alpha; \n\
 } p; \
 "
 
@@ -87,11 +92,11 @@ vec3 StarFieldLayer(vec2 uv, float rotAngle) \n\
             float star = Star(randomPosition, flareSwitch, rotAngle, randomN); \n\
             \n\
             float randomStarColorSeed = fract(randomN * 2150.0) * (3.0 * PI) * deltaTimeTwinkle; \n\
-            vec3 color = sin(vec3(0.7, 0.3, 0.9) * randomStarColorSeed); \n\
+            vec3 color = sin(vec3(p.red, p.green, p.blue) * randomStarColorSeed); \n\
             \n\
             color = color * (0.4 * sin(deltaTimeTwinkle)) + 0.6; \n\
             \n\
-            color = color * vec3(1, 0.1,  0.9 + size); \n\
+            color = color * vec3(p.red, p.green, p.blue + size); \n\
             float dimByDensity = 15.0 / STARFIELD_LAYERS_COUNT; \n\
             col += star * size * color * dimByDensity; \n\
         } \n\

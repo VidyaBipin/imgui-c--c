@@ -38,7 +38,7 @@ Star_vulkan::~Star_vulkan()
     }
 }
 
-void Star_vulkan::upload_param(const VkMat& src, VkMat& dst, float playTime)
+void Star_vulkan::upload_param(const VkMat& src, VkMat& dst, float playTime, ImPixel& colour)
 {
     std::vector<VkMat> bindings(8);
     if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
@@ -50,7 +50,7 @@ void Star_vulkan::upload_param(const VkMat& src, VkMat& dst, float playTime)
     else if (src.type == IM_DT_INT16)     bindings[5] = src;
     else if (src.type == IM_DT_FLOAT16)   bindings[6] = src;
     else if (src.type == IM_DT_FLOAT32)   bindings[7] = src;
-    std::vector<vk_constant_type> constants(11);
+    std::vector<vk_constant_type> constants(15);
     constants[0].i = src.w;
     constants[1].i = src.h;
     constants[2].i = src.c;
@@ -62,10 +62,14 @@ void Star_vulkan::upload_param(const VkMat& src, VkMat& dst, float playTime)
     constants[8].i = dst.color_format;
     constants[9].i = dst.type;
     constants[10].f = playTime;
+    constants[11].f = colour.r;
+    constants[12].f = colour.g;
+    constants[13].f = colour.b;
+    constants[14].f = colour.a;
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-double Star_vulkan::filter(const ImMat& src, ImMat& dst, float playTime)
+double Star_vulkan::filter(const ImMat& src, ImMat& dst, float playTime, ImPixel& colour)
 {
     double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
@@ -90,7 +94,7 @@ double Star_vulkan::filter(const ImMat& src, ImMat& dst, float playTime)
     cmd->benchmark_start();
 #endif
 
-    upload_param(src_gpu, dst_gpu, playTime);
+    upload_param(src_gpu, dst_gpu, playTime, colour);
 
 #ifdef VULKAN_SHADER_BENCHMARK
     cmd->benchmark_end();

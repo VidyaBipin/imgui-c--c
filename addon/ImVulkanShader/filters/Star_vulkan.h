@@ -13,7 +13,7 @@ public:
     ~Star_vulkan();
     void SetParam(float _edgeStrength);
 
-    double filter(const ImMat& src, ImMat& dst, float playTime);
+    double filter(const ImMat& src, ImMat& dst, float playTime, ImPixel& colour);
 
 private:
     const VulkanDevice* vkdev   {nullptr};
@@ -22,6 +22,6 @@ private:
     VkCompute * cmd             {nullptr};
 
 private:
-    void upload_param(const VkMat& src, VkMat& dst, float playTime);
+    void upload_param(const VkMat& src, VkMat& dst, float playTime, ImPixel& colour);
 };
 } // namespace ImGui
