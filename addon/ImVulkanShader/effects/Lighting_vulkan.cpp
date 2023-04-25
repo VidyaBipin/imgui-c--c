@@ -1,10 +1,10 @@
-#include "Star_vulkan.h"
-#include "Star_shader.h"
+#include "Lighting_vulkan.h"
+#include "Lighting_shader.h"
 #include "ImVulkanShader.h"
 
 namespace ImGui
 {
-Star_vulkan::Star_vulkan(int gpu)
+Lighting_vulkan::Lighting_vulkan(int gpu)
 {
     vkdev = get_gpu_device(gpu);
     opt.blob_vkallocator = vkdev->acquire_blob_allocator();
@@ -13,7 +13,7 @@ Star_vulkan::Star_vulkan(int gpu)
     opt.use_fp16_arithmetic = true;
     opt.use_fp16_storage = true;
 #endif
-    cmd = new VkCompute(vkdev, "Star");
+    cmd = new VkCompute(vkdev, "Light");
 
     std::vector<vk_specialization_type> specializations(0);
     std::vector<uint32_t> spirv_data;
@@ -27,7 +27,7 @@ Star_vulkan::Star_vulkan(int gpu)
     cmd->reset();
 }
 
-Star_vulkan::~Star_vulkan()
+Lighting_vulkan::~Lighting_vulkan()
 {
     if (vkdev)
     {
@@ -38,7 +38,7 @@ Star_vulkan::~Star_vulkan()
     }
 }
 
-void Star_vulkan::upload_param(const VkMat& src, VkMat& dst, float playTime, ImPixel& colour)
+void Lighting_vulkan::upload_param(const VkMat& src, VkMat& dst, float playTime, float saturation, float light)
 {
     std::vector<VkMat> bindings(8);
     if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
@@ -50,7 +50,7 @@ void Star_vulkan::upload_param(const VkMat& src, VkMat& dst, float playTime, ImP
     else if (src.type == IM_DT_INT16)     bindings[5] = src;
     else if (src.type == IM_DT_FLOAT16)   bindings[6] = src;
     else if (src.type == IM_DT_FLOAT32)   bindings[7] = src;
-    std::vector<vk_constant_type> constants(15);
+    std::vector<vk_constant_type> constants(13);
     constants[0].i = src.w;
     constants[1].i = src.h;
     constants[2].i = src.c;
@@ -62,14 +62,12 @@ void Star_vulkan::upload_param(const VkMat& src, VkMat& dst, float playTime, ImP
     constants[8].i = dst.color_format;
     constants[9].i = dst.type;
     constants[10].f = playTime;
-    constants[11].f = colour.r;
-    constants[12].f = colour.g;
-    constants[13].f = colour.b;
-    constants[14].f = colour.a;
+    constants[11].f = saturation;
+    constants[12].f = light;
     cmd->record_pipeline(pipe, bindings, constants, dst);
 }
 
-double Star_vulkan::filter(const ImMat& src, ImMat& dst, float playTime, ImPixel& colour)
+double Lighting_vulkan::effect(const ImMat& src, ImMat& dst, float playTime, float saturation, float light)
 {
     double ret = 0.0;
     if (!vkdev || !pipe || !cmd)
@@ -94,7 +92,7 @@ double Star_vulkan::filter(const ImMat& src, ImMat& dst, float playTime, ImPixel
     cmd->benchmark_start();
 #endif
 
-    upload_param(src_gpu, dst_gpu, playTime, colour);
+    upload_param(src_gpu, dst_gpu, playTime, saturation, light);
 
 #ifdef VULKAN_SHADER_BENCHMARK
     cmd->benchmark_end();

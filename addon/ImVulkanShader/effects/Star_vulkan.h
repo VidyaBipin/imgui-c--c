@@ -13,7 +13,7 @@ public:
     ~Star_vulkan();
     void SetParam(float _edgeStrength);
 
-    double filter(const ImMat& src, ImMat& dst, float playTime, ImPixel& colour);
+    double effect(const ImMat& src, ImMat& dst, float playTime, ImPixel& colour);
 
 private:
     const VulkanDevice* vkdev   {nullptr};
