@@ -299,6 +299,7 @@ compile_shader(fusions/StaticWipe_shader.h StaticWipe_data)
 # effects
 compile_shader(effects/Lighting_shader.h Filter_data)
 compile_shader(effects/Star_shader.h Filter_data)
+compile_shader(effects/Sway_shader.h Filter_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
@@ -487,6 +488,7 @@ set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
     effects/Star_vulkan.cpp
     effects/Lighting_vulkan.cpp
+    effects/Sway_vulkan.cpp
 )
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
@@ -494,6 +496,8 @@ set(VKSHADER_INCS
     effects/Star_vulkan.h
     effects/Lighting_shader.h
     effects/Lighting_vulkan.h
+    effects/Sway_shader.h
+    effects/Sway_vulkan.h
 )
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
