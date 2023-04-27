@@ -900,6 +900,7 @@ CODE
 #ifndef IMGUI_DISABLE
 #include "imgui_internal.h"
 #include "imgui_helper.h" // for get_current_time by Dicky
+#include "dir_iterate.h"  // for DIR iterate
 
 // System includes
 #include <stdio.h>      // vsnprintf, sscanf, printf
@@ -1254,7 +1255,7 @@ ImGuiIO::ImGuiIO()
     IniFilename = "imgui.ini"; // Important: "imgui.ini" is relative to current working dir, most apps will want to lock this to an absolute path (e.g. same path as executables).
     LogFilename = "imgui_log.txt";
     // Add by Dicky
-    LanguageFileName = "imgui_language.ini";
+    LanguagePath = "languages";
     // Add By Dicky end
     MouseDoubleClickTime = 0.30f;
     MouseDoubleClickMaxDist = 6.0f;
@@ -13574,8 +13575,8 @@ void ImGui::UpdateSettings()
     if (!g.LanguagesLoaded)
     {
         IM_ASSERT(g.StringMap.empty());
-        if (g.IO.LanguageFileName)
-            LoadIniLanguagesFromDisk(g.IO.LanguageFileName);
+        if (g.IO.LanguagePath)
+            LoadIniLanguagesFromDisk(g.IO.LanguagePath);
         g.LanguagesLoaded = true;
     }
     // add by Dicky end
@@ -13760,16 +13761,26 @@ const char* ImGui::SaveIniSettingsToMemory(size_t* out_size)
     return g.SettingsIniData.c_str();
 }
 
-// Lauguage Utils add By Dicky
-void ImGui::LoadIniLanguagesFromDisk(const char* ini_filename)
+// Language Utils add By Dicky
+void ImGui::LoadIniLanguagesFromDisk(const char* path)
 {
-    size_t file_data_size = 0;
-    char* file_data = (char*)ImFileLoadToMemory(ini_filename, "rb", &file_data_size);
-    if (!file_data)
-        return;
-    if (file_data_size > 0)
-        LoadIniLanguagesFromMemory(file_data, (size_t)file_data_size);
-    IM_FREE(file_data);
+    ImGuiContext& g = *GImGui;
+    std::vector<std::string> languages, language_names;
+    std::vector<std::string> filter = {"ini"};
+    if (DIR_Iterate(std::string(path), languages, language_names, filter, false) == 0)
+    {
+        for (auto language_path : languages)
+        {
+            size_t file_data_size = 0;
+            char* file_data = (char*)ImFileLoadToMemory(language_path.c_str(), "rb", &file_data_size);
+            if (!file_data)
+                return;
+            if (file_data_size > 0)
+                LoadIniLanguagesFromMemory(file_data, (size_t)file_data_size);
+            IM_FREE(file_data);
+        }
+    }
+    g.LanguagesLoaded = true;
 }
 
 void ImGui::LoadIniLanguagesFromMemory(const char* ini_data, size_t ini_size)
@@ -13778,10 +13789,8 @@ void ImGui::LoadIniLanguagesFromMemory(const char* ini_data, size_t ini_size)
     IM_ASSERT(g.Initialized);
     if (ini_size == 0)
         ini_size = strlen(ini_data);
-    g.LanguagesIniData.Buf.resize((int)ini_size + 1);
-    char* const buf = g.LanguagesIniData.Buf.Data;
+    char* const buf = (char* const)ini_data;
     char* const buf_end = buf + ini_size;
-    memcpy(buf, ini_data, ini_size);
     buf_end[0] = 0;
 
     char* line_end = NULL;
@@ -13835,7 +13844,6 @@ void ImGui::LoadIniLanguagesFromMemory(const char* ini_data, size_t ini_size)
     {
         g.StringMap[language_name] = locale_map;
     }
-    g.LanguagesLoaded = true;
 }
 
 void ImGui::SaveIniLanguagesToDisk(const char* ini_filename)

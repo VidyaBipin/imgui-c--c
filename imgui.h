@@ -997,7 +997,7 @@ namespace ImGui
     IMGUI_API const char*   SaveIniSettingsToMemory(size_t* out_ini_size = NULL);               // return a zero-terminated string with the .ini data which you can save by your own mean. call when io.WantSaveIniSettings is set, then save data by your own mean and clear io.WantSaveIniSettings.
 
     // Language Utilities Add by Dicky
-    IMGUI_API void          LoadIniLanguagesFromDisk(const char* ini_filename);                  // call after CreateContext() and before the first call to NewFrame().
+    IMGUI_API void          LoadIniLanguagesFromDisk(const char* path);                         // call after CreateContext() and before the first call to NewFrame().
     IMGUI_API void          LoadIniLanguagesFromMemory(const char* ini_data, size_t ini_size=0); // call after CreateContext() and before the first call to NewFrame() to provide .ini data from your own data source.
     IMGUI_API void          SaveIniLanguagesToDisk(const char* ini_filename);                    // 
     IMGUI_API const char*   SaveIniLanguagesToMemory(size_t* out_ini_size = NULL);               // 
@@ -2073,7 +2073,7 @@ struct ImGuiIO
     const char* IniFilename;                    // = "imgui.ini"    // Path to .ini file (important: default "imgui.ini" is relative to current working dir!). Set NULL to disable automatic .ini loading/saving or if you want to manually call LoadIniSettingsXXX() / SaveIniSettingsXXX() functions.
     const char* LogFilename;                    // = "imgui_log.txt"// Path to .log file (default parameter to ImGui::LogToFile when no file is specified).
     // Add by Dicky
-    const char* LanguageFileName;               // = "imgui_language.ini" // Path to language file, Set Null to disable multi-language support
+    const char* LanguagePath;                   // = "languages"    // Path to language files, Set Null to disable multi-language support
     // Add by Dicky end
     float       MouseDoubleClickTime;           // = 0.30f          // Time for a double-click, in seconds.
     float       MouseDoubleClickMaxDist;        // = 6.0f           // Distance threshold to stay in to validate a double-click, in pixels.

@@ -176,10 +176,9 @@ int main(int argc, char** argv)
     std::replace(ini_name.begin(), ini_name.end(), ' ', '_');
     setting_path += ini_name + ".ini";
     io.IniFilename = setting_path.c_str();
-    auto language_path = property.language_path + ini_name + "_language.ini";
-    if (property.internationalize)
+    if (property.internationalize && !property.language_path.empty())
     {
-        io.LanguageFileName = language_path.c_str();
+        io.LanguagePath = property.language_path.c_str();
         g.Style.TextInternationalize = 1;
         g.LanguageName = "Default";
     }
