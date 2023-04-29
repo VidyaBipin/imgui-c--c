@@ -13772,9 +13772,9 @@ void ImGui::LoadIniLanguagesFromDisk(const char* path)
         for (auto language_path : languages)
         {
             size_t file_data_size = 0;
-            char* file_data = (char*)ImFileLoadToMemory(language_path.c_str(), "rb", &file_data_size);
+            char* file_data = (char*)ImFileLoadToMemory(language_path.c_str(), "rb", &file_data_size, 1);
             if (!file_data)
-                return;
+                continue;
             if (file_data_size > 0)
                 LoadIniLanguagesFromMemory(file_data, (size_t)file_data_size);
             IM_FREE(file_data);
