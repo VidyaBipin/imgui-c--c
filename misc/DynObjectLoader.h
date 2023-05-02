@@ -19,10 +19,12 @@ public:
 
 	std::shared_ptr<T> make_obj();
 	int32_t get_version();
+	int32_t get_api_version();
 
 private:
 	struct shared_obj {
 		typename T::version_t* version = NULL;
+		typename T::version_t* api_version = NULL;
 		typename T::create_t* create = NULL;
 		typename T::destroy_t* destroy = NULL;
 		void* dll_handle = NULL;
@@ -55,6 +57,7 @@ void DLClass<T>::shared_obj::close_module() {
 		dll_handle = NULL;
 	}
 	if (version) version = NULL;
+	if (api_version) api_version = NULL;
 	if (create) create = NULL;
 	if (destroy) destroy = NULL;
 }
@@ -76,6 +79,14 @@ bool DLClass<T>::shared_obj::open_module(std::string module) {
 	const char* err = dlerror();
 	if (err) {
 		std::cerr << "Failed to load version symbol: " << err << std::endl;
+		close_module();
+		return false;
+	}
+
+	api_version = (typename T::version_t*) dlsym(dll_handle, "api_version");
+	err = dlerror();
+	if (err) {
+		std::cerr << "Failed to load api version symbol: " << err << std::endl;
 		close_module();
 		return false;
 	}
@@ -102,6 +113,11 @@ bool DLClass<T>::shared_obj::open_module(std::string module) {
 template <class T>
 int32_t DLClass<T>::get_version() {
 	return shared->version();
+}
+
+template <class T>
+int32_t DLClass<T>::get_api_version() {
+	return shared->api_version();
 }
 
 template <class T>
