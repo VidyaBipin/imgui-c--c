@@ -3905,6 +3905,7 @@ int compile_spirv_module(const char* comp_data, int comp_data_size, const Option
 
     {
         glslang::TShader s(EShLangCompute);
+        glslang::TProgram program;
 
         s.setStringsWithLengths(&comp_data, &comp_data_size, 1);
 
@@ -3933,7 +3934,7 @@ int compile_spirv_module(const char* comp_data, int comp_data_size, const Option
         bool pr = s.parse(&resources, 100, ENoProfile, false, false, messages);
         if (!pr)
         {
-            fprintf(stderr, "vkshader compile spir-v module failed\n");
+            fprintf(stderr, "vkshader parse failed\n");
             fprintf(stderr, "%s", s.getInfoLog());
             fprintf(stderr, "%s", s.getInfoDebugLog());
             ParserLog(comp_data, s.getInfoLog());
@@ -3942,12 +3943,24 @@ int compile_spirv_module(const char* comp_data, int comp_data_size, const Option
         }
         else
         {
-            glslang::SpvOptions options;
-            spv::SpvBuildLogger logger;
-            options.disableOptimizer = false;
-            glslang::TIntermediate* ir = s.getIntermediate();
-            glslang::GlslangToSpv(*ir, spirv, &logger, &options);
-            fprintf(stderr, "%s", logger.getAllMessages().c_str());
+            program.addShader(&s);
+            if (!program.link(messages))
+            {
+                fprintf(stderr, "vkshader link failed\n");
+                fprintf(stderr, "%s", s.getInfoLog());
+                fprintf(stderr, "%s", s.getInfoDebugLog());
+                ParserLog(comp_data, s.getInfoLog());
+                compile_success = false;
+            }
+            else
+            {
+                glslang::SpvOptions options;
+                spv::SpvBuildLogger logger;
+                options.disableOptimizer = false;
+                glslang::TIntermediate* ir = program.getIntermediate(EShLangCompute);
+                glslang::GlslangToSpv(*ir, spirv, &logger, &options);
+                fprintf(stderr, "%s", logger.getAllMessages().c_str());
+            }
         }
     }
 

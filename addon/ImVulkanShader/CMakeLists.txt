@@ -177,7 +177,6 @@ compile_shader(others/Transpose_shader.h Filter_data)
 compile_shader(others/warpAffine_shader.h Filter_data)
 compile_shader(others/warpPerspective_shader.h Filter_data)
 # filters
-compile_shader(filters/ALM_shader.h ALM_data)
 compile_shader(filters/Bilateral_shader.h Filter_data)
 compile_shader(filters/Brightness_shader.h Filter_data)
 compile_shader(filters/Canny_shader.h DSobelFilter_data)
@@ -296,16 +295,11 @@ compile_shader(fusions/Rectangle_shader.h Rectangle_data)
 compile_shader(fusions/RotateScaleVanish_shader.h RotateScaleVanish_data)
 compile_shader(fusions/SimpleZoomOut_shader.h SimpleZoomOut_data)
 compile_shader(fusions/StaticWipe_shader.h StaticWipe_data)
-# effects
-compile_shader(effects/Lighting_shader.h Filter_data)
-compile_shader(effects/Star_shader.h Filter_data)
-compile_shader(effects/Sway_shader.h Filter_data)
+compile_shader(fusions/CircleBlur_shader.h CircleBlur_data)
 
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
 endif(VKSHADER_VULKAN_PREBUILD)
-
-compile_shader(fusions/CircleBlur_shader.h CircleBlur_data)
 
 find_package(Glslang COMPONENTS Glslang SPIRV)
 if (Glslang_LIBRARY_RELEASE)
@@ -400,7 +394,6 @@ set(VKSHADER_SRCS
     filters/GaussianBlur.cpp
     filters/Box.cpp
     filters/Laplacian.cpp
-    filters/ALM_vulkan.cpp
     filters/CAS_vulkan.cpp
     filters/HQDN3D_vulkan.cpp
     filters/DeBand_vulkan.cpp
@@ -448,8 +441,6 @@ set(VKSHADER_INCS
     filters/GaussianBlur.h
     filters/Box.h
     filters/Laplacian.h
-    filters/ALM_shader.h
-    filters/ALM_vulkan.h
     filters/CAS_shader.h
     filters/CAS_vulkan.h
     filters/HQDN3D_shader.h
@@ -481,27 +472,6 @@ set(VKSHADER_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/filters
     ${CMAKE_CURRENT_SOURCE_DIR}/filters/lut3d
-)
-
-# add effect
-set(VKSHADER_SRCS
-    ${VKSHADER_SRCS}
-    effects/Star_vulkan.cpp
-    effects/Lighting_vulkan.cpp
-    effects/Sway_vulkan.cpp
-)
-set(VKSHADER_INCS
-    ${VKSHADER_INCS}
-    effects/Star_shader.h
-    effects/Star_vulkan.h
-    effects/Lighting_shader.h
-    effects/Lighting_vulkan.h
-    effects/Sway_shader.h
-    effects/Sway_vulkan.h
-)
-set(VKSHADER_INC_DIRS
-    ${VKSHADER_INC_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/effects
 )
 
 # add fusion
@@ -817,8 +787,8 @@ add_dependencies(VkShader generate-comp)
 endif(VKSHADER_VULKAN_PREBUILD)
 
 set(VKSHADER_VERSION_MAJOR 1)
-set(VKSHADER_VERSION_MINOR 8)
-set(VKSHADER_VERSION_PATCH 2)
+set(VKSHADER_VERSION_MINOR 9)
+set(VKSHADER_VERSION_PATCH 1)
 string(TIMESTAMP VKSHADER_VERSION_BUILD "%y%m%d")
 set(VKSHADER_VERSION_STRING ${VKSHADER_VERSION_MAJOR}.${VKSHADER_VERSION_MINOR}.${VKSHADER_VERSION_PATCH})
 add_definitions(-DVKSHADER_VERSION_MAJOR=${VKSHADER_VERSION_MAJOR})
