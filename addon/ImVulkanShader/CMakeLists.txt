@@ -478,7 +478,6 @@ set(VKSHADER_INC_DIRS
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
     fusions/AlphaBlending_vulkan.cpp
-    fusions/BookFlip_vulkan.cpp
     fusions/Bounce_vulkan.cpp
     fusions/BowTie_vulkan.cpp
     fusions/ButterflyWave_vulkan.cpp
@@ -531,7 +530,6 @@ set(VKSHADER_SRCS
     fusions/SquaresWire_vulkan.cpp
     fusions/Squeeze_vulkan.cpp
     fusions/Wind_vulkan.cpp
-    fusions/LinearBlur_vulkan.cpp
     fusions/Door_vulkan.cpp
     fusions/Fade_vulkan.cpp
     fusions/Slider_vulkan.cpp
@@ -550,8 +548,6 @@ set(VKSHADER_INCS
     ${VKSHADER_INCS}
     fusions/AlphaBlending_shader.h
     fusions/AlphaBlending_vulkan.h
-    fusions/BookFlip_shader.h
-    fusions/BookFlip_vulkan.h
     fusions/Bounce_shader.h
     fusions/Bounce_vulkan.h
     fusions/BowTie_shader.h
@@ -656,8 +652,6 @@ set(VKSHADER_INCS
     fusions/Squeeze_vulkan.h
     fusions/Wind_shader.h
     fusions/Wind_vulkan.h
-    fusions/LinearBlur_shader.h
-    fusions/LinearBlur_vulkan.h
     fusions/Door_shader.h
     fusions/Door_vulkan.h
     fusions/Fade_shader.h
