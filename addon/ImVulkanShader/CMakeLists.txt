@@ -478,9 +478,6 @@ set(VKSHADER_INC_DIRS
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
     fusions/AlphaBlending_vulkan.cpp
-    fusions/Bounce_vulkan.cpp
-    fusions/BowTie_vulkan.cpp
-    fusions/ButterflyWave_vulkan.cpp
     fusions/Swap_vulkan.cpp
     fusions/Radial_vulkan.cpp
     fusions/WindowSlice_vulkan.cpp
@@ -494,18 +491,11 @@ set(VKSHADER_SRCS
     fusions/Perlin_vulkan.cpp
     fusions/DirectionalWarp_vulkan.cpp
     fusions/Morph_vulkan.cpp
-    fusions/ColourDistance_vulkan.cpp
-    fusions/CircleCrop_vulkan.cpp
     fusions/Swirl_vulkan.cpp
-    fusions/CrossZoom_vulkan.cpp
     fusions/Dreamy_vulkan.cpp
     fusions/GridFlip_vulkan.cpp
     fusions/ZoomInCircles_vulkan.cpp
     fusions/Mosaic_vulkan.cpp
-    fusions/BurnOut_vulkan.cpp
-    fusions/Crosshatch_vulkan.cpp
-    fusions/CannabisLeaf_vulkan.cpp
-    fusions/CrazyParametric_vulkan.cpp
     fusions/KaleidoScope_vulkan.cpp
     fusions/WindowBlinds_vulkan.cpp
     fusions/Hexagonalize_vulkan.cpp
@@ -514,11 +504,6 @@ set(VKSHADER_SRCS
     fusions/DoomScreen_vulkan.cpp
     fusions/Ripple_vulkan.cpp
     fusions/Pinwheel_vulkan.cpp
-    fusions/Burn_vulkan.cpp
-    fusions/CircleBlur_vulkan.cpp
-    fusions/ColorPhase_vulkan.cpp
-    fusions/CrossWarp_vulkan.cpp
-    fusions/Cube_vulkan.cpp
     fusions/Doorway_vulkan.cpp
     fusions/Flyeye_vulkan.cpp
     fusions/Heart_vulkan.cpp
@@ -548,12 +533,6 @@ set(VKSHADER_INCS
     ${VKSHADER_INCS}
     fusions/AlphaBlending_shader.h
     fusions/AlphaBlending_vulkan.h
-    fusions/Bounce_shader.h
-    fusions/Bounce_vulkan.h
-    fusions/BowTie_shader.h
-    fusions/BowTie_vulkan.h
-    fusions/ButterflyWave_shader.h
-    fusions/ButterflyWave_vulkan.h
     fusions/Swap_shader.h
     fusions/Swap_vulkan.h
     fusions/Radial_shader.h
@@ -580,14 +559,8 @@ set(VKSHADER_INCS
     fusions/DirectionalWarp_vulkan.h
     fusions/Morph_shader.h
     fusions/Morph_vulkan.h
-    fusions/ColourDistance_shader.h
-    fusions/ColourDistance_vulkan.h
-    fusions/CircleCrop_shader.h
-    fusions/CircleCrop_vulkan.h
     fusions/Swirl_shader.h
     fusions/Swirl_vulkan.h
-    fusions/CrossZoom_shader.h
-    fusions/CrossZoom_vulkan.h
     fusions/Dreamy_shader.h
     fusions/Dreamy_vulkan.h
     fusions/GridFlip_shader.h
@@ -596,14 +569,6 @@ set(VKSHADER_INCS
     fusions/ZoomInCircles_vulkan.h
     fusions/Mosaic_shader.h
     fusions/Mosaic_vulkan.h
-    fusions/BurnOut_shader.h
-    fusions/BurnOut_vulkan.h
-    fusions/Crosshatch_shader.h
-    fusions/Crosshatch_vulkan.h
-    fusions/CannabisLeaf_shader.h
-    fusions/CannabisLeaf_vulkan.h
-    fusions/CrazyParametric_shader.h
-    fusions/CrazyParametric_vulkan.h
     fusions/KaleidoScope_shader.h
     fusions/KaleidoScope_vulkan.h
     fusions/WindowBlinds_shader.h
@@ -620,16 +585,6 @@ set(VKSHADER_INCS
     fusions/Ripple_vulkan.h
     fusions/Pinwheel_shader.h
     fusions/Pinwheel_vulkan.h
-    fusions/Burn_shader.h
-    fusions/Burn_vulkan.h
-    fusions/CircleBlur_shader.h
-    fusions/CircleBlur_vulkan.h
-    fusions/ColorPhase_shader.h
-    fusions/ColorPhase_vulkan.h
-    fusions/CrossWarp_shader.h
-    fusions/CrossWarp_vulkan.h
-    fusions/Cube_shader.h
-    fusions/Cube_vulkan.h
     fusions/Doorway_shader.h
     fusions/Doorway_vulkan.h
     fusions/Flyeye_shader.h
