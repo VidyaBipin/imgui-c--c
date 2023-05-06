@@ -485,28 +485,15 @@ set(VKSHADER_SRCS
     fusions/SimpleZoom_vulkan.cpp
     fusions/WaterDrop_vulkan.cpp
     fusions/PageCurl_vulkan.cpp
-    fusions/GlitchMemories_vulkan.cpp
     fusions/StereoViewer_vulkan.cpp
-    fusions/LuminanceMelt_vulkan.cpp
     fusions/Perlin_vulkan.cpp
-    fusions/DirectionalWarp_vulkan.cpp
     fusions/Morph_vulkan.cpp
     fusions/Swirl_vulkan.cpp
-    fusions/Dreamy_vulkan.cpp
-    fusions/GridFlip_vulkan.cpp
     fusions/ZoomInCircles_vulkan.cpp
     fusions/Mosaic_vulkan.cpp
-    fusions/KaleidoScope_vulkan.cpp
     fusions/WindowBlinds_vulkan.cpp
-    fusions/Hexagonalize_vulkan.cpp
-    fusions/GlitchDisplace_vulkan.cpp
-    fusions/DreamyZoom_vulkan.cpp
-    fusions/DoomScreen_vulkan.cpp
     fusions/Ripple_vulkan.cpp
     fusions/Pinwheel_vulkan.cpp
-    fusions/Doorway_vulkan.cpp
-    fusions/Flyeye_vulkan.cpp
-    fusions/Heart_vulkan.cpp
     fusions/MultiplyBlend_vulkan.cpp
     fusions/Pixelize_vulkan.cpp
     fusions/Polar_vulkan.cpp
@@ -515,15 +502,11 @@ set(VKSHADER_SRCS
     fusions/SquaresWire_vulkan.cpp
     fusions/Squeeze_vulkan.cpp
     fusions/Wind_vulkan.cpp
-    fusions/Door_vulkan.cpp
-    fusions/Fade_vulkan.cpp
     fusions/Slider_vulkan.cpp
     fusions/Wipe_vulkan.cpp
     fusions/Move_vulkan.cpp
     fusions/Rolls_vulkan.cpp
-    fusions/Edge_vulkan.cpp
     fusions/StaticWipe_vulkan.cpp
-    fusions/DirectionalScaled_vulkan.cpp
     fusions/Rectangle_vulkan.cpp
     fusions/SimpleZoomOut_vulkan.cpp
     fusions/RotateScaleVanish_vulkan.cpp
@@ -547,50 +530,24 @@ set(VKSHADER_INCS
     fusions/WaterDrop_vulkan.h
     fusions/PageCurl_shader.h
     fusions/PageCurl_vulkan.h
-    fusions/GlitchMemories_shader.h
-    fusions/GlitchMemories_vulkan.h
     fusions/StereoViewer_shader.h
     fusions/StereoViewer_vulkan.h
-    fusions/LuminanceMelt_shader.h
-    fusions/LuminanceMelt_vulkan.h
     fusions/Perlin_shader.h
     fusions/Perlin_vulkan.h
-    fusions/DirectionalWarp_shader.h
-    fusions/DirectionalWarp_vulkan.h
     fusions/Morph_shader.h
     fusions/Morph_vulkan.h
     fusions/Swirl_shader.h
     fusions/Swirl_vulkan.h
-    fusions/Dreamy_shader.h
-    fusions/Dreamy_vulkan.h
-    fusions/GridFlip_shader.h
-    fusions/GridFlip_vulkan.h
     fusions/ZoomInCircles_shader.h
     fusions/ZoomInCircles_vulkan.h
     fusions/Mosaic_shader.h
     fusions/Mosaic_vulkan.h
-    fusions/KaleidoScope_shader.h
-    fusions/KaleidoScope_vulkan.h
     fusions/WindowBlinds_shader.h
     fusions/WindowBlinds_vulkan.h
-    fusions/Hexagonalize_shader.h
-    fusions/Hexagonalize_vulkan.h
-    fusions/GlitchDisplace_shader.h
-    fusions/GlitchDisplace_vulkan.h
-    fusions/DreamyZoom_shader.h
-    fusions/DreamyZoom_vulkan.h
-    fusions/DoomScreen_shader.h
-    fusions/DoomScreen_vulkan.h
     fusions/Ripple_shader.h
     fusions/Ripple_vulkan.h
     fusions/Pinwheel_shader.h
     fusions/Pinwheel_vulkan.h
-    fusions/Doorway_shader.h
-    fusions/Doorway_vulkan.h
-    fusions/Flyeye_shader.h
-    fusions/Flyeye_vulkan.h
-    fusions/Heart_shader.h
-    fusions/Heart_vulkan.h
     fusions/MultiplyBlend_shader.h
     fusions/MultiplyBlend_vulkan.h
     fusions/Pixelize_shader.h
@@ -607,10 +564,6 @@ set(VKSHADER_INCS
     fusions/Squeeze_vulkan.h
     fusions/Wind_shader.h
     fusions/Wind_vulkan.h
-    fusions/Door_shader.h
-    fusions/Door_vulkan.h
-    fusions/Fade_shader.h
-    fusions/Fade_vulkan.h
     fusions/Slider_shader.h
     fusions/Slider_vulkan.h
     fusions/Wipe_shader.h
@@ -619,12 +572,8 @@ set(VKSHADER_INCS
     fusions/Move_vulkan.h
     fusions/Rolls_shader.h
     fusions/Rolls_vulkan.h
-    fusions/Edge_shader.h
-    fusions/Edge_vulkan.h
     fusions/StaticWipe_shader.h
     fusions/StaticWipe_vulkan.h
-    fusions/DirectionalScaled_shader.h
-    fusions/DirectionalScaled_vulkan.h
     fusions/Rectangle_shader.h
     fusions/Rectangle_vulkan.h
     fusions/SimpleZoomOut_shader.h
