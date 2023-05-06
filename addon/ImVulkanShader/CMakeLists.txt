@@ -474,118 +474,6 @@ set(VKSHADER_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/filters/lut3d
 )
 
-# add fusion
-set(VKSHADER_SRCS
-    ${VKSHADER_SRCS}
-    fusions/AlphaBlending_vulkan.cpp
-    fusions/Swap_vulkan.cpp
-    fusions/Radial_vulkan.cpp
-    fusions/WindowSlice_vulkan.cpp
-    fusions/PolkaDots_vulkan.cpp
-    fusions/SimpleZoom_vulkan.cpp
-    fusions/WaterDrop_vulkan.cpp
-    fusions/PageCurl_vulkan.cpp
-    fusions/StereoViewer_vulkan.cpp
-    fusions/Perlin_vulkan.cpp
-    fusions/Morph_vulkan.cpp
-    fusions/Swirl_vulkan.cpp
-    fusions/ZoomInCircles_vulkan.cpp
-    fusions/Mosaic_vulkan.cpp
-    fusions/WindowBlinds_vulkan.cpp
-    fusions/Ripple_vulkan.cpp
-    fusions/Pinwheel_vulkan.cpp
-    fusions/MultiplyBlend_vulkan.cpp
-    fusions/Pixelize_vulkan.cpp
-    fusions/Polar_vulkan.cpp
-    fusions/RandomSquares_vulkan.cpp
-    fusions/RotateScale_vulkan.cpp
-    fusions/SquaresWire_vulkan.cpp
-    fusions/Squeeze_vulkan.cpp
-    fusions/Wind_vulkan.cpp
-    fusions/Slider_vulkan.cpp
-    fusions/Wipe_vulkan.cpp
-    fusions/Move_vulkan.cpp
-    fusions/Rolls_vulkan.cpp
-    fusions/StaticWipe_vulkan.cpp
-    fusions/Rectangle_vulkan.cpp
-    fusions/SimpleZoomOut_vulkan.cpp
-    fusions/RotateScaleVanish_vulkan.cpp
-)
-
-set(VKSHADER_INCS
-    ${VKSHADER_INCS}
-    fusions/AlphaBlending_shader.h
-    fusions/AlphaBlending_vulkan.h
-    fusions/Swap_shader.h
-    fusions/Swap_vulkan.h
-    fusions/Radial_shader.h
-    fusions/Radial_vulkan.h
-    fusions/WindowSlice_shader.h
-    fusions/WindowSlice_vulkan.h
-    fusions/PolkaDots_shader.h
-    fusions/PolkaDots_vulkan.h
-    fusions/SimpleZoom_shader.h
-    fusions/SimpleZoom_vulkan.h
-    fusions/WaterDrop_shader.h
-    fusions/WaterDrop_vulkan.h
-    fusions/PageCurl_shader.h
-    fusions/PageCurl_vulkan.h
-    fusions/StereoViewer_shader.h
-    fusions/StereoViewer_vulkan.h
-    fusions/Perlin_shader.h
-    fusions/Perlin_vulkan.h
-    fusions/Morph_shader.h
-    fusions/Morph_vulkan.h
-    fusions/Swirl_shader.h
-    fusions/Swirl_vulkan.h
-    fusions/ZoomInCircles_shader.h
-    fusions/ZoomInCircles_vulkan.h
-    fusions/Mosaic_shader.h
-    fusions/Mosaic_vulkan.h
-    fusions/WindowBlinds_shader.h
-    fusions/WindowBlinds_vulkan.h
-    fusions/Ripple_shader.h
-    fusions/Ripple_vulkan.h
-    fusions/Pinwheel_shader.h
-    fusions/Pinwheel_vulkan.h
-    fusions/MultiplyBlend_shader.h
-    fusions/MultiplyBlend_vulkan.h
-    fusions/Pixelize_shader.h
-    fusions/Pixelize_vulkan.h
-    fusions/Polar_shader.h
-    fusions/Polar_vulkan.h
-    fusions/RandomSquares_shader.h
-    fusions/RandomSquares_vulkan.h
-    fusions/RotateScale_shader.h
-    fusions/RotateScale_vulkan.h
-    fusions/SquaresWire_shader.h
-    fusions/SquaresWire_vulkan.h
-    fusions/Squeeze_shader.h
-    fusions/Squeeze_vulkan.h
-    fusions/Wind_shader.h
-    fusions/Wind_vulkan.h
-    fusions/Slider_shader.h
-    fusions/Slider_vulkan.h
-    fusions/Wipe_shader.h
-    fusions/Wipe_vulkan.h
-    fusions/Move_shader.h
-    fusions/Move_vulkan.h
-    fusions/Rolls_shader.h
-    fusions/Rolls_vulkan.h
-    fusions/StaticWipe_shader.h
-    fusions/StaticWipe_vulkan.h
-    fusions/Rectangle_shader.h
-    fusions/Rectangle_vulkan.h
-    fusions/SimpleZoomOut_shader.h
-    fusions/SimpleZoomOut_vulkan.h
-    fusions/RotateScaleVanish_shader.h
-    fusions/RotateScaleVanish_vulkan.h
-)
-set(VKSHADER_INC_DIRS
-    ${VKSHADER_INC_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/fusions
-)
-
 # add scopes
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
@@ -615,52 +503,55 @@ set(VKSHADER_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/scopes
 )
 
-# add others
+# add internals
 set(VKSHADER_SRCS
     ${VKSHADER_SRCS}
-    others/colorspace_table.cpp
-    others/ColorConvert_vulkan.cpp
-    others/Resize_vulkan.cpp
-    others/CopyTo_vulkan.cpp
-    others/Flip_vulkan.cpp
-    others/Crop_vulkan.cpp
-    others/Transpose_vulkan.cpp
-    others/Concat_vulkan.cpp
-    others/warpPerspective_vulkan.cpp
-    others/warpAffine_vulkan.cpp
-    others/Substract_mean_normalize.cpp
-    others/Copy_make_border.cpp
+    internals/AlphaBlending_vulkan.cpp
+    internals/colorspace_table.cpp
+    internals/ColorConvert_vulkan.cpp
+    internals/Resize_vulkan.cpp
+    internals/CopyTo_vulkan.cpp
+    internals/Flip_vulkan.cpp
+    internals/Crop_vulkan.cpp
+    internals/Transpose_vulkan.cpp
+    internals/Concat_vulkan.cpp
+    internals/warpPerspective_vulkan.cpp
+    internals/warpAffine_vulkan.cpp
+    internals/Substract_mean_normalize.cpp
+    internals/Copy_make_border.cpp
 )
 
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
-    others/ColorConvert_shader.h
-    others/ColorConvert_vulkan.h
-    others/Resize_shader.h
-    others/Resize_vulkan.h
-    others/CopyTo_shader.h
-    others/CopyTo_vulkan.h
-    others/Flip_shader.h
-    others/Flip_vulkan.h
-    others/Crop_shader.h
-    others/Crop_vulkan.h
-    others/Transpose_shader.h
-    others/Transpose_vulkan.h
-    others/Concat_shader.h
-    others/Concat_vulkan.h
-    others/warpPerspective_shader.h
-    others/warpPerspective_vulkan.h
-    others/warpAffine_shader.h
-    others/warpAffine_vulkan.h
-    others/Substract_mean_normalize_shader.h
-    others/Substract_mean_normalize.h
-    others/Copy_make_border_shader.h
-    others/Copy_make_border.h
+    internals/AlphaBlending_shader.h
+    internals/AlphaBlending_vulkan.h
+    internals/ColorConvert_shader.h
+    internals/ColorConvert_vulkan.h
+    internals/Resize_shader.h
+    internals/Resize_vulkan.h
+    internals/CopyTo_shader.h
+    internals/CopyTo_vulkan.h
+    internals/Flip_shader.h
+    internals/Flip_vulkan.h
+    internals/Crop_shader.h
+    internals/Crop_vulkan.h
+    internals/Transpose_shader.h
+    internals/Transpose_vulkan.h
+    internals/Concat_shader.h
+    internals/Concat_vulkan.h
+    internals/warpPerspective_shader.h
+    internals/warpPerspective_vulkan.h
+    internals/warpAffine_shader.h
+    internals/warpAffine_vulkan.h
+    internals/Substract_mean_normalize_shader.h
+    internals/Substract_mean_normalize.h
+    internals/Copy_make_border_shader.h
+    internals/Copy_make_border.h
 )
 
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/others
+    ${CMAKE_CURRENT_SOURCE_DIR}/internals
 )
 
 include_directories(${VKSHADER_INC_DIRS})
