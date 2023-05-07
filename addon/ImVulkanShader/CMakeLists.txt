@@ -161,38 +161,28 @@ compile_shader(imvk_Packing_shader.h packing_pack8to4_fp32_to_fp16)
 compile_shader(imvk_Packing_shader.h packing_pack8to4)
 compile_shader(imvk_Packing_shader.h packing)
 # general
-compile_shader(others/ColorConvert_shader.h YUV2RGB_data)
-compile_shader(others/ColorConvert_shader.h RGB2YUV_data)
-compile_shader(others/ColorConvert_shader.h GRAY2RGB_data)
-compile_shader(others/ColorConvert_shader.h Conv_data)
-compile_shader(others/Concat_shader.h Shader_data)
-compile_shader(others/Copy_make_border_shader.h Filter_data)
-compile_shader(others/CopyTo_shader.h CopyTo_data)
-compile_shader(others/Crop_shader.h CropShader_data)
-compile_shader(others/Crop_shader.h CropToShader_data)
-compile_shader(others/Flip_shader.h Shader_data)
-compile_shader(others/Resize_shader.h Resize_data)
-compile_shader(others/Substract_mean_normalize_shader.h Filter_data)
-compile_shader(others/Transpose_shader.h Filter_data)
-compile_shader(others/warpAffine_shader.h Filter_data)
-compile_shader(others/warpPerspective_shader.h Filter_data)
+compile_shader(internals/AlphaBlending_shader.h AlphaBlending_data)
+compile_shader(internals/AlphaBlending_shader.h AlphaBlending_alpha_data)
+compile_shader(internals/ColorConvert_shader.h YUV2RGB_data)
+compile_shader(internals/ColorConvert_shader.h RGB2YUV_data)
+compile_shader(internals/ColorConvert_shader.h GRAY2RGB_data)
+compile_shader(internals/ColorConvert_shader.h Conv_data)
+compile_shader(internals/Concat_shader.h Shader_data)
+compile_shader(internals/Copy_make_border_shader.h Filter_data)
+compile_shader(internals/CopyTo_shader.h CopyTo_data)
+compile_shader(internals/Crop_shader.h CropShader_data)
+compile_shader(internals/Crop_shader.h CropToShader_data)
+compile_shader(internals/Flip_shader.h Shader_data)
+compile_shader(internals/Resize_shader.h Resize_data)
+compile_shader(internals/Substract_mean_normalize_shader.h Filter_data)
+compile_shader(internals/Transpose_shader.h Filter_data)
+compile_shader(internals/warpAffine_shader.h Filter_data)
+compile_shader(internals/warpPerspective_shader.h Filter_data)
 # filters
 compile_shader(filters/Bilateral_shader.h Filter_data)
 compile_shader(filters/Brightness_shader.h Filter_data)
-compile_shader(filters/Canny_shader.h DSobelFilter_data)
-compile_shader(filters/Canny_shader.h NMSFilter_data)
-compile_shader(filters/Canny_shader.h CannyFilter_data)
-compile_shader(filters/CAS_shader.h CAS_data)
-compile_shader(filters/ChromaKey_shader.h Filter_data)
-compile_shader(filters/ChromaKey_shader.h Blur_data)
-compile_shader(filters/ChromaKey_shader.h Sharpen_data)
-compile_shader(filters/ChromaKey_shader.h Despill_data)
-compile_shader(filters/ColorBalance_shader.h Filter_data)
-compile_shader(filters/ColorCurve_shader.h Filter_data)
 compile_shader(filters/ColorInvert_shader.h Filter_data)
 compile_shader(filters/Contrast_shader.h Filter_data)
-compile_shader(filters/DeBand_shader.h DeBand_data)
-compile_shader(filters/DeInterlace_shader.h DeInterlace_data)
 compile_shader(filters/Exposure_shader.h Filter_data)
 compile_shader(filters/Filter2D_shader.h Filter_data)
 compile_shader(filters/Filter2DS_shader.h FilterColumn_data)
@@ -200,17 +190,9 @@ compile_shader(filters/Filter2DS_shader.h FilterRow_data)
 compile_shader(filters/Filter2DS_shader.h FilterColumnMono_data)
 compile_shader(filters/Filter2DS_shader.h FilterRowMono_data)
 compile_shader(filters/Gamma_shader.h Filter_data)
-compile_shader(filters/Guided_shader.h ToMatting_data)
-compile_shader(filters/Guided_shader.h Guided_data)
-compile_shader(filters/Guided_shader.h Matting_data)
-compile_shader(filters/HQDN3D_shader.h HQDN3D_data)
 compile_shader(filters/Hue_shader.h Filter_data)
 compile_shader(filters/Saturation_shader.h Filter_data)
-compile_shader(filters/Sobel_shader.h Filter_data)
-compile_shader(filters/USM_shader.h USMFilter_data)
-compile_shader(filters/Vibrance_shader.h Filter_data)
-compile_shader(filters/WhiteBalance_shader.h Filter_data)
-compile_shader(filters/lut3d/Lut3D_Shader.h LUT3D_data)
+compile_shader(filters/Lut3D_shader.h LUT3D_data)
 # scopes
 compile_shader(scopes/CIE_shader.h CIE_data)
 compile_shader(scopes/CIE_shader.h CIE_merge_data)
@@ -227,76 +209,6 @@ compile_shader(scopes/Vector_shader.h Vector_merge_data)
 compile_shader(scopes/Waveform_shader.h Waveform_data)
 compile_shader(scopes/Waveform_shader.h Zero_data)
 compile_shader(scopes/Waveform_shader.h ConvInt2Mat_data)
-# fusions
-compile_shader(fusions/AlphaBlending_shader.h AlphaBlending_data)
-compile_shader(fusions/AlphaBlending_shader.h AlphaBlending_alpha_data)
-compile_shader(fusions/BookFlip_shader.h BookFlip_data)
-compile_shader(fusions/Bounce_shader.h Bounce_data)
-compile_shader(fusions/BowTie_shader.h BowTie_data)
-compile_shader(fusions/ButterflyWave_shader.h ButterflyWave_data)
-compile_shader(fusions/Swap_shader.h Swap_data)
-compile_shader(fusions/Radial_shader.h Radial_data)
-compile_shader(fusions/WindowSlice_shader.h WindowSlice_data)
-compile_shader(fusions/PolkaDots_shader.h PolkaDots_data)
-compile_shader(fusions/SimpleZoom_shader.h SimpleZoom_data)
-compile_shader(fusions/WaterDrop_shader.h WaterDrop_data)
-compile_shader(fusions/PageCurl_shader.h PageCurl_data)
-compile_shader(fusions/GlitchMemories_shader.h GlitchMemories_data)
-compile_shader(fusions/StereoViewer_shader.h StereoViewer_data)
-compile_shader(fusions/LuminanceMelt_shader.h LuminanceMelt_data)
-compile_shader(fusions/Perlin_shader.h Perlin_data)
-compile_shader(fusions/DirectionalWarp_shader.h DirectionalWarp_data)
-compile_shader(fusions/Morph_shader.h Morph_data)
-compile_shader(fusions/ColourDistance_shader.h ColourDistance_data)
-compile_shader(fusions/CircleCrop_shader.h CircleCrop_data)
-compile_shader(fusions/Swirl_shader.h Swirl_data)
-compile_shader(fusions/CrossZoom_shader.h CrossZoom_data)
-compile_shader(fusions/Dreamy_shader.h Dreamy_data)
-compile_shader(fusions/GridFlip_shader.h GridFlip_data)
-compile_shader(fusions/ZoomInCircles_shader.h ZoomInCircles_data)
-compile_shader(fusions/Mosaic_shader.h Mosaic_data)
-compile_shader(fusions/BurnOut_shader.h BurnOut_data)
-compile_shader(fusions/Crosshatch_shader.h Crosshatch_data)
-compile_shader(fusions/CannabisLeaf_shader.h CannabisLeaf_data)
-compile_shader(fusions/CrazyParametric_shader.h CrazyParametric_data)
-compile_shader(fusions/KaleidoScope_shader.h KaleidoScope_data)
-compile_shader(fusions/WindowBlinds_shader.h WindowBlinds_data)
-compile_shader(fusions/Hexagonalize_shader.h Hexagonalize_data)
-compile_shader(fusions/GlitchDisplace_shader.h GlitchDisplace_data)
-compile_shader(fusions/DreamyZoom_shader.h DreamyZoom_data)
-compile_shader(fusions/DoomScreen_shader.h DoomScreen_data)
-compile_shader(fusions/Ripple_shader.h Ripple_data)
-compile_shader(fusions/Pinwheel_shader.h Pinwheel_data)
-compile_shader(fusions/Burn_shader.h Burn_data)
-compile_shader(fusions/ColorPhase_shader.h ColorPhase_data)
-compile_shader(fusions/CrossWarp_shader.h CrossWarp_data)
-compile_shader(fusions/Cube_shader.h Cube_data)
-compile_shader(fusions/Doorway_shader.h Doorway_data)
-compile_shader(fusions/Flyeye_shader.h Flyeye_data)
-compile_shader(fusions/Heart_shader.h Heart_data)
-compile_shader(fusions/MultiplyBlend_shader.h MultiplyBlend_data)
-compile_shader(fusions/Pixelize_shader.h Pixelize_data)
-compile_shader(fusions/Polar_shader.h Polar_data)
-compile_shader(fusions/RandomSquares_shader.h RandomSquares_data)
-compile_shader(fusions/RotateScale_shader.h RotateScale_data)
-compile_shader(fusions/SquaresWire_shader.h SquaresWire_data)
-compile_shader(fusions/Squeeze_shader.h Squeeze_data)
-compile_shader(fusions/Wind_shader.h Wind_data)
-compile_shader(fusions/LinearBlur_shader.h LinearBlur_data)
-compile_shader(fusions/Door_shader.h Door_data)
-compile_shader(fusions/Fade_shader.h Fade_data)
-compile_shader(fusions/Slider_shader.h Slider_data)
-compile_shader(fusions/Wipe_shader.h Wipe_data)
-compile_shader(fusions/Move_shader.h Move_data)
-compile_shader(fusions/Rolls_shader.h Rolls_data)
-compile_shader(fusions/Edge_shader.h Edge_data)
-compile_shader(fusions/DirectionalScaled_shader.h DirectionalScaled_data)
-compile_shader(fusions/Rectangle_shader.h Rectangle_data)
-compile_shader(fusions/RotateScaleVanish_shader.h RotateScaleVanish_data)
-compile_shader(fusions/SimpleZoomOut_shader.h SimpleZoomOut_data)
-compile_shader(fusions/StaticWipe_shader.h StaticWipe_data)
-compile_shader(fusions/CircleBlur_shader.h CircleBlur_data)
-
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
 endif(VKSHADER_VULKAN_PREBUILD)
@@ -379,26 +291,12 @@ set(VKSHADER_SRCS
     filters/Contrast_vulkan.cpp
     filters/Exposure_vulkan.cpp
     filters/Gamma_vulkan.cpp
+    filters/Lut3D_vulkan.cpp
     filters/Saturation_vulkan.cpp
-    filters/WhiteBalance_vulkan.cpp
     filters/Hue_vulkan.cpp
-    filters/Vibrance_vulkan.cpp
     filters/ColorInvert_vulkan.cpp
-    filters/ColorBalance_vulkan.cpp
-    filters/ColorCurve_vulkan.cpp
     filters/Bilateral_vulkan.cpp
-    filters/Sobel_vulkan.cpp
-    filters/Canny_vulkan.cpp
-    filters/USM_vulkan.cpp
-    filters/ChromaKey_vulkan.cpp
-    filters/GaussianBlur.cpp
     filters/Box.cpp
-    filters/Laplacian.cpp
-    filters/CAS_vulkan.cpp
-    filters/HQDN3D_vulkan.cpp
-    filters/DeBand_vulkan.cpp
-    filters/DeInterlace_vulkan.cpp
-    filters/Guided_vulkan.cpp
 )
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
@@ -414,64 +312,23 @@ set(VKSHADER_INCS
     filters/Exposure_vulkan.h
     filters/Gamma_shader.h
     filters/Gamma_vulkan.h
+    filters/Lut3D_vulkan.h
+    filters/Lut3D_shader.h
     filters/Saturation_shader.h
     filters/Saturation_vulkan.h
-    filters/WhiteBalance_shader.h
-    filters/WhiteBalance_vulkan.h
     filters/Hue_shader.h
     filters/Hue_vulkan.h
-    filters/Vibrance_shader.h
-    filters/Vibrance_vulkan.h
     filters/ColorInvert_shader.h
     filters/ColorInvert_vulkan.h
-    filters/ColorBalance_shader.h
-    filters/ColorBalance_vulkan.h
-    filters/ColorCurve_shader.h
-    filters/ColorCurve_vulkan.h
     filters/Bilateral_shader.h
     filters/Bilateral_vulkan.h
-    filters/Sobel_shader.h
-    filters/Sobel_vulkan.h
-    filters/Canny_shader.h
-    filters/Canny_vulkan.h
-    filters/USM_shader.h
-    filters/USM_vulkan.h
-    filters/ChromaKey_shader.h
-    filters/ChromaKey_vulkan.h
-    filters/GaussianBlur.h
     filters/Box.h
-    filters/Laplacian.h
-    filters/CAS_shader.h
-    filters/CAS_vulkan.h
-    filters/HQDN3D_shader.h
-    filters/HQDN3D_vulkan.h
-    filters/DeBand_shader.h
-    filters/DeBand_vulkan.h
-    filters/DeInterlace_shader.h
-    filters/DeInterlace_vulkan.h
-    filters/Guided_shader.h
-    filters/Guided_vulkan.h
 )
-set(VKSHADER_SRCS
-    ${VKSHADER_SRCS}
-    filters/lut3d/Lut3D.cpp
-)
-set(VKSHADER_INCS
-    ${VKSHADER_INCS}
-    filters/lut3d/Lut3D.h
-    filters/lut3d/Lut3D_Shader.h
-    filters/lut3d/SDR709_HDR2020_HLG.h
-    filters/lut3d/SDR709_HDR2020_PQ.h
-    filters/lut3d/HDR2020_HLG_SDR709.h
-    filters/lut3d/HDR2020_PQ_SDR709.h
-    filters/lut3d/HDR2020HLG_HDR2020PQ.h
-    filters/lut3d/HDR2020PQ_HDR2020HLG.h
-)
+
 set(VKSHADER_INC_DIRS
     ${VKSHADER_INC_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/filters
-    ${CMAKE_CURRENT_SOURCE_DIR}/filters/lut3d
 )
 
 # add scopes

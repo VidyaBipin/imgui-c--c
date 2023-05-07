@@ -1,15 +1,7 @@
-#include "Lut3D.h"
-#define DECLARE_ALIGNED(n,t,v)      t __attribute__ ((aligned (n))) v
-
-#include "Lut3D_Shader.h"
+#include "Lut3D_vulkan.h"
+#include "Lut3D_shader.h"
 #include "ImVulkanShader.h"
 #include <algorithm>
-#include "SDR709_HDR2020_HLG.h"
-#include "SDR709_HDR2020_PQ.h"
-#include "HDR2020_HLG_SDR709.h"
-#include "HDR2020_PQ_SDR709.h"
-#include "HDR2020PQ_HDR2020HLG.h"
-#include "HDR2020HLG_HDR2020PQ.h"
 
 #define MAX_LEVEL 256
 #define MAX_LINE_SIZE 512
@@ -100,9 +92,9 @@ static std::string path_to_name(const char* path, int up_low = 0)
 
 namespace ImGui 
 {
-LUT3D_vulkan::LUT3D_vulkan(int default_model, int interpolation, int gpu)
+LUT3D_vulkan::LUT3D_vulkan(void * table, int size, float r_scale, float g_scale, float b_scale, float a_scale, int interpolation, int gpu)
 {
-    if (default_model < 0 || default_model > NO_DEFAULT)
+    if (!table || size <= 0)
     {
         return;
     }
@@ -111,59 +103,12 @@ LUT3D_vulkan::LUT3D_vulkan(int default_model, int interpolation, int gpu)
         return;
     }
 
-    switch (default_model)
-    {
-        case SDR709_HDRHLG:
-            lutsize = SDR709_HDR2020_HLG_SIZE;
-            lut = (void *)sdr709_hdr2020_hlg_lut;
-            scale.r = SDR709_HDR2020_HLG_R_SCALE;
-            scale.g = SDR709_HDR2020_HLG_G_SCALE;
-            scale.b = SDR709_HDR2020_HLG_B_SCALE;
-            scale.a = SDR709_HDR2020_HLG_A_SCALE;
-            break;
-        case SDR709_HDRPQ:
-            lutsize = SDR709_HDR2020_PQ_SIZE;
-            lut = (void *)sdr709_hdr2020_pq_lut;
-            scale.r = SDR709_HDR2020_PQ_R_SCALE;
-            scale.g = SDR709_HDR2020_PQ_G_SCALE;
-            scale.b = SDR709_HDR2020_PQ_B_SCALE;
-            scale.a = SDR709_HDR2020_PQ_A_SCALE;
-            break;
-        case HDRHLG_SDR709:
-            lutsize = HDR2020_HLG_SDR709_SIZE;
-            lut = (void *)hdr2020_hlg_sdr709_lut;
-            scale.r = HDR2020_HLG_SDR709_R_SCALE;
-            scale.g = HDR2020_HLG_SDR709_G_SCALE;
-            scale.b = HDR2020_HLG_SDR709_B_SCALE;
-            scale.a = HDR2020_HLG_SDR709_A_SCALE;
-            break;
-        case HDRPQ_SDR709:
-            lutsize = HDR2020_PQ_SDR709_SIZE;
-            lut = (void *)hdr2020_pq_sdr709_lut;
-            scale.r = HDR2020_PQ_SDR709_R_SCALE;
-            scale.g = HDR2020_PQ_SDR709_G_SCALE;
-            scale.b = HDR2020_PQ_SDR709_B_SCALE;
-            scale.a = HDR2020_PQ_SDR709_A_SCALE;
-            break;
-        case HDRHLG_HDRPQ:
-            lutsize = HDR2020HLG_HDR2020PQ_SIZE;
-            lut = (void *)hdr2020hlg_hdr2020pq_lut;
-            scale.r = HDR2020HLG_HDR2020PQ_R_SCALE;
-            scale.g = HDR2020HLG_HDR2020PQ_G_SCALE;
-            scale.b = HDR2020HLG_HDR2020PQ_B_SCALE;
-            scale.a = HDR2020HLG_HDR2020PQ_A_SCALE;
-            break;
-        case HDRPQ_HDRHLG:
-            lutsize = HDR2020PQ_HDR2020HLG_SIZE;
-            lut = (void *)hdr2020pq_hdr2020hlg_lut;
-            scale.r = HDR2020PQ_HDR2020HLG_R_SCALE;
-            scale.g = HDR2020PQ_HDR2020HLG_G_SCALE;
-            scale.b = HDR2020PQ_HDR2020HLG_B_SCALE;
-            scale.a = HDR2020PQ_HDR2020HLG_A_SCALE;
-            break;
-        default:
-            break;
-    }
+    lutsize = size;
+    lut = table;
+    scale.r = r_scale;
+    scale.g = g_scale;
+    scale.b = b_scale;
+    scale.a = a_scale;
 
     ImMat lut_cpu;
     lut_cpu.create_type(lutsize, lutsize * 4, lutsize, (void *)lut, IM_DT_FLOAT32);

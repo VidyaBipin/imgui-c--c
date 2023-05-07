@@ -8,22 +8,13 @@ typedef struct _tag_rgbvec
     float r, g, b, a;
 } rgbvec;
 
-enum default_lut : int {
-    SDR709_HDRHLG = 0,
-    SDR709_HDRPQ,
-    HDRHLG_SDR709,
-    HDRPQ_SDR709,
-    HDRHLG_HDRPQ,
-    HDRPQ_HDRHLG,
-    NO_DEFAULT,
-};
-
 namespace ImGui 
 {
 class VKSHADER_API LUT3D_vulkan
 {
 public:
-    LUT3D_vulkan(int default_model = SDR709_HDRHLG, int interpolation = IM_INTERPOLATE_TRILINEAR, int gpu = 0);
+    LUT3D_vulkan(void * table, int size, float r_scale, float g_scale, float b_scale, float a_scale,
+                int interpolation = IM_INTERPOLATE_TRILINEAR, int gpu = 0);
     LUT3D_vulkan(std::string lut_path, int interpolation = IM_INTERPOLATE_TRILINEAR, int gpu = 0);
     ~LUT3D_vulkan();
 
