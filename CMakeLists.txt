@@ -269,6 +269,7 @@ set(IMGUI_SRC
     imgui_widgets.cpp
     imgui_tables.cpp
     imgui_helper.cpp
+    immat.cpp
     misc/cpp/codewin.cpp
     misc/cpp/imgui_stdlib.cpp
     misc/cpp/dir_iterate.cpp

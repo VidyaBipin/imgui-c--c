@@ -362,8 +362,8 @@ enum Ordination {
 struct ImPoint
 {
     float                                   x, y;
-    constexpr ImPoint()                      : x(0.0f), y(0.0f) { }
-    constexpr ImPoint(float _x, float _y)    : x(_x), y(_y) { }
+    constexpr ImPoint()                     : x(0.0f), y(0.0f) { }
+    constexpr ImPoint(float _x, float _y)   : x(_x), y(_y) { }
     float  operator[] (size_t idx) const    { assert(idx <= 1); return (&x)[idx]; }
     float& operator[] (size_t idx)          { assert(idx <= 1); return (&x)[idx]; }
     bool operator==(const ImPoint& d) const { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8; }
@@ -381,6 +381,17 @@ struct ImPixel
     bool operator==(const ImPixel& d)       { return fabs(r - d.r) < 10e-8 && fabs(g - d.g) < 10e-8 && fabs(b - d.b) < 10e-8 && fabs(a - d.a) < 10e-8; }
     bool operator!=(const ImPixel& d) const { return fabs(r - d.r) > 10e-8 || fabs(g - d.g) > 10e-8 || fabs(b - d.b) > 10e-8 || fabs(a - d.a) > 10e-8; }
     bool operator!=(const ImPixel& d)       { return fabs(r - d.r) > 10e-8 || fabs(g - d.g) > 10e-8 || fabs(b - d.b) > 10e-8 || fabs(a - d.a) > 10e-8; }
+};
+
+struct ImSize
+{
+    int                                     w, h;
+    constexpr ImSize()                      : w(0), h(0) { }
+    constexpr ImSize(int _w, int _h)        : w(_w), h(_h) { }
+    bool operator==(const ImSize& d) const  { return w == d.w && h == d.h; }
+    bool operator==(const ImSize& d)        { return w == d.w && h == d.h; }
+    bool operator!=(const ImSize& d) const  { return w == d.w || h == d.h; }
+    bool operator!=(const ImSize& d)        { return w == d.w || h == d.h; }
 };
 ////////////////////////////////////////////////////////////////////
 
@@ -562,6 +573,10 @@ public:
     // mat dot mul dims = 2 only
     ImMat operator*(const ImMat& mat);
     ImMat& operator*=(const ImMat& mat);
+
+    // resize mat
+    ImMat resize(const ImSize size, float sw = 0.f, float sh = 0.f);
+
     // some draw function only support 3 dims
     // mat default ordination is ncwh
     // if need using nwhc then we need set elempack as elemsize * c

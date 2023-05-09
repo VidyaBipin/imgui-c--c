@@ -304,7 +304,7 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
 #endif
     if (imtexid == 0)
     {
-        // TODO::Dicky Need deal with 3 channels Image(link RGB / BGR)
+        // TODO::Dicky Need deal with 3 channels Image(link RGB / BGR) and 1 channel (Gray)
         g_tex_mutex.lock();
         g_Textures.resize(g_Textures.size() + 1);
         ImTexture& texture = g_Textures.back();
@@ -682,6 +682,18 @@ ImTextureID ImLoadTexture(const char* path)
     }
     else
         return nullptr;
+}
+
+void ImLoadImageToMat(const char* path, ImMat& mat, bool gray)
+{
+    int width = 0, height = 0, component = 0;
+    if (auto data = stbi_load(path, &width, &height, &component, gray ? 1 : 4))
+    {
+        ImMat tmp;
+        tmp.create_type(width, height, component, data, IM_DT_INT8);
+        mat = tmp.clone();
+        stbi_image_free(data);
+    }
 }
 
 int ImGetTextureData(ImTextureID texture, void* data)
@@ -2149,6 +2161,19 @@ std::string path_url(const std::string& path)
     auto pos = path.find_last_of(PATH_SEP);
     if (pos != std::string::npos)
         return path.substr(0, pos + 1);
+    return "";
+}
+
+std::string path_parent(const std::string& path)
+{
+    auto pos = path.find_last_of(PATH_SEP);
+    if (pos != std::string::npos)
+    {
+        auto sub_path = path.substr(0, pos);
+        pos = sub_path.find_last_of(PATH_SEP);
+        if (pos != std::string::npos)
+            return sub_path.substr(0, pos + 1);
+    }
     return "";
 }
 
