@@ -1234,7 +1234,7 @@ ImMat ImMat::resize(const ImSize size, float sw, float sh)
         return mat;
     }
 
-    mat.create(_w, _h, c);
+    mat.create_type(_w, _h, c, type);
 
     if (c == 1)
         resize_bilinear_c1((const unsigned char*)data, srcw, srch, (unsigned char*)mat.data, _w, _h);
@@ -1245,6 +1245,68 @@ ImMat ImMat::resize(const ImSize size, float sw, float sh)
     else if (c == 4)
         resize_bilinear_c4((const unsigned char*)data, srcw, srch, (unsigned char*)mat.data, _w, _h);
 
+    return mat;
+}
+
+ImMat ImMat::gray_to_image()
+{
+    ImMat mat;
+    if (c != 1 || device != IM_DD_CPU)
+        return mat;
+    mat.create_type(w, h, 4, type);
+    mat.elempack = 4;
+    for (int row = 0; row < h; row++)
+    {
+        for (int col = 0; col < w; col++)
+        {
+            switch (type)
+            {
+                case IM_DT_INT8:
+                    mat.at<uint8_t>(col, row, 0) = at<uint8_t>(col, row);
+                    mat.at<uint8_t>(col, row, 1) = at<uint8_t>(col, row);
+                    mat.at<uint8_t>(col, row, 2) = at<uint8_t>(col, row);
+                    mat.at<uint8_t>(col, row, 3) = UINT8_MAX;
+                break;
+                case IM_DT_INT16:
+                    mat.at<uint16_t>(col, row, 0) = at<uint16_t>(col, row);
+                    mat.at<uint16_t>(col, row, 1) = at<uint16_t>(col, row);
+                    mat.at<uint16_t>(col, row, 2) = at<uint16_t>(col, row);
+                    mat.at<uint16_t>(col, row, 3) = UINT16_MAX;
+                break;
+                case IM_DT_INT32:
+                    mat.at<uint32_t>(col, row, 0) = at<uint32_t>(col, row);
+                    mat.at<uint32_t>(col, row, 1) = at<uint32_t>(col, row);
+                    mat.at<uint32_t>(col, row, 2) = at<uint32_t>(col, row);
+                    mat.at<uint32_t>(col, row, 3) = UINT32_MAX;
+                break;
+                case IM_DT_INT64:
+                    mat.at<uint64_t>(col, row, 0) = at<uint64_t>(col, row);
+                    mat.at<uint64_t>(col, row, 1) = at<uint64_t>(col, row);
+                    mat.at<uint64_t>(col, row, 2) = at<uint64_t>(col, row);
+                    mat.at<uint64_t>(col, row, 3) = UINT64_MAX;
+                break;
+                case IM_DT_FLOAT16:
+                    mat.at<uint16_t>(col, row, 0) = at<uint16_t>(col, row);
+                    mat.at<uint16_t>(col, row, 1) = at<uint16_t>(col, row);
+                    mat.at<uint16_t>(col, row, 2) = at<uint16_t>(col, row);
+                    mat.at<uint16_t>(col, row, 3) = im_float32_to_float16(1.0);
+                break;
+                case IM_DT_FLOAT32:
+                    mat.at<float>(col, row, 0) = at<float>(col, row);
+                    mat.at<float>(col, row, 1) = at<float>(col, row);
+                    mat.at<float>(col, row, 2) = at<float>(col, row);
+                    mat.at<float>(col, row, 3) = 1.0f;
+                break;
+                case IM_DT_FLOAT64:
+                    mat.at<double>(col, row, 0) = at<double>(col, row);
+                    mat.at<double>(col, row, 1) = at<double>(col, row);
+                    mat.at<double>(col, row, 2) = at<double>(col, row);
+                    mat.at<double>(col, row, 3) = 1.0;
+                break;
+                default: break;
+            }
+        }
+    }
     return mat;
 }
 } // namespace ImGui
