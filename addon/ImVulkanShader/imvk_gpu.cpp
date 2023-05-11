@@ -73,6 +73,8 @@ int support_VK_KHR_get_surface_capabilities2 = 0;
 int support_VK_KHR_portability_enumeration = 0;
 int support_VK_KHR_surface = 0;
 int support_VK_EXT_debug_utils = 0;
+int support_VK_EXT_validation_features = 0;
+int support_VK_EXT_validation_flags = 0;
 
 // VK_KHR_external_memory_capabilities
 PFN_vkGetPhysicalDeviceExternalBufferPropertiesKHR vkGetPhysicalDeviceExternalBufferPropertiesKHR = 0;
@@ -920,6 +922,8 @@ int create_gpu_instance()
     support_VK_KHR_portability_enumeration = 0;
     support_VK_KHR_surface = 0;
     support_VK_EXT_debug_utils = 0;
+    support_VK_EXT_validation_features = 0;
+    support_VK_EXT_validation_flags = 0;
     for (uint32_t j = 0; j < instanceExtensionPropertyCount; j++)
     {
         const VkExtensionProperties& exp = instanceExtensionProperties[j];
@@ -939,6 +943,16 @@ int create_gpu_instance()
             support_VK_KHR_surface = exp.specVersion;
         else if (strcmp(exp.extensionName, "VK_EXT_debug_utils") == 0)
             support_VK_EXT_debug_utils = exp.specVersion;
+        else if (strcmp(exp.extensionName, "VK_EXT_validation_features") == 0)
+            support_VK_EXT_validation_features = exp.specVersion;
+        else if (strcmp(exp.extensionName, "VK_EXT_validation_flags") == 0)
+            support_VK_EXT_validation_flags = exp.specVersion;
+    }
+
+    if (support_VK_EXT_validation_features)
+    {
+        // we prefer the modern one
+        support_VK_EXT_validation_flags = 0;
     }
 
     if (support_VK_KHR_external_memory_capabilities)
@@ -954,6 +968,10 @@ int create_gpu_instance()
 #if ENABLE_VALIDATION_LAYER
     if (support_VK_EXT_debug_utils)
         enabledExtensions.push_back("VK_EXT_debug_utils");
+    if (support_VK_EXT_validation_features)
+        enabledExtensions.push_back("VK_EXT_validation_features");
+    if (support_VK_EXT_validation_flags)
+        enabledExtensions.push_back("VK_EXT_validation_flags");
 #endif // ENABLE_VALIDATION_LAYER
 
     uint32_t instance_api_version = VK_MAKE_VERSION(1, 0, 0);
@@ -982,9 +1000,44 @@ int create_gpu_instance()
     applicationInfo.engineVersion = 20230306;
     applicationInfo.apiVersion = instance_api_version;
 
+    void* enabledExtensionFeatures = 0;
+
+#if ENABLE_VALIDATION_LAYER
+    std::vector<VkValidationFeatureEnableEXT> enabledValidationFeature;
+    enabledValidationFeature.push_back(VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT);
+    enabledValidationFeature.push_back(VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_RESERVE_BINDING_SLOT_EXT);
+    enabledValidationFeature.push_back(VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT);
+    enabledValidationFeature.push_back(VK_VALIDATION_FEATURE_ENABLE_DEBUG_PRINTF_EXT);
+    enabledValidationFeature.push_back(VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT);
+
+    VkValidationFeaturesEXT validationFeatures;
+    validationFeatures.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
+    validationFeatures.pNext = 0;
+    validationFeatures.enabledValidationFeatureCount = enabledValidationFeature.size();
+    validationFeatures.pEnabledValidationFeatures = enabledValidationFeature.data();
+    validationFeatures.disabledValidationFeatureCount = 0;
+    validationFeatures.pDisabledValidationFeatures = 0;
+    if (support_VK_EXT_validation_features)
+    {
+        validationFeatures.pNext = enabledExtensionFeatures;
+        enabledExtensionFeatures = &validationFeatures;
+    }
+
+    VkValidationFlagsEXT validationFlags;
+    validationFlags.sType = VK_STRUCTURE_TYPE_VALIDATION_FLAGS_EXT;
+    validationFlags.pNext = 0;
+    validationFlags.disabledValidationCheckCount = 0;
+    validationFlags.pDisabledValidationChecks = 0;
+    if (support_VK_EXT_validation_flags)
+    {
+        validationFlags.pNext = enabledExtensionFeatures;
+        enabledExtensionFeatures = &validationFlags;
+    }
+#endif // ENABLE_VALIDATION_LAYER
+
     VkInstanceCreateInfo instanceCreateInfo;
     instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    instanceCreateInfo.pNext = 0;
+    instanceCreateInfo.pNext = enabledExtensionFeatures;
     instanceCreateInfo.flags = 0;
     if (support_VK_KHR_portability_enumeration)
         instanceCreateInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
@@ -1311,13 +1364,13 @@ int create_gpu_instance()
         gpu_info.support_VK_KHR_shader_float_controls = 0;
         gpu_info.support_VK_KHR_storage_buffer_storage_class = 0;
         gpu_info.support_VK_KHR_swapchain = 0;
+        gpu_info.support_VK_EXT_buffer_device_address = 0;
         gpu_info.support_VK_EXT_descriptor_indexing = 0;
         gpu_info.support_VK_EXT_memory_budget = 0;
         gpu_info.support_VK_EXT_memory_priority = 0;
         gpu_info.support_VK_EXT_queue_family_foreign = 0;
         gpu_info.support_VK_AMD_device_coherent_memory = 0;
         gpu_info.support_VK_NV_cooperative_matrix = 0;
-        gpu_info.support_VK_EXT_buffer_device_address = 0;
         for (uint32_t j = 0; j < deviceExtensionPropertyCount; j++)
         {
             const VkExtensionProperties& exp = deviceExtensionProperties[j];
@@ -1839,9 +1892,9 @@ const Packing_vulkan* VulkanDevicePrivate::get_utility_operator(int storage_type
     Packing_vulkan* uop = new Packing_vulkan;
     uop->vkdev = vkdev;
 
-    uop->out_elempack = packing_type_to_index == 0 ? 1 : packing_type_to_index == 1 ? 4 : 8;
+    uop->out_elempack = packing_type_to_index == 0 ? 1 : packing_type_to_index == 1 ? 4 : 8; // out_elempack
     uop->use_padding = 0;
-    uop->cast_type_from = cast_type_from_index + 1; // 0=auto 1=fp32 2=fp16p 3=fp16s
+    uop->cast_type_from = cast_type_from_index + 1; 										 // 0=auto 1=fp32 2=fp16p 3=fp16s
     uop->cast_type_to = cast_type_to_index + 1;
     uop->storage_type_from = storage_type_from; // 0=buffer 1=image
     uop->storage_type_to = storage_type_to;
