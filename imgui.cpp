@@ -9050,10 +9050,13 @@ bool ImGui::GetMouseStraw(ImVec4& data)
 
 void ImGui::ClearMouseStraw()
 {
-    ImGuiContext& g = *GImGui;
-    g.IO.MouseType = 0;
-    g.IO.MouseStrawed = false;
-    g.IO.MouseStrawValue = {};
+    if (GImGui)
+    {
+        ImGuiContext& g = *GImGui;
+        g.IO.MouseType = 0;
+        g.IO.MouseStrawed = false;
+        g.IO.MouseStrawValue = {};
+    }
 }
 // add by Dicky end
 
