@@ -167,7 +167,7 @@ ImGui::MarkdownConfig mdConfig;
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
     // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
+    // - If the file cannot be loaded, the function will return nullptr. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
     // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
     // - Read 'docs/FONTS.txt' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
@@ -176,8 +176,8 @@ ImGui::MarkdownConfig mdConfig;
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
-    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
-    //IM_ASSERT(font != NULL);
+    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
+    //IM_ASSERT(font != nullptr);
 
     // load file dialog resource
     std::string bookmark_path = std::string(DEFAULT_CONFIG_PATH) + "bookmark.ini";
@@ -344,13 +344,13 @@ ImGui::MarkdownConfig mdConfig;
     {
         std::string help_doc = get_file_contents("README.md");
         mdConfig.linkCallback =         LinkCallback;
-        mdConfig.tooltipCallback =      NULL;
+        mdConfig.tooltipCallback =      nullptr;
         mdConfig.imageCallback =        ImageCallback;
         mdConfig.linkIcon =             ICON_FA_LINK;
         mdConfig.headingFormats[0] =    { io.Fonts->Fonts[0], true };
         mdConfig.headingFormats[1] =    { io.Fonts->Fonts.size() > 1 ? io.Fonts->Fonts[1] : nullptr, true };
         mdConfig.headingFormats[2] =    { io.Fonts->Fonts.size() > 2 ? io.Fonts->Fonts[2] : nullptr, false };
-        mdConfig.userData =             NULL;
+        mdConfig.userData =             nullptr;
         mdConfig.formatCallback =       ExampleMarkdownFormatCallback;
         ImGui::Markdown( help_doc.c_str(), help_doc.length(), mdConfig );
     }
@@ -409,7 +409,8 @@ ImGui::MarkdownConfig mdConfig;
     UITouch *anyTouch = event.allTouches.anyObject;
     CGPoint touchLocation = [anyTouch locationInView:self.view];
     ImGuiIO &io = ImGui::GetIO();
-    io.MousePos = ImVec2(touchLocation.x, touchLocation.y);
+    io.AddMouseSourceEvent(ImGuiMouseSource_TouchScreen);
+    io.AddMousePosEvent(touchLocation.x, touchLocation.y);
 
     BOOL hasActiveTouch = NO;
     for (UITouch *touch in event.allTouches)

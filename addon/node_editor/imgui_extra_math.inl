@@ -22,12 +22,6 @@ inline ImVec2 operator*(const float lhs, const ImVec2& rhs)
     return ImVec2(lhs * rhs.x, lhs * rhs.y);
 }
 
-inline ImVec2 operator-(const ImVec2& lhs)
-{
-    return ImVec2(-lhs.x, -lhs.y);
-}
-
-
 //------------------------------------------------------------------------------
 inline float ImLength(float v)
 {
@@ -48,9 +42,6 @@ inline ImVec2 ImNormalized(const ImVec2& v)
 {
     return v * ImInvLength(v, 0.0f);
 }
-
-
-
 
 //------------------------------------------------------------------------------
 inline bool ImRect_IsEmpty(const ImRect& rect)
