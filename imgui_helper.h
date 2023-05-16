@@ -429,6 +429,8 @@ namespace ImGui
 {
 IMGUI_API ImMat getPerspectiveTransform(const ImVec2 src[], const ImVec2 dst[]);
 IMGUI_API ImMat getAffineTransform(const ImVec2 src[], const ImVec2 dst[]);
+IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);
+IMGUI_API ImMat GrayToImage(const ImMat& mat);
 } // namespace ImGui
 
 // These classed are supposed to be used internally

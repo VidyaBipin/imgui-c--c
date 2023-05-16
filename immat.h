@@ -574,10 +574,6 @@ public:
     ImMat operator*(const ImMat& mat);
     ImMat& operator*=(const ImMat& mat);
 
-    // resize mat
-    ImMat resize(const ImSize size, float sw = 0.f, float sh = 0.f);
-    ImMat gray_to_image();
-
     // some draw function only support 3 dims
     // mat default ordination is ncwh
     // if need using nwhc then we need set elempack as elemsize * c
@@ -1412,7 +1408,7 @@ inline void ImMat::create_type(int _w, int _h, int _c, void* _data, ImDataType _
     allocator = _allocator;
     refcount = nullptr;
 
-    dims = 3;
+    dims = _c == 1 ? 2 : 3;
     dw = w = _w;
     dh = h = _h;
     c = _c;
