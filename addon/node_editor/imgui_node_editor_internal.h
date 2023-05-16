@@ -1602,9 +1602,11 @@ struct IMGUI_API EditorContext
     void SetUserContext(bool globalSpace = false);
 
     void EnableShortcuts(bool enable);
+    void EnableDragOverBorder(bool enable);
     void TriggerShowMeters();
 
     bool AreShortcutsEnabled();
+    bool AreDragOverBorderEnabled();
 
     NodeId GetHoveredNode()            const { return m_HoveredNode;             }
     PinId  GetHoveredPin()             const { return m_HoveredPin;              }
@@ -1678,6 +1680,7 @@ private:
     bool                m_IsHoveredWithoutOverlapp;
 
     bool                m_ShortcutsEnabled;
+    bool                m_DragOverBorder;
     bool                m_ShowMeters;
 
     Style               m_Style;

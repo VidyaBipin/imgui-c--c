@@ -1012,6 +1012,7 @@ ed::EditorContext::EditorContext(const ax::NodeEditor::Config* config)
     , m_IsHovered(false)
     , m_IsHoveredWithoutOverlapp(false)
     , m_ShortcutsEnabled(true)
+    , m_DragOverBorder(true)
     , m_ShowMeters(false)
     , m_Style()
     , m_Nodes()
@@ -1092,7 +1093,7 @@ void ed::EditorContext::Begin(const char* id, const ImVec2& size)
     if (canvasSize.y <= 0.0f)
         canvasSize.y = ImMax(4.0f, availableContentSize.y);
 
-    if (m_CurrentAction && m_CurrentAction->IsDragging() && m_NavigateAction.MoveOverEdge(canvasSize))
+    if (m_DragOverBorder && m_CurrentAction && m_CurrentAction->IsDragging() && m_NavigateAction.MoveOverEdge(canvasSize))
     {
         auto& io = ImGui::GetIO();
         auto offset = m_NavigateAction.GetMoveScreenOffset();
@@ -2493,6 +2494,11 @@ void ed::EditorContext::EnableShortcuts(bool enable)
     m_ShortcutsEnabled = enable;
 }
 
+void ed::EditorContext::EnableDragOverBorder(bool enable)
+{
+    m_DragOverBorder = enable;
+}
+
 void ed::EditorContext::TriggerShowMeters()
 {
     m_ShowMeters = !m_ShowMeters;
@@ -2501,6 +2507,11 @@ void ed::EditorContext::TriggerShowMeters()
 bool ed::EditorContext::AreShortcutsEnabled()
 {
     return m_ShortcutsEnabled;
+}
+
+bool ed::EditorContext::AreDragOverBorderEnabled()
+{
+    return m_DragOverBorder;
 }
 
 void ed::EditorContext::DrawLastLine(bool light)

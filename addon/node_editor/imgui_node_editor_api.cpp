@@ -875,6 +875,11 @@ void ax::NodeEditor::EnableShortcuts(bool enable)
     s_Editor->EnableShortcuts(enable);
 }
 
+void ax::NodeEditor::EnableDragOverBorder(bool enable)
+{
+    s_Editor->EnableDragOverBorder(enable);
+}
+
 void ax::NodeEditor::TriggerShowMeters()
 {
     s_Editor->TriggerShowMeters();
@@ -883,6 +888,11 @@ void ax::NodeEditor::TriggerShowMeters()
 bool ax::NodeEditor::AreShortcutsEnabled()
 {
     return s_Editor->AreShortcutsEnabled();
+}
+
+bool ax::NodeEditor::AreDragOverBorderEnabled()
+{
+    return s_Editor->AreDragOverBorderEnabled();
 }
 
 bool ax::NodeEditor::BeginShortcut()

@@ -451,8 +451,10 @@ IMGUI_API bool ShowLinkContextMenu(LinkId* linkId);
 IMGUI_API bool ShowBackgroundContextMenu();
 
 IMGUI_API void EnableShortcuts(bool enable);
+IMGUI_API void EnableDragOverBorder(bool enable);
 IMGUI_API void TriggerShowMeters();
 IMGUI_API bool AreShortcutsEnabled();
+IMGUI_API bool AreDragOverBorderEnabled();
 
 IMGUI_API bool BeginShortcut();
 IMGUI_API bool AcceptCut();
