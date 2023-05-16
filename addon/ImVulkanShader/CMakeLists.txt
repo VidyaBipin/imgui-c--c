@@ -33,7 +33,7 @@ option(VKSHADER_VULKAN_BENCHMARK      "Enable Vulkan Shader Benchmark" ON)
 option(VKSHADER_VULKAN_PREBUILD       "Enable Vulkan Shader prebuild check" OFF)
 option(VKSHADER_VULKAN_FP16           "Enable Vulkan Shader support 16bits float" ON)
 option(VKSHADER_STATIC                "Build Vulkan Shader as static library" OFF)
-option(VKSHADER_BUILD_TESTS           "Build Vulkan Shader Tests" OFF)
+#option(VKSHADER_BUILD_TESTS           "Build Vulkan Shader Tests" OFF)
 option(VKSHADER_SKIP_INSTALL          "Skip Vulkan install" ON)
 
 find_package(PkgConfig)
@@ -462,14 +462,14 @@ install(TARGETS VkShader
     )
 endif()
 
-if(VKSHADER_BUILD_TESTS)
-    add_executable(
-        ImVulkan_tests
-        test/ImVulkan_tests.cpp
-    )
-    target_link_libraries(
-        ImVulkan_tests
-        VkShader
-        ${LINK_LIBS}
-    )
-endif(VKSHADER_BUILD_TESTS)
+#if(VKSHADER_BUILD_TESTS)
+#    add_executable(
+#        ImVulkan_tests
+#        test/ImVulkan_tests.cpp
+#    )
+#    target_link_libraries(
+#        ImVulkan_tests
+#        VkShader
+#        ${LINK_LIBS}
+#    )
+#endif(VKSHADER_BUILD_TESTS)
