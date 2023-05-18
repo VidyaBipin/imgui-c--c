@@ -99,6 +99,7 @@ if (VULKAN_FOUND)
     message(STATUS "[ImVulkanShader] vulkan found")
     set(VKSHADER_INC_DIRS
         ${Vulkan_INCLUDE_DIR}
+        ${VULKAN_INCLUDE_DIRS}
     )
     if ( NOT "${VULKAN_LDFLAGS}" STREQUAL "")
         message(STATUS "[ImVulkanShader] vulkan link with ${VULKAN_LDFLAGS}")
