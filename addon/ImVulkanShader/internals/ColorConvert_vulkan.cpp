@@ -86,7 +86,12 @@ double ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMa
         return ret;
     }
 
+    auto color_range = dstMat.color_range;
+    auto color_space = dstMat.color_space;
     dstMat.copy_attribute(srcMat);
+    // keep dstMat color info
+    dstMat.color_range = color_range;
+    dstMat.color_space = color_space;
 
     int srcClrCatg = GetColorFormatCategory(srcMat.color_format);
     int dstClrCatg = GetColorFormatCategory(dstMat.color_format);
