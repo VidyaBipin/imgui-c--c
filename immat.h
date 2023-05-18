@@ -781,8 +781,9 @@ public:
         time_stamp = mat.time_stamp;
         rate = mat.rate;
         flags = mat.flags;
-        color_range = mat.color_range;
-        color_space = mat.color_space;
+        // do NOT copy color_range and color_space!!!
+        //color_range = mat.color_range;
+        //color_space = mat.color_space;
         ord = mat.ord;
         duration = mat.duration;
     }

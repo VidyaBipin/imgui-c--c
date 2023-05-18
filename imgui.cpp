@@ -13145,6 +13145,12 @@ bool ImGui::BeginDragDropSource(ImGuiDragDropFlags flags)
         {
             // Target can request the Source to not display its tooltip (we use a dedicated flag to make this request explicit)
             // We unfortunately can't just modify the source flags and skip the call to BeginTooltip, as caller may be emitting contents.
+            
+            // Add by Dicky for keep preview tooltip on main view port
+            if (window && (g.IO.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) && (flags & ImGuiDragDropFlags_PreviewTooltipKeepViewport))
+                SetNextWindowViewport(window->ViewportId);
+            // Add By Dicky end
+            
             bool ret = BeginTooltip();
             IM_ASSERT(ret); // FIXME-NEWBEGIN: If this ever becomes false, we need to Begin("##Hidden", NULL, ImGuiWindowFlags_NoSavedSettings) + SetWindowHiddendAndSkipItemsForCurrentFrame().
             IM_UNUSED(ret);
