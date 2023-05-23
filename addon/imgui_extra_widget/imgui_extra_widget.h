@@ -574,6 +574,8 @@ IMGUI_API void SpinnerIngYang(const char *label, float radius, float thickness, 
 IMGUI_API void SpinnerGooeyBalls(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f);
 IMGUI_API void SpinnerDotsLoading(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bg, float speed);
 IMGUI_API void SpinnerRotateGooeyBalls(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int balls = 1);
+IMGUI_API void SpinnerHerbertBalls(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls);
+IMGUI_API void SpinnerHerbertBalls3D(const char *label, float radius, float thickness, const ImColor &color, float speed);
 IMGUI_API void SpinnerRotateTriangles(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int tris = 3);
 IMGUI_API void SpinnerRotateShapes(const char *label, float radius, float thickness, const ImColor &color, float speed, int shapes, int pnt);
 IMGUI_API void SpinnerSinSquares(const char *label, float radius, float thickness, const ImColor &color, float speed);

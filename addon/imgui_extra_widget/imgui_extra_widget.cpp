@@ -7465,6 +7465,63 @@ void ImGui::SpinnerRotateGooeyBalls(const char *label, float radius, float thick
     }
 }
 
+void ImGui::SpinnerHerbertBalls(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = ImFmod((float)ImGui::GetTime(), IM_PI);
+    const float rstart = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+    const float radius1 = 0.3f * radius;
+    const float radius2 = 0.8f * radius;
+    const float angle_offset = PI_2 / balls;
+    for (int i = 0; i < balls; i++)
+    {
+        const float a = rstart + (i * angle_offset);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), thickness, color_alpha(color, 1.f), num_segments);
+    }
+    for (int i = 0; i < balls * 2; i++)
+    {
+        const float a = -rstart + (i * angle_offset / 2.f);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2), thickness, color_alpha(color, 1.f), num_segments);
+    }
+}
+
+void ImGui::SpinnerHerbertBalls3D(const char *label, float radius, float thickness, const ImColor &color, float speed)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+
+    const float start = ImFmod((float)ImGui::GetTime(), IM_PI);
+    const float rstart = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+    const float radius1 = 0.3f * radius;
+    const float radius2 = 0.8f * radius;
+    const int balls = 2;
+    const float angle_offset = PI_2 / balls;
+
+    ImVec2 frontpos, backpos;
+    for (int i = 0; i < balls; i++)
+    {
+        const float a = rstart + (i * angle_offset);
+        const float t = (i == 1 ? 0.7f : 1.f) * thickness;
+        const ImVec2 pos = ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1);
+        window->DrawList->AddCircleFilled(pos, t, color_alpha(color, 1.f), num_segments);
+        if (i == 0) frontpos = pos; else backpos = pos;
+    }
+
+    ImVec2 lastpos;
+    for (int i = 0; i <= balls * 2; i++)
+    {
+        const float a = -rstart + (i * angle_offset / 2.f);
+        const ImVec2 pos = ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2);
+        float t = sqrt(pow(pos.x - frontpos.x, 2) + pow(pos.y - frontpos.y, 2)) / (radius * 1.f) * thickness;
+        window->DrawList->AddCircleFilled(pos, t, color_alpha(color, 1.f), num_segments);
+        window->DrawList->AddLine(pos, backpos, color_alpha(color, 0.5f), ImMax(thickness / 2.f, 1.f));
+        if (i > 0) {
+            window->DrawList->AddLine(pos, lastpos, color_alpha(color, 1.f), ImMax(thickness / 2.f, 1.f));
+        }
+        window->DrawList->AddLine(pos, frontpos, color_alpha(color, 1.f), ImMax(thickness / 2.f, 1.f));
+        lastpos = pos;
+    }
+}
+
 void ImGui::SpinnerRotateTriangles(const char *label, float radius, float thickness, const ImColor &color, float speed, int tris)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
