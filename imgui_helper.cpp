@@ -974,7 +974,8 @@ void TextComplex(const char * str, float scale, ImVec4 text_color, float outline
     ImGui::SetWindowFontScale(1.0);
 }
 
-bool GetTexCoordsFromGlyph(unsigned short glyph, ImVec2 &uv0, ImVec2 &uv1) {
+bool GetTexCoordsFromGlyph(unsigned short glyph, ImVec2 &uv0, ImVec2 &uv1)
+{
     if (!GImGui->Font) return false;
     const ImFontGlyph* g = GImGui->Font->FindGlyph(glyph);
     if (g)  {
@@ -984,7 +985,9 @@ bool GetTexCoordsFromGlyph(unsigned short glyph, ImVec2 &uv0, ImVec2 &uv1) {
     }
     return false;
 }
-float CalcMainMenuHeight()  {
+
+float CalcMainMenuHeight()
+{
     // Warning: according to https://github.com/ocornut/imgui/issues/252 this approach can fail [Better call ImGui::GetWindowSize().y from inside the menu and store the result somewhere]
     if (GImGui->FontBaseSize>0) return GImGui->FontBaseSize + GImGui->Style.FramePadding.y * 2.0f;
     else {
@@ -1033,28 +1036,35 @@ void RenderMouseCursor(const char* mouse_cursor, ImVec2 offset, float base_scale
 }
 
 // These two methods are inspired by imguidock.cpp
-void PutInBackground(const char* optionalRootWindowName)  {
+void PutInBackground(const char* optionalRootWindowName)
+{
     ImGuiWindow* w = optionalRootWindowName ? FindWindowByName(optionalRootWindowName) : GetCurrentWindow();
     if (!w) return;
     ImGuiContext& g = *GImGui;
     if (g.Windows[0] == w) return;
     const int isz = g.Windows.Size;
-    for (int i = 0; i < isz; i++)  {
-        if (g.Windows[i] == w)  {
+    for (int i = 0; i < isz; i++)
+    {
+        if (g.Windows[i] == w)
+        {
             for (int j = i; j > 0; --j) g.Windows[j] = g.Windows[j-1];  // shifts [0,j-1] to [1,j]
             g.Windows[0] = w;
             break;
         }
     }
 }
-void PutInForeground(const char* optionalRootWindowName)  {
+
+void PutInForeground(const char* optionalRootWindowName)
+{
     ImGuiWindow* w = optionalRootWindowName ? FindWindowByName(optionalRootWindowName) : GetCurrentWindow();
     if (!w) return;
     ImGuiContext& g = *GImGui;
     const int iszMinusOne = g.Windows.Size - 1;
     if (iszMinusOne<0 || g.Windows[iszMinusOne] == w) return;
-    for (int i = iszMinusOne; i >= 0; --i)  {
-        if (g.Windows[i] == w)  {
+    for (int i = iszMinusOne; i >= 0; --i)
+    {
+        if (g.Windows[i] == w)
+        {
             for (int j = i; j < iszMinusOne; j++) g.Windows[j] = g.Windows[j+1];  // shifts [i+1,iszMinusOne] to [i,iszMinusOne-1]
             g.Windows[iszMinusOne] = w;
             break;
@@ -1467,39 +1477,46 @@ void Grid::End()
 } // namespace Imgui
 
 #include <stdio.h>  // FILE
-namespace ImGuiHelper   {
-
+namespace ImGuiHelper
+{
 static const char* FieldTypeNames[ImGui::FT_COUNT+1] = {"INT","UNSIGNED","FLOAT","DOUBLE","STRING","ENUM","BOOL","COLOR","TEXTLINE","CUSTOM","COUNT"};
 static const char* FieldTypeFormats[ImGui::FT_COUNT]={"%d","%u","%f","%f","%s","%d","%d","%f","%s","%s"};
 static const char* FieldTypeFormatsWithCustomPrecision[ImGui::FT_COUNT]={"%.*d","%*u","%.*f","%.*f","%*s","%*d","%*d","%.*f","%*s","%*s"};
 
-void Deserializer::clear() {
+void Deserializer::clear()
+{
     if (f_data) ImGui::MemFree(f_data);
     f_data = NULL;f_size=0;
 }
-bool Deserializer::loadFromFile(const char *filename) {
+
+bool Deserializer::loadFromFile(const char *filename)
+{
     clear();
     if (!filename) return false;
     FILE* f;
     if ((f = (FILE *)ImFileOpen(filename, "rt")) == NULL) return false;
-    if (fseek(f, 0, SEEK_END))  {
+    if (fseek(f, 0, SEEK_END))
+    {
         fclose(f);
         return false;
     }
     const long f_size_signed = ftell(f);
-    if (f_size_signed == -1)    {
+    if (f_size_signed == -1)
+    {
         fclose(f);
         return false;
     }
     f_size = (size_t)f_size_signed;
-    if (fseek(f, 0, SEEK_SET))  {
+    if (fseek(f, 0, SEEK_SET))
+    {
         fclose(f);
         return false;
     }
     f_data = (char*)ImGui::MemAlloc(f_size+1);
     f_size = fread(f_data, 1, f_size, f); // Text conversion alter read size so let's not be fussy about return value
     fclose(f);
-    if (f_size == 0)    {
+    if (f_size == 0)
+    {
         clear();
         return false;
     }
@@ -1507,7 +1524,8 @@ bool Deserializer::loadFromFile(const char *filename) {
     ++f_size;
     return true;
 }
-bool Deserializer::allocate(size_t sizeToAllocate, const char *optionalTextToCopy, size_t optionalTextToCopySize)    {
+bool Deserializer::allocate(size_t sizeToAllocate, const char *optionalTextToCopy, size_t optionalTextToCopySize)
+{
     clear();
     if (sizeToAllocate==0) return false;
     f_size = sizeToAllocate;
@@ -1516,14 +1534,17 @@ bool Deserializer::allocate(size_t sizeToAllocate, const char *optionalTextToCop
     if (optionalTextToCopy && optionalTextToCopySize>0) memcpy(f_data,optionalTextToCopy,optionalTextToCopySize>f_size ? f_size:optionalTextToCopySize);
     return true;
 }
-Deserializer::Deserializer(const char *filename) : f_data(NULL),f_size(0) {
+Deserializer::Deserializer(const char *filename) : f_data(NULL),f_size(0)
+{
     if (filename) loadFromFile(filename);
 }
-Deserializer::Deserializer(const char *text, size_t textSizeInBytes) : f_data(NULL),f_size(0) {
+Deserializer::Deserializer(const char *text, size_t textSizeInBytes) : f_data(NULL),f_size(0)
+{
     allocate(textSizeInBytes,text,textSizeInBytes);
 }
 
-const char* Deserializer::parse(Deserializer::ParseCallback cb, void *userPtr, const char *optionalBufferStart) const {
+const char* Deserializer::parse(Deserializer::ParseCallback cb, void *userPtr, const char *optionalBufferStart) const
+{
     if (!cb || !f_data || f_size==0) return NULL;
     //------------------------------------------------
     // Parse file in memory
@@ -1548,17 +1569,21 @@ const char* Deserializer::parse(Deserializer::ParseCallback cb, void *userPtr, c
             varName = NULL;numArrayElements = 0;ft = ImGui::FT_COUNT;format[0]='\0';
             const char* colonCh = strchr(name,':');
             const char* minusCh = strchr(name,'-');
-            if (!colonCh) {
+            if (!colonCh)
+            {
                 fprintf(stderr,"ImGuiHelper::Deserializer::parse(...) warning (skipping line with no semicolon). name: %s\n",name);  // dbg
                 name[0]='\0';
             }
-            else {
+            else
+            {
                 ptrdiff_t diff = 0,diff2 = 0;
                 if (!minusCh || (minusCh-colonCh)>0)  {diff = (colonCh-name);numArrayElements=1;}
-                else {
+                else
+                {
                     diff = (minusCh-name);
                     diff2 = colonCh-minusCh;
-                    if (diff2>1 && diff2<7)    {
+                    if (diff2>1 && diff2<7)
+                    {
                         static char buff[8];
                         strncpy(&buff[0],(const char*) &minusCh[1],diff2);buff[diff2-1]='\0';
                         sscanf(buff,"%d",&numArrayElements);
@@ -1566,26 +1591,32 @@ const char* Deserializer::parse(Deserializer::ParseCallback cb, void *userPtr, c
                     }
                     else if (diff>0) numArrayElements = ((char)name[diff+1]-(char)'0');  // TODO: FT_STRING needs multibytes -> rewrite!
                 }
-                if (diff>0) {
+                if (diff>0)
+                {
                     const size_t len = (size_t)(diff>31?31:diff);
                     strncpy(typeName,name,len);typeName[len]='\0';
 
-                    for (int t=0;t<=ImGui::FT_COUNT;t++) {
-                        if (strcmp(typeName,FieldTypeNames[t])==0)  {
+                    for (int t=0;t<=ImGui::FT_COUNT;t++)
+                    {
+                        if (strcmp(typeName,FieldTypeNames[t])==0)
+                        {
                             ft = (FieldType) t;break;
                         }
                     }
                     varName = ++colonCh;
 
                     const bool isTextOrCustomType = ft==ImGui::FT_STRING || ft==ImGui::FT_TEXTLINE  || ft==ImGui::FT_CUSTOM;
-                    if (ft==ImGui::FT_COUNT || numArrayElements<1 || (numArrayElements>4 && !isTextOrCustomType))   {
+                    if (ft==ImGui::FT_COUNT || numArrayElements<1 || (numArrayElements>4 && !isTextOrCustomType))
+                    {
                         fprintf(stderr,"ImGuiHelper::Deserializer::parse(...) Error (wrong type detected): line:%s type:%d numArrayElements:%d varName:%s typeName:%s\n",name,(int)ft,numArrayElements,varName,typeName);
                         varName=NULL;
                     }
-                    else {
-
-                        if (ft==ImGui::FT_STRING && varName && varName[0]!='\0')  {
-                            if (numArrayElements==1 && (!minusCh || (minusCh-colonCh)>0)) {
+                    else
+                    {
+                        if (ft==ImGui::FT_STRING && varName && varName[0]!='\0')
+                        {
+                            if (numArrayElements==1 && (!minusCh || (minusCh-colonCh)>0))
+                            {
                                 numArrayElements=0;   // NEW! To handle blank strings ""
                             }
                             //Process soon here, as the string can be multiline
@@ -1606,9 +1637,11 @@ const char* Deserializer::parse(Deserializer::ParseCallback cb, void *userPtr, c
                             ft = ImGui::FT_COUNT;name[0]='\0';varName=NULL; // mandatory                            
 
                         }
-                        else if (!isTextOrCustomType) {
+                        else if (!isTextOrCustomType)
+                        {
                             format[0]='\0';
-                            for (int t=0;t<numArrayElements;t++) {
+                            for (int t=0;t<numArrayElements;t++)
+                            {
                                 if (t>0) strcat(format," ");
                                 strcat(format,FieldTypeFormats[ft]);
                             }
@@ -1621,26 +1654,28 @@ const char* Deserializer::parse(Deserializer::ParseCallback cb, void *userPtr, c
         }
         else if (varName && varName[0]!='\0')
         {
-            switch (ft) {
+            switch (ft)
+            {
             case ImGui::FT_FLOAT:
             case ImGui::FT_COLOR:
             {
                 float* p = (float*) voidBuffer;
-                if ( (numArrayElements==1 && sscanf(line_start, format, p)==numArrayElements) ||
-                     (numArrayElements==2 && sscanf(line_start, format, &p[0],&p[1])==numArrayElements) ||
-                     (numArrayElements==3 && sscanf(line_start, format, &p[0],&p[1],&p[2])==numArrayElements) ||
-                     (numArrayElements==4 && sscanf(line_start, format, &p[0],&p[1],&p[2],&p[3])==numArrayElements))
-                     quitParsing = cb(ft,numArrayElements,voidBuffer,varName,userPtr);
+                if ((numArrayElements==1 && sscanf(line_start, format, p)==numArrayElements) ||
+                    (numArrayElements==2 && sscanf(line_start, format, &p[0],&p[1])==numArrayElements) ||
+                    (numArrayElements==3 && sscanf(line_start, format, &p[0],&p[1],&p[2])==numArrayElements) ||
+                    (numArrayElements==4 && sscanf(line_start, format, &p[0],&p[1],&p[2],&p[3])==numArrayElements))
+                    quitParsing = cb(ft,numArrayElements,voidBuffer,varName,userPtr);
                 else fprintf(stderr,"Deserializer::parse(...) Error converting value:\"%s\" to type:%d numArrayElements:%d varName:%s\n",line_start,(int)ft,numArrayElements,varName);  // dbg
             }
             break;
-            case ImGui::FT_DOUBLE:  {
+            case ImGui::FT_DOUBLE:
+            {
                 double* p = (double*) voidBuffer;
-                if ( (numArrayElements==1 && sscanf(line_start, format, p)==numArrayElements) ||
-                     (numArrayElements==2 && sscanf(line_start, format, &p[0],&p[1])==numArrayElements) ||
-                     (numArrayElements==3 && sscanf(line_start, format, &p[0],&p[1],&p[2])==numArrayElements) ||
-                     (numArrayElements==4 && sscanf(line_start, format, &p[0],&p[1],&p[2],&p[3])==numArrayElements))
-                     quitParsing = cb(ft,numArrayElements,voidBuffer,varName,userPtr);
+                if ((numArrayElements==1 && sscanf(line_start, format, p)==numArrayElements) ||
+                    (numArrayElements==2 && sscanf(line_start, format, &p[0],&p[1])==numArrayElements) ||
+                    (numArrayElements==3 && sscanf(line_start, format, &p[0],&p[1],&p[2])==numArrayElements) ||
+                    (numArrayElements==4 && sscanf(line_start, format, &p[0],&p[1],&p[2],&p[3])==numArrayElements))
+                    quitParsing = cb(ft,numArrayElements,voidBuffer,varName,userPtr);
                 else fprintf(stderr,"Deserializer::parse(...) Error converting value:\"%s\" to type:%d numArrayElements:%d varName:%s\n",line_start,(int)ft,numArrayElements,varName);  // dbg
             }
             break;
@@ -1648,11 +1683,11 @@ const char* Deserializer::parse(Deserializer::ParseCallback cb, void *userPtr, c
             case ImGui::FT_ENUM:
             {
                 int* p = (int*) voidBuffer;
-                if ( (numArrayElements==1 && sscanf(line_start, format, p)==numArrayElements) ||
-                     (numArrayElements==2 && sscanf(line_start, format, &p[0],&p[1])==numArrayElements) ||
-                     (numArrayElements==3 && sscanf(line_start, format, &p[0],&p[1],&p[2])==numArrayElements) ||
-                     (numArrayElements==4 && sscanf(line_start, format, &p[0],&p[1],&p[2],&p[3])==numArrayElements))
-                     quitParsing = cb(ft,numArrayElements,voidBuffer,varName,userPtr);
+                if ((numArrayElements==1 && sscanf(line_start, format, p)==numArrayElements) ||
+                    (numArrayElements==2 && sscanf(line_start, format, &p[0],&p[1])==numArrayElements) ||
+                    (numArrayElements==3 && sscanf(line_start, format, &p[0],&p[1],&p[2])==numArrayElements) ||
+                    (numArrayElements==4 && sscanf(line_start, format, &p[0],&p[1],&p[2],&p[3])==numArrayElements))
+                    quitParsing = cb(ft,numArrayElements,voidBuffer,varName,userPtr);
                 else fprintf(stderr,"Deserializer::parse(...) Error converting value:\"%s\" to type:%d numArrayElements:%d varName:%s\n",line_start,(int)ft,numArrayElements,varName);  // dbg
             }
             break;
@@ -1660,23 +1695,24 @@ const char* Deserializer::parse(Deserializer::ParseCallback cb, void *userPtr, c
             {
                 bool* p = (bool*) voidBuffer;
                 int tmp[4];
-                if ( (numArrayElements==1 && sscanf(line_start, format, &tmp[0])==numArrayElements) ||
-                     (numArrayElements==2 && sscanf(line_start, format, &tmp[0],&tmp[1])==numArrayElements) ||
-                     (numArrayElements==3 && sscanf(line_start, format, &tmp[0],&tmp[1],&tmp[2])==numArrayElements) ||
-                     (numArrayElements==4 && sscanf(line_start, format, &tmp[0],&tmp[1],&tmp[2],&tmp[3])==numArrayElements))    {
-                     for (int i=0;i<numArrayElements;i++) p[i] = tmp[i];
-                     quitParsing = cb(ft,numArrayElements,voidBuffer,varName,userPtr);quitParsing = cb(ft,numArrayElements,voidBuffer,varName,userPtr);
+                if ((numArrayElements==1 && sscanf(line_start, format, &tmp[0])==numArrayElements) ||
+                    (numArrayElements==2 && sscanf(line_start, format, &tmp[0],&tmp[1])==numArrayElements) ||
+                    (numArrayElements==3 && sscanf(line_start, format, &tmp[0],&tmp[1],&tmp[2])==numArrayElements) ||
+                    (numArrayElements==4 && sscanf(line_start, format, &tmp[0],&tmp[1],&tmp[2],&tmp[3])==numArrayElements))    {
+                    for (int i=0;i<numArrayElements;i++) p[i] = tmp[i];
+                    quitParsing = cb(ft,numArrayElements,voidBuffer,varName,userPtr);quitParsing = cb(ft,numArrayElements,voidBuffer,varName,userPtr);
                 }
                 else fprintf(stderr,"Deserializer::parse(...) Error converting value:\"%s\" to type:%d numArrayElements:%d varName:%s\n",line_start,(int)ft,numArrayElements,varName);  // dbg
             }
             break;
-            case ImGui::FT_UNSIGNED:  {
+            case ImGui::FT_UNSIGNED:
+            {
                 unsigned* p = (unsigned*) voidBuffer;
-                if ( (numArrayElements==1 && sscanf(line_start, format, p)==numArrayElements) ||
-                     (numArrayElements==2 && sscanf(line_start, format, &p[0],&p[1])==numArrayElements) ||
-                     (numArrayElements==3 && sscanf(line_start, format, &p[0],&p[1],&p[2])==numArrayElements) ||
-                     (numArrayElements==4 && sscanf(line_start, format, &p[0],&p[1],&p[2],&p[3])==numArrayElements))
-                     quitParsing = cb(ft,numArrayElements,voidBuffer,varName,userPtr);
+                if ((numArrayElements==1 && sscanf(line_start, format, p)==numArrayElements) ||
+                    (numArrayElements==2 && sscanf(line_start, format, &p[0],&p[1])==numArrayElements) ||
+                    (numArrayElements==3 && sscanf(line_start, format, &p[0],&p[1],&p[2])==numArrayElements) ||
+                    (numArrayElements==4 && sscanf(line_start, format, &p[0],&p[1],&p[2],&p[3])==numArrayElements))
+                    quitParsing = cb(ft,numArrayElements,voidBuffer,varName,userPtr);
                 else fprintf(stderr,"Deserializer::parse(...) Error converting value:\"%s\" to type:%d numArrayElements:%d varName:%s\n",line_start,(int)ft,numArrayElements,varName);  // dbg
             }
             break;
@@ -1684,7 +1720,8 @@ const char* Deserializer::parse(Deserializer::ParseCallback cb, void *userPtr, c
             case ImGui::FT_TEXTLINE:
             {
                 // A similiar code can be used to parse "numArrayElements" line of text
-                for (int i=0;i<numArrayElements;i++)    {
+                for (int i=0;i<numArrayElements;i++)
+                {
                     textBuffer[0]=textBuffer[2049]='\0';
                     const int maxLen = (line_end-line_start)>2049?2049:(line_end-line_start);
                     if (maxLen<=0) break;
@@ -1718,7 +1755,8 @@ const char* Deserializer::parse(Deserializer::ParseCallback cb, void *userPtr, c
     return buf_end;
 }
 
-bool GetFileContent(const char *filePath, ImVector<char> &contentOut, bool clearContentOutBeforeUsage, const char *modes, bool appendTrailingZeroIfModesIsNotBinary)   {
+bool GetFileContent(const char *filePath, ImVector<char> &contentOut, bool clearContentOutBeforeUsage, const char *modes, bool appendTrailingZeroIfModesIsNotBinary)
+{
     ImVector<char>& f_data = contentOut;
     if (clearContentOutBeforeUsage) f_data.clear();
 //----------------------------------------------------
@@ -1726,17 +1764,20 @@ bool GetFileContent(const char *filePath, ImVector<char> &contentOut, bool clear
     const bool appendTrailingZero = appendTrailingZeroIfModesIsNotBinary && modes && strlen(modes)>0 && modes[strlen(modes)-1]!='b';
     FILE* f;
     if ((f = (FILE *)ImFileOpen(filePath, modes)) == NULL) return false;
-    if (fseek(f, 0, SEEK_END))  {
+    if (fseek(f, 0, SEEK_END))
+    {
         fclose(f);
         return false;
     }
     const long f_size_signed = ftell(f);
-    if (f_size_signed == -1)    {
+    if (f_size_signed == -1)
+    {
         fclose(f);
         return false;
     }
     size_t f_size = (size_t)f_size_signed;
-    if (fseek(f, 0, SEEK_SET))  {
+    if (fseek(f, 0, SEEK_SET))
+    {
         fclose(f);
         return false;
     }
@@ -1749,7 +1790,8 @@ bool GetFileContent(const char *filePath, ImVector<char> &contentOut, bool clear
     return true;
 }
 
-bool SetFileContent(const char *filePath, const unsigned char* content, int contentSize,const char* modes)	{
+bool SetFileContent(const char *filePath, const unsigned char* content, int contentSize,const char* modes)
+{
     if (!filePath || !content) return false;
     FILE* f;
     if ((f = (FILE *)ImFileOpen(filePath, modes)) == NULL) return false;
@@ -1758,7 +1800,8 @@ bool SetFileContent(const char *filePath, const unsigned char* content, int cont
     return true;
 }
 
-class ISerializable {
+class ISerializable
+{
 public:
     ISerializable() {}
     virtual ~ISerializable() {}
@@ -1767,21 +1810,25 @@ public:
     virtual int print(const char* fmt, ...)=0;
     virtual int getTypeID() const=0;
 };
-class SerializeToFile : public ISerializable {
+class SerializeToFile : public ISerializable
+{
 public:
-    SerializeToFile(const char* filename) : f(NULL) {
+    SerializeToFile(const char* filename) : f(NULL)
+    {
         saveToFile(filename);
     }
     SerializeToFile() : f(NULL) {}
     ~SerializeToFile() {close();}
-    bool saveToFile(const char* filename) {
+    bool saveToFile(const char* filename)
+    {
         close();
         f = (FILE *)ImFileOpen(filename,"w");
         return (f);
     }
     void close() {if (f) fclose(f);f=NULL;}
     bool isValid() const {return (f);}
-    int print(const char* fmt, ...) {
+    int print(const char* fmt, ...)
+    {
         va_list args;va_start(args, fmt);
         const int rv = vfprintf(f,fmt,args);
         va_end(args);
@@ -1791,17 +1838,20 @@ public:
 protected:
     FILE* f;
 };
-class SerializeToBuffer : public ISerializable {
+class SerializeToBuffer : public ISerializable
+{
 public:
     SerializeToBuffer(int initialCapacity=2048) {b.reserve(initialCapacity);b.resize(1);b[0]='\0';}
     ~SerializeToBuffer() {close();}
-    bool saveToFile(const char* filename) {
+    bool saveToFile(const char* filename)
+    {
         if (!isValid()) return false;
         return SetFileContent(filename,(unsigned char*)&b[0],b.size(),"w");
     }
     void close() {b.clear();ImVector<char> o;b.swap(o);b.resize(1);b[0]='\0';}
     bool isValid() const {return b.size()>0;}
-    int print(const char* fmt, ...) {
+    int print(const char* fmt, ...)
+    {
         va_list args,args2;
         va_start(args, fmt);
         va_copy(args2,args);                                    // since C99 (MANDATORY! otherwise we must reuse va_start(args2,fmt): slow)
@@ -1824,13 +1874,16 @@ public:
 protected:
     ImVector<char> b;
 };
-const char* Serializer::getBuffer() const   {
+const char* Serializer::getBuffer() const
+{
     return (f && f->getTypeID()==1 && f->isValid()) ? static_cast<SerializeToBuffer*>(f)->getBuffer() : NULL;
 }
-int Serializer::getBufferSize() const {
+int Serializer::getBufferSize() const
+{
     return (f && f->getTypeID()==1 && f->isValid()) ? static_cast<SerializeToBuffer*>(f)->getBufferSize() : 0;
 }
-bool Serializer::WriteBufferToFile(const char* filename,const char* buffer,int bufferSize)   {
+bool Serializer::WriteBufferToFile(const char* filename,const char* buffer,int bufferSize)
+{
     if (!buffer) return false;
     FILE* f = (FILE *)ImFileOpen(filename,"w");
     if (!f) return false;
@@ -1840,22 +1893,27 @@ bool Serializer::WriteBufferToFile(const char* filename,const char* buffer,int b
 }
 
 void Serializer::clear() {if (f) {f->close();}}
-Serializer::Serializer(const char *filename) {
+Serializer::Serializer(const char *filename)
+{
     f=(SerializeToFile*) ImGui::MemAlloc(sizeof(SerializeToFile));
     IM_PLACEMENT_NEW((SerializeToFile*)f) SerializeToFile(filename);
 }
-Serializer::Serializer(int memoryBufferCapacity) {
+Serializer::Serializer(int memoryBufferCapacity)
+{
     f=(SerializeToBuffer*) ImGui::MemAlloc(sizeof(SerializeToBuffer));
     IM_PLACEMENT_NEW((SerializeToBuffer*)f) SerializeToBuffer(memoryBufferCapacity);
 }
-Serializer::~Serializer() {
-    if (f) {
+Serializer::~Serializer()
+{
+    if (f)
+    {
         f->~ISerializable();
         ImGui::MemFree(f);
         f=NULL;
     }
 }
-template <typename T> inline static bool SaveTemplate(ISerializable* f,FieldType ft, const T* pValue, const char* name, int numArrayElements=1, int prec=-1)   {
+template <typename T> inline static bool SaveTemplate(ISerializable* f,FieldType ft, const T* pValue, const char* name, int numArrayElements=1, int prec=-1)
+{
     if (!f || ft==ImGui::FT_COUNT  || ft==ImGui::FT_CUSTOM || numArrayElements<0 || numArrayElements>4 || !pValue || !name || name[0]=='\0') return false;
     // name
     f->print( "[%s",FieldTypeNames[ft]);
@@ -1864,36 +1922,43 @@ template <typename T> inline static bool SaveTemplate(ISerializable* f,FieldType
     f->print( ":%s]\n",name);
     // value
     const char* precision = FieldTypeFormatsWithCustomPrecision[ft];
-    for (int t=0;t<numArrayElements;t++) {
+    for (int t=0;t<numArrayElements;t++)
+    {
         if (t>0) f->print(" ");
         f->print(precision,prec,pValue[t]);
     }
     f->print("\n\n");
     return true;
 }
-bool Serializer::save(FieldType ft, const float* pValue, const char* name, int numArrayElements,  int prec)   {
+bool Serializer::save(FieldType ft, const float* pValue, const char* name, int numArrayElements,  int prec)
+{
     IM_ASSERT(ft==ImGui::FT_FLOAT || ft==ImGui::FT_COLOR);
     return SaveTemplate<float>(f,ft,pValue,name,numArrayElements,prec);
 }
-bool Serializer::save(const double* pValue,const char* name,int numArrayElements, int prec)   {
+bool Serializer::save(const double* pValue,const char* name,int numArrayElements, int prec)
+{
     return SaveTemplate<double>(f,ImGui::FT_DOUBLE,pValue,name,numArrayElements,prec);
 }
-bool Serializer::save(const bool* pValue,const char* name,int numArrayElements)   {
+bool Serializer::save(const bool* pValue,const char* name,int numArrayElements)
+{
     if (!pValue || numArrayElements<0 || numArrayElements>4) return false;
     static int tmp[4];
     for (int i=0;i<numArrayElements;i++) tmp[i] = pValue[i] ? 1 : 0;
     return SaveTemplate<int>(f,ImGui::FT_BOOL,tmp,name,numArrayElements);
 }
-bool Serializer::save(FieldType ft,const int* pValue,const char* name,int numArrayElements, int prec) {
+bool Serializer::save(FieldType ft,const int* pValue,const char* name,int numArrayElements, int prec)
+{
     IM_ASSERT(ft==ImGui::FT_INT || ft==ImGui::FT_BOOL || ft==ImGui::FT_ENUM);
     if (prec==0) prec=-1;
     return SaveTemplate<int>(f,ft,pValue,name,numArrayElements,prec);
 }
-bool Serializer::save(const unsigned* pValue,const char* name,int numArrayElements, int prec) {
+bool Serializer::save(const unsigned* pValue,const char* name,int numArrayElements, int prec)
+{
     if (prec==0) prec=-1;
     return SaveTemplate<unsigned>(f,ImGui::FT_UNSIGNED,pValue,name,numArrayElements,prec);
 }
-bool Serializer::save(const char* pValue,const char* name,int pValueSize)    {
+bool Serializer::save(const char* pValue,const char* name,int pValueSize)
+{
     FieldType ft = ImGui::FT_STRING;
     int numArrayElements = pValueSize;
     if (!f || ft==ImGui::FT_COUNT || !pValue || !name || name[0]=='\0') return false;
@@ -1910,13 +1975,15 @@ bool Serializer::save(const char* pValue,const char* name,int pValueSize)    {
     f->print("%s\n\n",pValue);
     return true;
 }
-bool Serializer::saveTextLines(const char* pValue,const char* name)   {
+bool Serializer::saveTextLines(const char* pValue,const char* name)
+{
     FieldType ft = ImGui::FT_TEXTLINE;
     if (!f || ft==ImGui::FT_COUNT || !pValue || !name || name[0]=='\0') return false;
     const char *tmp;const char *start = pValue;
     int left = strlen(pValue);int numArrayElements =0;  // numLines
     bool endsWithNewLine = pValue[left-1]=='\n';
-    while ((tmp=strchr(start, '\n'))) {
+    while ((tmp=strchr(start, '\n')))
+    {
         ++numArrayElements;
         left-=tmp-start-1;
         start = ++tmp;  // to skip '\n'
@@ -1935,7 +2002,8 @@ bool Serializer::saveTextLines(const char* pValue,const char* name)   {
     f->print("\n");
     return true;
 }
-bool Serializer::saveTextLines(int numValues,bool (*items_getter)(void* data, int idx, const char** out_text),void* data,const char* name)  {
+bool Serializer::saveTextLines(int numValues,bool (*items_getter)(void* data, int idx, const char** out_text),void* data,const char* name)
+{
     FieldType ft = ImGui::FT_TEXTLINE;
     if (!items_getter || !f || ft==ImGui::FT_COUNT || numValues<=0 || !name || name[0]=='\0') return false;
     int numArrayElements =numValues;  // numLines
@@ -1948,8 +2016,10 @@ bool Serializer::saveTextLines(int numValues,bool (*items_getter)(void* data, in
 
     // value
     const char* text=NULL;int len=0;
-    for (int i=0;i<numArrayElements;i++)    {
-        if (items_getter(data,i,&text)) {
+    for (int i=0;i<numArrayElements;i++)
+    {
+        if (items_getter(data,i,&text))
+        {
             f->print("%s",text);
             if (len<=0 || text[len-1]!='\n')  f->print("\n");
         }
@@ -1958,7 +2028,8 @@ bool Serializer::saveTextLines(int numValues,bool (*items_getter)(void* data, in
     f->print("\n");
     return true;
 }
-bool Serializer::saveCustomFieldTypeHeader(const char* name, int numTextLines) {
+bool Serializer::saveCustomFieldTypeHeader(const char* name, int numTextLines)
+{
     // name
     f->print( "[%s",FieldTypeNames[ImGui::FT_CUSTOM]);
     if (numTextLines==0) numTextLines=1;
@@ -1967,18 +2038,22 @@ bool Serializer::saveCustomFieldTypeHeader(const char* name, int numTextLines) {
     return true;
 }
 
-void StringSet(char *&destText, const char *text, bool allowNullDestText) {
+void StringSet(char *&destText, const char *text, bool allowNullDestText)
+{
     if (destText) {ImGui::MemFree(destText);destText=NULL;}
     const char e = '\0';
     if (!text && !allowNullDestText) text=&e;
-    if (text)  {
+    if (text)
+    {
         const int sz = strlen(text);
         destText = (char*) ImGui::MemAlloc(sz+1);strcpy(destText,text);
     }
 }
-void StringAppend(char *&destText, const char *textToAppend, bool allowNullDestText, bool prependLineFeedIfDestTextIsNotEmpty, bool mustAppendLineFeed) {
+void StringAppend(char *&destText, const char *textToAppend, bool allowNullDestText, bool prependLineFeedIfDestTextIsNotEmpty, bool mustAppendLineFeed)
+{
     const int textToAppendSz = textToAppend ? strlen(textToAppend) : 0;
-    if (textToAppendSz==0) {
+    if (textToAppendSz==0)
+    {
         if (!destText && !allowNullDestText) {destText = (char*) ImGui::MemAlloc(1);strcpy(destText,"");}
         return;
     }
@@ -1988,7 +2063,8 @@ void StringAppend(char *&destText, const char *textToAppend, bool allowNullDestT
     const int totalTextSz = textToAppendSz + destTextSz + (mustPrependLF?1:0) + (mustAppendLF?1:0);
     ImVector<char> totalText;totalText.resize(totalTextSz+1);
     totalText[0]='\0';
-    if (destText) {
+    if (destText)
+    {
         strcpy(&totalText[0],destText);
         ImGui::MemFree(destText);destText=NULL;
     }
@@ -1998,7 +2074,8 @@ void StringAppend(char *&destText, const char *textToAppend, bool allowNullDestT
     destText = (char*) ImGui::MemAlloc(totalTextSz+1);strcpy(destText,&totalText[0]);
 }
 
-int StringAppend(ImVector<char>& v,const char* fmt, ...) {
+int StringAppend(ImVector<char>& v,const char* fmt, ...)
+{
     IM_ASSERT(v.size()>0 && v[v.size()-1]=='\0');
     va_list args,args2;
 
@@ -2299,20 +2376,23 @@ std::string settings_path(std::string app_name)
 #endif
     // 2. try to access user settings folder
     std::string settingspath = home + PATH_SETTINGS;
-    if (file_exists(settingspath)) {
+    if (file_exists(settingspath))
+    {
         // good, we have a place to put the settings file
         // settings should be in 'app_name' subfolder
         settingspath += app_name;
 
         // 3. create the vmix subfolder in settings folder if not existing already
-        if ( !file_exists(settingspath)) {
+        if ( !file_exists(settingspath))
+        {
             if ( !create_directory(settingspath) )
                 // fallback to home if settings path cannot be created
                 settingspath = home;
         }
         return settingspath + PATH_SEP;
     }
-    else {
+    else
+    {
         // fallback to home if settings path does not exists
         return home + PATH_SEP;
     }
@@ -2417,7 +2497,8 @@ size_t memory_usage()
     // mem sizes should all be multiplied by the page size.
     size_t size = 0;
     FILE *file = fopen("/proc/self/statm", "r");
-    if (file) {
+    if (file)
+    {
         unsigned long m = 0;
         int ret = 0, ret2 = 0;
         ret = fscanf (file, "%lu", &m);  // virtual mem program size,
@@ -2505,23 +2586,26 @@ std::string MillisecToString(int64_t millisec, int show_millisec)
 namespace base64 
 {
 // Decoder here
-	extern "C"
-	{
-		typedef enum {step_a, step_b, step_c, step_d} base64_decodestep;
-		typedef struct {base64_decodestep step;char plainchar;} base64_decodestate;
+extern "C"
+{
+typedef enum {step_a, step_b, step_c, step_d} base64_decodestep;
+typedef struct {base64_decodestep step;char plainchar;} base64_decodestate;
 
-inline int base64_decode_value(char value_in)	{
+inline int base64_decode_value(char value_in)
+{
 	static const char decoding[] = {62,-1,-1,-1,63,52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-2,-1,-1,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,-1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51};
 	static const char decoding_size = sizeof(decoding);
 	value_in -= 43;
 	if (value_in < 0 || value_in > decoding_size) return -1;
 	return decoding[(int)value_in];
 }
-inline void base64_init_decodestate(base64_decodestate* state_in)	{
+inline void base64_init_decodestate(base64_decodestate* state_in)
+{
 	state_in->step = step_a;
 	state_in->plainchar = 0;
 }
-inline int base64_decode_block(const char* code_in, const int length_in, char* plaintext_out, base64_decodestate* state_in)	{
+inline int base64_decode_block(const char* code_in, const int length_in, char* plaintext_out, base64_decodestate* state_in)
+{
 	const char* codechar = code_in;
 	char* plainchar = plaintext_out;
 	char fragment;
@@ -2532,8 +2616,9 @@ inline int base64_decode_block(const char* code_in, const int length_in, char* p
 	{
 		while (1)
 		{
-	case step_a:
-			do {
+        case step_a:
+			do
+            {
 				if (codechar == code_in+length_in)
 				{
 					state_in->step = step_a;
@@ -2543,8 +2628,9 @@ inline int base64_decode_block(const char* code_in, const int length_in, char* p
 				fragment = (char)base64_decode_value(*codechar++);
 			} while (fragment < 0);
 			*plainchar    = (fragment & 0x03f) << 2;
-	case step_b:
-			do {
+        case step_b:
+			do
+            {
 				if (codechar == code_in+length_in)
 				{
 					state_in->step = step_b;
@@ -2555,8 +2641,9 @@ inline int base64_decode_block(const char* code_in, const int length_in, char* p
 			} while (fragment < 0);
 			*plainchar++ |= (fragment & 0x030) >> 4;
 			*plainchar    = (fragment & 0x00f) << 4;
-	case step_c:
-			do {
+        case step_c:
+			do
+            {
 				if (codechar == code_in+length_in)
 				{
 					state_in->step = step_c;
@@ -2567,8 +2654,9 @@ inline int base64_decode_block(const char* code_in, const int length_in, char* p
 			} while (fragment < 0);
 			*plainchar++ |= (fragment & 0x03c) >> 2;
 			*plainchar    = (fragment & 0x003) << 6;
-	case step_d:
-			do {
+        case step_d:
+			do
+            {
 				if (codechar == code_in+length_in)
 				{
 					state_in->step = step_d;
@@ -2583,34 +2671,38 @@ inline int base64_decode_block(const char* code_in, const int length_in, char* p
 	/* control should not reach here */
 	return plainchar - plaintext_out;
 }
-	}	// extern "C"
-	struct decoder
-	{
-		base64_decodestate _state;
-		int _buffersize;
-		
-		decoder(int buffersize_in = 4096) : _buffersize(buffersize_in) {}
-		int decode(char value_in) {return base64_decode_value(value_in);}
-		int decode(const char* code_in, const int length_in, char* plaintext_out)	{return base64_decode_block(code_in, length_in, plaintext_out, &_state);}
-	};
+}	// extern "C"
+struct decoder
+{
+	base64_decodestate _state;
+	int _buffersize;
+	
+	decoder(int buffersize_in = 4096) : _buffersize(buffersize_in) {}
+	int decode(char value_in) {return base64_decode_value(value_in);}
+	int decode(const char* code_in, const int length_in, char* plaintext_out)	{return base64_decode_block(code_in, length_in, plaintext_out, &_state);}
+};
 
 // Encoder Here
-	extern "C" {
-		typedef enum {step_A, step_B, step_C} base64_encodestep;
-		typedef struct {base64_encodestep step;char result;int stepcount;} base64_encodestate;
+extern "C"
+{
+typedef enum {step_A, step_B, step_C} base64_encodestep;
+typedef struct {base64_encodestep step;char result;int stepcount;} base64_encodestate;
 
 const int CHARS_PER_LINE = 2147483647;//72; // This was hard coded to 72 originally. But here we add '\n' at a later step. So we use MAX_INT here.
-inline void base64_init_encodestate(base64_encodestate* state_in)	{
+inline void base64_init_encodestate(base64_encodestate* state_in)
+{
 	state_in->step = step_A;
 	state_in->result = 0;
 	state_in->stepcount = 0;
 }
-inline char base64_encode_value(char value_in)	{
+inline char base64_encode_value(char value_in)
+{
 	static const char* encoding = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	if (value_in > 63) return '=';
 	return encoding[(int)value_in];
 }
-inline int base64_encode_block(const char* plaintext_in, int length_in, char* code_out, base64_encodestate* state_in)	{
+inline int base64_encode_block(const char* plaintext_in, int length_in, char* code_out, base64_encodestate* state_in)
+{
 	const char* plainchar = plaintext_in;
 	const char* const plaintextend = plaintext_in + length_in;
 	char* codechar = code_out;
@@ -2623,7 +2715,7 @@ inline int base64_encode_block(const char* plaintext_in, int length_in, char* co
 	{
 		while (1)
 		{
-	case step_A:
+        case step_A:
 			if (plainchar == plaintextend)
 			{
 				state_in->result = result;
@@ -2634,7 +2726,7 @@ inline int base64_encode_block(const char* plaintext_in, int length_in, char* co
 			result = (fragment & 0x0fc) >> 2;
 			*codechar++ = base64_encode_value(result);
 			result = (fragment & 0x003) << 4;
-	case step_B:
+        case step_B:
 			if (plainchar == plaintextend)
 			{
 				state_in->result = result;
@@ -2645,7 +2737,7 @@ inline int base64_encode_block(const char* plaintext_in, int length_in, char* co
 			result |= (fragment & 0x0f0) >> 4;
 			*codechar++ = base64_encode_value(result);
 			result = (fragment & 0x00f) << 2;
-	case step_C:
+        case step_C:
 			if (plainchar == plaintextend)
 			{
 				state_in->result = result;
@@ -2670,7 +2762,8 @@ inline int base64_encode_block(const char* plaintext_in, int length_in, char* co
 	return codechar - code_out;
 }
 
-inline int base64_encode_blockend(char* code_out, base64_encodestate* state_in)	{
+inline int base64_encode_blockend(char* code_out, base64_encodestate* state_in)
+{
 	char* codechar = code_out;
 	
 	switch (state_in->step)
@@ -2691,32 +2784,34 @@ inline int base64_encode_blockend(char* code_out, base64_encodestate* state_in)	
 	
 	return codechar - code_out;
 }	
-	} // extern "C"
-	struct encoder
+} // extern "C"
+struct encoder
+{
+	base64_encodestate _state;
+	int _buffersize;
+	
+	encoder(int buffersize_in = 4096)
+	: _buffersize(buffersize_in)
+	{}
+	int encode(char value_in)
 	{
-		base64_encodestate _state;
-		int _buffersize;
-		
-		encoder(int buffersize_in = 4096)
-		: _buffersize(buffersize_in)
-		{}
-		int encode(char value_in)
-		{
-			return base64_encode_value(value_in);
-		}
-		int encode(const char* code_in, const int length_in, char* plaintext_out)
-		{
-			return base64_encode_block(code_in, length_in, plaintext_out, &_state);
-		}
-		int encode_end(char* plaintext_out)
-		{
-			return base64_encode_blockend(plaintext_out, &_state);
-		}
-	};
+		return base64_encode_value(value_in);
+	}
+	int encode(const char* code_in, const int length_in, char* plaintext_out)
+	{
+		return base64_encode_block(code_in, length_in, plaintext_out, &_state);
+	}
+	int encode_end(char* plaintext_out)
+	{
+		return base64_encode_blockend(plaintext_out, &_state);
+	}
+};
 } // namespace base64
 
-namespace ImGui {
-namespace Stringifier {
+namespace ImGui
+{
+namespace Stringifier
+{
 template <typename VectorChar> static bool Base64Decode(const char* input,VectorChar& output)
 {
     output.clear();if (!input) return false;
@@ -3008,8 +3103,10 @@ bool TextStringify(const char* input, ImVector<char>& output, int numCharsPerLin
 
 #ifdef IMGUI_USE_ZLIB	// requires linking to library -lZlib
 #include <zlib.h>
-namespace ImGui {
-bool GzDecompressFromFile(const char* filePath,ImVector<char>& rv,bool clearRvBeforeUsage)   {
+namespace ImGui
+{
+bool GzDecompressFromFile(const char* filePath,ImVector<char>& rv,bool clearRvBeforeUsage)
+{
     if (clearRvBeforeUsage) rv.clear();
     ImVector<char> f_data;
     if (!ImGuiHelper::GetFileContent(filePath,f_data,true,"rb",false)) return false;
@@ -3017,18 +3114,21 @@ bool GzDecompressFromFile(const char* filePath,ImVector<char>& rv,bool clearRvBe
     return GzDecompressFromMemory(&f_data[0],f_data.size(),rv,clearRvBeforeUsage);
     //----------------------------------------------------
 }
-bool GzBase64DecompressFromFile(const char* filePath,ImVector<char>& rv)    {
+bool GzBase64DecompressFromFile(const char* filePath,ImVector<char>& rv)
+{
     ImVector<char> f_data;
     if (!ImGuiHelper::GetFileContent(filePath,f_data,true,"r",true)) return false;
     return ImGui::GzBase64DecompressFromMemory(&f_data[0],rv);
 }
-bool GzBase85DecompressFromFile(const char* filePath,ImVector<char>& rv)    {
+bool GzBase85DecompressFromFile(const char* filePath,ImVector<char>& rv)
+{
     ImVector<char> f_data;
     if (!ImGuiHelper::GetFileContent(filePath,f_data,true,"r",true)) return false;
     return ImGui::GzBase85DecompressFromMemory(&f_data[0],rv);
 }
 
-bool GzDecompressFromMemory(const char* memoryBuffer,int memoryBufferSize,ImVector<char>& rv,bool clearRvBeforeUsage)    {
+bool GzDecompressFromMemory(const char* memoryBuffer,int memoryBufferSize,ImVector<char>& rv,bool clearRvBeforeUsage)
+{
     if (clearRvBeforeUsage) rv.clear();
     const int startRv = rv.size();
 
@@ -3044,9 +3144,11 @@ bool GzDecompressFromMemory(const char* memoryBuffer,int memoryBufferSize,ImVect
     myZStream.zfree = Z_NULL;
 
     bool done = false;
-    if (inflateInit2(&myZStream, (16+MAX_WBITS)) == Z_OK) {
+    if (inflateInit2(&myZStream, (16+MAX_WBITS)) == Z_OK)
+    {
         int err = Z_OK;
-        while (!done) {
+        while (!done)
+        {
             if (myZStream.total_out >= (uLong)(rv.size()-startRv)) rv.resize(rv.size()+memoryChunk);    // not enough space: we add the memoryChunk each step
 
             myZStream.next_out = (Bytef *) (&rv[startRv] + myZStream.total_out);
@@ -3061,7 +3163,8 @@ bool GzDecompressFromMemory(const char* memoryBuffer,int memoryBufferSize,ImVect
 
     return done;
 }
-bool GzCompressFromMemory(const char* memoryBuffer,int memoryBufferSize,ImVector<char>& rv,bool clearRvBeforeUsage)  {
+bool GzCompressFromMemory(const char* memoryBuffer,int memoryBufferSize,ImVector<char>& rv,bool clearRvBeforeUsage) 
+{
     if (clearRvBeforeUsage) rv.clear();
     const int startRv = rv.size();
 
@@ -3077,9 +3180,11 @@ bool GzCompressFromMemory(const char* memoryBuffer,int memoryBufferSize,ImVector
     myZStream.zfree = Z_NULL;
 
     bool done = false;
-    if (deflateInit2(&myZStream,Z_BEST_COMPRESSION,Z_DEFLATED,(16+MAX_WBITS),8,Z_DEFAULT_STRATEGY) == Z_OK) {
+    if (deflateInit2(&myZStream,Z_BEST_COMPRESSION,Z_DEFLATED,(16+MAX_WBITS),8,Z_DEFAULT_STRATEGY) == Z_OK)
+    {
         int err = Z_OK;
-        while (!done) {
+        while (!done)
+        {
             if (myZStream.total_out >= (uLong)(rv.size()-startRv)) rv.resize(rv.size()+memoryChunk);    // not enough space: we add the full memoryChunk each step
 
             myZStream.next_out = (Bytef *) (&rv[startRv] + myZStream.total_out);
@@ -3095,24 +3200,28 @@ bool GzCompressFromMemory(const char* memoryBuffer,int memoryBufferSize,ImVector
     return done;
 }
 
-bool GzBase64DecompressFromMemory(const char* input,ImVector<char>& rv) {
+bool GzBase64DecompressFromMemory(const char* input,ImVector<char>& rv)
+{
     rv.clear();ImVector<char> v;
     if (ImGui::Base64Decode(input,v)) return false;
     if (v.size()==0) return false;
     return GzDecompressFromMemory(&v[0],v.size(),rv);
 }
-bool GzBase85DecompressFromMemory(const char* input,ImVector<char>& rv) {
+bool GzBase85DecompressFromMemory(const char* input,ImVector<char>& rv)
+{
     rv.clear();ImVector<char> v;
     if (ImGui::Base85Decode(input,v)) return false;
     if (v.size()==0) return false;
     return GzDecompressFromMemory(&v[0],v.size(),rv);
 }
-bool GzBase64CompressFromMemory(const char* input,int inputSize,ImVector<char>& output,bool stringifiedMode,int numCharsPerLineInStringifiedMode)   {
+bool GzBase64CompressFromMemory(const char* input,int inputSize,ImVector<char>& output,bool stringifiedMode,int numCharsPerLineInStringifiedMode)
+{
     output.clear();ImVector<char> output1;
     if (!ImGui::GzCompressFromMemory(input,inputSize,output1)) return false;
     return ImGui::Base64Encode(&output1[0],output1.size(),output,stringifiedMode,numCharsPerLineInStringifiedMode);
 }
-bool GzBase85CompressFromMemory(const char* input,int inputSize,ImVector<char>& output,bool stringifiedMode,int numCharsPerLineInStringifiedMode) {
+bool GzBase85CompressFromMemory(const char* input,int inputSize,ImVector<char>& output,bool stringifiedMode,int numCharsPerLineInStringifiedMode)
+{
     output.clear();ImVector<char> output1;
     if (!ImGui::GzCompressFromMemory(input,inputSize,output1)) return false;
     return ImGui::Base85Encode(&output1[0],output1.size(),output,stringifiedMode,numCharsPerLineInStringifiedMode);
@@ -3123,17 +3232,22 @@ bool GzBase85CompressFromMemory(const char* input,int inputSize,ImVector<char>& 
 namespace ImGui
 {
 // Two methods that fill rv and return true on success
-bool Base64DecodeFromFile(const char* filePath,ImVector<char>& rv)  {
+bool Base64DecodeFromFile(const char* filePath,ImVector<char>& rv)
+{
     ImVector<char> f_data;
     if (!ImGuiHelper::GetFileContent(filePath,f_data,true,"r",true)) return false;
     return ImGui::Base64Decode(&f_data[0],rv);
 }
-bool Base85DecodeFromFile(const char* filePath,ImVector<char>& rv)  {
+bool Base85DecodeFromFile(const char* filePath,ImVector<char>& rv)
+{
     ImVector<char> f_data;
     if (!ImGuiHelper::GetFileContent(filePath,f_data,true,"r",true)) return false;
     return ImGui::Base85Decode(&f_data[0],rv);
 }
+} // namespace ImGui
 
+namespace ImGui
+{
 // Generate color
 void RandomColor(ImVec4& color, float alpha)
 {
@@ -3152,7 +3266,6 @@ void RandomColor(ImU32& color, float alpha)
     int b = std::rand() % 255;
     color = IM_COL32(r, g, b, (int)(alpha * 255.f));
 }
-
 } // namespace ImGui
 
 namespace ImGui
@@ -3469,10 +3582,10 @@ private:
     int frame_size;
 };
 
-struct Overlap
+struct WindowOverlap
 {
 public:
-    inline Overlap(uint32_t _frame_size, uint32_t _shift_size)
+    inline WindowOverlap(uint32_t _frame_size, uint32_t _shift_size)
     {
         frame_size = _frame_size;
         shift_size = _shift_size;
@@ -3482,7 +3595,7 @@ public:
         buf = new float[frame_size];
         memset(buf, 0, frame_size * sizeof(float));
     }
-    inline ~Overlap() { delete[] buf; delete[] output; };
+    inline ~WindowOverlap() { delete[] buf; delete[] output; };
     inline float *overlap(float *in)
     {
         // Shift
@@ -3511,7 +3624,7 @@ ImSTFT::ImSTFT(int frame_, int shift_)
     shift_size = shift_;
     overlap_size = frame_size - shift_size;
     hannwin = new HannWindow(frame_size, shift_size);
-    overlap = new Overlap(frame_size, shift_size);
+    overlap = new WindowOverlap(frame_size, shift_size);
     buf = new float[frame_size];
     memset(buf, 0, sizeof(float) * frame_size);
 }
@@ -3519,7 +3632,7 @@ ImSTFT::ImSTFT(int frame_, int shift_)
 ImSTFT::~ImSTFT()
 { 
     delete (HannWindow*)hannwin; 
-    delete (Overlap*)overlap; 
+    delete (WindowOverlap*)overlap; 
     delete[] buf;
 };
 
@@ -3542,7 +3655,7 @@ void ImSTFT::istft(float* in, float* out)
     /*** Window ***/
     ((HannWindow*)hannwin)->Process(in);
     /*** Output ***/
-    memcpy(out, ((Overlap*)overlap)->overlap(in), sizeof(float) * shift_size);
+    memcpy(out, ((WindowOverlap*)overlap)->overlap(in), sizeof(float) * shift_size);
 }
 } // namespace ImGui
 
@@ -3701,51 +3814,34 @@ static inline int LU(float* A, size_t astep, int m, float* b, size_t bstep, int 
     for( i = 0; i < m; i++ )
     {
         k = i;
-
-        for( j = i+1; j < m; j++ )
-            if( std::abs(A[j*astep + i]) > std::abs(A[k*astep + i]) )
-                k = j;
-
-        if( std::abs(A[k*astep + i]) < eps )
-            return 0;
-
+        for( j = i+1; j < m; j++ ) if( std::abs(A[j*astep + i]) > std::abs(A[k*astep + i]) ) k = j;
+        if( std::abs(A[k*astep + i]) < eps ) return 0;
         if( k != i )
         {
-            for( j = i; j < m; j++ )
-                std::swap(A[i*astep + j], A[k*astep + j]);
-            if( b )
-                for( j = 0; j < n; j++ )
-                    std::swap(b[i*bstep + j], b[k*bstep + j]);
+            for( j = i; j < m; j++ ) std::swap(A[i*astep + j], A[k*astep + j]);
+            if( b ) for( j = 0; j < n; j++ ) std::swap(b[i*bstep + j], b[k*bstep + j]);
             p = -p;
         }
-
         float d = -1/A[i*astep + i];
-
         for( j = i+1; j < m; j++ )
         {
             float alpha = A[j*astep + i]*d;
-
-            for( k = i+1; k < m; k++ )
-                A[j*astep + k] += alpha*A[i*astep + k];
-
-            if( b )
-                for( k = 0; k < n; k++ )
-                    b[j*bstep + k] += alpha*b[i*bstep + k];
+            for( k = i+1; k < m; k++ ) A[j*astep + k] += alpha*A[i*astep + k];
+            if( b ) for( k = 0; k < n; k++ ) b[j*bstep + k] += alpha*b[i*bstep + k];
         }
     }
-
     if( b )
     {
         for( i = m-1; i >= 0; i-- )
+        {
             for( j = 0; j < n; j++ )
             {
                 float s = b[i*bstep + j];
-                for( k = i+1; k < m; k++ )
-                    s -= A[i*astep + k]*b[k*bstep + j];
+                for( k = i+1; k < m; k++ ) s -= A[i*astep + k]*b[k*bstep + j];
                 b[i*bstep + j] = s/A[i*astep + i];
             }
+        }
     }
-
     return p;
 }
 
@@ -5041,18 +5137,18 @@ ImGui::ImMat ImGui::MatResize(const ImGui::ImMat& mat, const ImSize size, float 
         return dst;
     }
 
-    dst.create_type(w, h, mat.c, mat.type);
+    dst.create(w, h, mat.c, 1u, 4);
 
     if (mat.c == 1)
-        resize_bilinear_c1((const unsigned char*)mat.data, srcw, srch, (unsigned char*)mat.data, w, h);
+        resize_bilinear_c1((const unsigned char*)mat.data, srcw, srch, (unsigned char*)dst.data, w, h);
     else if (mat.c == 2)
-        resize_bilinear_c2((const unsigned char*)mat.data, srcw, srch, (unsigned char*)mat.data, w, h);
+        resize_bilinear_c2((const unsigned char*)mat.data, srcw, srch, (unsigned char*)dst.data, w, h);
     else if (mat.c == 3)
-        resize_bilinear_c3((const unsigned char*)mat.data, srcw, srch, (unsigned char*)mat.data, w, h);
+        resize_bilinear_c3((const unsigned char*)mat.data, srcw, srch, (unsigned char*)dst.data, w, h);
     else if (mat.c == 4)
-        resize_bilinear_c4((const unsigned char*)mat.data, srcw, srch, (unsigned char*)mat.data, w, h);
+        resize_bilinear_c4((const unsigned char*)mat.data, srcw, srch, (unsigned char*)dst.data, w, h);
 
-    return mat;
+    return dst;
 }
 
 ImGui::ImMat ImGui::GrayToImage(const ImGui::ImMat& mat)
@@ -5115,4 +5211,160 @@ ImGui::ImMat ImGui::GrayToImage(const ImGui::ImMat& mat)
         }
     }
     return dst;
+}
+
+
+static const unsigned char* GetTextData(const ImWchar c, ImVec2& size, ImVec4& rect, int& output_stride, int& char_width, int& char_height)
+{
+    ImFontAtlas* atlas = ImGui::GetIO().Fonts;
+    float scale_x = c < 0x80 ? 2.0 : 1.0;
+    float scale_y = c < 0x80 ? 2.0 : 1.0;
+    unsigned char* bitmap;
+    int _out_width, _out_height;
+    atlas->GetTexDataAsAlpha8(&bitmap, &_out_width, &_out_height);
+    const ImFontGlyph* glyph = ImGui::GetCurrentContext()->Font->FindGlyph(c);
+    if (glyph == NULL)
+        return nullptr;
+    const int U1 = (int)(glyph->U1 * _out_width);
+    const int U0 = (int)(glyph->U0 * _out_width);
+    const int V1 = (int)(glyph->V1 * _out_height);
+    const int V0 = (int)(glyph->V0 * _out_height);
+    const unsigned char * ptr = &bitmap[_out_width * V0 + U0];
+    output_stride = _out_width;
+    size.x = U1 - U0;
+    size.y = V1 - V0;
+    rect.x = glyph->X0 * scale_x;
+    rect.y = glyph->Y0 * scale_y;
+    rect.z = glyph->X1 * scale_x;
+    rect.w = glyph->Y1 * scale_y;
+    char_width = rect.x + glyph->AdvanceX * scale_x;
+    char_height = glyph->Y0 * scale_y + V1 - V0;
+    return ptr;
+}
+
+static const ImVec2 GetTextSize(const ImWchar c)
+{
+    ImFontAtlas* atlas = ImGui::GetIO().Fonts;
+    const ImFontGlyph* glyph = ImGui::GetCurrentContext()->Font->FindGlyph(c);
+    if (glyph == NULL)
+        return ImVec2(0, 0);
+    const int V1 = (int)(glyph->V1 * atlas->TexHeight);
+    const int V0 = (int)(glyph->V0 * atlas->TexHeight);
+    float scale_x = c < 0x80 ? 2.0 : 1.0;
+    float scale_y = c < 0x80 ? 2.0 : 1.0;
+    float width = glyph->X0 * scale_x + glyph->AdvanceX * scale_x;
+    float height = glyph->Y0 * scale_y + V1 - V0;
+    return ImVec2(width, height);
+}
+
+void ImGui::DrawTextToMat(ImGui::ImMat& mat, const ImPoint pos, const char* str, const ImPixel& color, float scale)
+{
+    int start_x = pos.x;
+    int start_y = pos.y;
+    const char* str_ptr = str;
+    const char* str_end = str_ptr + strlen(str);
+    while (str_ptr < str_end)
+    {
+        unsigned int c = *str_ptr;
+        if (c < 0x80)
+            str_ptr += 1;
+        else
+            str_ptr += ImTextCharFromUtf8(&c, str_ptr, str_end);
+        if (c < 32)
+        {
+            if (c == '\n')
+            {
+                start_x = pos.x;
+                start_y += ImGui::GetFontSize() * scale;
+                continue;
+            }
+            if (c == '\r')
+                continue;
+        }
+        float scale_internal = c < 0x80 ? 0.5 : 1.0;
+        int output_stride = 0, char_width = 0, char_height = 0;
+        ImVec2 size = {0, 0};
+        ImVec4 rect = {0, 0, 0, 0};
+        const unsigned char* out_data = GetTextData(c, size, rect, output_stride, char_width, char_height);
+        if (out_data && output_stride)
+        {
+            ImGui::ImMat char_mat(char_width, char_height, 4, 1u, 4);
+            float x1 = rect.x;
+            float x2 = rect.z;
+            float y1 = rect.y;
+            float y2 = rect.w;
+            
+            for (int x = 0; x < size.x; x++)
+            {
+                for (int y = 0; y < size.y; y++)
+                {
+                    const unsigned char alpha = out_data[y * output_stride + x];
+                    char_mat.draw_dot(ImPoint(x + x1, y + y1), ImPixel(color.r, color.g, color.b, alpha / 255.0));
+                }
+            }
+            auto scale_mat = ImGui::MatResize(char_mat, ImSize(char_width * scale * scale_internal, ImGui::GetFontSize() * scale));
+            ImGui::ImageMatCopyTo(scale_mat, mat, ImPoint(start_x, start_y));
+            start_x += char_width * scale * scale_internal;
+        }
+    }
+}
+
+ImGui::ImMat ImGui::CreateTextMat(const char* str, const ImPixel& color, float scale)
+{
+    ImGui::ImMat dst;
+    if (!str || strlen(str) == 0)
+        return dst;
+
+    int lines = 1;
+    float line_width = 0;
+    float max_line_width = -1;
+    const char* str_ptr = str;
+    const char* str_end = str_ptr + strlen(str);
+    while (str_ptr < str_end)
+    {
+        unsigned int c = *str_ptr;
+        if (c < 0x80)
+            str_ptr += 1;
+        else
+            str_ptr += ImTextCharFromUtf8(&c, str_ptr, str_end);
+        if (c < 32)
+        {
+            if (c == '\n')
+            {
+                if (max_line_width < line_width) max_line_width = line_width;
+                line_width = 0;
+                lines++;
+                continue;
+            }
+            if (c == '\r')
+                continue;
+        }
+        float scale_internal = c < 0x80 ? 0.5 : 1.0;
+        auto char_size = GetTextSize(c);
+        line_width += char_size.x * scale_internal;
+        if (max_line_width < line_width) max_line_width = line_width;
+    }
+
+    float text_height = ImGui::GetFontSize() * lines * scale;
+    float text_width = max_line_width * scale;
+    dst.create_type(ceil(text_width), ceil(text_height), 4, IM_DT_INT8);
+    dst.elempack = 4;
+    ImGui::DrawTextToMat(dst, ImPoint(0, 0), str, color, scale);
+    return dst;
+}
+
+void ImGui::ImageMatCopyTo(const ImGui::ImMat& src, ImGui::ImMat& dst, ImPoint pos)
+{
+    if (src.empty() || dst.empty())
+        return;
+    ImPixel pixel;
+    for (int x = 0; x < src.w; x++)
+    {
+        for (int y = 0; y < src.h; y++)
+        {
+            src.get_pixel(x, y, pixel);
+            if (pixel.a > 0)
+                dst.draw_dot((int)(pos.x + x), (int)(pos.y + y), pixel);
+        }
+    }
 }

@@ -369,10 +369,13 @@ void Example::DrawLineDemo()
     float h = abs(sin(t * 0.2));
     float s = abs(sin(t * 0.1)) * 0.5 + 0.4;
     float h2 = abs(sin(t * 0.4));
+    float h3 = abs(sin(t * 0.8));
     ImVec4 base_color = ImVec4(0.f, 0.f, 0.f, 1.f);
     ImVec4 light_color = ImVec4(0.f, 0.f, 0.f, 1.f);
+    ImVec4 t_color = ImVec4(0.f, 0.f, 0.f, 1.f);
     ImGui::ColorConvertHSVtoRGB(h, s, 0.5f, base_color.x, base_color.y, base_color.z);
     ImGui::ColorConvertHSVtoRGB(h2, s, 0.5f, light_color.x, light_color.y, light_color.z);
+    ImGui::ColorConvertHSVtoRGB(h3, s, 0.5f, t_color.x, t_color.y, t_color.z);
     static float arc = 0.0;
     draw_mat.clean(ImPixel(0.f, 0.f, 0.f, 1.f));
     arc += 2 * M_PI / 64 / 32;
@@ -380,6 +383,7 @@ void Example::DrawLineDemo()
     float cx = draw_mat.w * 0.5f, cy = draw_mat.h * 0.5f;
     ImPixel line_color(base_color.x, base_color.y, base_color.z, 1.f);
     ImPixel circle_color(light_color.x, light_color.y, light_color.z, 1.f);
+    ImPixel text_color(t_color.x, t_color.y, t_color.z, 1.f);
 
     // draw line test
     for (int j = 0; j < 5; j++) 
@@ -404,6 +408,11 @@ void Example::DrawLineDemo()
 
     // draw circle test
     draw_mat.draw_circle(draw_mat.w / 2, draw_mat.h / 2, draw_mat.w / 2 - 1, ImPixel(1.0, 1.0, 1.0, 1.0));
+
+    std::string text_str = "字体测试\nFont Test\n字体Test\nFont测试";
+    //auto str_mat = ImGui::CreateTextMat(text_str.c_str(), text_color, 1.0);
+    //ImGui::ImageMatCopyTo(str_mat, draw_mat, ImVec2(draw_mat.w / 2 - str_mat.w / 2, draw_mat.h / 2 - str_mat.h / 2));
+    ImGui::DrawTextToMat(draw_mat, ImPoint(50, 50), text_str.c_str(), text_color, 1.0);
 
     ImGui::ImMatToTexture(draw_mat, DrawMatTexture);
     ImGui::Image(DrawMatTexture, ImVec2(draw_mat.w, draw_mat.h));

@@ -578,8 +578,8 @@ public:
     // mat default ordination is ncwh
     // if need using nwhc then we need set elempack as elemsize * c
     void clean(ImPixel color);
-    void get_pixel(int x, int y, ImPixel& color);
-    void get_pixel(ImPoint p, ImPixel& color);
+    void get_pixel(int x, int y, ImPixel& color) const;
+    void get_pixel(ImPoint p, ImPixel& color) const;
     void draw_dot(int x, int y, ImPixel color);
     void draw_dot(ImPoint p, ImPixel color);
     void alphablend(int x, int y, float alpha, ImPixel color);
@@ -4753,7 +4753,7 @@ inline void ImMat::clean(ImPixel color)
     }
 }
 
-inline void ImMat::get_pixel(int x, int y, ImPixel& color)
+inline void ImMat::get_pixel(int x, int y, ImPixel& color) const
 {
     assert(dims == 3);
     assert(x >= 0 && x < w);
@@ -4803,7 +4803,7 @@ inline void ImMat::get_pixel(int x, int y, ImPixel& color)
     }
 }
 
-inline void ImMat::get_pixel(ImPoint p, ImPixel& color)
+inline void ImMat::get_pixel(ImPoint p, ImPixel& color) const
 {
     get_pixel((int)p.x, (int)p.y, color);
 }

@@ -65,7 +65,8 @@ IMGUI_API void TextV(int fntIndex,const char* fmt, va_list args);
 IMGUI_API void Text(int fntIndex,const char* fmt, ...) IM_FMTARGS(2);
 IMGUI_API void TextComplex(const char * str, float scale, ImVec4 text_color, float outline_w, ImVec4 outline_color, ImVec2 shadow_offset, ImVec4 shadow_color);
 // Handy if we want to use ImGui::Image(...) or ImGui::ImageButton(...) with a glyph
-IMGUI_API bool GetTexCoordsFromGlyph(unsigned short glyph,ImVec2& uv0,ImVec2& uv1);
+IMGUI_API bool GetTexCoordsFromGlyph(unsigned short glyph, ImVec2& uv0, ImVec2& uv1);
+
 // Returns the height of the main menu based on the current font and style
 // Warning: according to https://github.com/ocornut/imgui/issues/252 this approach can fail [Better call ImGui::GetWindowSize().y from inside the menu and store the result somewhere]
 IMGUI_API float CalcMainMenuHeight();
@@ -429,10 +430,17 @@ namespace ImGui
 {
 IMGUI_API ImMat getPerspectiveTransform(const ImVec2 src[], const ImVec2 dst[]);
 IMGUI_API ImMat getAffineTransform(const ImVec2 src[], const ImVec2 dst[]);
-IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);
-IMGUI_API ImMat GrayToImage(const ImMat& mat);
 } // namespace ImGui
 
+// Draw helper for ImMat
+namespace ImGui
+{
+IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);
+IMGUI_API ImMat GrayToImage(const ImMat& mat);
+IMGUI_API ImMat CreateTextMat(const char* str, const ImPixel& color, float scale);
+IMGUI_API void  DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, const ImPixel& color, float scale);
+IMGUI_API void  ImageMatCopyTo(const ImMat& src, ImMat& dst, ImPoint pos);
+} // namespace ImGui
 // These classed are supposed to be used internally
 namespace ImGuiHelper {
 typedef ImGui::FieldType FieldType;
