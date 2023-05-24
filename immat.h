@@ -1121,7 +1121,7 @@ inline void ImMat::create(int _w, int _h, int _c, size_t _elemsize, Allocator* _
     elempack = 1;
     allocator = _allocator;
 
-    dims = 3;
+    dims = _c == 1 ? 2 : 3;
     dw = w = _w;
     dh = h = _h;
     c = _c;
@@ -1217,7 +1217,7 @@ inline void ImMat::create(int _w, int _h, int _c, size_t _elemsize, int _elempac
     elempack = _elempack;
     allocator = _allocator;
 
-    dims = 3;
+    dims = _c == 1 ? 2 : 3;
     dw = w = _w;
     dh = h = _h;
     c = _c;
@@ -1833,7 +1833,7 @@ inline ImMat ImMat::reshape(int _w, int _h, int _c, Allocator* _allocator) const
 
     ImMat m = *this;
 
-    m.dims = 3;
+    m.dims = _c == 1 ? 2 : 3;
     m.dw = m.w = _w;
     m.dh = m.h = _h;
     m.c = _c;

@@ -5137,7 +5137,7 @@ ImGui::ImMat ImGui::MatResize(const ImGui::ImMat& mat, const ImSize size, float 
         return dst;
     }
 
-    dst.create(w, h, mat.c, 1u, 4);
+    dst.create(w, h, mat.c, 1u, mat.c);
 
     if (mat.c == 1)
         resize_bilinear_c1((const unsigned char*)mat.data, srcw, srch, (unsigned char*)dst.data, w, h);

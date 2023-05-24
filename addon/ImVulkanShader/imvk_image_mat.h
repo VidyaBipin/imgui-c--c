@@ -278,7 +278,7 @@ inline void VkImageMat::create(int _w, int _h, int _c, size_t _elemsize, VkAlloc
     elempack = 1;
     allocator = _allocator;
 
-    dims = 3;
+    dims = _c == 1 ? 2 : 3;
     w = _w;
     h = _h;
     c = _c;
@@ -368,7 +368,7 @@ inline void VkImageMat::create(int _w, int _h, int _c, size_t _elemsize, int _el
     elempack = _elempack;
     allocator = _allocator;
 
-    dims = 3;
+    dims = _c == 1 ? 2 : 3;
     w = _w;
     h = _h;
     c = _c;

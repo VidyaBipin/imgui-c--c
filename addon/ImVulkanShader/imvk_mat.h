@@ -292,7 +292,7 @@ inline void VkMat::create(int _w, int _h, int _c, size_t _elemsize, VkAllocator*
     elempack = 1;
     allocator = _allocator;
 
-    dims = 3;
+    dims = _c == 1 ? 2 : 3;
     dw = w = _w;
     dh = h = _h;
     c = _c;
@@ -394,7 +394,7 @@ inline void VkMat::create(int _w, int _h, int _c, size_t _elemsize, int _elempac
     elempack = _elempack;
     allocator = _allocator;
 
-    dims = 3;
+    dims = _c == 1 ? 2 : 3;
     dw = w = _w;
     dh = h = _h;
     c = _c;
@@ -496,7 +496,7 @@ inline void VkMat::create_type(int _w, int _h, int _c, ImDataType _t, VkAllocato
     elempack = 1;
     allocator = _allocator;
 
-    dims = 3;
+    dims = _c == 1 ? 2 : 3;
     dw = w = _w;
     dh = h = _h;
     c = _c;
