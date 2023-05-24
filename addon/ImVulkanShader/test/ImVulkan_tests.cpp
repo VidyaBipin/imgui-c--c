@@ -193,12 +193,12 @@ static void test_filters(int gpu, int times)
     // TODO::Dicky add more filter test
 }
 
-static void test_fusions(int gpu, int times)
+static void test_transitions(int gpu, int times)
 {
     if (mat1.empty() || mat2.empty())
         return;
 
-    std::cout << "Fusions:" << std::endl;
+    std::cout << "Transitions:" << std::endl;
     ImPixel color = ImPixel(0.0f, 0.0f, 0.0f, 0.6f);
     // test AlphaBlending
     ImGui::AlphaBlending_vulkan *alphablending = new ImGui::AlphaBlending_vulkan(gpu);
@@ -268,7 +268,7 @@ static void test_fusions(int gpu, int times)
         delete bowtie;
     }
 
-    // TODO::Dicky add more fusion test
+    // TODO::Dicky add more transition test
 }
 
 static void test_scopes(int gpu, int times)
@@ -696,7 +696,7 @@ int main(int argc, char ** argv)
         mat3.create_type(TEST_WIDTH, TEST_HEIGHT, 4, IM_DT_INT8);
     
     if (test_flags & 0x00000001) test_filters(test_gpu, test_loop);
-    if (test_flags & 0x00000002) test_fusions(test_gpu, test_loop);
+    if (test_flags & 0x00000002) test_transitions(test_gpu, test_loop);
     if (test_flags & 0x00000004) test_scopes(test_gpu, test_loop);
     if (test_flags & 0x00000008) test_others(test_gpu, test_loop);
 
