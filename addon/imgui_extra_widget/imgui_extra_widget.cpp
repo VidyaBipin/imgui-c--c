@@ -1343,6 +1343,18 @@ bool ImGui::CheckButton(const char* label, bool* pvalue, ImVec4 CheckButtonColor
     return rv;
 }
 
+// TODO::Jimmy add in
+// RotateCheckButton
+bool ImGui::RotateCheckButton(const char* label, bool* pvalue, ImVec4 CheckButtonColor, int rotate, ImVec2 CheckButtonSize, float checkedStateAlphaMult) {
+    bool rv = false;
+    const bool tmp = pvalue ? *pvalue : false;
+    if (tmp) ImGui::PushStyleColor(ImGuiCol_Button, CheckButtonColor);
+    if (ImGui::RotateButton(label, CheckButtonSize, rotate)) {if (pvalue) *pvalue=!(*pvalue);rv=true;}
+    if (tmp) ImGui::PopStyleColor();
+    return rv;
+}
+// TODO::Jimmy add out
+
 // ColoredButtonV1: code posted by @ocornut here: https://github.com/ocornut/imgui/issues/4722
 // [Button rounding depends on the FrameRounding Style property (but can be overridden with the last argument)]
 bool ImGui::ColoredButton(const char* label, const ImVec2& size_arg, ImU32 text_color, ImU32 bg_color_1, ImU32 bg_color_2,float frame_rounding_override)

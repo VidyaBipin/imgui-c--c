@@ -73,6 +73,9 @@ IMGUI_API bool InputInt64(const char* label, int64_t* v, int step = 1, int step_
 // CheckButton
 IMGUI_API bool CheckButton(const char* label, bool* pvalue, ImVec4 CheckButtonColor, bool useSmallButton = false, float checkedStateAlphaMult = 0.5f);
 
+// RotateCheckButton
+IMGUI_API bool RotateCheckButton(const char* label, bool* pvalue, ImVec4 CheckButtonColor, int rotate = 0, ImVec2 CheckButtonSize = ImVec2(0, 0), float checkedStateAlphaMult = 0.5f);
+
 // ColoredButtonV1: code posted by @ocornut here: https://github.com/ocornut/imgui/issues/4722
 // [Button rounding depends on the FrameRounding Style property (but can be overridden with the last argument)]
 IMGUI_API bool ColoredButton(const char* label, const ImVec2& size, ImU32 text_color, ImU32 bg_color_1, ImU32 bg_color_2, float frame_rounding_override=-1.f);
