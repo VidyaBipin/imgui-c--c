@@ -12,7 +12,7 @@
 
 
 //------------------------------------------------------------------------------
-static ax::NodeEditor::Detail::EditorContext* s_Editor = nullptr;
+static thread_local ax::NodeEditor::Detail::EditorContext* s_Editor = nullptr;
 
 
 //------------------------------------------------------------------------------
