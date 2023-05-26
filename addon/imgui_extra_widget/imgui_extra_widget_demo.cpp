@@ -513,6 +513,7 @@ void ShowExtraWidgetDemoWindow()
                     case 146: ImGui::SpinnerFillingMem("SpinnerFillingMem", 16, 6, ImColor::HSV(hue * 0.001f, 0.8f, 0.8f), spinner_filling_meb_bg, 4 * velocity); ImGui::ShowTooltipOnHover("SpinnerFillingMem"); break;
                     case 147: ImGui::SpinnerHerbertBalls("SpinnerHerbertBalls", 16, 2.3f, Color{ImColor(255, 255, 255)}, 2.f * velocity, 4); ImGui::ShowTooltipOnHover("SpinnerHerbertBalls"); break;
                     case 148: ImGui::SpinnerHerbertBalls3D("SpinnerHerbertBalls3D", 16, 3.f, Color{ImColor(255, 255, 255)}, 1.4f * velocity); ImGui::ShowTooltipOnHover("SpinnerHerbertBalls3D"); break;
+                    case 149: ImGui::SpinnerSquareLoading("SpinnerSquareLoanding", 16, 2, Color{ImColor(255, 255, 255)}, 3 * velocity);ImGui::ShowTooltipOnHover("SpinnerSquareLoanding");  break;
 
                     // ...
                     default: break;
