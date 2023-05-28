@@ -139,6 +139,7 @@ void warpAffine_cubic() \n\
     int sx = int(X0 >> INTER_BITS) - 1, sy = int(Y0 >> INTER_BITS) - 1; \n\
     int ay = int(Y0 & (INTER_TAB_SIZE - 1)), ax = int(X0 & (INTER_TAB_SIZE - 1)); \n\
     sfpvec4 v[16]; \n\
+    #if 0 \n\
     v[ 0] = (sx + 0 >= p.crop_l && sx + 0 < p.w - p.crop_r && sy + 0 >= p.crop_t && sy + 0 < p.h - p.crop_b) ? load_rgba(sx + 0, sy + 0, p.w, p.h, p.cstep, p.in_format, p.in_type) : filled; \n\
     v[ 1] = (sx + 1 >= p.crop_l && sx + 1 < p.w - p.crop_r && sy + 0 >= p.crop_t && sy + 0 < p.h - p.crop_b) ? load_rgba(sx + 1, sy + 0, p.w, p.h, p.cstep, p.in_format, p.in_type) : filled; \n\
     v[ 2] = (sx + 2 >= p.crop_l && sx + 2 < p.w - p.crop_r && sy + 0 >= p.crop_t && sy + 0 < p.h - p.crop_b) ? load_rgba(sx + 2, sy + 0, p.w, p.h, p.cstep, p.in_format, p.in_type) : filled; \n\
@@ -155,7 +156,44 @@ void warpAffine_cubic() \n\
     v[13] = (sx + 1 >= p.crop_l && sx + 1 < p.w - p.crop_r && sy + 3 >= p.crop_t && sy + 3 < p.h - p.crop_b) ? load_rgba(sx + 1, sy + 3, p.w, p.h, p.cstep, p.in_format, p.in_type) : filled; \n\
     v[14] = (sx + 2 >= p.crop_l && sx + 2 < p.w - p.crop_r && sy + 3 >= p.crop_t && sy + 3 < p.h - p.crop_b) ? load_rgba(sx + 2, sy + 3, p.w, p.h, p.cstep, p.in_format, p.in_type) : filled; \n\
     v[15] = (sx + 3 >= p.crop_l && sx + 3 < p.w - p.crop_r && sy + 3 >= p.crop_t && sy + 3 < p.h - p.crop_b) ? load_rgba(sx + 3, sy + 3, p.w, p.h, p.cstep, p.in_format, p.in_type) : filled; \n\
-    \n\
+    #else \n\
+    #pragma unroll \n\
+    for (int y = 0; y < 4; y++) \n\
+    { \n\
+        if (sy + y > p.crop_t && sy + y < p.h - p.crop_b - 1) \n\
+        { \n\
+            #pragma unroll \n\
+            for (int x = 0; x < 4; x++) \n\
+            { \n\
+                if (sx + x > p.crop_l && sx + x < p.w - p.crop_r - 1) \n\
+                    v[y * 4 + x] = load_rgba(sx + x, sy + y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+                else if (sx + x == p.crop_l || sx + x == p.w - p.crop_r - 1) \n\
+                    v[y * 4 + x] = mix(load_rgba(sx + x, sy + y, p.w, p.h, p.cstep, p.in_format, p.in_type), filled, sfp((float(y) * 4.0 + float(x)) / float(16))); \n\
+                else \n\
+                    v[y * 4 + x] = filled; \n\
+            } \n\
+        } \n\
+        else if (sy + y == p.crop_t || sy + y == p.h - p.crop_b - 1) \n\
+        { \n\
+            #pragma unroll \n\
+            for (int x = 0; x < 4; x++) \n\
+            { \n\
+                if (sx + x > p.crop_l && sx + x < p.w - p.crop_r - 1) \n\
+                    v[y * 4 + x] = mix(load_rgba(sx + x, sy + y, p.w, p.h, p.cstep, p.in_format, p.in_type), filled, sfp((float(y) * 4.0 + float(x)) / float(16))); \n\
+                else \n\
+                    v[y * 4 + x] = filled; \n\
+            } \n\
+        } \n\
+        else \n\
+        { \n\
+            #pragma unroll \n\
+            for (int x = 0; x < 4; x++) \n\
+            { \n\
+                v[y * 4 + x] = filled; \n\
+            } \n\
+        } \n\
+    } \n\
+    #endif \n\
     sfp tab1y[4], tab1x[4]; \n\
     sfp ayy = sfp(INTER_SCALE * ay); \n\
     sfp axx = sfp(INTER_SCALE * ax); \n\
