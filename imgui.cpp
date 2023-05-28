@@ -904,7 +904,6 @@ CODE
 #include "imgui.h"
 #ifndef IMGUI_DISABLE
 #include "imgui_internal.h"
-#include "imgui_helper.h" // for get_current_time by Dicky
 #include "dir_iterate.h"  // for DIR iterate
 
 // System includes
@@ -4300,16 +4299,6 @@ const char* ImGui::GetVersion()
 {
     return IMGUI_VERSION;
 }
-
-// add by Dicky to get Version number
-void ImGui::GetVersion(int& major, int& minor, int& patch, int& build)
-{
-    major = IMGUI_VERSION_MAJOR;
-    minor = IMGUI_VERSION_MINOR;
-    patch = IMGUI_VERSION_PATCH;
-    build = IMGUI_VERSION_BUILD;
-}
-// add by Dicky end
 
 ImGuiIO& ImGui::GetIO()
 {
@@ -13848,7 +13837,7 @@ void ImGui::LoadIniLanguagesFromDisk(const char* path)
     ImGuiContext& g = *GImGui;
     std::vector<std::string> languages, language_names;
     std::vector<std::string> filter = {"ini"};
-    if (DIR_Iterate(std::string(path), languages, language_names, filter, false) == 0)
+    if (DIR_Iterate(std::string(path), languages, language_names, filter, "", false) == 0)
     {
         for (auto language_path : languages)
         {
@@ -19817,6 +19806,115 @@ void ImGui::ResumeLayout()
     IM_ASSERT(!window->DC.CurrentLayout);
     IM_ASSERT(!window->DC.LayoutStack.empty());
     PopLayout(NULL);
+}
+
+// new get version API
+void ImGui::GetVersion(int& major, int& minor, int& patch, int& build)
+{
+#if defined(IMGUI_VERSION_MAJOR) && defined(IMGUI_VERSION_MINOR) && defined(IMGUI_VERSION_PATCH) && defined(IMGUI_VERSION_BUILD)
+    major = IMGUI_VERSION_MAJOR;
+    minor = IMGUI_VERSION_MINOR;
+    patch = IMGUI_VERSION_PATCH;
+    build = IMGUI_VERSION_BUILD;
+#endif
+}
+//-----------------------------------------------------------------------------
+// BanchMark utils
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else // _WIN32
+#include <sys/time.h>
+#endif // _WIN32
+#include <thread>
+
+double ImGui::get_current_time()
+{
+#ifdef _WIN32
+    LARGE_INTEGER freq;
+    LARGE_INTEGER pc;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&pc);
+    return (double)pc.QuadPart / ((double)freq.QuadPart + 1e-10);
+#else  // _WIN32
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec + tv.tv_usec / 1000000.0;
+#endif // _WIN32
+}
+
+uint32_t ImGui::get_current_time_msec()
+{
+#ifdef _WIN32
+    LARGE_INTEGER freq;
+    LARGE_INTEGER pc;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&pc);
+    return pc.QuadPart * 1000.0 / freq.QuadPart;
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return ((uint32_t)tv.tv_sec * 1000 + (uint32_t)tv.tv_usec / 1000);
+#endif
+}
+
+uint64_t ImGui::get_current_time_usec()
+{
+#ifdef _WIN32
+    LARGE_INTEGER freq;
+    LARGE_INTEGER pc;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&pc);
+    return pc.QuadPart * 1000000.0 / freq.QuadPart;
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return ((uint64_t)tv.tv_sec * 1000000 + (uint64_t)tv.tv_usec);
+#endif
+}
+
+void ImGui::sleep(float seconds)
+{
+    IM_ASSERT(seconds >= 0 && !isinf(seconds));
+    const int waiting_time_ms = seconds * 1000;
+    if (waiting_time_ms == 0)
+        std::this_thread::yield();
+    else
+        std::this_thread::sleep_for(std::chrono::milliseconds(waiting_time_ms));
+}
+
+void ImGui::sleep(int ms_seconds)
+{
+    IM_ASSERT(ms_seconds >= 0);
+    if (ms_seconds == 0)
+        std::this_thread::yield();
+    else
+        std::this_thread::sleep_for(std::chrono::milliseconds(ms_seconds));
+}
+
+// Power Save utils
+double ImGui::GetEventWaitingTime()
+{
+    ImGuiContext& g = *GImGui;
+    if (g.IO.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
+    {
+        double current_time = get_current_time();
+        double deltaTime = g.WallClock > 0 ? current_time - g.WallClock : g.MaxWaitBeforeNextFrame;
+        double delta = g.MaxWaitBeforeNextFrame - deltaTime;
+        return ImMax(0.0, delta);
+    }
+
+    if ((g.IO.ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode) && g.IO.FrameCountSinceLastInput > 2)
+        return ImMax(0.0, g.MaxWaitBeforeNextFrame);
+
+    return 0.0;
+}
+
+void ImGui::SetMaxWaitBeforeNextFrame(double time)
+{
+    ImGuiContext& g = *GImGui;
+
+    g.MaxWaitBeforeNextFrame = ImMin(g.MaxWaitBeforeNextFrame, time);
 }
 // Add By Dicky end
 

@@ -28,7 +28,7 @@
 #endif
 
 #ifdef _WIN32
-inline double get_current_time()
+inline double GetCurrentTime()
 {
     LARGE_INTEGER freq;
     LARGE_INTEGER pc;
@@ -37,7 +37,7 @@ inline double get_current_time()
     return (double)pc.QuadPart / ((double)freq.QuadPart + 1e-10);
 }
 #else  // _WIN32
-inline double get_current_time()
+inline double GetCurrentTime()
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);

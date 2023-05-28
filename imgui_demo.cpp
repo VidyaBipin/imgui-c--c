@@ -84,7 +84,7 @@ Index of this file:
 #endif
 
 #include "imgui.h"
-#include "imgui_helper.h"   // add by Dicky
+#include "imgui_helper.h"   // add by Dicky for ThemeGenerator
 #if IMGUI_VULKAN_SHADER
 #include "ImVulkanShader.h" // add by Dicky
 #endif
