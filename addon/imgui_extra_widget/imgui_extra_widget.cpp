@@ -4883,7 +4883,7 @@ void ImGui::ImRenderTextVerticalClipped(const ImVec2& pos_min, const ImVec2& pos
     }
 }
 
-void ImGui::ImAddTextRolling(const ImFont* font, float font_size, const ImVec2& pos, const ImVec2& size, ImU32 col, const int speed, const char* text_begin, const char* text_end)
+void ImGui::ImAddTextRolling(ImDrawList* drawList, const ImFont* font, float font_size, const ImVec2& pos, const ImVec2& size, ImU32 col, const int speed, const char* text_begin, const char* text_end)
 {
     static int start_offset = 0;
     static int count = 0;
@@ -4936,7 +4936,7 @@ void ImGui::ImAddTextRolling(const ImFont* font, float font_size, const ImVec2& 
         }
     }
 
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    if (!drawList) drawList = ImGui::GetWindowDrawList();
     IM_ASSERT(drawList && font->ContainerAtlas->TexID == drawList->_TextureIdStack.back());  // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
 
     ImVec4 clip_rect = drawList->_ClipRectStack.back();
@@ -4949,12 +4949,12 @@ void ImGui::ImAddTextRolling(const ImFont* font, float font_size, const ImVec2& 
 
 void ImGui::ImAddTextRolling(const char* text, const ImVec2& size, const ImVec2& pos, const int speed)
 {
-    ImGui::ImAddTextRolling(NULL, 0, pos, size, ImGui::GetColorU32(ImGuiCol_Text), speed, text);
+    ImGui::ImAddTextRolling(NULL, NULL, 0, pos, size, ImGui::GetColorU32(ImGuiCol_Text), speed, text);
 }
 
 void ImGui::ImAddTextRolling(const char* text, const ImVec2& size, const int speed)
 {
-    ImGui::ImAddTextRolling(NULL, 0, ImGui::GetCursorScreenPos(), size, ImGui::GetColorU32(ImGuiCol_Text), speed, text);
+    ImGui::ImAddTextRolling(NULL, NULL, 0, ImGui::GetCursorScreenPos(), size, ImGui::GetColorU32(ImGuiCol_Text), speed, text);
 }
 
 // add By Dicky

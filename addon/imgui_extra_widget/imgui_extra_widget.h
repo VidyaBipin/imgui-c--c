@@ -389,7 +389,7 @@ IMGUI_API void      ImRenderTextVerticalClipped(const ImVec2& pos_min, const ImV
 namespace ImGui
 {
 // Roll Text Helper
-IMGUI_API void      ImAddTextRolling(const ImFont* font, float font_size, const ImVec2& pos, const ImVec2& size, ImU32 col, const int speed, const char* text_begin, const char* text_end = NULL);
+IMGUI_API void      ImAddTextRolling(ImDrawList* drawList, const ImFont* font, float font_size, const ImVec2& pos, const ImVec2& size, ImU32 col, const int speed, const char* text_begin, const char* text_end = NULL);
 IMGUI_API void      ImAddTextRolling(const char* text, const ImVec2& size, const ImVec2& pos, const int speed = 10);
 IMGUI_API void      ImAddTextRolling(const char* text, const ImVec2& size, const int speed = 10);
 } //namespace ImGui
