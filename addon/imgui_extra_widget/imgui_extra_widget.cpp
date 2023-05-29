@@ -4913,17 +4913,6 @@ void ImGui::ImAddTextRolling(const ImFont* font, float font_size, const ImVec2& 
             _text_end = _text_begin + changed;
         }
     }
-
-    if (start_offset > strlen(_text_begin) - 1) start_offset = 0;
-    _text_begin += start_offset;
-    count ++;
-    if (count >= speed_internal)
-    {
-        unsigned int c = *_text_begin;
-        if (c < 0x80) { start_offset ++; speed_internal = speed > 0 ? speed : 10; }
-        else { start_offset += ImTextCharFromUtf8(&c, _text_begin, _text_end); speed_internal = speed > 0 ? speed * 2 : 20; }
-        count = 0;
-    }
     
     // Note: This is one of the few instance of breaking the encapsulation of ImDrawList, as we pull this from ImGui state, but it is just SO useful.
     // Might just move Font/FontSize to ImDrawList?
@@ -4933,6 +4922,20 @@ void ImGui::ImAddTextRolling(const ImFont* font, float font_size, const ImVec2& 
         font_size = GImGui->FontSize;
     
     auto str_size = ImGui::CalcTextSize(_text_begin, _text_end);
+    if (str_size.x > size.x)
+    {
+        if (start_offset > strlen(_text_begin) - 1) start_offset = 0;
+        _text_begin += start_offset;
+        count ++;
+        if (count >= speed_internal)
+        {
+            unsigned int c = *_text_begin;
+            if (c < 0x80) { start_offset ++; speed_internal = speed > 0 ? speed : 10; }
+            else { start_offset += ImTextCharFromUtf8(&c, _text_begin, _text_end); speed_internal = speed > 0 ? speed * 2 : 20; }
+            count = 0;
+        }
+    }
+
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     IM_ASSERT(drawList && font->ContainerAtlas->TexID == drawList->_TextureIdStack.back());  // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
 
@@ -4943,6 +4946,17 @@ void ImGui::ImAddTextRolling(const ImFont* font, float font_size, const ImVec2& 
     clip_rect.w = ImMin(clip_rect.w, bb.Max.y);
     font->RenderText(drawList, font_size, pos, col, clip_rect, _text_begin, _text_end, 0.0, true);
 }
+
+void ImGui::ImAddTextRolling(const char* text, const ImVec2& size, const ImVec2& pos, const int speed)
+{
+    ImGui::ImAddTextRolling(NULL, 0, pos, size, ImGui::GetColorU32(ImGuiCol_Text), speed, text);
+}
+
+void ImGui::ImAddTextRolling(const char* text, const ImVec2& size, const int speed)
+{
+    ImGui::ImAddTextRolling(NULL, 0, ImGui::GetCursorScreenPos(), size, ImGui::GetColorU32(ImGuiCol_Text), speed, text);
+}
+
 // add By Dicky
 // Posted by @alexsr here: https://github.com/ocornut/imgui/issues/1901
 // Sligthly modified to provide default behaviour with default args
