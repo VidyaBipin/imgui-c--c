@@ -388,6 +388,12 @@ IMGUI_API void      ImRenderTextVerticalClipped(const ImVec2& pos_min, const ImV
 
 namespace ImGui
 {
+// Roll Text Helper
+IMGUI_API void      ImAddTextRolling(const ImFont* font, float font_size, const ImVec2& pos, const ImVec2& size, ImU32 col, const int speed, const char* text_begin, const char* text_end = NULL);
+} //namespace ImGui
+
+namespace ImGui
+{
 // Posted by @alexsr here: https://github.com/ocornut/imgui/issues/1901
 // Sligthly modified to provide default behaviour with default args
 IMGUI_API void      LoadingIndicatorCircle(const char* label, float indicatorRadiusFactor=1.f,

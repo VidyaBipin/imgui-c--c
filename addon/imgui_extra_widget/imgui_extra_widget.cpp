@@ -4883,6 +4883,66 @@ void ImGui::ImRenderTextVerticalClipped(const ImVec2& pos_min, const ImVec2& pos
     }
 }
 
+void ImGui::ImAddTextRolling(const ImFont* font, float font_size, const ImVec2& pos, const ImVec2& size, ImU32 col, const int speed, const char* text_begin, const char* text_end)
+{
+    static int start_offset = 0;
+    static int count = 0;
+    static int speed_internal = speed > 0 ? speed : 10;
+    if ((col & IM_COL32_A_MASK) == 0)
+        return;
+
+    if (text_end == NULL)
+        text_end = text_begin + strlen(text_begin);
+    if (text_begin == text_end)
+        return;
+
+    ImRect bb(pos, pos + size);
+    ItemSize(size);
+    if (!ItemAdd(bb, 0))
+        return;
+
+    const char * _text_begin = text_begin;
+    const char * _text_end = text_end;
+    ImGuiContext& g = *GImGui;
+    if (g.Style.TextInternationalize)
+    {
+        auto changed = ImGui::InternationalizedText(_text_begin, _text_end);
+        if (changed > 0)
+        {
+            _text_begin = g.InternationalizedBuffer;
+            _text_end = _text_begin + changed;
+        }
+    }
+
+    if (start_offset > strlen(_text_begin) - 1) start_offset = 0;
+    _text_begin += start_offset;
+    count ++;
+    if (count >= speed_internal)
+    {
+        unsigned int c = *_text_begin;
+        if (c < 0x80) { start_offset ++; speed_internal = speed > 0 ? speed : 10; }
+        else { start_offset += ImTextCharFromUtf8(&c, _text_begin, _text_end); speed_internal = speed > 0 ? speed * 2 : 20; }
+        count = 0;
+    }
+    
+    // Note: This is one of the few instance of breaking the encapsulation of ImDrawList, as we pull this from ImGui state, but it is just SO useful.
+    // Might just move Font/FontSize to ImDrawList?
+    if (font == NULL)
+        font = GImGui->Font;
+    if (font_size == 0.0f)
+        font_size = GImGui->FontSize;
+    
+    auto str_size = ImGui::CalcTextSize(_text_begin, _text_end);
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    IM_ASSERT(drawList && font->ContainerAtlas->TexID == drawList->_TextureIdStack.back());  // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
+
+    ImVec4 clip_rect = drawList->_ClipRectStack.back();
+    clip_rect.x = ImMax(clip_rect.x, bb.Min.x);
+    clip_rect.y = ImMax(clip_rect.y, bb.Min.y);
+    clip_rect.z = ImMin(clip_rect.z, bb.Max.x);
+    clip_rect.w = ImMin(clip_rect.w, bb.Max.y);
+    font->RenderText(drawList, font_size, pos, col, clip_rect, _text_begin, _text_end, 0.0, true);
+}
 // add By Dicky
 // Posted by @alexsr here: https://github.com/ocornut/imgui/issues/1901
 // Sligthly modified to provide default behaviour with default args

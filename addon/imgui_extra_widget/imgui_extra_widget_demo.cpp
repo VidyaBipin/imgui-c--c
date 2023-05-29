@@ -149,6 +149,16 @@ void ShowExtraWidgetDemoWindow()
             // choice OK here
         }
 
+        // rolling text
+        ImGui::Spacing();
+        static int speed = 5;
+        static std::string long_string = "The quick brown fox jumps over the lazy dog, 那只敏捷的棕毛狐狸跃过那只懒狗";
+        ImGui::ImAddTextRolling(NULL, 16, ImGui::GetCursorScreenPos(), ImVec2(100, 16), IM_COL32_WHITE, speed, long_string.c_str());
+        ImGui::SameLine();
+        ImGui::PushItemWidth(100);
+        ImGui::SliderInt("Speed##rolling text", &speed, 1, 10);
+        ImGui::PopItemWidth();
+
         // SliderBar with Marks
         ImGui::Spacing();
         static float slider_vol = 0.0f;
