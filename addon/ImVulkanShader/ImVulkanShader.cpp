@@ -186,7 +186,7 @@ float ImVulkanPeak(VulkanDevice* vkdev, int loop, int count_mb, int cmd_loop, in
 
             // time this
             {
-                double t0 = GetCurrentTime();
+                double t0 = GetSysCurrentTime();
 
                 int ret = cmd.submit_and_wait();
                 if (ret != 0)
@@ -195,7 +195,7 @@ float ImVulkanPeak(VulkanDevice* vkdev, int loop, int count_mb, int cmd_loop, in
                     return -1;
                 }
 
-                double time = GetCurrentTime() - t0;
+                double time = GetSysCurrentTime() - t0;
                 const double mac = (double)count * (double)loop * 8 * elempack * 2;
                 double gflops = mac / time / 1000000000;
                 max_gflops += gflops;
