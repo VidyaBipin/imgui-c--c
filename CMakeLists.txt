@@ -86,6 +86,7 @@ _OPTION(IMGUI_WGPU                  "Build ImGui wgpu backends" OFF)
 _OPTION(IMGUI_GL2                   "Build ImGui OpenGL2 backends" ON)
 _OPTION(IMGUI_GL3                   "Build ImGui OpenGL3 backends" ON)
 _OPTION(IMGUI_SDL2                  "Build ImGui SDL2 backends" ON)
+_OPTION(IMGUI_SDL2_RENDERER         "Build ImGui SDL2 Renderer backends" OFF)
 _OPTION(IMGUI_GLFW                  "Build ImGui GLFW backends" ON)
 _OPTION(IMGUI_GLUT                  "Build ImGui GLUT backends" OFF)
 _OPTION(IMGUI_GLEW                  "Build ImGui GLEW backends" ON)
@@ -591,14 +592,22 @@ if (IMGUI_SDL2 AND SDL2_FOUND)
     set(IMGUI_PLATFORM_SDL2 ON)
     set(IMGUI_SRC
         ${IMGUI_SRC}
-        #backends/imgui_impl_sdlrenderer.cpp
         backends/imgui_impl_sdl2.cpp
     )
     set(IMGUI_INCS
         ${IMGUI_INCS}
-        #backends/imgui_impl_sdlrenderer.h
         backends/imgui_impl_sdl2.h
     )
+    if (IMGUI_SDL2_RENDERER)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        backends/imgui_impl_sdlrenderer2.cpp
+    )
+    set(IMGUI_INCS
+        ${IMGUI_INCS}
+        backends/imgui_impl_sdlrenderer2.h
+    )
+    endif(IMGUI_SDL2_RENDERER)
 endif(IMGUI_SDL2 AND SDL2_FOUND)
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     set(IMGUI_PLATFORM_WGPU ON)
@@ -1368,6 +1377,17 @@ if (IMGUI_BUILD_EXAMPLE AND SDL2_FOUND AND IMGUI_SDL2)
             ${LINK_LIBS}
         )
     endif(BACKEND_RENDERING MATCHES VULKAN)
+    if(IMGUI_SDL2_RENDERER)
+        add_executable(
+            example_sdl2_sdlrenderer2
+            test/example_sdl2_sdlrenderer2.cpp
+        )
+        target_link_libraries(
+            example_sdl2_sdlrenderer2
+            imgui
+            ${LINK_LIBS}
+        )
+    endif(IMGUI_SDL2_RENDERER)
 endif(IMGUI_BUILD_EXAMPLE AND SDL2_FOUND AND IMGUI_SDL2)
 
 if (IMGUI_BUILD_EXAMPLE AND GLFW_FOUND AND IMGUI_GLFW AND BACKEND_RENDERING MATCHES VULKAN)
