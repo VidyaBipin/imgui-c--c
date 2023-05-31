@@ -877,6 +877,7 @@ bool Example_Frame(void* handle, bool app_will_quit)
 
 bool Example_Splash_Screen(void* handle, bool app_will_quit)
 {
+    const int delay = 20;
     static int x = 0;
     auto& io = ImGui::GetIO();
     ImGuiCond cond = ImGuiCond_None;
@@ -896,12 +897,12 @@ bool Example_Splash_Screen(void* handle, bool app_will_quit)
     ImGui::SetWindowFontScale(1.0);
 
     ImGui::SetCursorPos(ImVec2(4, io.DisplaySize.y - 32));
-    float progress = (float)x / 100.f;
+    float progress = (float)x / (float)delay;
     ImGui::ProgressBar("##esplash_progress", progress, 0.f, 1.f, "", ImVec2(io.DisplaySize.x - 16, 8), 
                                 ImVec4(0.3f, 0.3f, 0.8f, 1.f), ImVec4(0.1f, 0.1f, 0.3f, 1.f), ImVec4(0.f, 0.f, 0.8f, 1.f));
     ImGui::End();
 
-    if (x < 100)
+    if (x < delay)
     {
         ImGui::sleep(1);
         x++;

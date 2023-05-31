@@ -570,6 +570,7 @@ IMGUI_API void SpinnerBounceBall(const char *label, float radius, float thicknes
 IMGUI_API void SpinnerArcRotation(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4);
 IMGUI_API void SpinnerArcFade(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4);
 IMGUI_API void SpinnerAsciiSymbolPoints(const char *label, const char* text, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f);
+IMGUI_API void SpinnerTextFading(const char *label, const char* text, float radius, float fsize, const ImColor &color = 0xffffffff, float speed = 2.8f);
 IMGUI_API void SpinnerSevenSegments(const char *label, const char* text, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f);
 IMGUI_API void SpinnerSquareStrokeFill(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f);
 IMGUI_API void SpinnerSquareStrokeLoading(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f);
