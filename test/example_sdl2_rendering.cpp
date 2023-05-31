@@ -182,7 +182,7 @@ int main(int, char**)
                     ImGui::OpenPopup("关于");
                 ImVec2 center(ImGui::GetIO().DisplaySize.x * 0.5f, ImGui::GetIO().DisplaySize.y * 0.5f);
                 ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-                if (ImGui::BeginPopupModal("关于", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+                if (ImGui::BeginPopupModal("关于", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
                 {
                     ImGui::Text("SDL 2.0 ImGUI OpenGL2\n\n");
                     ImGui::Separator();

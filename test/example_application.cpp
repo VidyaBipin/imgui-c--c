@@ -712,13 +712,13 @@ bool Example_Frame(void* handle, bool app_will_quit)
         ImGui::Begin("Markdown window",&example->show_markdown_window, ImGuiWindowFlags_NoScrollbar);
         std::string help_doc =                   example->get_file_contents("README.md");
         example->mdConfig.linkCallback =         example->LinkCallback;
-        example->mdConfig.tooltipCallback =      NULL;
+        example->mdConfig.tooltipCallback =      nullptr;
         example->mdConfig.imageCallback =        example->ImageCallback;
         example->mdConfig.linkIcon =             ICON_FA_LINK;
         example->mdConfig.headingFormats[0] =    { io.Fonts->Fonts[0], true };
         example->mdConfig.headingFormats[1] =    { io.Fonts->Fonts.size() > 1 ? io.Fonts->Fonts[1] : nullptr, true };
         example->mdConfig.headingFormats[2] =    { io.Fonts->Fonts.size() > 2 ? io.Fonts->Fonts[2] : nullptr, false };
-        example->mdConfig.userData =             NULL;
+        example->mdConfig.userData =             nullptr;
         example->mdConfig.formatCallback =       example->ExampleMarkdownFormatCallback;
         ImGui::Markdown( help_doc.c_str(), help_doc.length(), example->mdConfig );
         ImGui::End();

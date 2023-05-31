@@ -330,13 +330,13 @@ int main(int, char**)
         {
             std::string help_doc = get_file_contents("README.md");
             mdConfig.linkCallback =         LinkCallback;
-            mdConfig.tooltipCallback =      NULL;
+            mdConfig.tooltipCallback =      nullptr;
             mdConfig.imageCallback =        ImageCallback;
             mdConfig.linkIcon =             ICON_FA_LINK;
             mdConfig.headingFormats[0] =    { io.Fonts->Fonts[0], true };
             mdConfig.headingFormats[1] =    { io.Fonts->Fonts.size() > 1 ? io.Fonts->Fonts[1] : nullptr, true };
             mdConfig.headingFormats[2] =    { io.Fonts->Fonts.size() > 2 ? io.Fonts->Fonts[2] : nullptr, false };
-            mdConfig.userData =             NULL;
+            mdConfig.userData =             nullptr;
             mdConfig.formatCallback =       ExampleMarkdownFormatCallback;
             ImGui::Markdown( help_doc.c_str(), help_doc.length(), mdConfig );
         }
