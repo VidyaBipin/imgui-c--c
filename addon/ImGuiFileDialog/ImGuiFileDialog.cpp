@@ -59,9 +59,8 @@ SOFTWARE.
 #define stricmp _stricmp
 #include <cctype>
 // this option need c++17
-#ifdef USE_STD_FILESYSTEM
 #include <windows.h>
-#else
+#ifndef USE_STD_FILESYSTEM
 #include <dirent_portable.h>  // directly open the dirent file attached to this lib Modify By Dicky
 #endif                        // USE_STD_FILESYSTEM
 #define PATH_SEP '\\'
