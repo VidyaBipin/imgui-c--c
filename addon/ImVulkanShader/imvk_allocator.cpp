@@ -1,6 +1,7 @@
 #include "imvk_allocator.h"
 #include "imvk_gpu.h"
 #include "imvk_pipeline.h"
+#include <mutex>
 
 namespace ImGui 
 {
@@ -239,6 +240,7 @@ public:
     std::vector<VkBufferMemory*> buffer_blocks;
     std::vector<std::list<std::pair<size_t, size_t> > > image_memory_budgets;
     std::vector<VkDeviceMemory> image_memory_blocks;
+    std::mutex mtlk;
 };
 
 VkBlobAllocator::VkBlobAllocator(const VulkanDevice* _vkdev, size_t preferred_block_size)
@@ -279,6 +281,7 @@ VkBlobAllocator& VkBlobAllocator::operator=(const VkBlobAllocator&)
 
 void VkBlobAllocator::clear()
 {
+    std::lock_guard<std::mutex> lk(d->mtlk);
     for (size_t i = 0; i < d->buffer_blocks.size(); i++)
     {
         VkBufferMemory* ptr = d->buffer_blocks[i];
@@ -307,6 +310,7 @@ void VkBlobAllocator::clear()
 
 VkBufferMemory* VkBlobAllocator::fastMalloc(size_t size)
 {
+    std::lock_guard<std::mutex> lk(d->mtlk);
     size_t aligned_size = Im_AlignSize(size, d->buffer_offset_alignment);
 
     const int buffer_block_count = d->buffer_blocks.size();
@@ -420,6 +424,7 @@ VkBufferMemory* VkBlobAllocator::fastMalloc(size_t size)
 
 void VkBlobAllocator::fastFree(VkBufferMemory* ptr)
 {
+    std::lock_guard<std::mutex> lk(d->mtlk);
     const int buffer_block_count = d->buffer_blocks.size();
 
     int block_index = -1;
@@ -489,6 +494,7 @@ void VkBlobAllocator::fastFree(VkBufferMemory* ptr)
 
 VkImageMemory* VkBlobAllocator::fastMalloc(int w, int h, int c, size_t elemsize, int elempack)
 {
+    std::lock_guard<std::mutex> lk(d->mtlk);
     if (elempack != 1 && elempack != 4 && elempack != 8)
     {
         fprintf(stderr, "elempack must be 1 4 8");
@@ -671,6 +677,7 @@ VkImageMemory* VkBlobAllocator::fastMalloc(int w, int h, int c, size_t elemsize,
 
 void VkBlobAllocator::fastFree(VkImageMemory* ptr)
 {
+    std::lock_guard<std::mutex> lk(d->mtlk);
     const int image_memory_block_count = d->image_memory_blocks.size();
 
     int block_index = -1;
