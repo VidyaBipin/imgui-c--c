@@ -848,11 +848,25 @@ IGFD_API void IGFD::FilterManager::ParseFilters(const char* vFilters) {
                         if (word.size() > 1U && word[0] == '.') {
                             if (prParsedFilters.empty()) { prParsedFilters.emplace_back(); }
                             prParsedFilters.back().collectionfilters.emplace(word);
+                            // add by Dicky to fixed single filter issue on case insensitive
+                            prParsedFilters.back().collectionfilters_optimized.emplace(Utils::LowerCaseString(word));
+                            // add by Dicky end
                         }
                         word.clear();
                         filter_name.clear();
                         collection_started = false;
                     }
+                    // add by Dicky to fixed single filter issue on case insensitive
+                    else
+                    {
+                        if (word.size() > 1U && word[0] == '.') 
+                        {
+                            prParsedFilters.emplace_back();
+                            prParsedFilters.back().filter           = word;
+                            prParsedFilters.back().filter_optimized = Utils::LowerCaseString(word);
+                        }
+                    }
+                    // add by Dicky End
                 }
                 last_split_char = c;
             } else if (c == '(') {
