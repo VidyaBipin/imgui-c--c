@@ -8377,6 +8377,27 @@ void ImGui::SpinnerBarChartSine(const char *label, float radius, float thickness
     }
 }
 
+void ImGui::SpinnerBarChartAdvSine(const char *label, float radius, float thickness, const ImColor &color, float speed, int mode)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const ImGuiStyle &style = GImGui->Style;
+    const float nextItemKoeff = 1.5f;
+    const float yOffsetKoeftt = 0.8f;
+    const float heightSpeed = 0.8f;
+    const float start = (float)ImGui::GetTime() * speed;
+    const int bars = radius * 2 / thickness;
+    const float offset = IM_PI / bars;
+    for (int i = 0; i < bars; i++)
+    {
+        float a = start + (IM_PI - i * offset);
+        float halfsx = thickness * ImSin(a);
+        float halfsy = (ImMax(0.1f, ImSin(a) + 1.f)) * radius * 0.5f;
+        window->DrawList->AddRectFilled(ImVec2(pos.x + i * (thickness * nextItemKoeff) - thickness / 2 + halfsx, centre.y + halfsy),
+                                        ImVec2(pos.x + i * (thickness * nextItemKoeff) + thickness / 2 + halfsx, centre.y - halfsy),
+                                        color);
+    }
+}
+
 void ImGui::SpinnerBarChartRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
