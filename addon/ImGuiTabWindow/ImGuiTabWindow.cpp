@@ -2367,11 +2367,8 @@ TabWindow::TabLabel *TabWindow::FindTabLabelFromUserText(const char *userText, c
     return NULL;
 }
 
-
-
-
 // Based on the code by krys-spectralpixel (https://github.com/krys-spectralpixel), posted here: https://github.com/ocornut/imgui/issues/261
-bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, const char** tabLabelTooltips, bool wrapMode, bool breathing_select, int *pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int *pOptionalClosedTabIndex, int *pOptionalClosedTabIndexInsideItemOrdering) {
+bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& tableSize, const char** tabLabelTooltips, bool wrapMode, bool breathing_select, int *pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int *pOptionalClosedTabIndex, int *pOptionalClosedTabIndexInsideItemOrdering) {
     ImGuiStyle& style = ImGui::GetStyle();
     const TabLabelStyle& tabStyle = TabLabelStyle::GetMergedWithWindowAlpha();
 
@@ -2546,7 +2543,7 @@ bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, const ch
 
     // Restore the style
     style.ItemSpacing =                     itemSpacing;
-
+    tableSize = groupSize;
     return selection_changed;
 }
 

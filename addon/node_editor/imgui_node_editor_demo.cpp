@@ -74,7 +74,8 @@ void ImGui::ShowNodeEditorWindow()
     auto& io = ImGui::GetIO();
     static const int numTabs = sizeof(DemoTabNames)/sizeof(DemoTabNames[0]);
     static int tab_index = 0;
-    ImGui::TabLabels(numTabs, DemoTabNames, tab_index, nullptr , false, false, nullptr, nullptr, false, false, nullptr, nullptr);
+    static ImVec2 table_size;
+    ImGui::TabLabels(numTabs, DemoTabNames, tab_index, table_size, nullptr , false, false, nullptr, nullptr, false, false, nullptr, nullptr);
     switch (tab_index)
     {
         case 0:
