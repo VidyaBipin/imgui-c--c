@@ -1004,20 +1004,27 @@ void Text(int fntIndex, const char *fmt,...)    {
     va_end(args);
 }
 
-void TextComplex(const char * str, float scale, ImVec4 text_color, float outline_w, ImVec4 outline_color, ImVec2 shadow_offset, ImVec4 shadow_color) {
-    ImGui::SetWindowFontScale(scale);
-    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphOutlineWidth, outline_w);
-    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, shadow_offset);
-    //ImGui::PushStyleColor(ImGuiCol_Text, text_color);
-    //ImGui::PushStyleColor(ImGuiCol_TexGlyphOutline, outline_color);
-    //ImGui::PushStyleColor(ImGuiCol_TexGlyphShadow, shadow_color);
-    //ImGui::TextUnformatted(str);
-    //ImGui::PopStyleColor(3);
-    //ImGui::PopStyleVar(2);
-    ImGui::PushStyleColor(ImGuiCol_Text, text_color);
-    ImGui::TextUnformatted(str);
-    ImGui::PopStyleColor();
+void AddTextComplex(ImDrawList *draw_list, const ImVec2 pos, const char * str, float font_size, ImU32 text_color, float outline_w, ImU32 outline_color, ImVec2 shadow_offset, ImU32 shadow_color)
+{
+    ImGui::SetWindowFontScale(font_size);
+    if (shadow_offset.x != 0 || shadow_offset.y != 0)
+    {
+        draw_list->AddText(pos + shadow_offset, shadow_color, str);
+    }
+    if (outline_w > 0)
+    {
+        draw_list->AddText(ImVec2(pos.x - outline_w, pos.y), outline_color, str);
+        draw_list->AddText(ImVec2(pos.x, pos.y - outline_w), outline_color, str);
+        draw_list->AddText(ImVec2(pos.x + outline_w, pos.y), outline_color, str);
+        draw_list->AddText(ImVec2(pos.x, pos.y + outline_w), outline_color, str);
+    }
+    draw_list->AddText(pos, text_color, str);
     ImGui::SetWindowFontScale(1.0);
+}
+
+void AddTextComplex(const char * str, float font_size, ImU32 text_color, float outline_w, ImU32 outline_color, ImVec2 shadow_offset, ImU32 shadow_color)
+{
+    AddTextComplex(ImGui::GetWindowDrawList(), ImGui::GetCursorScreenPos(), str, font_size, text_color, outline_w, outline_color, shadow_offset, shadow_color);
 }
 
 bool GetTexCoordsFromGlyph(unsigned short glyph, ImVec2 &uv0, ImVec2 &uv1)
@@ -2257,8 +2264,6 @@ void ThemeGenerator(const char* name, bool* p_open, ImGuiWindowFlags flags)
     //style.Colors[ImGuiCol_NavWindowingHighlight] =
     //style.Colors[ImGuiCol_NavWindowingDimBg]     = 
     //style.Colors[ImGuiCol_ModalWindowDimBg]      = 
-    //style.Colors[ImGuiCol_TexGlyphShadow]        = 
-    //style.Colors[ImGuiCol_TexGlyphOutline]       = 
 
     if (ImGui::Button("Export")) 
     {

@@ -814,12 +814,7 @@ void ImGui::RoundProgressBar(float radius, float *p_value, float v_min, float v_
     auto draw_size = ImGui::CalcTextSize(label);
     float font_scale = radius / draw_size.x;
     draw_size *= font_scale;
-    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphOutlineWidth, 1.f);
-    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(3.0f, 3.0f));
-    //ImGui::PushStyleColor(ImGuiCol_TexGlyphShadow, bar_color.base);
-    draw_list->AddText(ImGui::GetFont(), ImGui::GetFontSize() * font_scale, center - draw_size * ImVec2(0.5, 0.6), ImGui::GetColorU32(text_color.base), label, text_end);
-    //ImGui::PopStyleVar(2);
-    //ImGui::PopStyleColor();
+    ImGui::AddTextComplex(draw_list, center - draw_size * ImVec2(0.5, 0.6), label, font_scale, IM_COL32(255, 255, 255, 255), 1.f, IM_COL32(255, 255, 255, 255), ImVec2(3, 3), ImGui::GetColorU32(bar_color.base));
 }
 
 // Splitter
@@ -3405,9 +3400,8 @@ static void HueSelectorEx(char const* label, ImVec2 const size, float* hueCenter
     oss << std::fixed << std::setprecision(2) << *hueCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
-    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
-    //ImGui::PopStyleVar();
+    ImGui::AddTextComplex(pDrawList, ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2),
+                        value_str.c_str(), 1.0f, text_color, 0.f, 0, ImVec2(1, 1), IM_COL32(128, 128, 128, 255));
     ImGui::EndGroup();
 	ImGui::PopID();
 }
@@ -3467,9 +3461,8 @@ void ImGui::LumianceSelector(char const* label, ImVec2 const size, float* lumCen
     oss << std::fixed << std::setprecision(2) << *lumCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
-    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
-	//ImGui::PopStyleVar();
+    ImGui::AddTextComplex(pDrawList, ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2),
+                        value_str.c_str(), 1.0f, text_color, 0.f, 0, ImVec2(1, 1), IM_COL32(128, 128, 128, 255));
     ImGui::EndGroup();
     ImGui::PopID();
 }
@@ -3517,9 +3510,8 @@ void ImGui::GammaSelector(char const* label, ImVec2 const size, float* gammaCent
     oss << std::fixed << std::setprecision(2) << *gammaCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
-    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
-	//ImGui::PopStyleVar();
+    ImGui::AddTextComplex(pDrawList, ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2),
+                        value_str.c_str(), 1.0f, text_color, 0.f, 0, ImVec2(1, 1), IM_COL32(128, 128, 128, 255));
     ImGui::EndGroup();
     ImGui::PopID();
 }
@@ -3565,9 +3557,8 @@ void ImGui::TemperatureSelector(char const* label, ImVec2 const size, float* tem
     oss << std::fixed << std::setprecision(2) << *tempCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
-    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
-	//ImGui::PopStyleVar();
+    ImGui::AddTextComplex(pDrawList, ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2),
+                        value_str.c_str(), 1.0f, text_color, 0.f, 0, ImVec2(1, 1), IM_COL32(128, 128, 128, 255));
     ImGui::EndGroup();
     ImGui::PopID();
 }
@@ -3622,9 +3613,8 @@ void ImGui::SaturationSelector(char const* label, ImVec2 const size, float* satC
     oss << std::fixed << std::setprecision(2) << *satCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
-    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
-    //ImGui::PopStyleVar();
+    ImGui::AddTextComplex(pDrawList, ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2),
+                        value_str.c_str(), 1.0f, text_color, 0.f, 0, ImVec2(1, 1), IM_COL32(128, 128, 128, 255));
     ImGui::EndGroup();
     ImGui::PopID();
 }
@@ -3677,9 +3667,8 @@ void ImGui::ContrastSelector(char const* label, ImVec2 const size, float* conCen
     oss << std::fixed << std::setprecision(2) << *conCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
-    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), rgb_color ? text_color : IM_COL32(0,0,0,255), value_str.c_str());
-    //ImGui::PopStyleVar();
+    ImGui::AddTextComplex(pDrawList, ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2),
+                        value_str.c_str(), 1.0f, text_color, 0.f, 0, ImVec2(1, 1), IM_COL32(128, 128, 128, 255));
     ImGui::EndGroup();
     ImGui::PopID();
 }
