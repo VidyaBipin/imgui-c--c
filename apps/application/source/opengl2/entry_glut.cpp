@@ -147,6 +147,7 @@ int main(int argc, char** argv)
 #endif
     ImGui_ImplOpenGL2_Shutdown();
     ImGui_ImplGLUT_Shutdown();
+    ImGui::ImDestroyTextures();
     ImGui::DestroyContext();
 
     return 0;

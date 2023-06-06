@@ -349,49 +349,49 @@ IMGUI_API void ShowImSTFTDemoWindow();
 namespace ImGui
 {
 // Extensions to ImDrawList
-IMGUI_API void ImDrawListAddConvexPolyFilledWithVerticalGradient(ImDrawList* dl, const ImVec2* points, const int points_count, ImU32 colTop, ImU32 colBot, float miny=-1.f, float maxy=-1.f);
-IMGUI_API void ImDrawListPathFillWithVerticalGradientAndStroke(ImDrawList* dl, const ImU32& fillColorTop, const ImU32& fillColorBottom, const ImU32& strokeColor, bool strokeClosed=false, float strokeThickness = 1.0f, float miny=-1.f, float maxy=-1.f);
-IMGUI_API void ImDrawListPathFillAndStroke(ImDrawList* dl,const ImU32& fillColor,const ImU32& strokeColor,bool strokeClosed=false, float strokeThickness = 1.0f);
-IMGUI_API void ImDrawListAddRect(ImDrawList* dl,const ImVec2& a, const ImVec2& b,const ImU32& fillColor,const ImU32& strokeColor,float rounding = 0.0f, int rounding_corners = 0,float strokeThickness = 1.0f);
-IMGUI_API void ImDrawListAddRectWithVerticalGradient(ImDrawList* dl,const ImVec2& a, const ImVec2& b,const ImU32& fillColorTop,const ImU32& fillColorBottom,const ImU32& strokeColor,float rounding = 0.0f, int rounding_corners = 0,float strokeThickness = 1.0f);
-IMGUI_API void ImDrawListAddRectWithVerticalGradient(ImDrawList* dl,const ImVec2& a, const ImVec2& b,const ImU32& fillColor,float fillColorGradientDeltaIn0_05,const ImU32& strokeColor,float rounding = 0.0f, int rounding_corners = 0,float strokeThickness = 1.0f);
-IMGUI_API void ImDrawListPathArcTo(ImDrawList* dl,const ImVec2& centre,const ImVec2& radii, float amin, float amax, int num_segments = 10);
-IMGUI_API void ImDrawListAddEllipse(ImDrawList* dl,const ImVec2& centre, const ImVec2& radii,const ImU32& fillColor,const ImU32& strokeColor,int num_segments = 12,float strokeThickness = 1.f);
-IMGUI_API void ImDrawListAddEllipseWithVerticalGradient(ImDrawList* dl, const ImVec2& centre, const ImVec2& radii, const ImU32& fillColorTop, const ImU32& fillColorBottom, const ImU32& strokeColor, int num_segments = 12, float strokeThickness = 1.f);
-IMGUI_API void ImDrawListAddCircle(ImDrawList* dl,const ImVec2& centre, float radius,const ImU32& fillColor,const ImU32& strokeColor,int num_segments = 12,float strokeThickness = 1.f);
-IMGUI_API void ImDrawListAddCircleWithVerticalGradient(ImDrawList* dl, const ImVec2& centre, float radius, const ImU32& fillColorTop, const ImU32& fillColorBottom, const ImU32& strokeColor, int num_segments = 12, float strokeThickness = 1.f);
+IMGUI_API void AddConvexPolyFilledWithVerticalGradient(ImDrawList* dl, const ImVec2* points, const int points_count, ImU32 colTop, ImU32 colBot, float miny=-1.f, float maxy=-1.f);
+IMGUI_API void PathFillWithVerticalGradientAndStroke(ImDrawList* dl, const ImU32& fillColorTop, const ImU32& fillColorBottom, const ImU32& strokeColor, bool strokeClosed=false, float strokeThickness = 1.0f, float miny=-1.f, float maxy=-1.f);
+IMGUI_API void PathFillAndStroke(ImDrawList* dl,const ImU32& fillColor,const ImU32& strokeColor,bool strokeClosed=false, float strokeThickness = 1.0f);
+IMGUI_API void AddRect(ImDrawList* dl,const ImVec2& a, const ImVec2& b,const ImU32& fillColor,const ImU32& strokeColor,float rounding = 0.0f, int rounding_corners = 0,float strokeThickness = 1.0f);
+IMGUI_API void AddRectWithVerticalGradient(ImDrawList* dl,const ImVec2& a, const ImVec2& b,const ImU32& fillColorTop,const ImU32& fillColorBottom,const ImU32& strokeColor,float rounding = 0.0f, int rounding_corners = 0,float strokeThickness = 1.0f);
+IMGUI_API void AddRectWithVerticalGradient(ImDrawList* dl,const ImVec2& a, const ImVec2& b,const ImU32& fillColor,float fillColorGradientDeltaIn0_05,const ImU32& strokeColor,float rounding = 0.0f, int rounding_corners = 0,float strokeThickness = 1.0f);
+IMGUI_API void PathArcTo(ImDrawList* dl,const ImVec2& centre,const ImVec2& radii, float amin, float amax, int num_segments = 10);
+IMGUI_API void AddEllipse(ImDrawList* dl,const ImVec2& centre, const ImVec2& radii,const ImU32& fillColor,const ImU32& strokeColor,int num_segments = 12,float strokeThickness = 1.f);
+IMGUI_API void AddEllipseWithVerticalGradient(ImDrawList* dl, const ImVec2& centre, const ImVec2& radii, const ImU32& fillColorTop, const ImU32& fillColorBottom, const ImU32& strokeColor, int num_segments = 12, float strokeThickness = 1.f);
+IMGUI_API void AddCircle(ImDrawList* dl,const ImVec2& centre, float radius,const ImU32& fillColor,const ImU32& strokeColor,int num_segments = 12,float strokeThickness = 1.f);
+IMGUI_API void AddCircleWithVerticalGradient(ImDrawList* dl, const ImVec2& centre, float radius, const ImU32& fillColorTop, const ImU32& fillColorBottom, const ImU32& strokeColor, int num_segments = 12, float strokeThickness = 1.f);
 // Overload of ImDrawList::addPolyLine(...) that takes offset and scale:
-IMGUI_API void ImDrawListAddPolyLine(ImDrawList *dl,const ImVec2* polyPoints,int numPolyPoints,ImU32 strokeColor=IM_COL32_WHITE,float strokeThickness=1.f,bool strokeClosed=false, const ImVec2 &offset=ImVec2(0,0), const ImVec2& scale=ImVec2(1,1));
-IMGUI_API void ImDrawListAddConvexPolyFilledWithHorizontalGradient(ImDrawList *dl, const ImVec2 *points, const int points_count, ImU32 colLeft, ImU32 colRight, float minx=-1.f, float maxx=-1.f);
-IMGUI_API void ImDrawListPathFillWithHorizontalGradientAndStroke(ImDrawList *dl, const ImU32 &fillColorLeft, const ImU32 &fillColorRight, const ImU32 &strokeColor, bool strokeClosed=false, float strokeThickness = 1.0f, float minx=-1.f,float maxx=-1.f);
-IMGUI_API void ImDrawListAddRectWithHorizontalGradient(ImDrawList *dl, const ImVec2 &a, const ImVec2 &b, const ImU32 &fillColorLeft, const ImU32 &fillColoRight, const ImU32 &strokeColor, float rounding = 0.0f, int rounding_corners = 0, float strokeThickness = 1.0f);
-IMGUI_API void ImDrawListAddEllipseWithHorizontalGradient(ImDrawList *dl, const ImVec2 &centre, const ImVec2 &radii, const ImU32 &fillColorLeft, const ImU32 &fillColorRight, const ImU32 &strokeColor, int num_segments = 12, float strokeThickness = 1.0f);
-IMGUI_API void ImDrawListAddCircleWithHorizontalGradient(ImDrawList *dl, const ImVec2 &centre, float radius, const ImU32 &fillColorLeft, const ImU32 &fillColorRight, const ImU32 &strokeColor, int num_segments = 12, float strokeThickness = 1.0f);
-IMGUI_API void ImDrawListAddRectWithHorizontalGradient(ImDrawList *dl, const ImVec2 &a, const ImVec2 &b, const ImU32 &fillColor, float fillColorGradientDeltaIn0_05, const ImU32 &strokeColor, float rounding = 0.0f, int rounding_corners = 0, float strokeThickness = 1.0f);
+IMGUI_API void AddPolyLine(ImDrawList *dl,const ImVec2* polyPoints,int numPolyPoints,ImU32 strokeColor=IM_COL32_WHITE,float strokeThickness=1.f,bool strokeClosed=false, const ImVec2 &offset=ImVec2(0,0), const ImVec2& scale=ImVec2(1,1));
+IMGUI_API void AddConvexPolyFilledWithHorizontalGradient(ImDrawList *dl, const ImVec2 *points, const int points_count, ImU32 colLeft, ImU32 colRight, float minx=-1.f, float maxx=-1.f);
+IMGUI_API void PathFillWithHorizontalGradientAndStroke(ImDrawList *dl, const ImU32 &fillColorLeft, const ImU32 &fillColorRight, const ImU32 &strokeColor, bool strokeClosed=false, float strokeThickness = 1.0f, float minx=-1.f,float maxx=-1.f);
+IMGUI_API void AddRectWithHorizontalGradient(ImDrawList *dl, const ImVec2 &a, const ImVec2 &b, const ImU32 &fillColorLeft, const ImU32 &fillColoRight, const ImU32 &strokeColor, float rounding = 0.0f, int rounding_corners = 0, float strokeThickness = 1.0f);
+IMGUI_API void AddEllipseWithHorizontalGradient(ImDrawList *dl, const ImVec2 &centre, const ImVec2 &radii, const ImU32 &fillColorLeft, const ImU32 &fillColorRight, const ImU32 &strokeColor, int num_segments = 12, float strokeThickness = 1.0f);
+IMGUI_API void AddCircleWithHorizontalGradient(ImDrawList *dl, const ImVec2 &centre, float radius, const ImU32 &fillColorLeft, const ImU32 &fillColorRight, const ImU32 &strokeColor, int num_segments = 12, float strokeThickness = 1.0f);
+IMGUI_API void AddRectWithHorizontalGradient(ImDrawList *dl, const ImVec2 &a, const ImVec2 &b, const ImU32 &fillColor, float fillColorGradientDeltaIn0_05, const ImU32 &strokeColor, float rounding = 0.0f, int rounding_corners = 0, float strokeThickness = 1.0f);
 // Add Dashed line or circle
-IMGUI_API void ImDrawListAddLineDashed(ImDrawList *dl, const ImVec2& a, const ImVec2& b, ImU32 col, float thickness = 1.0f, unsigned int segments = 10, unsigned int on_segments = 1, unsigned int off_segments = 1);
-IMGUI_API void ImDrawListAddCircleDashed(ImDrawList *dl, const ImVec2& centre, float radius, ImU32 col, int num_segments = 12, float thickness = 1.0f, int on_segments = 1, int off_segments = 1);
-IMGUI_API void ImDrawListPathArcToDashedAndStroke(ImDrawList *dl, const ImVec2& centre, float radius, float a_min, float a_max, ImU32 col, float thickness = 1.0f, int num_segments = 10, int on_segments = 1, int off_segments = 1);
+IMGUI_API void AddLineDashed(ImDrawList *dl, const ImVec2& a, const ImVec2& b, ImU32 col, float thickness = 1.0f, unsigned int segments = 10, unsigned int on_segments = 1, unsigned int off_segments = 1);
+IMGUI_API void AddCircleDashed(ImDrawList *dl, const ImVec2& centre, float radius, ImU32 col, int num_segments = 12, float thickness = 1.0f, int on_segments = 1, int off_segments = 1);
+IMGUI_API void PathArcToDashedAndStroke(ImDrawList *dl, const ImVec2& centre, float radius, float a_min, float a_max, ImU32 col, float thickness = 1.0f, int num_segments = 10, int on_segments = 1, int off_segments = 1);
 // Add Rotate Image
-IMGUI_API void ImDrawListAddImageRotate(ImDrawList *dl, ImTextureID tex_id, ImVec2 pos, ImVec2 size, float angle, ImU32 board_col = IM_COL32(0, 0, 0, 255));
+IMGUI_API void AddImageRotate(ImDrawList *dl, ImTextureID tex_id, ImVec2 pos, ImVec2 size, float angle, ImU32 board_col = IM_COL32(0, 0, 0, 255));
 } // namespace ImGui
 
 namespace ImGui
 {
 // Vertical Text Helper
-IMGUI_API ImVec2    ImCalcVerticalTextSize(const char* text, const char* text_end = NULL, bool hide_text_after_double_hash = false, float wrap_width = -1.0f);
-IMGUI_API void      ImRenderTextVertical(const ImFont* font,ImDrawList* draw_list, float size, ImVec2 pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin,  const char* text_end = NULL, float wrap_width = 0.0f, bool cpu_fine_clip = false, bool rotateCCW = false, bool char_no_rotate = false);
-IMGUI_API void      ImAddTextVertical(ImDrawList* drawList,const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0.0f, const ImVec4* cpu_fine_clip_rect = NULL, bool rotateCCW = false, bool char_no_rotate = false);
-IMGUI_API void      ImAddTextVertical(ImDrawList* drawList,const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL,bool rotateCCW = false, bool char_no_rotate = false);
-IMGUI_API void      ImRenderTextVerticalClipped(const ImVec2& pos_min, const ImVec2& pos_max, const char* text, const char* text_end, const ImVec2* text_size_if_known, const ImVec2& align = ImVec2(0.0f,0.0f), const ImVec2* clip_min = NULL, const ImVec2* clip_max = NULL, bool rotateCCW = false, bool char_no_rotate = false);
+IMGUI_API ImVec2    CalcVerticalTextSize(const char* text, const char* text_end = NULL, bool hide_text_after_double_hash = false, float wrap_width = -1.0f);
+IMGUI_API void      RenderTextVertical(const ImFont* font,ImDrawList* draw_list, float size, ImVec2 pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin,  const char* text_end = NULL, float wrap_width = 0.0f, bool cpu_fine_clip = false, bool rotateCCW = false, bool char_no_rotate = false);
+IMGUI_API void      AddTextVertical(ImDrawList* drawList,const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0.0f, const ImVec4* cpu_fine_clip_rect = NULL, bool rotateCCW = false, bool char_no_rotate = false);
+IMGUI_API void      AddTextVertical(ImDrawList* drawList,const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL,bool rotateCCW = false, bool char_no_rotate = false);
+IMGUI_API void      RenderTextVerticalClipped(const ImVec2& pos_min, const ImVec2& pos_max, const char* text, const char* text_end, const ImVec2* text_size_if_known, const ImVec2& align = ImVec2(0.0f,0.0f), const ImVec2* clip_min = NULL, const ImVec2* clip_max = NULL, bool rotateCCW = false, bool char_no_rotate = false);
 } //namespace ImGui
 
 namespace ImGui
 {
 // Roll Text Helper
-IMGUI_API void      ImAddTextRolling(ImDrawList* drawList, const ImFont* font, float font_size, const ImVec2& pos, const ImVec2& size, ImU32 col, const int speed, const char* text_begin, const char* text_end = NULL);
-IMGUI_API void      ImAddTextRolling(const char* text, const ImVec2& size, const ImVec2& pos, const int speed = 10);
-IMGUI_API void      ImAddTextRolling(const char* text, const ImVec2& size, const int speed = 10);
+IMGUI_API void      AddTextRolling(ImDrawList* drawList, const ImFont* font, float font_size, const ImVec2& pos, const ImVec2& size, ImU32 col, const int speed, const char* text_begin, const char* text_end = NULL);
+IMGUI_API void      AddTextRolling(const char* text, const ImVec2& size, const ImVec2& pos, const int speed = 10);
+IMGUI_API void      AddTextRolling(const char* text, const ImVec2& size, const int speed = 10);
 } //namespace ImGui
 
 namespace ImGui

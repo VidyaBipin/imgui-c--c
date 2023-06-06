@@ -167,6 +167,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     check_vk_result(err);
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+    ImGui::ImDestroyTextures();
     CleanupVulkanWindow();
     CleanupVulkan();
     glfwDestroyWindow(window);
@@ -413,6 +414,7 @@ int main(int argc, char** argv)
     check_vk_result(err);
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+    ImGui::ImDestroyTextures();
     ImGui::DestroyContext();
 
     CleanupVulkanWindow();

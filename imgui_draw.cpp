@@ -286,8 +286,6 @@ void ImGui::StyleColorsDark(ImGuiStyle* dst)
     colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
     colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
     colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
-    colors[ImGuiCol_TexGlyphShadow]         = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);  // add by Dicky
-    colors[ImGuiCol_TexGlyphOutline]        = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);  // add by Dicky
 }
 
 void ImGui::StyleColorsClassic(ImGuiStyle* dst)
@@ -3790,9 +3788,7 @@ void ImFont::RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 }
 
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
-// Modify By Dicky
-void ImFont::RenderTextEx(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
-// Modify By Dicky end
+void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
 {
     if (!text_end)
         text_end = text_begin + strlen(text_begin); // ImGui:: functions generally already provides a valid text_end, so this is merely to handle direct calls.
@@ -3975,31 +3971,6 @@ void ImFont::RenderTextEx(ImDrawList* draw_list, float size, const ImVec2& pos, 
     draw_list->_IdxWritePtr = idx_write;
     draw_list->_VtxCurrentIdx = vtx_index;
 }
-
-void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
-{
-    ImGuiContext& g = *GImGui;
-    ImVec2 offset = g.Style.TexGlyphShadowOffset;
-    float outline_width = g.Style.TexGlyphOutlineWidth;
-    if (offset.x != 0 || offset.y != 0)
-    {
-        // TODO::Dicky how to show shadow only
-        ImU32 shadow_color = ImGui::GetColorU32(ImGuiCol_TexGlyphShadow);
-        RenderTextEx(draw_list, size, pos + offset, shadow_color, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
-    }
-
-    if (outline_width > 0)
-    {
-        // TODO::Dicky how to show outline only
-        ImU32 outline_color = ImGui::GetColorU32(ImGuiCol_TexGlyphOutline);
-        RenderTextEx(draw_list, size, ImVec2(pos.x - outline_width, pos.y), outline_color, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
-        RenderTextEx(draw_list, size, ImVec2(pos.x, pos.y - outline_width), outline_color, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
-        RenderTextEx(draw_list, size, ImVec2(pos.x + outline_width, pos.y), outline_color, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
-        RenderTextEx(draw_list, size, ImVec2(pos.x, pos.y + outline_width), outline_color, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
-    }
-    RenderTextEx(draw_list, size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
-}
-// Modify By Dicky end
 
 //-----------------------------------------------------------------------------
 // [SECTION] ImGui Internal Render Helpers

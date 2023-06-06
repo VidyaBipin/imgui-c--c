@@ -138,17 +138,31 @@
 
 //---- Define constructor and implicit cast operators to convert back<>forth between your math types and ImVec2/ImVec4.
 // This will be inlined as part of ImVec2 and ImVec4 class declarations.
-/*
-#define IM_VEC2_CLASS_EXTRA                                                     \
-        constexpr ImVec2(const MyVec2& f) : x(f.x), y(f.y) {}                   \
-        operator MyVec2() const { return MyVec2(x,y); }
+#define IM_VEC2_CLASS_EXTRA \
+    bool operator==(const ImVec2& d) const          { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8; } \
+    bool operator==(const ImVec2& d)                { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8; } \
+    bool operator!=(const ImVec2& d) const          { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; } \
+    bool operator!=(const ImVec2& d)                { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; }
 
-#define IM_VEC4_CLASS_EXTRA                                                     \
-        constexpr ImVec4(const MyVec4& f) : x(f.x), y(f.y), z(f.z), w(f.w) {}   \
-        operator MyVec4() const { return MyVec4(x,y,z,w); }
-*/
-//---- ...Or use Dear ImGui's own very basic math operators.
+#define IM_VEC4_CLASS_EXTRA \
+    bool operator==(const ImVec4& d) const          { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8 && fabs(w - d.w) < 10e-8; } \
+    bool operator==(const ImVec4& d)                { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8 && fabs(w - d.w) < 10e-8; } \
+    bool operator!=(const ImVec4& d) const          { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8 || fabs(w - d.w) > 10e-8; } \
+    bool operator!=(const ImVec4& d)                { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8 || fabs(w - d.w) > 10e-8; }
+
 #define IMGUI_DEFINE_MATH_OPERATORS
+
+#define IMGUI_DEFINE_MATH_EXTRA \
+    static inline ImVec4 operator-(ImVec4 v)                                { return { -v.x, -v.y, -v.z, -v.w }; } \
+    static inline ImVec4 operator*(const ImVec4& lhs, const float rhs)      { return ImVec4(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs, lhs.w * rhs); } \
+    static inline ImVec4 operator/(const ImVec4& lhs, const float rhs)      { return ImVec4(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs, lhs.w / rhs); } \
+    static inline ImVec4 operator/(const ImVec4& lhs, const ImVec4& rhs)    { return ImVec4(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z, lhs.w / rhs.w); } \
+    static inline ImVec4& operator*=(ImVec4& lhs, const float rhs)          { lhs.x *= rhs; lhs.y *= rhs; lhs.z *= rhs; lhs.w *= rhs; return lhs; } \
+    static inline ImVec4& operator/=(ImVec4& lhs, const float rhs)          { lhs.x /= rhs; lhs.y /= rhs; lhs.z /= rhs; lhs.w /= rhs; return lhs; } \
+    static inline ImVec4& operator+=(ImVec4& lhs, const float rhs)          { lhs.x += rhs; lhs.y += rhs; lhs.z += rhs; lhs.w += rhs; return lhs; } \
+    static inline ImVec4& operator-=(ImVec4& lhs, const float rhs)          { lhs.x -= rhs; lhs.y -= rhs; lhs.z -= rhs; lhs.w -= rhs; return lhs; } \
+    static inline ImVec4& operator+=(ImVec4& lhs, const ImVec4& rhs)        { lhs.x += rhs.x; lhs.y += rhs.y; lhs.z += rhs.z; lhs.w += rhs.w; return lhs; } \
+    static inline ImVec4& operator-=(ImVec4& lhs, const ImVec4& rhs)        { lhs.x -= rhs.x; lhs.y -= rhs.y; lhs.z -= rhs.z; lhs.w -= rhs.w; return lhs; } \
 
 //---- Use 32-bit vertex indices (default is 16-bit) is one way to allow large meshes with more than 64K vertices.
 // Your renderer backend will need to support it (most example renderer backends support both 16/32-bit indices).

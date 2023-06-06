@@ -153,7 +153,7 @@ void ShowExtraWidgetDemoWindow()
         ImGui::Spacing();
         static int speed = 5;
         static std::string long_string = "The quick brown fox jumps over the lazy dog, 那只敏捷的棕毛狐狸跃过那只懒狗";
-        ImGui::ImAddTextRolling(long_string.c_str(), ImVec2(100, 16), speed);
+        ImGui::AddTextRolling(long_string.c_str(), ImVec2(100, 16), speed);
         ImGui::SameLine();
         ImGui::PushItemWidth(100);
         ImGui::SliderInt("Speed##rolling text", &speed, 1, 10);

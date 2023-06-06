@@ -1207,8 +1207,6 @@ ImGuiStyle::ImGuiStyle()
     CircleTessellationMaxError = 0.30f;         // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
     // add by Dicky
     LayoutAlign             = 0.5f;             // Element alignment inside horizontal and vertical layouts (0.0f - left/top, 1.0f - right/bottom, 0.5f - center).
-    TexGlyphShadowOffset    = ImVec2(0, 0);     // Default no Shadow
-    TexGlyphOutlineWidth    = 0.0f;             // Default no outline
     TextInternationalize    = 0;                // Default isn't using multi-language for text
     // add by Dicky end
     // Default theme
@@ -3180,8 +3178,6 @@ static const ImGuiDataVarInfo GStyleVarInfo[] =
     { ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImGuiStyle, SeparatorTextPadding) },   // ImGuiStyleVar_SeparatorTextPadding
     // add by Dicky
     { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, LayoutAlign) },         // ImGuiStyleVar_LayoutAlign
-    { ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImGuiStyle, TexGlyphShadowOffset) },// ImGuiStyleVar_TexGlyphShadowOffset
-    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, TexGlyphOutlineWidth) },// ImGuiStyleVar_TexGlyphOutlineWidth
     { ImGuiDataType_S32,   1, (ImU32)IM_OFFSETOF(ImGuiStyle, TextInternationalize) },// ImGuiStyleVar_TextInternationalize
     // add by Dicky end
 };
@@ -3321,10 +3317,6 @@ const char* ImGui::GetStyleColorName(ImGuiCol idx)
     case ImGuiCol_NavWindowingHighlight: return "NavWindowingHighlight";
     case ImGuiCol_NavWindowingDimBg: return "NavWindowingDimBg";
     case ImGuiCol_ModalWindowDimBg: return "ModalWindowDimBg";
-    // Add By Dicky
-    case ImGuiCol_TexGlyphShadow: return "TexGlyphShadow";
-    case ImGuiCol_TexGlyphOutline: return "TexGlyphOutline";
-    // Add By Dicky end
     }
     IM_ASSERT(0);
     return "Unknown";

@@ -264,12 +264,6 @@ struct ImVec2
     constexpr ImVec2(float _x, float _y)    : x(_x), y(_y) { }
     float& operator[] (size_t idx)          { IM_ASSERT(idx == 0 || idx == 1); return ((float*)(void*)(char*)this)[idx]; } // We very rarely use this [] operator, so the assert overhead is fine.
     float  operator[] (size_t idx) const    { IM_ASSERT(idx == 0 || idx == 1); return ((const float*)(const void*)(const char*)this)[idx]; }
-    // Add by Dicky
-    bool operator==(const ImVec2& d) const          { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8; }
-    bool operator==(const ImVec2& d)                { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8; }
-    bool operator!=(const ImVec2& d) const          { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; }
-    bool operator!=(const ImVec2& d)                { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; }
-    // Add by Dicky end
 #ifdef IM_VEC2_CLASS_EXTRA
     IM_VEC2_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec2.
 #endif
@@ -281,12 +275,6 @@ struct ImVec4
     float                                                     x, y, z, w;
     constexpr ImVec4()                                        : x(0.0f), y(0.0f), z(0.0f), w(0.0f) { }
     constexpr ImVec4(float _x, float _y, float _z, float _w)  : x(_x), y(_y), z(_z), w(_w) { }
-    // Add By Dicky
-    bool operator==(const ImVec4& d) const          { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8 && fabs(w - d.w) < 10e-8; }
-    bool operator==(const ImVec4& d)                { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8 && fabs(w - d.w) < 10e-8; }
-    bool operator!=(const ImVec4& d) const          { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8 || fabs(w - d.w) > 10e-8; }
-    bool operator!=(const ImVec4& d)                { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8 || fabs(w - d.w) > 10e-8; }
-    // Add By Dicky end
 #ifdef IM_VEC4_CLASS_EXTRA
     IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec4.
 #endif
@@ -1703,10 +1691,6 @@ enum ImGuiCol_
     ImGuiCol_NavWindowingHighlight, // Highlight window when using CTRL+TAB
     ImGuiCol_NavWindowingDimBg,     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
     ImGuiCol_ModalWindowDimBg,      // Darken/colorize entire screen behind a modal window, when one is active
-//  add by Dicky
-    ImGuiCol_TexGlyphShadow,        // Shadow Color for font texture
-    ImGuiCol_TexGlyphOutline,       // Outline Color for font texture
-//  add by Dicky end
     ImGuiCol_COUNT
 };
 
@@ -1750,8 +1734,6 @@ enum ImGuiStyleVar_
     ImGuiStyleVar_SeparatorTextPadding,// ImVec2    SeparatorTextPadding
 	// add By Dicky
     ImGuiStyleVar_LayoutAlign,         // float     LayoutAlign
-    ImGuiStyleVar_TexGlyphShadowOffset,// ImVec2    TexGlyphShadowOffset
-    ImGuiStyleVar_TexGlyphOutlineWidth,// float     TexGlyphOutlineWidth
     ImGuiStyleVar_TextInternationalize,// int       TextInternationalize 
 	// add By Dicky end
     ImGuiStyleVar_COUNT
@@ -2034,10 +2016,8 @@ struct ImGuiStyle
     float       CurveTessellationTol;       // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
     float       CircleTessellationMaxError; // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
     ImVec4      Colors[ImGuiCol_COUNT];
-    // Add by Dicky for stack layout and text render
+    // Add by Dicky for stack layout and Internationlize
     float       LayoutAlign;                // Element alignment inside horizontal and vertical layouts (0.0f - left/top, 1.0f - right/bottom, 0.5f - center).
-    ImVec2      TexGlyphShadowOffset;       // If you would like to use shadows with your text use this. Defaults to (0, 0). Defines horizontal and vertical shadows. Can only be positive at the moment.
-    float       TexGlyphOutlineWidth;       // If you would like to use outline with your text use this.
     int         TextInternationalize;       // If you need multi-language supported, set this to 1
     // Add by Dicky end
 
@@ -2579,16 +2559,9 @@ static inline ImVec4  operator+(const ImVec4& lhs, const ImVec4& rhs)   { return
 static inline ImVec4  operator-(const ImVec4& lhs, const ImVec4& rhs)   { return ImVec4(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z, lhs.w - rhs.w); }
 static inline ImVec4  operator*(const ImVec4& lhs, const ImVec4& rhs)   { return ImVec4(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z, lhs.w * rhs.w); }
 // Add By Dicky
-static inline ImVec4 operator-(ImVec4 v)                                        { return { -v.x, -v.y, -v.z, -v.w }; }
-static inline ImVec4 operator*(const ImVec4& lhs, const float rhs)              { return ImVec4(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs, lhs.w * rhs); }
-static inline ImVec4 operator/(const ImVec4& lhs, const float rhs)              { return ImVec4(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs, lhs.w / rhs); }
-static inline ImVec4 operator/(const ImVec4& lhs, const ImVec4& rhs)            { return ImVec4(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z, lhs.w / rhs.w); }
-static inline ImVec4& operator*=(ImVec4& lhs, const float rhs)                  { lhs.x *= rhs; lhs.y *= rhs; lhs.z *= rhs; lhs.w *= rhs; return lhs; }
-static inline ImVec4& operator/=(ImVec4& lhs, const float rhs)                  { lhs.x /= rhs; lhs.y /= rhs; lhs.z /= rhs; lhs.w /= rhs; return lhs; }
-static inline ImVec4& operator+=(ImVec4& lhs, const float rhs)                  { lhs.x += rhs; lhs.y += rhs; lhs.z += rhs; lhs.w += rhs; return lhs; }
-static inline ImVec4& operator-=(ImVec4& lhs, const float rhs)                  { lhs.x -= rhs; lhs.y -= rhs; lhs.z -= rhs; lhs.w -= rhs; return lhs; }
-static inline ImVec4& operator+=(ImVec4& lhs, const ImVec4& rhs)                { lhs.x += rhs.x; lhs.y += rhs.y; lhs.z += rhs.z; lhs.w += rhs.w; return lhs; }
-static inline ImVec4& operator-=(ImVec4& lhs, const ImVec4& rhs)                { lhs.x -= rhs.x; lhs.y -= rhs.y; lhs.z -= rhs.z; lhs.w -= rhs.w; return lhs; }
+#ifdef IMGUI_DEFINE_MATH_EXTRA
+IMGUI_DEFINE_MATH_EXTRA
+#endif // IMGUI_DEFINE_MATH_EXTRA
 // Add By Dicky end 
 IM_MSVC_RUNTIME_CHECKS_RESTORE
 #endif
@@ -3170,9 +3143,6 @@ struct ImFont
     IMGUI_API ImVec2            CalcTextSizeA(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
     IMGUI_API const char*       CalcWordWrapPositionA(float scale, const char* text, const char* text_end, float wrap_width) const;
     IMGUI_API void              RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, ImWchar c) const;
-    // Modify By Dicky
-    IMGUI_API void              RenderTextEx(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0.0f, bool cpu_fine_clip = false) const;
-    // Modify By Dicky end
     IMGUI_API void              RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0.0f, bool cpu_fine_clip = false) const;
 
     // [Internal] Don't use!

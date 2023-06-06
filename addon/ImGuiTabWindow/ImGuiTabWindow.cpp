@@ -582,7 +582,7 @@ static bool TabButton(const char *label, bool selected, bool *pCloseButtonPresse
     if (!drawListOverride) drawListOverride = window->DrawList;
 
     // Canvas
-    ImGui::ImDrawListAddRectWithVerticalGradient(drawListOverride,bb.Min, bb.Max,col,(selected || hovered || held)?tabStyle.fillColorGradientDeltaIn0_05:(-tabStyle.fillColorGradientDeltaIn0_05),tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedBorder : TabLabelStyle::Col_TabLabelBorder],tabStyle.rounding,ImDrawFlags_RoundCornersTop,tabStyle.borderWidth);
+    ImGui::AddRectWithVerticalGradient(drawListOverride,bb.Min, bb.Max,col,(selected || hovered || held)?tabStyle.fillColorGradientDeltaIn0_05:(-tabStyle.fillColorGradientDeltaIn0_05),tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedBorder : TabLabelStyle::Col_TabLabelBorder],tabStyle.rounding,ImDrawFlags_RoundCornersTop,tabStyle.borderWidth);
 
     // Text
     ImVec4 textcol = ImGui::ColorConvertU32ToFloat4(colText);
@@ -613,7 +613,7 @@ static bool TabButton(const char *label, bool selected, bool *pCloseButtonPresse
     //fprintf(stderr,"bb.Min=%d,%d bb.Max=%d,%d label_size=%d,%d extraWidthForBtn=%d\n",(int)bb.Min.x,(int)bb.Min.y,(int)bb.Max.x,(int)bb.Max.y,(int)label_size.x,(int)label_size.y,(int)extraWidthForBtn);
     if (hasCloseButton) {
     const ImU32 col = (held && btnHovered) ? tabStyle.colors[TabLabelStyle::Col_TabLabelCloseButtonActive] : btnHovered ? tabStyle.colors[TabLabelStyle::Col_TabLabelCloseButtonHovered] : 0;
-    if (btnHovered) ImGui::ImDrawListAddRect(drawListOverride,startBtn, endBtn, col,tabStyle.colors[TabLabelStyle::Col_TabLabelCloseButtonBorder],tabStyle.closeButtonRounding,ImDrawFlags_RoundCornersAll,tabStyle.closeButtonBorderWidth);
+    if (btnHovered) ImGui::AddRect(drawListOverride,startBtn, endBtn, col,tabStyle.colors[TabLabelStyle::Col_TabLabelCloseButtonBorder],tabStyle.closeButtonRounding,ImDrawFlags_RoundCornersAll,tabStyle.closeButtonBorderWidth);
 
         const float cross_extent = (btnWidth * 0.5f * 0.7071f);// - 1.0f;
         const ImVec2 center((startBtn.x+endBtn.x)*0.5f,(startBtn.y+endBtn.y)*0.5f);
@@ -2704,7 +2704,7 @@ static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, b
     if (fontOverride) ImGui::PushFont(fontOverride);
     static ImVec2 staticLabelSize(0,0);
     ImVec2 label_size(0,0);
-    if (!privateReuseLastCalculatedLabelSizeDoNotUse) label_size = staticLabelSize = ImCalcVerticalTextSize(label, NULL, true);
+    if (!privateReuseLastCalculatedLabelSizeDoNotUse) label_size = staticLabelSize = CalcVerticalTextSize(label, NULL, true);
     else label_size = staticLabelSize;
 
     ImVec2 pos = window ? window->DC.CursorPos : ImVec2(0,0);
@@ -2753,8 +2753,8 @@ static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, b
     if (!drawListOverride) drawListOverride = window->DrawList;
 
     // Canvas
-    if (rotateCCW) ImGui::ImDrawListAddRectWithHorizontalGradient(drawListOverride,bb.Min, bb.Max,col,(selected || hovered || held)?tabStyle.fillColorGradientDeltaIn0_05:(-tabStyle.fillColorGradientDeltaIn0_05),tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedBorder : TabLabelStyle::Col_TabLabelBorder],tabStyle.rounding,invertRounding ? ImDrawFlags_RoundCornersRight : ImDrawFlags_RoundCornersLeft,tabStyle.borderWidth);
-    else ImGui::ImDrawListAddRectWithHorizontalGradient(drawListOverride,bb.Min, bb.Max,col,(selected || hovered || held)?(-tabStyle.fillColorGradientDeltaIn0_05):tabStyle.fillColorGradientDeltaIn0_05,tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedBorder : TabLabelStyle::Col_TabLabelBorder],tabStyle.rounding,invertRounding ? ImDrawFlags_RoundCornersLeft : ImDrawFlags_RoundCornersRight,tabStyle.borderWidth);
+    if (rotateCCW) ImGui::AddRectWithHorizontalGradient(drawListOverride,bb.Min, bb.Max,col,(selected || hovered || held)?tabStyle.fillColorGradientDeltaIn0_05:(-tabStyle.fillColorGradientDeltaIn0_05),tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedBorder : TabLabelStyle::Col_TabLabelBorder],tabStyle.rounding,invertRounding ? ImDrawFlags_RoundCornersRight : ImDrawFlags_RoundCornersLeft,tabStyle.borderWidth);
+    else ImGui::AddRectWithHorizontalGradient(drawListOverride,bb.Min, bb.Max,col,(selected || hovered || held)?(-tabStyle.fillColorGradientDeltaIn0_05):tabStyle.fillColorGradientDeltaIn0_05,tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedBorder : TabLabelStyle::Col_TabLabelBorder],tabStyle.rounding,invertRounding ? ImDrawFlags_RoundCornersLeft : ImDrawFlags_RoundCornersRight,tabStyle.borderWidth);
 
     // Text
     ImVec4 textcol = ImGui::ColorConvertU32ToFloat4(colText);
@@ -2776,12 +2776,12 @@ static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, b
     ImGui::PushStyleColor(ImGuiCol_Text, textcol);
     if (!pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset)  {
         if (!rotateCCW)
-            ImRenderTextVerticalClipped(
+            RenderTextVerticalClipped(
                         bb.Min,
                         ImVec2(bb.Max.x,bb.Max.y-extraWidthForBtn),//ImVec2(bb.Max.x-extraHeightForBtn,bb.Max.y),
                         label, NULL, &label_size, ImVec2(0.5f,0.5f),NULL,NULL,rotateCCW);
         else
-            ImRenderTextVerticalClipped(
+            RenderTextVerticalClipped(
                         ImVec2(bb.Min.x,bb.Min.y+extraWidthForBtn),
                         bb.Max,
                         label, NULL, &label_size, ImVec2(0.5f,0.5f),NULL,NULL,rotateCCW);
@@ -2789,12 +2789,12 @@ static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, b
     else    {
         //ImVec2 textPos(bb.Min.x+(bb.Max.x-bb.Min.x-label_size.x-extraHeightForBtn)*0.5f,bb.Min.y+(bb.Max.y-bb.Min.y-label_size.y)*0.5f);
         ImVec2 textPos(bb.Min.x+(bb.Max.x-bb.Min.x-label_size.x)*0.5f,
-                       rotateCCW ?
-                       (bb.Max.y-(bb.Max.y-bb.Min.y-label_size.y-extraWidthForBtn)*0.5f)
-                       :
-                       (bb.Min.y+(bb.Max.y-bb.Min.y-label_size.y-extraWidthForBtn)*0.5f)
-                       );
-        ImAddTextVertical(drawListOverride,textPos,colText,label,NULL,rotateCCW);
+                    rotateCCW ?
+                    (bb.Max.y-(bb.Max.y-bb.Min.y-label_size.y-extraWidthForBtn)*0.5f)
+                    :
+                    (bb.Min.y+(bb.Max.y-bb.Min.y-label_size.y-extraWidthForBtn)*0.5f)
+                    );
+        AddTextVertical(drawListOverride,textPos,colText,label,NULL,rotateCCW);
     }
     ImGui::PopStyleColor();
 
@@ -2803,7 +2803,7 @@ static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, b
     //fprintf(stderr,"bb.Min=%d,%d bb.Max=%d,%d label_size=%d,%d extraWidthForBtn=%d\n",(int)bb.Min.x,(int)bb.Min.y,(int)bb.Max.x,(int)bb.Max.y,(int)label_size.x,(int)label_size.y,(int)extraWidthForBtn);
     if (hasCloseButton) {
     const ImU32 col = (held && btnHovered) ? tabStyle.colors[TabLabelStyle::Col_TabLabelCloseButtonActive] : btnHovered ? tabStyle.colors[TabLabelStyle::Col_TabLabelCloseButtonHovered] : 0;
-    if (btnHovered) ImGui::ImDrawListAddRect(drawListOverride,startBtn, endBtn, col,tabStyle.colors[TabLabelStyle::Col_TabLabelCloseButtonBorder],tabStyle.closeButtonRounding,
+    if (btnHovered) ImGui::AddRect(drawListOverride,startBtn, endBtn, col,tabStyle.colors[TabLabelStyle::Col_TabLabelCloseButtonBorder],tabStyle.closeButtonRounding,
             ImDrawFlags_RoundCornersAll,    //0x0F, ?
             tabStyle.closeButtonBorderWidth);
 

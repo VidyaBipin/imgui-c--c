@@ -336,6 +336,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 #endif
     ImGui_ImplDX11_Shutdown();
     ImGui_ImplWin32_Shutdown();
+    ImGui::ImDestroyTextures();
     ImGui::DestroyContext();
         
     CleanupDeviceD3D();

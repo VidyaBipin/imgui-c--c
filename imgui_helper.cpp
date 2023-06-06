@@ -672,6 +672,40 @@ void ImDestroyTexture(ImTextureID texture)
     g_tex_mutex.unlock();
 }
 
+void ImDestroyTextures()
+{
+    g_tex_mutex.lock();
+    for (auto iter = g_Textures.begin(); iter != g_Textures.end(); iter++)
+    {
+#if IMGUI_RENDERING_VULKAN
+        if (iter->TextureID)
+        {
+            ImGui_ImplVulkan_DestroyTexture(&iter->TextureID);
+            iter->TextureID = nullptr;
+        }
+#elif IMGUI_RENDERING_DX11
+        if (iter->TextureID)
+        {
+            iter->TextureID->Release();
+            iter->TextureID = nullptr;
+        }
+#elif IMGUI_RENDERING_DX9
+        if (iter->TextureID)
+        {
+            iter->TextureID->Release();
+            iter->TextureID = nullptr;
+        }
+#elif IMGUI_OPENGL
+        if (iter->TextureID)
+        {
+            glDeleteTextures(1, &iter->TextureID);
+            iter->TextureID = 0;
+        }
+#endif
+    }
+    g_tex_mutex.unlock();
+}
+
 int ImGetTextureWidth(ImTextureID texture)
 {
     auto textureIt = ImFindTexture(texture);
@@ -972,14 +1006,17 @@ void Text(int fntIndex, const char *fmt,...)    {
 
 void TextComplex(const char * str, float scale, ImVec4 text_color, float outline_w, ImVec4 outline_color, ImVec2 shadow_offset, ImVec4 shadow_color) {
     ImGui::SetWindowFontScale(scale);
-    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphOutlineWidth, outline_w);
-    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, shadow_offset);
+    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphOutlineWidth, outline_w);
+    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, shadow_offset);
+    //ImGui::PushStyleColor(ImGuiCol_Text, text_color);
+    //ImGui::PushStyleColor(ImGuiCol_TexGlyphOutline, outline_color);
+    //ImGui::PushStyleColor(ImGuiCol_TexGlyphShadow, shadow_color);
+    //ImGui::TextUnformatted(str);
+    //ImGui::PopStyleColor(3);
+    //ImGui::PopStyleVar(2);
     ImGui::PushStyleColor(ImGuiCol_Text, text_color);
-    ImGui::PushStyleColor(ImGuiCol_TexGlyphOutline, outline_color);
-    ImGui::PushStyleColor(ImGuiCol_TexGlyphShadow, shadow_color);
     ImGui::TextUnformatted(str);
-    ImGui::PopStyleColor(3);
-    ImGui::PopStyleVar(2);
+    ImGui::PopStyleColor();
     ImGui::SetWindowFontScale(1.0);
 }
 

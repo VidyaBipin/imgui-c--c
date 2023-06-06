@@ -814,12 +814,12 @@ void ImGui::RoundProgressBar(float radius, float *p_value, float v_min, float v_
     auto draw_size = ImGui::CalcTextSize(label);
     float font_scale = radius / draw_size.x;
     draw_size *= font_scale;
-    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphOutlineWidth, 1.f);
-    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(3.0f, 3.0f));
-    ImGui::PushStyleColor(ImGuiCol_TexGlyphShadow, bar_color.base);
+    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphOutlineWidth, 1.f);
+    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(3.0f, 3.0f));
+    //ImGui::PushStyleColor(ImGuiCol_TexGlyphShadow, bar_color.base);
     draw_list->AddText(ImGui::GetFont(), ImGui::GetFontSize() * font_scale, center - draw_size * ImVec2(0.5, 0.6), ImGui::GetColorU32(text_color.base), label, text_end);
-    ImGui::PopStyleVar(2);
-    ImGui::PopStyleColor();
+    //ImGui::PopStyleVar(2);
+    //ImGui::PopStyleColor();
 }
 
 // Splitter
@@ -3405,9 +3405,9 @@ static void HueSelectorEx(char const* label, ImVec2 const size, float* hueCenter
     oss << std::fixed << std::setprecision(2) << *hueCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
+    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
     pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
-    ImGui::PopStyleVar();
+    //ImGui::PopStyleVar();
     ImGui::EndGroup();
 	ImGui::PopID();
 }
@@ -3467,9 +3467,9 @@ void ImGui::LumianceSelector(char const* label, ImVec2 const size, float* lumCen
     oss << std::fixed << std::setprecision(2) << *lumCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
+    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
     pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
-	ImGui::PopStyleVar();
+	//ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
 }
@@ -3517,9 +3517,9 @@ void ImGui::GammaSelector(char const* label, ImVec2 const size, float* gammaCent
     oss << std::fixed << std::setprecision(2) << *gammaCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
+    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
     pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
-	ImGui::PopStyleVar();
+	//ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
 }
@@ -3565,9 +3565,9 @@ void ImGui::TemperatureSelector(char const* label, ImVec2 const size, float* tem
     oss << std::fixed << std::setprecision(2) << *tempCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
+    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
     pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
-	ImGui::PopStyleVar();
+	//ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
 }
@@ -3622,9 +3622,9 @@ void ImGui::SaturationSelector(char const* label, ImVec2 const size, float* satC
     oss << std::fixed << std::setprecision(2) << *satCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
+    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
     pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
-    ImGui::PopStyleVar();
+    //ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
 }
@@ -3677,9 +3677,9 @@ void ImGui::ContrastSelector(char const* label, ImVec2 const size, float* conCen
     oss << std::fixed << std::setprecision(2) << *conCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
+    //ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
     pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), rgb_color ? text_color : IM_COL32(0,0,0,255), value_str.c_str());
-    ImGui::PopStyleVar();
+    //ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
 }
@@ -4091,7 +4091,7 @@ inline static void GetVerticalGradientTopAndBottomColors(ImU32 c, float fillColo
     cacheBottomColorOut = bc;
 }
 
-void ImGui::ImDrawListAddConvexPolyFilledWithVerticalGradient(ImDrawList *dl, const ImVec2 *points, const int points_count, ImU32 colTop, ImU32 colBot,float miny,float maxy)
+void ImGui::AddConvexPolyFilledWithVerticalGradient(ImDrawList *dl, const ImVec2 *points, const int points_count, ImU32 colTop, ImU32 colBot,float miny,float maxy)
 {
     if (!dl) return;
     if (colTop == colBot)  
@@ -4204,16 +4204,16 @@ void ImGui::ImDrawListAddConvexPolyFilledWithVerticalGradient(ImDrawList *dl, co
     }
 }
 
-void ImGui::ImDrawListPathFillWithVerticalGradientAndStroke(ImDrawList *dl, const ImU32 &fillColorTop, const ImU32 &fillColorBottom, const ImU32 &strokeColor, bool strokeClosed, float strokeThickness, float miny, float maxy)
+void ImGui::PathFillWithVerticalGradientAndStroke(ImDrawList *dl, const ImU32 &fillColorTop, const ImU32 &fillColorBottom, const ImU32 &strokeColor, bool strokeClosed, float strokeThickness, float miny, float maxy)
 {
     if (!dl) return;
     if (fillColorTop == fillColorBottom) dl->AddConvexPolyFilled(dl->_Path.Data,dl->_Path.Size, fillColorTop);
-    else if ((fillColorTop & IM_COL32_A_MASK) != 0 || (fillColorBottom & IM_COL32_A_MASK) != 0) ImDrawListAddConvexPolyFilledWithVerticalGradient(dl, dl->_Path.Data, dl->_Path.Size, fillColorTop, fillColorBottom,miny,maxy);
+    else if ((fillColorTop & IM_COL32_A_MASK) != 0 || (fillColorBottom & IM_COL32_A_MASK) != 0) AddConvexPolyFilledWithVerticalGradient(dl, dl->_Path.Data, dl->_Path.Size, fillColorTop, fillColorBottom,miny,maxy);
     if ((strokeColor & IM_COL32_A_MASK) != 0 && strokeThickness > 0) dl->AddPolyline(dl->_Path.Data, dl->_Path.Size, strokeColor, strokeClosed, strokeThickness);
     dl->PathClear();
 }
 
-void ImGui::ImDrawListPathFillAndStroke(ImDrawList *dl, const ImU32 &fillColor, const ImU32 &strokeColor, bool strokeClosed, float strokeThickness)
+void ImGui::PathFillAndStroke(ImDrawList *dl, const ImU32 &fillColor, const ImU32 &strokeColor, bool strokeClosed, float strokeThickness)
 {
     if (!dl) return;
     if ((fillColor & IM_COL32_A_MASK) != 0) dl->AddConvexPolyFilled(dl->_Path.Data, dl->_Path.Size, fillColor);
@@ -4221,14 +4221,14 @@ void ImGui::ImDrawListPathFillAndStroke(ImDrawList *dl, const ImU32 &fillColor, 
     dl->PathClear();
 }
 
-void ImGui::ImDrawListAddRect(ImDrawList *dl, const ImVec2 &a, const ImVec2 &b, const ImU32 &fillColor, const ImU32 &strokeColor, float rounding, int rounding_corners, float strokeThickness)
+void ImGui::AddRect(ImDrawList *dl, const ImVec2 &a, const ImVec2 &b, const ImU32 &fillColor, const ImU32 &strokeColor, float rounding, int rounding_corners, float strokeThickness)
 {
     if (!dl || (((fillColor & IM_COL32_A_MASK) == 0) && ((strokeColor & IM_COL32_A_MASK) == 0)))  return;
     dl->PathRect(a, b, rounding, rounding_corners);
-    ImDrawListPathFillAndStroke(dl,fillColor,strokeColor,true,strokeThickness);
+    PathFillAndStroke(dl,fillColor,strokeColor,true,strokeThickness);
 }
 
-void ImGui::ImDrawListAddRectWithVerticalGradient(ImDrawList *dl, const ImVec2 &a, const ImVec2 &b, const ImU32 &fillColorTop, const ImU32 &fillColorBottom, const ImU32 &strokeColor, float rounding, int rounding_corners, float strokeThickness)
+void ImGui::AddRectWithVerticalGradient(ImDrawList *dl, const ImVec2 &a, const ImVec2 &b, const ImU32 &fillColorTop, const ImU32 &fillColorBottom, const ImU32 &strokeColor, float rounding, int rounding_corners, float strokeThickness)
 {
     if (!dl || (((fillColorTop & IM_COL32_A_MASK) == 0) && ((fillColorBottom & IM_COL32_A_MASK) == 0) && ((strokeColor & IM_COL32_A_MASK) == 0)))  return;
     if (rounding == 0.f || rounding_corners == ImDrawFlags_RoundCornersNone)
@@ -4244,11 +4244,11 @@ void ImGui::ImDrawListAddRectWithVerticalGradient(ImDrawList *dl, const ImVec2 &
     else 
     {
         dl->PathRect(a, b, rounding, rounding_corners);
-        ImDrawListPathFillWithVerticalGradientAndStroke(dl,fillColorTop,fillColorBottom,strokeColor,true,strokeThickness,a.y,b.y);
+        PathFillWithVerticalGradientAndStroke(dl,fillColorTop,fillColorBottom,strokeColor,true,strokeThickness,a.y,b.y);
     }
 }
 
-void ImGui::ImDrawListPathArcTo(ImDrawList *dl, const ImVec2 &centre, const ImVec2 &radii, float amin, float amax, int num_segments)
+void ImGui::PathArcTo(ImDrawList *dl, const ImVec2 &centre, const ImVec2 &radii, float amin, float amax, int num_segments)
 {
     if (!dl) return;
     if (radii.x == 0.0f || radii.y == 0) dl->_Path.push_back(centre);
@@ -4260,48 +4260,48 @@ void ImGui::ImDrawListPathArcTo(ImDrawList *dl, const ImVec2 &centre, const ImVe
     }
 }
 
-void ImGui::ImDrawListAddEllipse(ImDrawList *dl, const ImVec2 &centre, const ImVec2 &radii, const ImU32 &fillColor, const ImU32 &strokeColor, int num_segments, float strokeThickness)
+void ImGui::AddEllipse(ImDrawList *dl, const ImVec2 &centre, const ImVec2 &radii, const ImU32 &fillColor, const ImU32 &strokeColor, int num_segments, float strokeThickness)
 {
     if (!dl) return;
     const float a_max = IM_PI * 2.0f * ((float)num_segments - 1.0f) / (float)num_segments;
-    ImDrawListPathArcTo(dl,centre, radii, 0.0f, a_max, num_segments);
-    ImDrawListPathFillAndStroke(dl,fillColor,strokeColor,true,strokeThickness);
+    PathArcTo(dl,centre, radii, 0.0f, a_max, num_segments);
+    PathFillAndStroke(dl,fillColor,strokeColor,true,strokeThickness);
 }
 
-void ImGui::ImDrawListAddEllipseWithVerticalGradient(ImDrawList *dl, const ImVec2 &centre, const ImVec2 &radii, const ImU32 &fillColorTop, const ImU32 &fillColorBottom, const ImU32 &strokeColor, int num_segments, float strokeThickness)
+void ImGui::AddEllipseWithVerticalGradient(ImDrawList *dl, const ImVec2 &centre, const ImVec2 &radii, const ImU32 &fillColorTop, const ImU32 &fillColorBottom, const ImU32 &strokeColor, int num_segments, float strokeThickness)
 {
     if (!dl) return;
     const float a_max = IM_PI * 2.0f * ((float)num_segments - 1.0f) / (float)num_segments;
-    ImDrawListPathArcTo(dl,centre, radii, 0.0f, a_max, num_segments);
-    ImDrawListPathFillWithVerticalGradientAndStroke(dl,fillColorTop,fillColorBottom,strokeColor,true,strokeThickness,centre.y-radii.y,centre.y+radii.y);
+    PathArcTo(dl,centre, radii, 0.0f, a_max, num_segments);
+    PathFillWithVerticalGradientAndStroke(dl,fillColorTop,fillColorBottom,strokeColor,true,strokeThickness,centre.y-radii.y,centre.y+radii.y);
 }
 
-void ImGui::ImDrawListAddCircle(ImDrawList *dl, const ImVec2 &centre, float radius, const ImU32 &fillColor, const ImU32 &strokeColor, int num_segments, float strokeThickness)
-{
-    if (!dl) return;
-    const ImVec2 radii(radius,radius);
-    const float a_max = IM_PI * 2.0f * ((float)num_segments - 1.0f) / (float)num_segments;
-    ImDrawListPathArcTo(dl,centre, radii, 0.0f, a_max, num_segments-1);
-    ImDrawListPathFillAndStroke(dl,fillColor,strokeColor,true,strokeThickness);
-}
-
-void ImGui::ImDrawListAddCircleWithVerticalGradient(ImDrawList *dl, const ImVec2 &centre, float radius, const ImU32 &fillColorTop, const ImU32 &fillColorBottom, const ImU32 &strokeColor, int num_segments, float strokeThickness)
+void ImGui::AddCircle(ImDrawList *dl, const ImVec2 &centre, float radius, const ImU32 &fillColor, const ImU32 &strokeColor, int num_segments, float strokeThickness)
 {
     if (!dl) return;
     const ImVec2 radii(radius,radius);
     const float a_max = IM_PI * 2.0f * ((float)num_segments - 1.0f) / (float)num_segments;
-    ImDrawListPathArcTo(dl,centre, radii, 0.0f, a_max, num_segments-1);
-    ImDrawListPathFillWithVerticalGradientAndStroke(dl,fillColorTop,fillColorBottom,strokeColor,true,strokeThickness,centre.y-radius,centre.y+radius);
+    PathArcTo(dl,centre, radii, 0.0f, a_max, num_segments-1);
+    PathFillAndStroke(dl,fillColor,strokeColor,true,strokeThickness);
 }
 
-void ImGui::ImDrawListAddRectWithVerticalGradient(ImDrawList *dl, const ImVec2 &a, const ImVec2 &b, const ImU32 &fillColor, float fillColorGradientDeltaIn0_05, const ImU32 &strokeColor, float rounding, int rounding_corners, float strokeThickness)
+void ImGui::AddCircleWithVerticalGradient(ImDrawList *dl, const ImVec2 &centre, float radius, const ImU32 &fillColorTop, const ImU32 &fillColorBottom, const ImU32 &strokeColor, int num_segments, float strokeThickness)
+{
+    if (!dl) return;
+    const ImVec2 radii(radius,radius);
+    const float a_max = IM_PI * 2.0f * ((float)num_segments - 1.0f) / (float)num_segments;
+    PathArcTo(dl,centre, radii, 0.0f, a_max, num_segments-1);
+    PathFillWithVerticalGradientAndStroke(dl,fillColorTop,fillColorBottom,strokeColor,true,strokeThickness,centre.y-radius,centre.y+radius);
+}
+
+void ImGui::AddRectWithVerticalGradient(ImDrawList *dl, const ImVec2 &a, const ImVec2 &b, const ImU32 &fillColor, float fillColorGradientDeltaIn0_05, const ImU32 &strokeColor, float rounding, int rounding_corners, float strokeThickness)
 {
     ImU32 fillColorTop,fillColorBottom;
     GetVerticalGradientTopAndBottomColors(fillColor,fillColorGradientDeltaIn0_05,fillColorTop,fillColorBottom);
-    ImDrawListAddRectWithVerticalGradient(dl,a,b,fillColorTop,fillColorBottom,strokeColor,rounding,rounding_corners,strokeThickness);
+    AddRectWithVerticalGradient(dl,a,b,fillColorTop,fillColorBottom,strokeColor,rounding,rounding_corners,strokeThickness);
 }
 
-void ImGui::ImDrawListAddPolyLine(ImDrawList *dl, const ImVec2* polyPoints, int numPolyPoints, ImU32 strokeColor, float strokeThickness, bool strokeClosed, const ImVec2 &offset, const ImVec2 &scale)
+void ImGui::AddPolyLine(ImDrawList *dl, const ImVec2* polyPoints, int numPolyPoints, ImU32 strokeColor, float strokeThickness, bool strokeClosed, const ImVec2 &offset, const ImVec2 &scale)
 {
     if (polyPoints && numPolyPoints>0 && (strokeColor & IM_COL32_A_MASK) != 0)
     {
@@ -4312,7 +4312,7 @@ void ImGui::ImDrawListAddPolyLine(ImDrawList *dl, const ImVec2* polyPoints, int 
     }
 }
 
-void ImGui::ImDrawListAddConvexPolyFilledWithHorizontalGradient(ImDrawList *dl, const ImVec2 *points, const int points_count, ImU32 colLeft, ImU32 colRight, float minx, float maxx)
+void ImGui::AddConvexPolyFilledWithHorizontalGradient(ImDrawList *dl, const ImVec2 *points, const int points_count, ImU32 colLeft, ImU32 colRight, float minx, float maxx)
 {
     if (!dl) return;
     if (colLeft == colRight) 
@@ -4424,16 +4424,16 @@ void ImGui::ImDrawListAddConvexPolyFilledWithHorizontalGradient(ImDrawList *dl, 
     }
 }
 
-void ImGui::ImDrawListPathFillWithHorizontalGradientAndStroke(ImDrawList *dl, const ImU32 &fillColorLeft, const ImU32 &fillColorRight, const ImU32 &strokeColor, bool strokeClosed, float strokeThickness, float minx, float maxx)
+void ImGui::PathFillWithHorizontalGradientAndStroke(ImDrawList *dl, const ImU32 &fillColorLeft, const ImU32 &fillColorRight, const ImU32 &strokeColor, bool strokeClosed, float strokeThickness, float minx, float maxx)
 {
     if (!dl) return;
     if (fillColorLeft==fillColorRight) dl->AddConvexPolyFilled(dl->_Path.Data,dl->_Path.Size, fillColorLeft);
-    else if ((fillColorLeft & IM_COL32_A_MASK) != 0 || (fillColorRight & IM_COL32_A_MASK) != 0) ImDrawListAddConvexPolyFilledWithHorizontalGradient(dl, dl->_Path.Data, dl->_Path.Size, fillColorLeft, fillColorRight,minx,maxx);
+    else if ((fillColorLeft & IM_COL32_A_MASK) != 0 || (fillColorRight & IM_COL32_A_MASK) != 0) AddConvexPolyFilledWithHorizontalGradient(dl, dl->_Path.Data, dl->_Path.Size, fillColorLeft, fillColorRight,minx,maxx);
     if ((strokeColor & IM_COL32_A_MASK) != 0 && strokeThickness > 0) dl->AddPolyline(dl->_Path.Data, dl->_Path.Size, strokeColor, strokeClosed, strokeThickness);
     dl->PathClear();
 }
 
-void ImGui::ImDrawListAddRectWithHorizontalGradient(ImDrawList *dl, const ImVec2 &a, const ImVec2 &b, const ImU32 &fillColorLeft, const ImU32 &fillColoRight, const ImU32 &strokeColor, float rounding, int rounding_corners, float strokeThickness)
+void ImGui::AddRectWithHorizontalGradient(ImDrawList *dl, const ImVec2 &a, const ImVec2 &b, const ImU32 &fillColorLeft, const ImU32 &fillColoRight, const ImU32 &strokeColor, float rounding, int rounding_corners, float strokeThickness)
 {
     if (!dl || (((fillColorLeft & IM_COL32_A_MASK) == 0) && ((fillColoRight & IM_COL32_A_MASK) == 0) && ((strokeColor & IM_COL32_A_MASK) == 0)))  return;
     if (rounding == 0.f || rounding_corners == ImDrawFlags_RoundCornersNone)
@@ -4449,35 +4449,35 @@ void ImGui::ImDrawListAddRectWithHorizontalGradient(ImDrawList *dl, const ImVec2
     else
     {
         dl->PathRect(a, b, rounding, rounding_corners);
-        ImDrawListPathFillWithHorizontalGradientAndStroke(dl,fillColorLeft,fillColoRight,strokeColor,true,strokeThickness,a.x,b.x);
+        PathFillWithHorizontalGradientAndStroke(dl,fillColorLeft,fillColoRight,strokeColor,true,strokeThickness,a.x,b.x);
     }
 }
 
-void ImGui::ImDrawListAddEllipseWithHorizontalGradient(ImDrawList *dl, const ImVec2 &centre, const ImVec2 &radii, const ImU32 &fillColorLeft, const ImU32 &fillColorRight, const ImU32 &strokeColor, int num_segments, float strokeThickness)
+void ImGui::AddEllipseWithHorizontalGradient(ImDrawList *dl, const ImVec2 &centre, const ImVec2 &radii, const ImU32 &fillColorLeft, const ImU32 &fillColorRight, const ImU32 &strokeColor, int num_segments, float strokeThickness)
 {
     if (!dl) return;
     const float a_max = IM_PI * 2.0f * ((float)num_segments - 1.0f) / (float)num_segments;
-    ImDrawListPathArcTo(dl,centre, radii, 0.0f, a_max, num_segments);
-    ImDrawListPathFillWithHorizontalGradientAndStroke(dl,fillColorLeft,fillColorRight,strokeColor,true,strokeThickness,centre.y - radii.y,centre.y + radii.y);
+    PathArcTo(dl,centre, radii, 0.0f, a_max, num_segments);
+    PathFillWithHorizontalGradientAndStroke(dl,fillColorLeft,fillColorRight,strokeColor,true,strokeThickness,centre.y - radii.y,centre.y + radii.y);
 }
 
-void ImGui::ImDrawListAddCircleWithHorizontalGradient(ImDrawList *dl, const ImVec2 &centre, float radius, const ImU32 &fillColorLeft, const ImU32 &fillColorRight, const ImU32 &strokeColor, int num_segments, float strokeThickness)
+void ImGui::AddCircleWithHorizontalGradient(ImDrawList *dl, const ImVec2 &centre, float radius, const ImU32 &fillColorLeft, const ImU32 &fillColorRight, const ImU32 &strokeColor, int num_segments, float strokeThickness)
 {
     if (!dl) return;
     const ImVec2 radii(radius,radius);
     const float a_max = IM_PI * 2.0f * ((float)num_segments - 1.0f) / (float)num_segments;
-    ImDrawListPathArcTo(dl,centre, radii, 0.0f, a_max, num_segments - 1);
-    ImDrawListPathFillWithHorizontalGradientAndStroke(dl,fillColorLeft,fillColorRight,strokeColor,true,strokeThickness,centre.y - radius,centre.y + radius);
+    PathArcTo(dl,centre, radii, 0.0f, a_max, num_segments - 1);
+    PathFillWithHorizontalGradientAndStroke(dl,fillColorLeft,fillColorRight,strokeColor,true,strokeThickness,centre.y - radius,centre.y + radius);
 }
 
-void ImGui::ImDrawListAddRectWithHorizontalGradient(ImDrawList *dl, const ImVec2 &a, const ImVec2 &b, const ImU32 &fillColor, float fillColorGradientDeltaIn0_05, const ImU32 &strokeColor, float rounding, int rounding_corners, float strokeThickness)
+void ImGui::AddRectWithHorizontalGradient(ImDrawList *dl, const ImVec2 &a, const ImVec2 &b, const ImU32 &fillColor, float fillColorGradientDeltaIn0_05, const ImU32 &strokeColor, float rounding, int rounding_corners, float strokeThickness)
 {
     ImU32 fillColorTop,fillColorBottom;
     GetVerticalGradientTopAndBottomColors(fillColor,fillColorGradientDeltaIn0_05,fillColorTop,fillColorBottom);
-    ImDrawListAddRectWithHorizontalGradient(dl,a,b,fillColorTop,fillColorBottom,strokeColor,rounding,rounding_corners,strokeThickness);
+    AddRectWithHorizontalGradient(dl,a,b,fillColorTop,fillColorBottom,strokeColor,rounding,rounding_corners,strokeThickness);
 }
 
-void ImGui::ImDrawListAddLineDashed(ImDrawList *dl, const ImVec2& a, const ImVec2& b, ImU32 col, float thickness, unsigned int num_segments, unsigned int on_segments, unsigned int off_segments)
+void ImGui::AddLineDashed(ImDrawList *dl, const ImVec2& a, const ImVec2& b, ImU32 col, float thickness, unsigned int num_segments, unsigned int on_segments, unsigned int off_segments)
 {
     if ((col >> 24) == 0)
         return;
@@ -4505,7 +4505,7 @@ void ImGui::ImDrawListAddLineDashed(ImDrawList *dl, const ImVec2& a, const ImVec
     dl->PathStroke(col, false, thickness);
 }
 
-void ImGui::ImDrawListPathArcToDashedAndStroke(ImDrawList *dl, const ImVec2& centre, float radius, float amin, float amax, ImU32 col, float thickness, int num_segments, int on_segments, int off_segments)
+void ImGui::PathArcToDashedAndStroke(ImDrawList *dl, const ImVec2& centre, float radius, float amin, float amax, ImU32 col, float thickness, int num_segments, int on_segments, int off_segments)
 {
     if (radius == 0.0f)
         dl->_Path.push_back(centre);
@@ -4534,15 +4534,15 @@ void ImGui::ImDrawListPathArcToDashedAndStroke(ImDrawList *dl, const ImVec2& cen
     dl->PathStroke(col, false, thickness);
 }
 
-void ImGui::ImDrawListAddCircleDashed(ImDrawList *dl, const ImVec2& centre, float radius, ImU32 col, int num_segments, float thickness, int on_segments, int off_segments)
+void ImGui::AddCircleDashed(ImDrawList *dl, const ImVec2& centre, float radius, ImU32 col, int num_segments, float thickness, int on_segments, int off_segments)
 {
     if ((col >> 24) == 0 || on_segments == 0)
         return;
     const float a_max = IM_PI*2.0f * ((float)num_segments - 1.0f) / (float)num_segments;
-    ImDrawListPathArcToDashedAndStroke(dl, centre, radius-0.5f, 0.0f, a_max, col, thickness, num_segments, on_segments, off_segments);
+    PathArcToDashedAndStroke(dl, centre, radius-0.5f, 0.0f, a_max, col, thickness, num_segments, on_segments, off_segments);
 }
 
-void ImGui::ImDrawListAddImageRotate(ImDrawList *dl, ImTextureID tex_id, ImVec2 pos, ImVec2 size, float angle, ImU32 board_col)
+void ImGui::AddImageRotate(ImDrawList *dl, ImTextureID tex_id, ImVec2 pos, ImVec2 size, float angle, ImU32 board_col)
 {
     int rotation_start_index = dl->VtxBuffer.Size;
     dl->AddImage(tex_id, pos, pos + size);
@@ -4563,13 +4563,13 @@ void ImGui::ImDrawListAddImageRotate(ImDrawList *dl, ImTextureID tex_id, ImVec2 
 }
 
 // Vertical Text
-ImVec2 ImGui::ImCalcVerticalTextSize(const char* text, const char* text_end, bool hide_text_after_double_hash, float wrap_width)
+ImVec2 ImGui::CalcVerticalTextSize(const char* text, const char* text_end, bool hide_text_after_double_hash, float wrap_width)
 {
     const ImVec2 rv = ImGui::CalcTextSize(text,text_end,hide_text_after_double_hash,wrap_width);
     return ImVec2(rv.y,rv.x);
 }
 
-void ImGui::ImRenderTextVertical(const ImFont* font,ImDrawList* draw_list, float size, ImVec2 pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin,  const char* text_end, float wrap_width, bool cpu_fine_clip, bool rotateCCW, bool char_no_rotate) 
+void ImGui::RenderTextVertical(const ImFont* font,ImDrawList* draw_list, float size, ImVec2 pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin,  const char* text_end, float wrap_width, bool cpu_fine_clip, bool rotateCCW, bool char_no_rotate) 
 {
     if (!text_end) text_end = text_begin + strlen(text_begin);
 
@@ -4577,7 +4577,7 @@ void ImGui::ImRenderTextVertical(const ImFont* font,ImDrawList* draw_list, float
     const float line_height = font->FontSize * scale;
 
     // Align to be pixel perfect
-    //const ImVec2 text_size = ImCalcVerticalTextSize(text_begin, text_end, false, 0.0f);
+    //const ImVec2 text_size = CalcVerticalTextSize(text_begin, text_end, false, 0.0f);
     pos.x = (float)(int)pos.x;
     pos.y = (float)(int)pos.y;// + (rotateCCW ? text_size.y : 0);
 
@@ -4787,7 +4787,7 @@ void ImGui::ImRenderTextVertical(const ImFont* font,ImDrawList* draw_list, float
     draw_list->_VtxCurrentIdx = (unsigned int)draw_list->VtxBuffer.Size;
 }
 
-void ImGui::ImAddTextVertical(ImDrawList* drawList,const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect, bool rotateCCW, bool char_no_rotate)
+void ImGui::AddTextVertical(ImDrawList* drawList,const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect, bool rotateCCW, bool char_no_rotate)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -4830,15 +4830,15 @@ void ImGui::ImAddTextVertical(ImDrawList* drawList,const ImFont* font, float fon
         clip_rect.w = ImMin(clip_rect.w, cpu_fine_clip_rect->w);
     }
     // modify by Dicky for multi-language 
-    ImRenderTextVertical(font, drawList, font_size, pos, col, clip_rect, _text_begin, _text_end, wrap_width, cpu_fine_clip_rect != NULL, rotateCCW, char_no_rotate);
+    RenderTextVertical(font, drawList, font_size, pos, col, clip_rect, _text_begin, _text_end, wrap_width, cpu_fine_clip_rect != NULL, rotateCCW, char_no_rotate);
 }
 
-void ImGui::ImAddTextVertical(ImDrawList* drawList,const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end,bool rotateCCW, bool char_no_rotate)
+void ImGui::AddTextVertical(ImDrawList* drawList,const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end,bool rotateCCW, bool char_no_rotate)
 {
-    ImAddTextVertical(drawList,GImGui->Font, GImGui->FontSize, pos, col, text_begin, text_end, 0.0f, NULL, rotateCCW, char_no_rotate);
+    AddTextVertical(drawList,GImGui->Font, GImGui->FontSize, pos, col, text_begin, text_end, 0.0f, NULL, rotateCCW, char_no_rotate);
 }
 
-void ImGui::ImRenderTextVerticalClipped(const ImVec2& pos_min, const ImVec2& pos_max, const char* text, const char* text_end, const ImVec2* text_size_if_known, const ImVec2& align, const ImVec2* clip_min, const ImVec2* clip_max, bool rotateCCW, bool char_no_rotate)
+void ImGui::RenderTextVerticalClipped(const ImVec2& pos_min, const ImVec2& pos_max, const char* text, const char* text_end, const ImVec2* text_size_if_known, const ImVec2& align, const ImVec2* clip_min, const ImVec2* clip_max, bool rotateCCW, bool char_no_rotate)
 {
     // Hide anything after a '##' string
     const char* text_display_end = FindRenderedTextEnd(text, text_end);
@@ -4851,7 +4851,7 @@ void ImGui::ImRenderTextVerticalClipped(const ImVec2& pos_min, const ImVec2& pos
 
     // Perform CPU side clipping for single clipped element to avoid using scissor state
     ImVec2 pos = pos_min;
-    const ImVec2 text_size = text_size_if_known ? *text_size_if_known : ImCalcVerticalTextSize(text, text_display_end, false, 0.0f);
+    const ImVec2 text_size = text_size_if_known ? *text_size_if_known : CalcVerticalTextSize(text, text_display_end, false, 0.0f);
 
     if (!clip_max) clip_max = &pos_max;
     bool need_clipping = (pos.x + text_size.x >= clip_max->x) || (pos.y + text_size.y >= clip_max->y);
@@ -4875,15 +4875,15 @@ void ImGui::ImRenderTextVerticalClipped(const ImVec2& pos_min, const ImVec2& pos
     if (need_clipping)
     {
         ImVec4 fine_clip_rect(clip_min->x, clip_min->y, clip_max->x, clip_max->y);
-        ImAddTextVertical(window->DrawList,g.Font, g.FontSize, pos, GetColorU32(ImGuiCol_Text), text, text_display_end, 0.0f, &fine_clip_rect, rotateCCW, char_no_rotate);
+        AddTextVertical(window->DrawList,g.Font, g.FontSize, pos, GetColorU32(ImGuiCol_Text), text, text_display_end, 0.0f, &fine_clip_rect, rotateCCW, char_no_rotate);
     }
     else
     {
-        ImAddTextVertical(window->DrawList,g.Font, g.FontSize, pos, GetColorU32(ImGuiCol_Text), text, text_display_end, 0.0f, NULL, rotateCCW, char_no_rotate);
+        AddTextVertical(window->DrawList,g.Font, g.FontSize, pos, GetColorU32(ImGuiCol_Text), text, text_display_end, 0.0f, NULL, rotateCCW, char_no_rotate);
     }
 }
 
-void ImGui::ImAddTextRolling(ImDrawList* drawList, const ImFont* font, float font_size, const ImVec2& pos, const ImVec2& size, ImU32 col, const int speed, const char* text_begin, const char* text_end)
+void ImGui::AddTextRolling(ImDrawList* drawList, const ImFont* font, float font_size, const ImVec2& pos, const ImVec2& size, ImU32 col, const int speed, const char* text_begin, const char* text_end)
 {
     static int start_offset = 0;
     static int count = 0;
@@ -4947,14 +4947,14 @@ void ImGui::ImAddTextRolling(ImDrawList* drawList, const ImFont* font, float fon
     font->RenderText(drawList, font_size, pos, col, clip_rect, _text_begin, _text_end, 0.0, true);
 }
 
-void ImGui::ImAddTextRolling(const char* text, const ImVec2& size, const ImVec2& pos, const int speed)
+void ImGui::AddTextRolling(const char* text, const ImVec2& size, const ImVec2& pos, const int speed)
 {
-    ImGui::ImAddTextRolling(NULL, NULL, 0, pos, size, ImGui::GetColorU32(ImGuiCol_Text), speed, text);
+    ImGui::AddTextRolling(NULL, NULL, 0, pos, size, ImGui::GetColorU32(ImGuiCol_Text), speed, text);
 }
 
-void ImGui::ImAddTextRolling(const char* text, const ImVec2& size, const int speed)
+void ImGui::AddTextRolling(const char* text, const ImVec2& size, const int speed)
 {
-    ImGui::ImAddTextRolling(NULL, NULL, 0, ImGui::GetCursorScreenPos(), size, ImGui::GetColorU32(ImGuiCol_Text), speed, text);
+    ImGui::AddTextRolling(NULL, NULL, 0, ImGui::GetCursorScreenPos(), size, ImGui::GetColorU32(ImGuiCol_Text), speed, text);
 }
 
 // add By Dicky

@@ -223,6 +223,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     check_vk_result(err);
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplWin32_Shutdown();
+    ImGui::ImDestroyTextures();
     CleanupVulkanWindow();
     CleanupVulkan();
     ::DestroyWindow(hwnd);
@@ -449,6 +450,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     check_vk_result(err);
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplWin32_Shutdown();
+    ImGui::ImDestroyTextures();
     ImGui::DestroyContext();
 
     CleanupVulkanWindow();
