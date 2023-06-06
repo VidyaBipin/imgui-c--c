@@ -3980,20 +3980,22 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 {
     ImGuiContext& g = *GImGui;
     ImVec2 offset = g.Style.TexGlyphShadowOffset;
-    float outline_scale = g.Style.TexGlyphOutlineWidth;
+    float outline_width = g.Style.TexGlyphOutlineWidth;
     if (offset.x != 0 || offset.y != 0)
     {
+        // TODO::Dicky how to show shadow only
         ImU32 shadow_color = ImGui::GetColorU32(ImGuiCol_TexGlyphShadow);
         RenderTextEx(draw_list, size, pos + offset, shadow_color, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
     }
 
-    if (outline_scale != 0)
+    if (outline_width > 0)
     {
+        // TODO::Dicky how to show outline only
         ImU32 outline_color = ImGui::GetColorU32(ImGuiCol_TexGlyphOutline);
-        RenderTextEx(draw_list, size, ImVec2(pos.x - outline_scale, pos.y), outline_color, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
-        RenderTextEx(draw_list, size, ImVec2(pos.x, pos.y - outline_scale), outline_color, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
-        RenderTextEx(draw_list, size, ImVec2(pos.x + outline_scale, pos.y), outline_color, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
-        RenderTextEx(draw_list, size, ImVec2(pos.x, pos.y + outline_scale), outline_color, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
+        RenderTextEx(draw_list, size, ImVec2(pos.x - outline_width, pos.y), outline_color, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
+        RenderTextEx(draw_list, size, ImVec2(pos.x, pos.y - outline_width), outline_color, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
+        RenderTextEx(draw_list, size, ImVec2(pos.x + outline_width, pos.y), outline_color, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
+        RenderTextEx(draw_list, size, ImVec2(pos.x, pos.y + outline_width), outline_color, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
     }
     RenderTextEx(draw_list, size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
 }

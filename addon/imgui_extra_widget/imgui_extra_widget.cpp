@@ -823,7 +823,7 @@ void ImGui::RoundProgressBar(float radius, float *p_value, float v_min, float v_
 }
 
 // Splitter
-bool ImGui::Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size)
+bool ImGui::Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size, float delay)
 {
 	using namespace ImGui;
 	ImGuiContext& g = *GImGui;
@@ -832,7 +832,7 @@ bool ImGui::Splitter(bool split_vertically, float thickness, float* size1, float
 	ImRect bb;
 	bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2(*size1, 0.0f) : ImVec2(0.0f, *size1));
 	bb.Max = bb.Min + CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size) : ImVec2(splitter_long_axis_size, thickness), 0.0f, 0.0f);
-	return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 1.0, 0.01);
+	return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 1.0, delay);
 }
 
 // Based on the code from: https://github.com/benoitjacquier/imgui

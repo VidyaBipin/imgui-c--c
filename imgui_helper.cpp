@@ -289,35 +289,50 @@ void ShowImGuiInfo()
 static std::vector<ImTexture> g_Textures;
 std::mutex g_tex_mutex;
 
-void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int channels,const unsigned char* pixels,bool useMipmapsIfPossible,bool wraps,bool wrapt,bool minFilterNearest,bool magFilterNearest,bool vulkan)
+void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int channels,const unsigned char* pixels,bool useMipmapsIfPossible,bool wraps,bool wrapt,bool minFilterNearest,bool magFilterNearest,bool is_immat)
 {
     IM_ASSERT(pixels);
     IM_ASSERT(channels>0 && channels<=4);
+    unsigned char* data = nullptr;
 #if IMGUI_RENDERING_VULKAN
     VkBuffer buffer {nullptr};
     size_t offset {0};
-#if IMGUI_VULKAN_SHADER
-    if (vulkan)
+    bool is_vulkan = false;
+    if (is_immat)
     {
-        ImGui::VkMat* vkmat = (ImGui::VkMat*)pixels;
-        if (vkmat->empty())
+        ImGui::ImMat* mat = (ImGui::ImMat*)pixels;
+        if (mat->empty())
             return;
-        buffer = vkmat->buffer();
-        offset = vkmat->buffer_offset();
-        if (!buffer)
-            return;
-    }
+#if IMGUI_VULKAN_SHADER
+        if (mat->device == IM_DD_VULKAN)
+        {
+            ImGui::VkMat* vkmat = (ImGui::VkMat*)mat;
+            buffer = vkmat->buffer();
+            offset = vkmat->buffer_offset();
+            if (!buffer)
+                return;
+            is_vulkan = true;
+        }
+        else 
 #endif
+        if (mat->device == IM_DD_CPU)
+        {
+            data = (unsigned char *)mat->data;
+            is_vulkan = false;
+        }
+    }
+    if (!is_vulkan && !data)
+        return;
     if (imtexid == 0)
     {
         // TODO::Dicky Need deal with 3 channels Image(link RGB / BGR) and 1 channel (Gray)
         g_tex_mutex.lock();
         g_Textures.resize(g_Textures.size() + 1);
         ImTexture& texture = g_Textures.back();
-        if (vulkan)
+        if (is_vulkan)
             texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(buffer, offset, width, height);
         else
-            texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(pixels, width, height);
+            texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(data, width, height);
         if (!texture.TextureID)
         {
             g_Textures.pop_back();
@@ -331,11 +346,11 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
         return;
     }
 #if IMGUI_VULKAN_SHADER
-    if (vulkan)
+    if (is_vulkan)
         ImGui_ImplVulkan_UpdateTexture(imtexid, buffer, offset);
     else
 #endif
-        ImGui_ImplVulkan_UpdateTexture(imtexid, pixels);
+        ImGui_ImplVulkan_UpdateTexture(imtexid, data);
 #elif IMGUI_RENDERING_DX11
     auto textureID = (ID3D11ShaderResourceView *)imtexid;
     if (textureID)
@@ -404,8 +419,6 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
     clampEnum = GL_CLAMP;
 #   endif //GL_CLAMP
 
-    unsigned char* potImageBuffer = NULL;
-
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,wraps ? GL_REPEAT : clampEnum);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,wrapt ? GL_REPEAT : clampEnum);
     //const GLfloat borderColor[]={0.f,0.f,0.f,1.f};glTexParameterfv(GL_TEXTURE_2D,GL_TEXTURE_BORDER_COLOR,borderColor);
@@ -452,18 +465,26 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
 #   endif //IMIMPL_USE_ARB_TEXTURE_COMPRESSION_TO_COMPRESS_FONT_TEXTURE
 
 #if IMGUI_VULKAN_SHADER
-    if (vulkan)
+    if (is_immat)
     {
-        ImGui::VkMat * vkmat = (ImGui::VkMat*)pixels;
-        if (pixels)
+        ImGui::ImMat *mat = (ImGui::ImMat*)pixels;
+        if (mat->device == IM_DD_VULKAN)
         {
-            auto data = ImGui::ImVulkanVkMatMapping(*vkmat);
-            if (data) glTexImage2D(GL_TEXTURE_2D, 0, ifmt, width, height, 0, fmt, GL_UNSIGNED_BYTE, data);
+            ImGui::VkMat * vkmat = (ImGui::VkMat*)mat;
+            if (!vkmat->empty())
+            {
+                auto data = ImGui::ImVulkanVkMatMapping(*vkmat);
+                if (data) glTexImage2D(GL_TEXTURE_2D, 0, ifmt, width, height, 0, fmt, mat->type == IM_DT_FLOAT32 ? GL_FLOAT : GL_UNSIGNED_BYTE, data);
+            }
+        }
+        else if (mat->device == IM_DD_CPU)
+        {
+            glTexImage2D(GL_TEXTURE_2D, 0, ifmt, width, height, 0, fmt, mat->type == IM_DT_FLOAT32 ? GL_FLOAT : GL_UNSIGNED_BYTE, mat->data);
         }
     }
     else
 #endif
-    glTexImage2D(GL_TEXTURE_2D, 0, ifmt, width, height, 0, fmt, GL_UNSIGNED_BYTE, potImageBuffer ? potImageBuffer : pixels);
+    glTexImage2D(GL_TEXTURE_2D, 0, ifmt, width, height, 0, fmt, GL_UNSIGNED_BYTE, pixels);
 
 #   ifdef IMIMPL_USE_ARB_TEXTURE_COMPRESSION_TO_COMPRESS_FONT_TEXTURE
     if (&imtexid==&gImImplPrivateParams.fontTex)    {
@@ -473,8 +494,6 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
             printf("Font texture compressed = %s\n",compressed==GL_TRUE?"true":"false");
     }
 #   endif //IMIMPL_USE_ARB_TEXTURE_COMPRESSION_TO_COMPRESS_FONT_TEXTURE
-
-    if (potImageBuffer) {STBI_FREE(potImageBuffer);potImageBuffer=NULL;}
 
 #   ifndef NO_IMGUI_OPENGL_GLGENERATEMIPMAP
     if (useMipmapsIfPossible) glGenerateMipmap(GL_TEXTURE_2D);
@@ -833,17 +852,7 @@ void ImMatToTexture(ImGui::ImMat mat, ImTextureID& texture)
             texture = nullptr;
         }
     }
-    if (mat.device == ImDataDevice::IM_DD_CPU)
-    {
-        ImGui::ImGenerateOrUpdateTexture(texture, mat.w, mat.h, mat.c, (const unsigned char *)mat.data);
-    }
-#if IMGUI_VULKAN_SHADER
-    if (mat.device == ImDataDevice::IM_DD_VULKAN)
-    {
-        ImGui::VkMat vkmat = mat;
-        ImGui::ImGenerateOrUpdateTexture(texture, vkmat.w, vkmat.h, vkmat.c, (const unsigned char *)&vkmat, true);
-    }
-#endif
+    ImGui::ImGenerateOrUpdateTexture(texture, mat.w, mat.h, mat.c, (const unsigned char *)&mat, true);
 }
 
 bool OpenWithDefaultApplication(const char* url,bool exploreModeForWindowsOS)	
