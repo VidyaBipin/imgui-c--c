@@ -298,11 +298,13 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
     VkBuffer buffer {nullptr};
     size_t offset {0};
     bool is_vulkan = false;
+    int bit_depth = 8;
     if (is_immat)
     {
         ImGui::ImMat* mat = (ImGui::ImMat*)pixels;
         if (mat->empty())
             return;
+        bit_depth = mat->depth;
 #if IMGUI_VULKAN_SHADER
         if (mat->device == IM_DD_VULKAN)
         {
@@ -330,9 +332,9 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
         g_Textures.resize(g_Textures.size() + 1);
         ImTexture& texture = g_Textures.back();
         if (is_vulkan)
-            texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(buffer, offset, width, height);
+            texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(buffer, offset, width, height, bit_depth);
         else
-            texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(data, width, height);
+            texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(data, width, height, bit_depth);
         if (!texture.TextureID)
         {
             g_Textures.pop_back();
@@ -347,10 +349,10 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
     }
 #if IMGUI_VULKAN_SHADER
     if (is_vulkan)
-        ImGui_ImplVulkan_UpdateTexture(imtexid, buffer, offset);
+        ImGui_ImplVulkan_UpdateTexture(imtexid, buffer, offset, bit_depth);
     else
 #endif
-        ImGui_ImplVulkan_UpdateTexture(imtexid, data);
+        ImGui_ImplVulkan_UpdateTexture(imtexid, data, bit_depth);
 #elif IMGUI_RENDERING_DX11
     auto textureID = (ID3D11ShaderResourceView *)imtexid;
     if (textureID)
@@ -504,15 +506,16 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
 #   endif //NO_IMGUI_OPENGL_GLGENERATEMIPMAP
     glBindTexture(GL_TEXTURE_2D, last_texture);
 #endif
+    //fprintf(stderr, "[ImTexture]:%lu\n", g_Textures.size());
 }
 
-ImTextureID ImCreateTexture(const void* data, int width, int height, double time_stamp)
+ImTextureID ImCreateTexture(const void* data, int width, int height, double time_stamp, int bit_depth)
 {
 #if IMGUI_RENDERING_VULKAN
     g_tex_mutex.lock();
     g_Textures.resize(g_Textures.size() + 1);
     ImTexture& texture = g_Textures.back();
-    texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(data, width, height);
+    texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(data, width, height, bit_depth);
     if (!texture.TextureID)
     {
         g_Textures.pop_back();
@@ -679,6 +682,7 @@ void ImDestroyTexture(ImTextureID texture)
 
 void ImDestroyTextures()
 {
+    //fprintf(stderr, "[remain ImTexture]:%lu\n", g_Textures.size());
     g_tex_mutex.lock();
     for (auto iter = g_Textures.begin(); iter != g_Textures.end(); iter++)
     {

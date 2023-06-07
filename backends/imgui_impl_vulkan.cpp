@@ -1971,7 +1971,24 @@ static void copyImageToBuffer(ImGui_ImplVulkan_InitInfo* v, VkCommandPool comman
     endSingleTimeCommands(v, commandPool, commandBuffer);
 }
 
-ImTextureID ImGui_ImplVulkan_CreateTexture(const void * pixels, int width, int height)
+static void BlitImage(ImGui_ImplVulkan_InitInfo* v, VkCommandPool commandPool, VkImage src, VkImage dst, uint32_t width, uint32_t height)
+{
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands(v, commandPool);
+    VkImageBlit region{};
+    region.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.srcSubresource.layerCount = 1;
+    region.srcOffsets[0] = { 0, 0, 0 };
+    region.srcOffsets[1] = { (int32_t)width, (int32_t)height, 1 };
+    region.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.dstSubresource.layerCount = 1;
+    region.dstOffsets[0] = { 0, 0, 0 };
+    region.dstOffsets[1] = { (int32_t)width, (int32_t)height, 1 };
+
+    vkCmdBlitImage(commandBuffer, src, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region, VK_FILTER_CUBIC_IMG);
+    endSingleTimeCommands(v, commandPool, commandBuffer);
+}
+
+ImTextureID ImGui_ImplVulkan_CreateTexture(const void * pixels, int width, int height, int bit_depth)
 {
     ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
     if (!bd) return (ImTextureID)0;
@@ -2019,8 +2036,27 @@ ImTextureID ImGui_ImplVulkan_CreateTexture(const void * pixels, int width, int h
         throw std::runtime_error("failed to create graphics command pool!");
     }
 
-    copyBufferToImage(v, commandPool, stagingBuffer, 0, texture->textureImage, 
+    if (bit_depth == 8)
+    {
+        copyBufferToImage(v, commandPool, stagingBuffer, 0, texture->textureImage, 
                     static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+    }
+    else if (bit_depth == 32)
+    {
+        VkImage textureImage = VK_NULL_HANDLE;
+        VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
+        createImage(v, width, height, VK_FORMAT_R32G32B32A32_SFLOAT,
+                    VK_IMAGE_TILING_OPTIMAL,
+                    VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                    textureImage, textureImageMemory);
+        copyBufferToImage(v, commandPool, stagingBuffer, 0, textureImage, 
+                    static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+        BlitImage(v, commandPool, textureImage, texture->textureImage,
+                    static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+        vkDestroyImage(v->Device, textureImage, v->Allocator);
+        vkFreeMemory(v->Device, textureImageMemory, v->Allocator);
+    }
 
     vkDestroyBuffer(v->Device, stagingBuffer, nullptr);
     vkFreeMemory(v->Device, stagingBufferMemory, nullptr);
@@ -2029,7 +2065,7 @@ ImTextureID ImGui_ImplVulkan_CreateTexture(const void * pixels, int width, int h
     return (ImTextureID)texture;
 }
 
-ImTextureID ImGui_ImplVulkan_CreateTexture(VkBuffer buffer, size_t buffer_offset, int width, int height)
+ImTextureID ImGui_ImplVulkan_CreateTexture(VkBuffer buffer, size_t buffer_offset, int width, int height, int bit_depth)
 {
     ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
     if (!bd) return (ImTextureID)0;
@@ -2039,11 +2075,12 @@ ImTextureID ImGui_ImplVulkan_CreateTexture(VkBuffer buffer, size_t buffer_offset
     // create texture
     VkCommandPool commandPool = VK_NULL_HANDLE;
     ImTextureVk texture = new ImTextureVK("Texture From GPU");
-    VkDeviceSize imageSize = width * height * 4;
+    VkDeviceSize imageSize = width * height * 4 * bit_depth / 8;
     texture->textureWidth = width;
     texture->textureHeight = height;
     texture->textureChannels = 4;
 
+    
     createImage(v, width,height,VK_FORMAT_R8G8B8A8_UNORM,
                 VK_IMAGE_TILING_OPTIMAL,
                 VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -2060,16 +2097,34 @@ ImTextureID ImGui_ImplVulkan_CreateTexture(VkBuffer buffer, size_t buffer_offset
     if (vkCreateCommandPool(v->Device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics command pool!");
     }
-
-    copyBufferToImage(v, commandPool, buffer, buffer_offset, texture->textureImage, 
+    if (bit_depth == 8)
+    {
+        copyBufferToImage(v, commandPool, buffer, buffer_offset, texture->textureImage, 
+                        static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+    }
+    else if (bit_depth == 32)
+    {
+        VkImage textureImage = VK_NULL_HANDLE;
+        VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
+        createImage(v, width, height, VK_FORMAT_R32G32B32A32_SFLOAT,
+                    VK_IMAGE_TILING_OPTIMAL,
+                    VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                    textureImage, textureImageMemory);
+        copyBufferToImage(v, commandPool, buffer, buffer_offset, textureImage, 
                     static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+        BlitImage(v, commandPool, textureImage, texture->textureImage,
+                    static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+        vkDestroyImage(v->Device, textureImage, v->Allocator);
+        vkFreeMemory(v->Device, textureImageMemory, v->Allocator);
+    }
 
     vkDestroyCommandPool(v->Device, commandPool, nullptr);
     texture->textureDescriptor = (VkDescriptorSet)ImGui_ImplVulkan_AddTexture(texture->textureSampler, texture->textureView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     return (ImTextureID)texture;
 }
 
-void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, VkBuffer stagingBuffer, size_t buffer_offset)
+void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, VkBuffer stagingBuffer, size_t buffer_offset, int bit_depth)
 {
     ImTextureVk texture = (ImTextureVk)textureid;
     if (!texture) return;
@@ -2091,13 +2146,32 @@ void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, VkBuffer stagingBuffe
         throw std::runtime_error("failed to create graphics command pool!");
     }
 
-    copyBufferToImage(v, commandPool, stagingBuffer, buffer_offset, texture->textureImage, 
+    if (bit_depth == 8)
+    {
+        copyBufferToImage(v, commandPool, stagingBuffer, buffer_offset, texture->textureImage, 
                     static_cast<uint32_t>(texture->textureWidth), static_cast<uint32_t>(texture->textureHeight));
+    }
+    else if (bit_depth == 32)
+    {
+        VkImage textureImage = VK_NULL_HANDLE;
+        VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
+        createImage(v, static_cast<uint32_t>(texture->textureWidth), static_cast<uint32_t>(texture->textureHeight), VK_FORMAT_R32G32B32A32_SFLOAT,
+                    VK_IMAGE_TILING_OPTIMAL,
+                    VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                    textureImage, textureImageMemory);
+        copyBufferToImage(v, commandPool, stagingBuffer, buffer_offset, textureImage, 
+                    static_cast<uint32_t>(texture->textureWidth), static_cast<uint32_t>(texture->textureHeight));
+        BlitImage(v, commandPool, textureImage, texture->textureImage,
+                    static_cast<uint32_t>(texture->textureWidth), static_cast<uint32_t>(texture->textureHeight));
+        vkDestroyImage(v->Device, textureImage, v->Allocator);
+        vkFreeMemory(v->Device, textureImageMemory, v->Allocator);
+    }
 
     vkDestroyCommandPool(v->Device, commandPool, nullptr);
 }
 
-void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, const void * pixels)
+void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, const void * pixels, int bit_depth)
 {
     ImTextureVk texture = (ImTextureVk)textureid;
     if (!texture) return;
@@ -2133,8 +2207,27 @@ void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, const void * pixels)
         throw std::runtime_error("failed to create graphics command pool!");
     }
 
-    copyBufferToImage(v, commandPool, stagingBuffer, 0, texture->textureImage, 
+    if (bit_depth == 8)
+    {
+        copyBufferToImage(v, commandPool, stagingBuffer, 0, texture->textureImage, 
                     static_cast<uint32_t>(texture->textureWidth), static_cast<uint32_t>(texture->textureHeight));
+    }
+    else if (bit_depth == 32)
+    {
+        VkImage textureImage = VK_NULL_HANDLE;
+        VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
+        createImage(v, static_cast<uint32_t>(texture->textureWidth), static_cast<uint32_t>(texture->textureHeight), VK_FORMAT_R32G32B32A32_SFLOAT,
+                    VK_IMAGE_TILING_OPTIMAL,
+                    VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                    textureImage, textureImageMemory);
+        copyBufferToImage(v, commandPool, stagingBuffer, 0, textureImage, 
+                    static_cast<uint32_t>(texture->textureWidth), static_cast<uint32_t>(texture->textureHeight));
+        BlitImage(v, commandPool, textureImage, texture->textureImage,
+                    static_cast<uint32_t>(texture->textureWidth), static_cast<uint32_t>(texture->textureHeight));
+        vkDestroyImage(v->Device, textureImage, v->Allocator);
+        vkFreeMemory(v->Device, textureImageMemory, v->Allocator);
+    }
 
     vkDestroyBuffer(v->Device, stagingBuffer, nullptr);
     vkFreeMemory(v->Device, stagingBufferMemory, nullptr);
