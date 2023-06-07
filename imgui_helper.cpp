@@ -176,7 +176,7 @@ struct ImTexture
 #elif IMGUI_OPENGL
 struct ImTexture
 {
-    GLuint TextureID = 0;
+    ImTextureGl TextureID = nullptr;
     int    Width     = 0;
     int    Height    = 0;
     double  TimeStamp = NAN;
@@ -393,20 +393,23 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
     glEnable(GL_TEXTURE_2D);
     GLint last_texture = 0;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-    GLuint& texid = reinterpret_cast<GLuint&>(imtexid);
-    if (texid==0) 
+
+    if (imtexid == 0)
     {
-        glGenTextures(1, &texid);
         g_tex_mutex.lock();
         g_Textures.resize(g_Textures.size() + 1);
         ImTexture& texture = g_Textures.back();
-        texture.TextureID = texid;
+        texture.TextureID = new ImTextureGL("GLTexture");
+        glGenTextures(1, &texture.TextureID->gID);
         texture.Width  = width;
         texture.Height = height;
+        imtexid = texture.TextureID;
         g_tex_mutex.unlock();
     }
 
-    glBindTexture(GL_TEXTURE_2D, texid);
+    auto textureID = (ImTextureGL *)imtexid;
+
+    glBindTexture(GL_TEXTURE_2D, textureID->gID);
 
     GLenum clampEnum = 0x2900;    // 0x2900 -> GL_CLAMP; 0x812F -> GL_CLAMP_TO_EDGE
 #   ifndef GL_CLAMP
@@ -595,12 +598,12 @@ ImTextureID ImCreateTexture(const void* data, int width, int height, double time
     g_tex_mutex.lock();
     g_Textures.resize(g_Textures.size() + 1);
     ImTexture& texture = g_Textures.back();
-
+    texture.TextureID = new ImTextureGL("GLTexture");
     // Upload texture to graphics system
     GLint last_texture = 0;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-    glGenTextures(1, &texture.TextureID);
-    glBindTexture(GL_TEXTURE_2D, texture.TextureID);
+    glGenTextures(1, &texture.TextureID->gID);
+    glBindTexture(GL_TEXTURE_2D, texture.TextureID->gID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -610,7 +613,7 @@ ImTextureID ImCreateTexture(const void* data, int width, int height, double time
     texture.Height = height;
     texture.TimeStamp = time_stamp;
     g_tex_mutex.unlock();
-    return reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture.TextureID));
+    return (ImTextureID)texture.TextureID;
 #else
     return nullptr;
 #endif
@@ -625,7 +628,7 @@ static std::vector<ImTexture>::iterator ImFindTexture(ImTextureID texture)
 #elif IMGUI_RENDERING_DX9
     auto textureID = reinterpret_cast<LPDIRECT3DTEXTURE9>(texture);
 #elif IMGUI_OPENGL
-    auto textureID = static_cast<GLuint>(reinterpret_cast<intptr_t>(texture));
+    auto textureID = reinterpret_cast<ImTextureGl>(texture);
 #else
     int textureID = -1;
 #endif
@@ -665,8 +668,9 @@ void ImDestroyTexture(ImTextureID texture)
 #elif IMGUI_OPENGL
     if (textureIt->TextureID)
     {
-        glDeleteTextures(1, &textureIt->TextureID);
-        textureIt->TextureID = 0;
+        glDeleteTextures(1, &textureIt->TextureID->gID);
+        delete textureIt->TextureID;
+        textureIt->TextureID = nullptr;
     }
 #endif
     g_Textures.erase(textureIt);
@@ -699,11 +703,13 @@ void ImDestroyTextures()
 #elif IMGUI_OPENGL
         if (iter->TextureID)
         {
-            glDeleteTextures(1, &iter->TextureID);
-            iter->TextureID = 0;
+            glDeleteTextures(1, &iter->TextureID->gID);
+            delete iter->TextureID;
+            iter->TextureID = nullptr;
         }
 #endif
     }
+    g_Textures.clear();
     g_tex_mutex.unlock();
 }
 
@@ -778,7 +784,7 @@ int ImGetTextureData(ImTextureID texture, void* data)
     glEnable(GL_TEXTURE_2D);
     GLint last_texture = 0;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-    glBindTexture(GL_TEXTURE_2D, textureIt->TextureID);
+    glBindTexture(GL_TEXTURE_2D, textureIt->TextureID->gID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

@@ -25,8 +25,19 @@
 
 #pragma once
 #include "imgui.h"      // IMGUI_IMPL_API
-#include <string>       // add by Dicky
-
+// add by Dicky
+#include <string>
+typedef struct ImTextureGL
+{
+    std::string name;
+    unsigned int gID {0};
+    ImTextureGL(std::string _name)
+    {
+        name = _name;
+        gID = 0;
+    }
+} *ImTextureGl;
+// add by Dicky end
 // Backend API
 IMGUI_IMPL_API bool     ImGui_ImplOpenGL3_Init(const char* glsl_version = nullptr);
 IMGUI_IMPL_API void     ImGui_ImplOpenGL3_Shutdown();

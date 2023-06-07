@@ -184,7 +184,6 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
-    ImGui::ImDestroyTextures();
     glfwDestroyWindow(window);
     ImGui::UpdatePlatformWindows();
 }

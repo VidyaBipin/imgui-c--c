@@ -134,7 +134,6 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
 
     ImGui_ImplOpenGL2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
-    ImGui::ImDestroyTextures();
     SDL_GL_DeleteContext(gl_context);
     SDL_DestroyWindow(window);
     ImGui::UpdatePlatformWindows();
@@ -156,7 +155,7 @@ int main(int argc, char** argv)
     SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 #endif
 
-    ApplicationWindowProperty property;
+    ApplicationWindowProperty property(argc, argv);
     Application_Setup(property);
     // Init IME effect windows only
     ImGui_ImplSDL2_InitIme();

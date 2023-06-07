@@ -166,7 +166,6 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     ImGui_ImplSDL2_Shutdown();
     CleanupVulkanWindow();
     CleanupVulkan();
-    ImGui::ImDestroyTextures();
     SDL_DestroyWindow(window);
     ImGui::UpdatePlatformWindows();
 }

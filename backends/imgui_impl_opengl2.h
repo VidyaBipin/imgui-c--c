@@ -20,7 +20,19 @@
 
 #pragma once
 #include "imgui.h"      // IMGUI_IMPL_API
-#include <string>       // Add by Dicky
+// Add by Dicky
+#include <string>
+typedef struct ImTextureGL
+{
+    std::string name;
+    unsigned int gID {0};
+    ImTextureGL(std::string _name)
+    {
+        name = _name;
+        gID = 0;
+    }
+} *ImTextureGl;
+// Add by Dicky end
 
 IMGUI_IMPL_API bool     ImGui_ImplOpenGL2_Init();
 IMGUI_IMPL_API void     ImGui_ImplOpenGL2_Shutdown();

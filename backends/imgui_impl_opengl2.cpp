@@ -70,7 +70,7 @@
 struct ImGui_ImplOpenGL2_Data
 {
     GLuint       GlVersion;     // add by Dicky
-    GLuint       FontTexture;
+    ImTextureGL* FontTexture;   // modify by Dicky
 
     ImGui_ImplOpenGL2_Data() { memset((void*)this, 0, sizeof(*this)); }
 };
@@ -251,7 +251,11 @@ void ImGui_ImplOpenGL2_RenderDrawData(ImDrawData* draw_data)
                 glScissor((int)clip_min.x, (int)((float)fb_height - clip_max.y), (int)(clip_max.x - clip_min.x), (int)(clip_max.y - clip_min.y));
 
                 // Bind texture, Draw
-                glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->GetTexID());
+                // modify by Dicky
+                //GL_CALL(glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->GetTexID()));
+                ImTextureGl texture_id = (ImTextureGl)pcmd->GetTexID();
+                glBindTexture(GL_TEXTURE_2D, (GLuint)texture_id->gID);
+                // modify by Dicky end
                 glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer + pcmd->IdxOffset);
             }
         }
@@ -283,19 +287,21 @@ bool ImGui_ImplOpenGL2_CreateFontsTexture()
     int width, height;
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);   // Load as RGBA 32-bit (75% of the memory is wasted, but default font is so small) because it is more likely to be compatible with user's existing shaders. If your ImTextureId represent a higher-level concept than just a GL texture id, consider calling GetTexDataAsAlpha8() instead to save on GPU memory.
 
+    // Modify By Dicky
+    bd->FontTexture = new ImTextureGL("GL2Font");
     // Upload texture to graphics system
     // (Bilinear sampling is required by default. Set 'io.Fonts->Flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling)
     GLint last_texture;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-    glGenTextures(1, &bd->FontTexture);
-    glBindTexture(GL_TEXTURE_2D, bd->FontTexture);
+    glGenTextures(1, &bd->FontTexture->gID);
+    glBindTexture(GL_TEXTURE_2D, bd->FontTexture->gID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
     // Store our identifier
-    io.Fonts->SetTexID((ImTextureID)(intptr_t)bd->FontTexture);
+    io.Fonts->SetTexID((ImTextureID)bd->FontTexture); // modify by Dicky
 
     // Restore state
     glBindTexture(GL_TEXTURE_2D, last_texture);
@@ -309,9 +315,12 @@ void ImGui_ImplOpenGL2_DestroyFontsTexture()
     ImGui_ImplOpenGL2_Data* bd = ImGui_ImplOpenGL2_GetBackendData();
     if (bd->FontTexture)
     {
-        glDeleteTextures(1, &bd->FontTexture);
-        io.Fonts->SetTexID(0);
+        // Modify by Dicky
+        glDeleteTextures(1, &bd->FontTexture->gID);
+        delete bd->FontTexture;
         bd->FontTexture = 0;
+        io.Fonts->SetTexID(0);
+        // Modify by Dicky end
     }
 }
 
