@@ -464,10 +464,10 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
     }
 #   endif //IMIMPL_USE_ARB_TEXTURE_COMPRESSION_TO_COMPRESS_FONT_TEXTURE
 
-#if IMGUI_VULKAN_SHADER
     if (is_immat)
     {
         ImGui::ImMat *mat = (ImGui::ImMat*)pixels;
+#if IMGUI_VULKAN_SHADER
         if (mat->device == IM_DD_VULKAN)
         {
             ImGui::VkMat * vkmat = (ImGui::VkMat*)mat;
@@ -477,14 +477,15 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
                 if (data) glTexImage2D(GL_TEXTURE_2D, 0, ifmt, width, height, 0, fmt, mat->type == IM_DT_FLOAT32 ? GL_FLOAT : GL_UNSIGNED_BYTE, data);
             }
         }
-        else if (mat->device == IM_DD_CPU)
+        else
+#endif
+        if (mat->device == IM_DD_CPU)
         {
             glTexImage2D(GL_TEXTURE_2D, 0, ifmt, width, height, 0, fmt, mat->type == IM_DT_FLOAT32 ? GL_FLOAT : GL_UNSIGNED_BYTE, mat->data);
         }
     }
     else
-#endif
-    glTexImage2D(GL_TEXTURE_2D, 0, ifmt, width, height, 0, fmt, GL_UNSIGNED_BYTE, pixels);
+        glTexImage2D(GL_TEXTURE_2D, 0, ifmt, width, height, 0, fmt, GL_UNSIGNED_BYTE, pixels);
 
 #   ifdef IMIMPL_USE_ARB_TEXTURE_COMPRESSION_TO_COMPRESS_FONT_TEXTURE
     if (&imtexid==&gImImplPrivateParams.fontTex)    {
