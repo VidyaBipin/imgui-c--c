@@ -254,6 +254,7 @@ void ImGui_ImplOpenGL2_RenderDrawData(ImDrawData* draw_data)
                 // modify by Dicky
                 //GL_CALL(glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->GetTexID()));
                 ImTextureGl texture_id = (ImTextureGl)pcmd->GetTexID();
+                if (!texture_id) continue;
                 glBindTexture(GL_TEXTURE_2D, (GLuint)texture_id->gID);
                 // modify by Dicky end
                 glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer + pcmd->IdxOffset);
