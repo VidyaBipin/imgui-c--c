@@ -25,6 +25,7 @@ static bool app_done = false;
 
 void glut_display_func()
 {
+    ImGui::ImUpdateTextures();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL2_NewFrame();

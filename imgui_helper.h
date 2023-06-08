@@ -42,6 +42,7 @@ IMGUI_API void ImMatToTexture(ImGui::ImMat mat, ImTextureID& texture);
 #if IMGUI_RENDERING_VULKAN && IMGUI_VULKAN_SHADER
 IMGUI_API ImTextureID ImCreateTexture(ImGui::VkImageMat & image, double time_stamp = NAN);
 #endif
+IMGUI_API void ImUpdateTextures(); // update internal textures, check need destroy texture and destroy it if we can
 IMGUI_API void ImDestroyTextures(); // clean internal textures
 
 // Experimental: tested on Ubuntu only. Should work with urls, folders and files.

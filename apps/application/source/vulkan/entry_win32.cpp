@@ -195,6 +195,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     bool splash_done = false;
     while (!splash_done)
     {
+        ImGui::ImUpdateTextures();
         ImGui_ImplWin32_WaitForEvent();
 
         // Start the Dear ImGui frame
@@ -404,6 +405,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     bool app_done = false;
     while (!app_done)
     {
+        ImGui::ImUpdateTextures();
         ImGui_ImplWin32_WaitForEvent();
         MSG msg;
         while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))

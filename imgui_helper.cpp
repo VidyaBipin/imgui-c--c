@@ -6,6 +6,7 @@
 #include "imgui_helper.h"
 #include <errno.h>
 #include <mutex>
+#include <thread>
 #include <sstream>
 #include <iomanip>
 
@@ -154,6 +155,8 @@ struct ImTexture
     int     Width     = 0;
     int     Height    = 0;
     double  TimeStamp = NAN;
+    std::thread::id CreateThread;
+    bool NeedDestroy  = false;
 };
 #elif IMGUI_RENDERING_DX11
 #include <imgui_impl_dx11.h>
@@ -163,6 +166,8 @@ struct ImTexture
     int    Width     = 0;
     int    Height    = 0;
     double  TimeStamp = NAN;
+    std::thread::id CreateThread;
+    bool NeedDestroy  = false;
 };
 #elif IMGUI_RENDERING_DX9
 #include <imgui_impl_dx9.h>
@@ -172,6 +177,8 @@ struct ImTexture
     int    Width     = 0;
     int    Height    = 0;
     double  TimeStamp = NAN;
+    std::thread::id CreateThread;
+    bool NeedDestroy  = false;
 };
 #elif IMGUI_OPENGL
 struct ImTexture
@@ -180,6 +187,8 @@ struct ImTexture
     int    Width     = 0;
     int    Height    = 0;
     double  TimeStamp = NAN;
+    std::thread::id CreateThread;
+    bool NeedDestroy  = false;
 };
 #else
 struct ImTexture
@@ -188,6 +197,8 @@ struct ImTexture
     int    Width     = 0;
     int    Height    = 0;
     double  TimeStamp = NAN;
+    std::thread::id CreateThread;
+    bool NeedDestroy  = false;
 };
 #endif
 
@@ -341,6 +352,8 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
             g_tex_mutex.unlock();
             return;
         }
+        texture.CreateThread = std::this_thread::get_id();
+        texture.NeedDestroy = false;
         texture.Width  = width;
         texture.Height = height;
         imtexid = texture.TextureID;
@@ -403,6 +416,8 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
         ImTexture& texture = g_Textures.back();
         texture.TextureID = new ImTextureGL("GLTexture");
         glGenTextures(1, &texture.TextureID->gID);
+        texture.CreateThread = std::this_thread::get_id();
+        texture.NeedDestroy = false;
         texture.Width  = width;
         texture.Height = height;
         imtexid = texture.TextureID;
@@ -522,6 +537,8 @@ ImTextureID ImCreateTexture(const void* data, int width, int height, double time
         g_tex_mutex.unlock();
         return (ImTextureID)nullptr;
     }
+    texture.CreateThread = std::this_thread::get_id();
+    texture.NeedDestroy = false;
     texture.Width  = width;
     texture.Height = height;
     texture.TimeStamp = time_stamp;
@@ -565,6 +582,8 @@ ImTextureID ImCreateTexture(const void* data, int width, int height, double time
     srvDesc.Texture2D.MostDetailedMip = 0;
     pd3dDevice->CreateShaderResourceView(pTexture, &srvDesc, &texture.TextureID);
     pTexture->Release();
+    texture.CreateThread = std::this_thread::get_id();
+    texture.NeedDestroy = false;
     texture.Width  = width;
     texture.Height = height;
     texture.TimeStamp = time_stamp;
@@ -592,6 +611,8 @@ ImTextureID ImCreateTexture(const void* data, int width, int height, double time
     for (int y = 0; y < height; y++)
         memcpy((unsigned char*)tex_locked_rect.pBits + tex_locked_rect.Pitch * y, (unsigned char* )data + (width * bytes_per_pixel) * y, (width * bytes_per_pixel));
     texture.TextureID->UnlockRect(0);
+    texture.CreateThread = std::this_thread::get_id();
+    texture.NeedDestroy = false;
     texture.Width  = width;
     texture.Height = height;
     texture.TimeStamp = time_stamp;
@@ -612,6 +633,8 @@ ImTextureID ImCreateTexture(const void* data, int width, int height, double time
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     glBindTexture(GL_TEXTURE_2D, last_texture);
 
+    texture.CreateThread = std::this_thread::get_id();
+    texture.NeedDestroy = false;
     texture.Width  = width;
     texture.Height = height;
     texture.TimeStamp = time_stamp;
@@ -641,8 +664,39 @@ static std::vector<ImTexture>::iterator ImFindTexture(ImTextureID texture)
     });
 }
 
+static void destroy_texture(ImTexture* tex)
+{
+#if IMGUI_RENDERING_VULKAN
+    if (tex->TextureID)
+    {
+        ImGui_ImplVulkan_DestroyTexture(&tex->TextureID);
+        tex->TextureID = nullptr;
+    }
+#elif IMGUI_RENDERING_DX11
+    if (tex->TextureID)
+    {
+        tex->TextureID->Release();
+        tex->TextureID = nullptr;
+    }
+#elif IMGUI_RENDERING_DX9
+    if (tex->TextureID)
+    {
+        tex->TextureID->Release();
+        tex->TextureID = nullptr;
+    }
+#elif IMGUI_OPENGL
+    if (tex->TextureID)
+    {
+        glDeleteTextures(1, &tex->TextureID->gID);
+        delete tex->TextureID;
+        tex->TextureID = nullptr;
+    }
+#endif
+}
+
 void ImDestroyTexture(ImTextureID texture)
 {
+    //fprintf(stderr, "[Destroy ImTexture]:%lu\n", g_Textures.size());
     g_tex_mutex.lock();
     auto textureIt = ImFindTexture(texture);
     if (textureIt == g_Textures.end())
@@ -650,32 +704,13 @@ void ImDestroyTexture(ImTextureID texture)
         g_tex_mutex.unlock();
         return;
     }
-#if IMGUI_RENDERING_VULKAN
-    if (textureIt->TextureID)
+    if (textureIt->CreateThread != std::this_thread::get_id())
     {
-        ImGui_ImplVulkan_DestroyTexture(&textureIt->TextureID);
-        textureIt->TextureID = nullptr;
+        textureIt->NeedDestroy = true;
+        g_tex_mutex.unlock();
+        return;
     }
-#elif IMGUI_RENDERING_DX11
-    if (textureIt->TextureID)
-    {
-        textureIt->TextureID->Release();
-        textureIt->TextureID = nullptr;
-    }
-#elif IMGUI_RENDERING_DX9
-    if (textureIt->TextureID)
-    {
-        textureIt->TextureID->Release();
-        textureIt->TextureID = nullptr;
-    }
-#elif IMGUI_OPENGL
-    if (textureIt->TextureID)
-    {
-        glDeleteTextures(1, &textureIt->TextureID->gID);
-        delete textureIt->TextureID;
-        textureIt->TextureID = nullptr;
-    }
-#endif
+    destroy_texture(&(*textureIt));
     g_Textures.erase(textureIt);
     g_tex_mutex.unlock();
 }
@@ -686,35 +721,34 @@ void ImDestroyTextures()
     g_tex_mutex.lock();
     for (auto iter = g_Textures.begin(); iter != g_Textures.end(); iter++)
     {
-#if IMGUI_RENDERING_VULKAN
-        if (iter->TextureID)
-        {
-            ImGui_ImplVulkan_DestroyTexture(&iter->TextureID);
-            iter->TextureID = nullptr;
-        }
-#elif IMGUI_RENDERING_DX11
-        if (iter->TextureID)
-        {
-            iter->TextureID->Release();
-            iter->TextureID = nullptr;
-        }
-#elif IMGUI_RENDERING_DX9
-        if (iter->TextureID)
-        {
-            iter->TextureID->Release();
-            iter->TextureID = nullptr;
-        }
-#elif IMGUI_OPENGL
-        if (iter->TextureID)
-        {
-            glDeleteTextures(1, &iter->TextureID->gID);
-            delete iter->TextureID;
-            iter->TextureID = nullptr;
-        }
-#endif
+        destroy_texture(&(*iter));
     }
     g_Textures.clear();
     g_tex_mutex.unlock();
+}
+
+void ImUpdateTextures()
+{
+    g_tex_mutex.lock();
+    for (auto iter = g_Textures.begin(); iter != g_Textures.end();)
+    {
+        if (!iter->NeedDestroy)
+        {
+            iter++;
+        }
+        else if (iter->CreateThread != std::this_thread::get_id())
+        {
+            iter++;
+        }
+        else
+        {
+            //fprintf(stderr, "[Update ImTexture delete]:%lu\n", g_Textures.size());
+            destroy_texture(&(*iter));
+            iter = g_Textures.erase(iter);
+        }
+    }
+    g_tex_mutex.unlock();
+    //fprintf(stderr, "[Update ImTexture]:%lu\n", g_Textures.size());
 }
 
 int ImGetTextureWidth(ImTextureID texture)

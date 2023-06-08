@@ -136,6 +136,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     while (!splash_done)
 #endif
     {
+        ImGui::ImUpdateTextures();
         ImGui_ImplGlfw_WaitForEvent();
         glfwPollEvents();
         if (glfwWindowShouldClose(window))
@@ -377,6 +378,7 @@ int main(int argc, char** argv)
     while (!app_done)
 #endif
     {
+        ImGui::ImUpdateTextures();
         ImGui_ImplGlfw_WaitForEvent();
         glfwPollEvents();
         if (glfwWindowShouldClose(window))

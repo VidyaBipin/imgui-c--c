@@ -98,6 +98,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     while (!splash_done)
 #endif
     {
+        ImGui::ImUpdateTextures();
         ImGui_ImplSDL2_WaitForEvent();
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -361,6 +362,7 @@ int main(int argc, char** argv)
     while (!app_done)
 #endif
     {
+        ImGui::ImUpdateTextures();
         ImGui_ImplSDL2_WaitForEvent();
         SDL_Event event;
         std::vector<std::string> paths;
