@@ -1208,6 +1208,7 @@ ImGuiStyle::ImGuiStyle()
     // add by Dicky
     LayoutAlign             = 0.5f;             // Element alignment inside horizontal and vertical layouts (0.0f - left/top, 1.0f - right/bottom, 0.5f - center).
     TextInternationalize    = 0;                // Default isn't using multi-language for text
+    TexGlyphShadowOffset    = ImVec2(0, 0);     // Default no Shadow
     // add by Dicky end
     // Default theme
     ImGui::StyleColorsDark(this);
@@ -3179,6 +3180,7 @@ static const ImGuiDataVarInfo GStyleVarInfo[] =
     // add by Dicky
     { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, LayoutAlign) },         // ImGuiStyleVar_LayoutAlign
     { ImGuiDataType_S32,   1, (ImU32)IM_OFFSETOF(ImGuiStyle, TextInternationalize) },// ImGuiStyleVar_TextInternationalize
+    { ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImGuiStyle, TexGlyphShadowOffset) },// ImGuiStyleVar_TexGlyphShadowOffset
     // add by Dicky end
 };
 
@@ -3317,6 +3319,9 @@ const char* ImGui::GetStyleColorName(ImGuiCol idx)
     case ImGuiCol_NavWindowingHighlight: return "NavWindowingHighlight";
     case ImGuiCol_NavWindowingDimBg: return "NavWindowingDimBg";
     case ImGuiCol_ModalWindowDimBg: return "ModalWindowDimBg";
+    // Add By Dicky
+    case ImGuiCol_TexGlyphShadow: return "TexGlyphShadow";
+    // Add By Dicky end
     }
     IM_ASSERT(0);
     return "Unknown";

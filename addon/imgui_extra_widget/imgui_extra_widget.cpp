@@ -3400,8 +3400,9 @@ static void HueSelectorEx(char const* label, ImVec2 const size, float* hueCenter
     oss << std::fixed << std::setprecision(2) << *hueCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    ImGui::AddTextComplex(pDrawList, ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2),
-                        value_str.c_str(), 1.0f, text_color, 0.f, 0, ImVec2(1, 1), IM_COL32(128, 128, 128, 255));
+    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
+    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
+    ImGui::PopStyleVar();
     ImGui::EndGroup();
 	ImGui::PopID();
 }
@@ -3461,8 +3462,9 @@ void ImGui::LumianceSelector(char const* label, ImVec2 const size, float* lumCen
     oss << std::fixed << std::setprecision(2) << *lumCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    ImGui::AddTextComplex(pDrawList, ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2),
-                        value_str.c_str(), 1.0f, text_color, 0.f, 0, ImVec2(1, 1), IM_COL32(128, 128, 128, 255));
+    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
+    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
+    ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
 }
@@ -3510,8 +3512,9 @@ void ImGui::GammaSelector(char const* label, ImVec2 const size, float* gammaCent
     oss << std::fixed << std::setprecision(2) << *gammaCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    ImGui::AddTextComplex(pDrawList, ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2),
-                        value_str.c_str(), 1.0f, text_color, 0.f, 0, ImVec2(1, 1), IM_COL32(128, 128, 128, 255));
+    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
+    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
+    ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
 }
@@ -3557,8 +3560,9 @@ void ImGui::TemperatureSelector(char const* label, ImVec2 const size, float* tem
     oss << std::fixed << std::setprecision(2) << *tempCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    ImGui::AddTextComplex(pDrawList, ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2),
-                        value_str.c_str(), 1.0f, text_color, 0.f, 0, ImVec2(1, 1), IM_COL32(128, 128, 128, 255));
+    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
+    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
+    ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
 }
@@ -3613,8 +3617,9 @@ void ImGui::SaturationSelector(char const* label, ImVec2 const size, float* satC
     oss << std::fixed << std::setprecision(2) << *satCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    ImGui::AddTextComplex(pDrawList, ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2),
-                        value_str.c_str(), 1.0f, text_color, 0.f, 0, ImVec2(1, 1), IM_COL32(128, 128, 128, 255));
+    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
+    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
+    ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
 }
@@ -3667,8 +3672,9 @@ void ImGui::ContrastSelector(char const* label, ImVec2 const size, float* conCen
     oss << std::fixed << std::setprecision(2) << *conCenter;
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
-    ImGui::AddTextComplex(pDrawList, ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2),
-                        value_str.c_str(), 1.0f, text_color, 0.f, 0, ImVec2(1, 1), IM_COL32(128, 128, 128, 255));
+    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
+    pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
+    ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
 }
@@ -6865,6 +6871,38 @@ void ImGui::SpinnerSolarArcs(const char *label, float radius, float thickness, c
     }
 }
 
+void ImGui::SpinnerMovingArcs(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t arcs)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = (float)ImFmod(ImGui::GetTime() * speed, IM_PI * 2);
+    const int half_segments = num_segments / 2;
+    auto calculateSpringOscillation = [] (double mass, double stiffness, double initialDisplacement, double time) {
+        double angularFrequency = sqrt(stiffness / mass);
+        double displacement = initialDisplacement * cos(angularFrequency * time);
+        return displacement;
+    };
+    auto calculateDampedSpringOscillation = [] (double mass, double stiffness, double damping, double time){
+        double omega = sqrt(stiffness / mass);
+        double alpha = damping / (2 * mass);
+        double exponent = exp(-alpha * time);
+        double cosTerm = cos(omega * sqrt(1 - alpha * alpha) * time); // ￊ￮￱￨￭￳￱￭￠￿ ￱￮￱￲￠￢￫￿￾￹￠￿
+        return exponent * cosTerm;
+    };
+    for (int i = 0; i < arcs; ++i)
+    {
+        const float rb = (radius / arcs) * 1.3f * (i + 1);
+        //float a = calculateSpringOscillation(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(arcs), PI_2)));
+        float a = calculateDampedSpringOscillation(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(arcs), PI_2)));
+        a *= PI_DIV_2;
+        a += PI_DIV_2;
+        const float angle = ImMax(PI_DIV_2, (1.f - i/(float)arcs) * IM_PI);
+        circle([&] (int i) {
+            const float b = a + (i * angle / num_segments);
+            return ImVec2(ImCos(b) * rb, ImSin(b) * rb);
+        }, color_alpha(color, 1.f), thickness);
+    }
+}
+
 void ImGui::SpinnerRainbowCircle(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t arcs, float mode)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
@@ -8369,21 +8407,35 @@ void ImGui::SpinnerBarChartSine(const char *label, float radius, float thickness
 void ImGui::SpinnerBarChartAdvSine(const char *label, float radius, float thickness, const ImColor &color, float speed, int mode)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
-    const ImGuiStyle &style = GImGui->Style;
+
     const float nextItemKoeff = 1.5f;
-    const float yOffsetKoeftt = 0.8f;
-    const float heightSpeed = 0.8f;
     const float start = (float)ImGui::GetTime() * speed;
     const int bars = radius * 2 / thickness;
-    const float offset = IM_PI / bars;
+    const float offset = PI_DIV_2 / bars;
     for (int i = 0; i < bars; i++)
     {
-        float a = start + (IM_PI - i * offset);
+        float a = start + (PI_DIV_2 - i * offset);
         float halfsx = thickness * ImSin(a);
         float halfsy = (ImMax(0.1f, ImSin(a) + 1.f)) * radius * 0.5f;
         window->DrawList->AddRectFilled(ImVec2(pos.x + i * (thickness * nextItemKoeff) - thickness / 2 + halfsx, centre.y + halfsy),
                                         ImVec2(pos.x + i * (thickness * nextItemKoeff) + thickness / 2 + halfsx, centre.y - halfsy),
                                         color);
+    }
+}
+
+void ImGui::SpinnerBarChartAdvSineFade(const char *label, float radius, float thickness, const ImColor &color, float speed, int mode)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = (float)ImGui::GetTime() * speed;
+    const int bars = radius * 2 / thickness;
+    const float offset = PI_DIV_2 / bars;
+    for (int i = 0; i < bars; i++)
+    {
+        float a = start - i * offset;
+        float halfsy = ImMax(0.1f, ImCos(a) + 1.f) * radius * 0.5f;
+        window->DrawList->AddRectFilled(ImVec2(pos.x + i * thickness - thickness / 2, centre.y + halfsy),
+                                        ImVec2(pos.x + i * thickness + thickness / 2, centre.y - halfsy),
+                                        color_alpha(color, ImMax(0.1f, halfsy / radius)));
     }
 }
 

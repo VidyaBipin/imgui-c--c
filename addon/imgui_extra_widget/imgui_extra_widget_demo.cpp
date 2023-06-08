@@ -526,6 +526,8 @@ void ShowExtraWidgetDemoWindow()
                     case 149: ImGui::SpinnerSquareLoading("SpinnerSquareLoanding", 16, 2, Color{ImColor(255, 255, 255)}, 3 * velocity); ImGui::ShowTooltipOnHover("SpinnerSquareLoanding"); break;
                     case 150: ImGui::SpinnerTextFading("SpinnerTextFading", "Loading", 16, 12, ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f), 4 * velocity); ImGui::ShowTooltipOnHover("SpinnerTextFading"); break;
                     case 151: ImGui::SpinnerBarChartAdvSine ("SpinnerBarChartAdvSine", 16, 5, ImColor(255, 255, 255), 4.8f * velocity, 0); ImGui::ShowTooltipOnHover("SpinnerBarChartAdvSine"); break;
+                    case 152: ImGui::SpinnerBarChartAdvSineFade("SpinnerBarChartAdvSineFade", 16, 5, ImColor(255, 255, 255), 4.8f * velocity, 0); ImGui::ShowTooltipOnHover("SpinnerBarChartAdvSineFade"); break;
+                    case 153: ImGui::SpinnerMovingArcs("SpinnerMovingArcs", 16, 4, ImColor(255, 255, 255), 2 * velocity, 4); ImGui::ShowTooltipOnHover("SpinnerMovingArcs"); break;
 
                     // ...
                     default: break;

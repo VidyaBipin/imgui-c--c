@@ -88,7 +88,7 @@ Index of this file:
 #define IM_UNUSED(_VAR)             ((void)(_VAR))                              // Used to silence "unused variable warnings". Often useful as asserts may be stripped out from final builds.
 #define IM_OFFSETOF(_TYPE,_MEMBER)  offsetof(_TYPE, _MEMBER)                    // Offset of _MEMBER within _TYPE. Standardized as offsetof() in C++11
 #define IMGUI_CHECKVERSION()        ImGui::DebugCheckVersionAndDataLayout(IMGUI_VERSION, sizeof(ImGuiIO), sizeof(ImGuiStyle), sizeof(ImVec2), sizeof(ImVec4), sizeof(ImDrawVert), sizeof(ImDrawIdx))
-
+#define FLOAT_IS_ZERO(_VAR)         (fabs(_VAR) < 1e-6)                         // Add By Dicky to check float == 0
 // Helper Macros - IM_FMTARGS, IM_FMTLIST: Apply printf-style warnings to our formatting functions.
 #if !defined(IMGUI_USE_STB_SPRINTF) && defined(__MINGW32__) && !defined(__clang__)
 #define IM_FMTARGS(FMT)             __attribute__((format(gnu_printf, FMT, FMT+1)))
@@ -1691,6 +1691,9 @@ enum ImGuiCol_
     ImGuiCol_NavWindowingHighlight, // Highlight window when using CTRL+TAB
     ImGuiCol_NavWindowingDimBg,     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
     ImGuiCol_ModalWindowDimBg,      // Darken/colorize entire screen behind a modal window, when one is active
+    //  add by Dicky
+    ImGuiCol_TexGlyphShadow,        // Shadow Color for font texture
+    //  add by Dicky end
     ImGuiCol_COUNT
 };
 
@@ -1734,7 +1737,8 @@ enum ImGuiStyleVar_
     ImGuiStyleVar_SeparatorTextPadding,// ImVec2    SeparatorTextPadding
 	// add By Dicky
     ImGuiStyleVar_LayoutAlign,         // float     LayoutAlign
-    ImGuiStyleVar_TextInternationalize,// int       TextInternationalize 
+    ImGuiStyleVar_TextInternationalize,// int       TextInternationalize
+    ImGuiStyleVar_TexGlyphShadowOffset,// ImVec2    TexGlyphShadowOffset
 	// add By Dicky end
     ImGuiStyleVar_COUNT
 };
@@ -2016,8 +2020,9 @@ struct ImGuiStyle
     float       CurveTessellationTol;       // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
     float       CircleTessellationMaxError; // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
     ImVec4      Colors[ImGuiCol_COUNT];
-    // Add by Dicky for stack layout and Internationlize
+    // Add by Dicky for stack layout, text shadow and Internationlize
     float       LayoutAlign;                // Element alignment inside horizontal and vertical layouts (0.0f - left/top, 1.0f - right/bottom, 0.5f - center).
+    ImVec2      TexGlyphShadowOffset;       // If you would like to use shadows with your text use this. Defaults to (0, 0). Defines horizontal and vertical shadows. Can only be positive at the moment.
     int         TextInternationalize;       // If you need multi-language supported, set this to 1
     // Add by Dicky end
 
@@ -3153,6 +3158,10 @@ struct ImFont
     IMGUI_API void              AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst = true); // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
     IMGUI_API void              SetGlyphVisible(ImWchar c, bool visible);
     IMGUI_API bool              IsGlyphRangeUnused(unsigned int c_begin, unsigned int c_last);
+
+    // add By Dicky
+    IMGUI_API void              RenderTextEx(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0.0f, bool cpu_fine_clip = false) const;
+    // Modiaddfy By Dicky end
 };
 
 //-----------------------------------------------------------------------------

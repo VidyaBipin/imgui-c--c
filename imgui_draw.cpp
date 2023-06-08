@@ -286,6 +286,7 @@ void ImGui::StyleColorsDark(ImGuiStyle* dst)
     colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
     colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
     colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+    colors[ImGuiCol_TexGlyphShadow]         = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);  // add by Dicky
 }
 
 void ImGui::StyleColorsClassic(ImGuiStyle* dst)
@@ -3788,7 +3789,8 @@ void ImFont::RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 }
 
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
-void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
+// modify by dicky, add RenderText to handle shadow text
+void ImFont::RenderTextEx(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
 {
     if (!text_end)
         text_end = text_begin + strlen(text_begin); // ImGui:: functions generally already provides a valid text_end, so this is merely to handle direct calls.
@@ -3971,6 +3973,19 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
     draw_list->_IdxWritePtr = idx_write;
     draw_list->_VtxCurrentIdx = vtx_index;
 }
+
+// add by Dicky to override old RenderText
+void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
+{
+    ImGuiContext& g = *GImGui;
+    ImVec2 offset = g.Style.TexGlyphShadowOffset;
+    if (!FLOAT_IS_ZERO(offset.x) || !FLOAT_IS_ZERO(offset.y))
+    {
+        RenderTextEx(draw_list, size, pos + offset, ImGui::GetColorU32(ImGuiCol_TexGlyphShadow), clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
+    }
+    RenderTextEx(draw_list, size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
+}
+// add by Dicky end
 
 //-----------------------------------------------------------------------------
 // [SECTION] ImGui Internal Render Helpers

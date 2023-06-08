@@ -1052,10 +1052,8 @@ void Text(int fntIndex, const char *fmt,...)    {
 void AddTextComplex(ImDrawList *draw_list, const ImVec2 pos, const char * str, float font_size, ImU32 text_color, float outline_w, ImU32 outline_color, ImVec2 shadow_offset, ImU32 shadow_color)
 {
     ImGui::SetWindowFontScale(font_size);
-    if (shadow_offset.x != 0 || shadow_offset.y != 0)
-    {
-        draw_list->AddText(pos + shadow_offset, shadow_color, str);
-    }
+    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, shadow_offset);
+    ImGui::PushStyleColor(ImGuiCol_TexGlyphShadow, ImGui::ColorConvertU32ToFloat4(shadow_color));
     if (outline_w > 0)
     {
         draw_list->AddText(ImVec2(pos.x - outline_w, pos.y), outline_color, str);
@@ -1064,6 +1062,8 @@ void AddTextComplex(ImDrawList *draw_list, const ImVec2 pos, const char * str, f
         draw_list->AddText(ImVec2(pos.x, pos.y + outline_w), outline_color, str);
     }
     draw_list->AddText(pos, text_color, str);
+    ImGui::PopStyleColor();
+    ImGui::PopStyleVar();
     ImGui::SetWindowFontScale(1.0);
 }
 
