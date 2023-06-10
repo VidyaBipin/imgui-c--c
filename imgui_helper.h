@@ -44,6 +44,7 @@ IMGUI_API ImTextureID ImCreateTexture(ImGui::VkImageMat & image, double time_sta
 #endif
 IMGUI_API void ImUpdateTextures(); // update internal textures, check need destroy texture and destroy it if we can
 IMGUI_API void ImDestroyTextures(); // clean internal textures
+IMGUI_API size_t ImGetTextureCount();
 
 // Experimental: tested on Ubuntu only. Should work with urls, folders and files.
 IMGUI_API bool OpenWithDefaultApplication(const char* url,bool exploreModeForWindowsOS=false);

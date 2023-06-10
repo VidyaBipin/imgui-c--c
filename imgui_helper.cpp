@@ -751,6 +751,11 @@ void ImUpdateTextures()
     //fprintf(stderr, "[Update ImTexture]:%lu\n", g_Textures.size());
 }
 
+size_t ImGetTextureCount()
+{
+    return g_Textures.size();
+}
+
 int ImGetTextureWidth(ImTextureID texture)
 {
     auto textureIt = ImFindTexture(texture);
