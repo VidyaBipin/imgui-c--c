@@ -362,10 +362,10 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
     }
 #if IMGUI_VULKAN_SHADER
     if (is_vulkan)
-        ImGui_ImplVulkan_UpdateTexture(imtexid, buffer, offset, bit_depth);
+        ImGui_ImplVulkan_UpdateTexture(imtexid, buffer, offset, width, height, bit_depth);
     else
 #endif
-        ImGui_ImplVulkan_UpdateTexture(imtexid, data, bit_depth);
+        ImGui_ImplVulkan_UpdateTexture(imtexid, data, width, height, bit_depth);
 #elif IMGUI_RENDERING_DX11
     auto textureID = (ID3D11ShaderResourceView *)imtexid;
     if (textureID)
@@ -522,6 +522,115 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
     glBindTexture(GL_TEXTURE_2D, last_texture);
 #endif
     //fprintf(stderr, "[ImTexture]:%lu\n", g_Textures.size());
+}
+
+void ImCopyToTexture(ImTextureID& imtexid, unsigned char* pixels, int width, int height, int channels, int offset_x, int offset_y, bool is_immat)
+{
+    IM_ASSERT(imtexid);
+    IM_ASSERT(pixels);
+    IM_ASSERT(channels>0 && channels<=4);
+    auto texture_width = ImGetTextureWidth(imtexid);
+    auto texture_height = ImGetTextureHeight(imtexid);
+    if (offset_x < 0 || offset_y < 0 ||
+        offset_x + width > texture_width ||
+        offset_y + height > texture_height)
+        return;
+#if IMGUI_RENDERING_VULKAN
+
+    bool is_vulkan = false;
+    int bit_depth = 8;
+    VkBuffer buffer {nullptr};
+    size_t offset {0};
+    unsigned char* data = nullptr;
+    if (is_immat)
+    {
+        ImGui::ImMat* mat = (ImGui::ImMat*)pixels;
+        if (mat->empty())
+            return;
+        bit_depth = mat->depth;
+#if IMGUI_VULKAN_SHADER
+        if (mat->device == IM_DD_VULKAN)
+        {
+            ImGui::VkMat* vkmat = (ImGui::VkMat*)mat;
+            buffer = vkmat->buffer();
+            offset = vkmat->buffer_offset();
+            if (!buffer)
+                return;
+            is_vulkan = true;
+        }
+        else 
+#endif
+        if (mat->device == IM_DD_CPU)
+        {
+            data = (unsigned char *)mat->data;
+            is_vulkan = false;
+        }
+    }
+    if (!is_vulkan && !data)
+        return;
+#if IMGUI_VULKAN_SHADER
+    if (is_vulkan)
+        ImGui_ImplVulkan_UpdateTexture(imtexid, buffer, offset, width, height, bit_depth, offset_x, offset_y);
+    else
+#endif
+        ImGui_ImplVulkan_UpdateTexture(imtexid, data, width, height, bit_depth, offset_x, offset_y);
+#elif IMGUI_RENDERING_DX11
+#elif IMGUI_RENDERING_DX9
+#elif IMGUI_OPENGL
+    glEnable(GL_TEXTURE_2D);
+    GLint last_texture = 0;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+
+    auto textureID = (ImTextureGL *)imtexid;
+    glBindTexture(GL_TEXTURE_2D, textureID->gID);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+
+    GLenum luminanceAlphaEnum = 0x190A; // 0x190A -> GL_LUMINANCE_ALPHA [Note that we're FORCING this definition even if when it's not defined! What should we use for 2 channels?]
+    GLenum compressedLuminanceAlphaEnum = 0x84EB; // 0x84EB -> GL_COMPRESSED_LUMINANCE_ALPHA [Note that we're FORCING this definition even if when it's not defined! What should we use for 2 channels?]
+#   ifdef GL_LUMINANCE_ALPHA
+    luminanceAlphaEnum = GL_LUMINANCE_ALPHA;
+#   endif //GL_LUMINANCE_ALPHA
+#   ifdef GL_COMPRESSED_LUMINANCE_ALPHA
+    compressedLuminanceAlphaEnum = GL_COMPRESSED_LUMINANCE_ALPHA;
+#   endif //GL_COMPRESSED_LUMINANCE_ALPHA
+
+#   ifdef IMIMPL_USE_ARB_TEXTURE_SWIZZLE_TO_SAVE_FONT_TEXTURE_MEMORY
+    if (&imtexid==&gImImplPrivateParams.fontTex && channels==1) {
+        GLint swizzleMask[] = {GL_ONE, GL_ONE, GL_ONE, GL_ALPHA};
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzleMask);
+        //printf("IMIMPL_USE_ARB_TEXTURE_SWIZZLE_TO_SAVE_FONT_TEXTURE_MEMORY used.\n");
+    }
+#   endif //IMIMPL_USE_ARB_TEXTURE_SWIZZLE_TO_SAVE_FONT_TEXTURE_MEMORY
+    GLenum ifmt = channels==1 ? GL_ALPHA : channels==2 ? luminanceAlphaEnum : channels==3 ? GL_RGB : GL_RGBA;  // channels == 1 could be GL_LUMINANCE, GL_ALPHA, GL_RED ...
+    GLenum fmt = ifmt;
+
+    if (is_immat)
+    {
+        ImGui::ImMat *mat = (ImGui::ImMat*)pixels;
+        auto src_format = mat->type == IM_DT_FLOAT32 ? GL_FLOAT : GL_UNSIGNED_BYTE;
+#if IMGUI_VULKAN_SHADER
+        if (mat->device == IM_DD_VULKAN)
+        {
+            ImGui::VkMat * vkmat = (ImGui::VkMat*)mat;
+            if (!vkmat->empty())
+            {
+                auto data = ImGui::ImVulkanVkMatMapping(*vkmat);
+                if (data) glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, width, height, fmt, src_format, data);
+            }
+        }
+        else
+#endif
+        if (mat->device == IM_DD_CPU)
+        {
+            glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, width, height, fmt, src_format, mat->data);
+        }
+    }
+    else
+        glTexSubImage2D(GL_TEXTURE_2D, 0, offset_x, offset_y, width, height, fmt, GL_UNSIGNED_BYTE, pixels);
+
+    glBindTexture(GL_TEXTURE_2D, last_texture);
+#endif
 }
 
 ImTextureID ImCreateTexture(const void* data, int width, int height, double time_stamp, int bit_depth)

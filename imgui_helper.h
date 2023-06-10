@@ -26,8 +26,8 @@ namespace ImGui {
 // ImGui Info
 IMGUI_API void ShowImGuiInfo();
 // Image load
-IMGUI_API void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int channels,const unsigned char* pixels,bool useMipmapsIfPossible,bool wraps,bool wrapt,bool minFilterNearest = false,bool magFilterNearest=false,bool is_immat=false);
-IMGUI_API inline void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int channels,const unsigned char* pixels, bool is_immat = false) { ImGenerateOrUpdateTexture(imtexid, width, height, channels, pixels,false,false,false,false,false,is_immat); };
+IMGUI_API void ImGenerateOrUpdateTexture(ImTextureID& imtexid, int width, int height, int channels, const unsigned char* pixels, bool useMipmapsIfPossible, bool wraps, bool wrapt, bool minFilterNearest = false, bool magFilterNearest=false, bool is_immat=false);
+IMGUI_API inline void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width, int height, int channels, const unsigned char* pixels, bool is_immat = false) { ImGenerateOrUpdateTexture(imtexid, width, height, channels, pixels,false,false,false,false,false,is_immat); };
 IMGUI_API ImTextureID ImCreateTexture(const void* data, int width, int height, double time_stamp = NAN, int bit_depth = 8);
 IMGUI_API ImTextureID ImLoadTexture(const char* path);
 IMGUI_API void ImLoadImageToMat(const char* path, ImMat& mat, bool gray = false);
@@ -39,6 +39,7 @@ IMGUI_API ImPixel ImGetTexturePixel(ImTextureID texture, float x, float y);
 IMGUI_API double ImGetTextureTimeStamp(ImTextureID texture);
 IMGUI_API bool ImTextureToFile(ImTextureID texture, std::string path);
 IMGUI_API void ImMatToTexture(ImGui::ImMat mat, ImTextureID& texture);
+IMGUI_API void ImCopyToTexture(ImTextureID& imtexid, unsigned char* pixels, int width, int height, int channels, int offset_x, int offset_y, bool is_immat=false);
 #if IMGUI_RENDERING_VULKAN && IMGUI_VULKAN_SHADER
 IMGUI_API ImTextureID ImCreateTexture(ImGui::VkImageMat & image, double time_stamp = NAN);
 #endif

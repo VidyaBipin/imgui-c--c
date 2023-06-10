@@ -252,6 +252,7 @@ public:
 public:
     ImGui::ImMat image {ImGui::ImMat(256, 256, 4, 1u, 4)};
     ImGui::ImMat draw_mat {ImGui::ImMat(512, 512, 4, 1u, 4)};
+    ImGui::ImMat small_mat {ImGui::ImMat(128, 128, 4, 4u, 4)};
     ImTextureID ImageTexture = 0;
     ImTextureID DrawMatTexture = 0;
 };
@@ -370,6 +371,10 @@ void Example::DrawLineDemo()
     float s = abs(sin(t * 0.1)) * 0.5 + 0.4;
     float h2 = abs(sin(t * 0.4));
     float h3 = abs(sin(t * 0.8));
+    static int offset_x = 0;
+    static int offset_y = 0;
+    static int step_x = 2;
+    static int step_y = 3;
     ImVec4 base_color = ImVec4(0.f, 0.f, 0.f, 1.f);
     ImVec4 light_color = ImVec4(0.f, 0.f, 0.f, 1.f);
     ImVec4 t_color = ImVec4(0.f, 0.f, 0.f, 1.f);
@@ -384,6 +389,14 @@ void Example::DrawLineDemo()
     ImPixel line_color(base_color.x, base_color.y, base_color.z, 1.f);
     ImPixel circle_color(light_color.x, light_color.y, light_color.z, 1.f);
     ImPixel text_color(t_color.x, t_color.y, t_color.z, 1.f);
+    small_mat.clean(text_color);
+    small_mat.draw_line(ImPoint(0, 0), ImPoint(small_mat.w - 1, 0), 1, ImPixel(0, 0, 0, 1));
+    small_mat.draw_line(ImPoint(0, 0), ImPoint(0, small_mat.h - 1), 1, ImPixel(0, 0, 0, 1));
+    small_mat.draw_line(ImPoint(small_mat.w - 1, 0), ImPoint(small_mat.w - 1, small_mat.h - 1), 1, ImPixel(0, 0, 0, 1));
+    small_mat.draw_line(ImPoint(0, small_mat.h - 1), ImPoint(small_mat.w - 1, small_mat.h - 1), 1, ImPixel(0, 0, 0, 1));
+    small_mat.draw_line(ImPoint(small_mat.w / 2, 0), ImPoint(small_mat.w / 2, small_mat.h - 1), 1, ImPixel(0, 0, 0, 1));
+    small_mat.draw_line(ImPoint(0, small_mat.h / 2), ImPoint(small_mat.w - 1, small_mat.h / 2), 1, ImPixel(0, 0, 0, 1));
+    ImGui::VkMat small_vkmat(small_mat);
 
     // draw line test
     for (int j = 0; j < 5; j++) 
@@ -415,6 +428,14 @@ void Example::DrawLineDemo()
     ImGui::DrawTextToMat(draw_mat, ImPoint(50, 50), text_str.c_str(), text_color, 1.0);
 
     ImGui::ImMatToTexture(draw_mat, DrawMatTexture);
+
+    ImGui::ImCopyToTexture(DrawMatTexture, (unsigned char*)&small_vkmat, small_vkmat.w, small_vkmat.h, small_vkmat.c, offset_x, offset_y, true);
+    
+    offset_x += step_x;
+    offset_y += step_y;
+    if (offset_x < 0 || offset_x + small_mat.w >= draw_mat.w) { step_x = -step_x; offset_x += step_x; }
+    if (offset_y < 0 || offset_y + small_mat.h >= draw_mat.h) { step_y = -step_y; offset_y += step_y; }
+    
     ImGui::Image(DrawMatTexture, ImVec2(draw_mat.w, draw_mat.h));
 }
 
