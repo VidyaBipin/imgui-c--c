@@ -396,7 +396,9 @@ void Example::DrawLineDemo()
     small_mat.draw_line(ImPoint(0, small_mat.h - 1), ImPoint(small_mat.w - 1, small_mat.h - 1), 1, ImPixel(0, 0, 0, 1));
     small_mat.draw_line(ImPoint(small_mat.w / 2, 0), ImPoint(small_mat.w / 2, small_mat.h - 1), 1, ImPixel(0, 0, 0, 1));
     small_mat.draw_line(ImPoint(0, small_mat.h / 2), ImPoint(small_mat.w - 1, small_mat.h / 2), 1, ImPixel(0, 0, 0, 1));
+#if IMGUI_VULKAN_SHADER
     ImGui::VkMat small_vkmat(small_mat);
+#endif
 
     // draw line test
     for (int j = 0; j < 5; j++) 
@@ -429,8 +431,12 @@ void Example::DrawLineDemo()
 
     ImGui::ImMatToTexture(draw_mat, DrawMatTexture);
 
+#if IMGUI_VULKAN_SHADER
     ImGui::ImCopyToTexture(DrawMatTexture, (unsigned char*)&small_vkmat, small_vkmat.w, small_vkmat.h, small_vkmat.c, offset_x, offset_y, true);
-    
+#else
+    ImGui::ImCopyToTexture(DrawMatTexture, (unsigned char*)&small_mat, small_mat.w, small_mat.h, small_mat.c, offset_x, offset_y, true);
+#endif
+
     offset_x += step_x;
     offset_y += step_y;
     if (offset_x < 0 || offset_x + small_mat.w >= draw_mat.w) { step_x = -step_x; offset_x += step_x; }

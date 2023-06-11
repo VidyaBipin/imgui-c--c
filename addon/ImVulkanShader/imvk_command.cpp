@@ -1921,6 +1921,7 @@ void VkCompute::benchmark_print()
 
 int VkCompute::submit_and_wait(uint64_t timeout)
 {
+    //fprintf(stderr, "[Vkshader Debug]: %s\n", m_Name.c_str());
     if (!vkdev->info.support_VK_KHR_push_descriptor())
     {
         d->begin_command_buffer();
