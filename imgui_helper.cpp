@@ -1026,6 +1026,11 @@ bool ImTextureToFile(ImTextureID texture, std::string path)
         else if (file_suffix.compare(".tga") == 0 || file_suffix.compare(".TGA") == 0)
             stbi_write_tga(path.c_str(), width, height, channels, data);
     }
+    else
+    {
+        path += ".png";
+        stbi_write_png(path.c_str(), width, height, channels, data, width * channels);
+    }
     if (data) IM_FREE(data);
     return true;
 }
