@@ -179,6 +179,7 @@ compile_shader(internals/Substract_mean_normalize_shader.h Filter_data)
 compile_shader(internals/Transpose_shader.h Filter_data)
 compile_shader(internals/warpAffine_shader.h Filter_data)
 compile_shader(internals/warpPerspective_shader.h Filter_data)
+compile_shader(internals/Binary_shader.h Filter_data)
 # filters
 compile_shader(filters/Bilateral_shader.h Filter_data)
 compile_shader(filters/Brightness_shader.h Filter_data)
@@ -377,6 +378,7 @@ set(VKSHADER_SRCS
     internals/warpAffine_vulkan.cpp
     internals/Substract_mean_normalize.cpp
     internals/Copy_make_border.cpp
+    internals/Binary_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -405,6 +407,8 @@ set(VKSHADER_INCS
     internals/Substract_mean_normalize.h
     internals/Copy_make_border_shader.h
     internals/Copy_make_border.h
+    internals/Binary_shader.h
+    internals/Binary_vulkan.cpp
 )
 
 set(VKSHADER_INC_DIRS

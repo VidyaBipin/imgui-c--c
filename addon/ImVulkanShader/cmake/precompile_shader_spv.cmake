@@ -31,6 +31,7 @@ add_custom_command(
          "-D sfp2afpmat4(v)=v"
          "-D afp2sfpmat4(v)=v"
          "-D psc(x)=(x==0?p.x:x)"
+         "-D eps=float(1e-8)"
          -V -x -o ${SHADER_fp32_SPV_HEX_FILE} ${SHADER_SRC}
     DEPENDS ${SHADER_SRC}
     COMMENT "Building SPIR-V module ${SHADER_fp32_SRC_NAME_WE}.spv"
@@ -65,6 +66,7 @@ add_custom_command(
          "-D buffer_cp8to1(buf,i4,ii4,sbuf,si)={buf[i4.r]=sbuf[si].abcd.r;buf[i4.g]=sbuf[si].abcd.g;buf[i4.b]=sbuf[si].abcd.b;buf[i4.a]=sbuf[si].abcd.a; buf[ii4.r]=sbuf[si].efgh.r;buf[ii4.g]=sbuf[si].efgh.g;buf[ii4.b]=sbuf[si].efgh.b;buf[ii4.a]=sbuf[si].efgh.a;}"
          "-D buffer_cp8to4(buf,i2,sbuf,si)={buf[i2.r]=sbuf[si].abcd;buf[i2.g]=sbuf[si].efgh;}"
          "-D psc(x)=(x==0?p.x:x)"
+         "-D eps=float16_t(1e-4)"
          -DImVulkan_fp16_storage=1
          -V -x -o ${SHADER_fp16s_SPV_HEX_FILE} ${SHADER_SRC}
     DEPENDS ${SHADER_SRC}
@@ -102,6 +104,7 @@ add_custom_command(
          "-D sfp2afpmat4(v)=v"
          "-D afp2sfpmat4(v)=v"
          "-D psc(x)=(x==0?p.x:x)"
+         "-D eps=float16_t(1e-4)"
          -DImVulkan_fp16_storage=1 -DImVulkan_fp16_arithmetic=1
          -V -x -o ${SHADER_fp16sa_SPV_HEX_FILE} ${SHADER_SRC}
     DEPENDS ${SHADER_SRC}
@@ -174,6 +177,7 @@ add_custom_command(
          "-D sfp2afpmat4(v)=v"
          "-D afp2sfpmat4(v)=v"
          "-D psc(x)=(x==0?p.x:x)"
+         "-D eps=float(1e-8)"
          -DImVulkan_image_shader=1
          -V -x -o ${SHADER_image_SPV_HEX_FILE} ${SHADER_SRC}
     DEPENDS ${SHADER_SRC}
@@ -246,6 +250,7 @@ add_custom_command(
          "-D sfp2afpmat4(v)=v"
          "-D afp2sfpmat4(v)=v"
          "-D psc(x)=(x==0?p.x:x)"
+         "-D eps=float16_t(1e-4)"
          -DImVulkan_image_shader=1 -DImVulkan_fp16_storage=1
          -V -x -o ${SHADER_image_fp16s_SPV_HEX_FILE} ${SHADER_SRC}
     DEPENDS ${SHADER_SRC}
@@ -318,6 +323,7 @@ add_custom_command(
          "-D afp2sfpmat4(v)=v"
 
          "-D psc(x)=(x==0?p.x:x)"
+         "-D eps=float16_t(1e-4)"
          -DImVulkan_image_shader=1 -DImVulkan_fp16_storage=1 -DImVulkan_fp16_arithmetic=1
          -V -x -o ${SHADER_image_fp16sa_SPV_HEX_FILE} ${SHADER_SRC}
     DEPENDS ${SHADER_SRC}
@@ -390,6 +396,7 @@ add_custom_command(
          "-D buffer_cp8to1(buf,i4,ii4,sbuf,si)={uvec4 _v=sbuf[si]; vec2 _v0=unpackHalf2x16(_v.r);vec2 _v1=unpackHalf2x16(_v.g);vec2 _v2=unpackHalf2x16(_v.b);vec2 _v3=unpackHalf2x16(_v.a); buf[i4.r]=_v0.r;buf[i4.g]=_v0.g;buf[i4.b]=_v1.r;buf[i4.a]=_v1.g; buf[ii4.r]=_v2.r;buf[ii4.g]=_v2.g;buf[ii4.b]=_v3.r;buf[ii4.a]=_v3.g;}"
          "-D buffer_cp8to4(buf,i2,sbuf,si)={uvec4 _v=sbuf[si]; buf[i2.r]=_v.rg;buf[i2.g]=_v.ba;}"
          "-D psc(x)=(x==0?p.x:x)"
+         "-D eps=float16_t(1e-4)"
          -DImVulkan_fp16_packed=1 -DImVulkan_fp16_arithmetic=1
          -V -x -o ${SHADER_fp16pa_SPV_HEX_FILE} ${SHADER_SRC}
     DEPENDS ${SHADER_SRC}
@@ -460,6 +467,7 @@ add_custom_command(
          "-D buffer_cp8to4(buf,i2,sbuf,si)={uvec4 _v=sbuf[si]; buf[i2.r]=_v.rg;buf[i2.g]=_v.ba;}"
 
          "-D psc(x)=(x==0?p.x:x)"
+         "-D eps=float16_t(1e-4)"
          -DImVulkan_image_shader=1 -DImVulkan_fp16_packed=1
          -V -x -o ${SHADER_image_fp16p_SPV_HEX_FILE} ${SHADER_SRC}
     DEPENDS ${SHADER_SRC}
@@ -530,6 +538,7 @@ add_custom_command(
          "-D buffer_cp8to4(buf,i2,sbuf,si)={uvec4 _v=sbuf[si]; buf[i2.r]=_v.rg;buf[i2.g]=_v.ba;}"
 
          "-D psc(x)=(x==0?p.x:x)"
+         "-D eps=float16_t(1e-4)"
          -DImVulkan_image_shader=1 -DImVulkan_fp16_packed=1 -DImVulkan_fp16_arithmetic=1
          -V -x -o ${SHADER_image_fp16pa_SPV_HEX_FILE} ${SHADER_SRC}
     DEPENDS ${SHADER_SRC}
