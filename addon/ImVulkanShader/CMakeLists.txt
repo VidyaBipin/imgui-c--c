@@ -195,6 +195,8 @@ compile_shader(filters/Gamma_shader.h Filter_data)
 compile_shader(filters/Hue_shader.h Filter_data)
 compile_shader(filters/Saturation_shader.h Filter_data)
 compile_shader(filters/Lut3D_shader.h LUT3D_data)
+compile_shader(filters/Dilation_shader.h Filter_data)
+compile_shader(filters/Erosion_shader.h Filter_data)
 # scopes
 compile_shader(scopes/CIE_shader.h CIE_data)
 compile_shader(scopes/CIE_shader.h CIE_merge_data)
@@ -299,6 +301,8 @@ set(VKSHADER_SRCS
     filters/ColorInvert_vulkan.cpp
     filters/Bilateral_vulkan.cpp
     filters/Box.cpp
+    filters/Dilation_vulkan.cpp
+    filters/Erosion_vulkan.cpp
 )
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
@@ -325,6 +329,10 @@ set(VKSHADER_INCS
     filters/Bilateral_shader.h
     filters/Bilateral_vulkan.h
     filters/Box.h
+    filters/Dilation_shader.h
+    filters/Dilation_vulkan.h
+    filters/Erosion_shader.h
+    filters/Erosion_vulkan.h
 )
 
 set(VKSHADER_INC_DIRS
