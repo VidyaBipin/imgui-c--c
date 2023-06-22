@@ -354,7 +354,7 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SliderFloat("Speed", &velocity, 0.0f, 10.0f, "velocity = %.3f");
         
         static ImVec2 selected{0, 0};
-        constexpr int sidex = 11, sidey = 14;
+        constexpr int sidex = 11, sidey = 15;
 
         float widget_size = 50.f;
         static ImColor spinner_filling_meb_bg;
@@ -528,6 +528,7 @@ void ShowExtraWidgetDemoWindow()
                     case 151: ImGui::SpinnerBarChartAdvSine ("SpinnerBarChartAdvSine", 16, 5, ImColor(255, 255, 255), 4.8f * velocity, 0); ImGui::ShowTooltipOnHover("SpinnerBarChartAdvSine"); break;
                     case 152: ImGui::SpinnerBarChartAdvSineFade("SpinnerBarChartAdvSineFade", 16, 5, ImColor(255, 255, 255), 4.8f * velocity, 0); ImGui::ShowTooltipOnHover("SpinnerBarChartAdvSineFade"); break;
                     case 153: ImGui::SpinnerMovingArcs("SpinnerMovingArcs", 16, 4, ImColor(255, 255, 255), 2 * velocity, 4); ImGui::ShowTooltipOnHover("SpinnerMovingArcs"); break;
+                    case 154: ImGui::SpinnerFadeTris("SpinnerFadeTris", 20, ImColor(255, 255, 255), 5.f * velocity, 2); ImGui::ShowTooltipOnHover("SpinnerFadeTris"); break;
 
                     // ...
                     default: break;

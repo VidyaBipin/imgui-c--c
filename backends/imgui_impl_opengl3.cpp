@@ -289,7 +289,12 @@ bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
     io.BackendRendererName = "imgui_impl_opengl3";
 
     // Query for GL version (e.g. 320 for GL 3.2)
-#if !defined(IMGUI_IMPL_OPENGL_ES2)
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+    // GLES 2
+    bd->GlVersion = 200;
+    bd->GlProfileIsES2 = true;
+#else
+    // Desktop or GLES 3
     GLint major = 0;
     GLint minor = 0;
     glGetIntegerv(GL_MAJOR_VERSION, &major);
@@ -306,6 +311,10 @@ bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
     bd->GlProfileIsCompat = (bd->GlProfileMask & GL_CONTEXT_COMPATIBILITY_PROFILE_BIT) != 0;
 #endif
 
+#if defined(IMGUI_IMPL_OPENGL_ES3)
+    bd->GlProfileIsES3 = true;
+#endif
+
     bd->UseBufferSubData = false;
     /*
     // Query vendor to enable glBufferSubData kludge
@@ -315,16 +324,10 @@ bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
             bd->UseBufferSubData = true;
 #endif
     */
-#elif defined(IMGUI_IMPL_OPENGL_ES2)
-    bd->GlVersion = 200; // GLES 2
-    bd->GlProfileIsES2 = true;
-#elif defined(IMGUI_IMPL_OPENGL_ES3)
-    bd->GlVersion = 200; // Don't raise version as it is intended as a desktop version check for now.
-    bd->GlProfileIsES3 = true;
 #endif
 
 #ifdef IMGUI_IMPL_OPENGL_DEBUG
-    printf("GL_MAJOR_VERSION = %d\nGL_MINOR_VERSION = %d\nGL_VENDOR = '%s'\nGL_RENDERER = '%s'\n", major, minor, (const char*)glGetString(GL_VENDOR), (const char*)glGetString(GL_RENDERER)); // [DEBUG]
+    printf("GlVersion = %d\nGlProfileIsCompat = %d\nGlProfileMask = 0x%X\nGlProfileIsES2 = %d, GlProfileIsES3 = %d\nGL_VENDOR = '%s'\nGL_RENDERER = '%s'\n", bd->GlVersion, bd->GlProfileIsCompat, bd->GlProfileMask, bd->GlProfileIsES2, bd->GlProfileIsES3, (const char*)glGetString(GL_VENDOR), (const char*)glGetString(GL_RENDERER)); // [DEBUG]
 #endif
 
 #ifdef IMGUI_IMPL_OPENGL_MAY_HAVE_VTX_OFFSET
@@ -675,14 +678,13 @@ bool ImGui_ImplOpenGL3_CreateFontsTexture()
     int width, height;
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);   // Load as RGBA 32-bit (75% of the memory is wasted, but default font is so small) because it is more likely to be compatible with user's existing shaders. If your ImTextureId represent a higher-level concept than just a GL texture id, consider calling GetTexDataAsAlpha8() instead to save on GPU memory.
 
-    // Modify By Dicky
-    bd->FontTexture = new ImTextureGL("GL3Font");
+    bd->FontTexture = new ImTextureGL("GL3Font"); // Add By Dicky
     // Upload texture to graphics system
     // (Bilinear sampling is required by default. Set 'io.Fonts->Flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling)
     GLint last_texture;
     GL_CALL(glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture));
-    GL_CALL(glGenTextures(1, &bd->FontTexture->gID));
-    GL_CALL(glBindTexture(GL_TEXTURE_2D, bd->FontTexture->gID));
+    GL_CALL(glGenTextures(1, &bd->FontTexture->gID)); // Modify By Dicky
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, bd->FontTexture->gID)); // Modify By Dicky
     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 #ifdef GL_UNPACK_ROW_LENGTH // Not on WebGL/ES

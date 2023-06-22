@@ -558,6 +558,7 @@ IMGUI_API void SpinnerTwinAng360(const char *label, float radius1, float radius2
 IMGUI_API void SpinnerIncDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 6);
 IMGUI_API void SpinnerIncFullDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 4);
 IMGUI_API void SpinnerFadeBars(const char *label, float w, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t bars = 3, bool scale = false);
+IMGUI_API void SpinnerFadeTris(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dim = 2, bool scale = false);
 IMGUI_API void SpinnerBarsRotateFade(const char *label, float rmin, float rmax , float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t bars = 6);
 IMGUI_API void SpinnerBarsScaleMiddle(const char *label, float w, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t bars = 3);
 IMGUI_API void SpinnerAngTwin(const char *label, float radius1, float radius2, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI, size_t arcs = 1);
