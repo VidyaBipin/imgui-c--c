@@ -5831,6 +5831,15 @@ static bool SpinnerBegin(const char *label, float radius, ImVec2 &pos, ImVec2 &s
 #define SPINNER_HEADER(pos, size, centre, num_segments) ImVec2 pos, size, centre; int num_segments; if (!SpinnerBegin(label, radius, pos, size, centre, num_segments)) { return; }; ImGuiWindow *window = ImGui::GetCurrentWindow(); \
 auto circle = [&] (auto point_func, auto dbc, auto dth) { window->DrawList->PathClear(); for (int i = 0; i < num_segments; i++) { ImVec2 p = point_func(i); window->DrawList->PathLineTo(ImVec2(centre.x + p.x, centre.y + p.y)); } window->DrawList->PathStroke(dbc, false, dth); }
 inline ImColor color_alpha(ImColor c, float alpha) { c.Value.w *= alpha * ImGui::GetStyle().Alpha; return c; }
+float damped_pring (double mass, double stiffness, double damping, double time, float a = ImGui::PI_DIV_2, float b = ImGui::PI_DIV_2) {
+    double omega = sqrt(stiffness / mass);
+    double alpha = damping / (2 * mass);
+    double exponent = exp(-alpha * time);
+    double cosTerm = cos(omega * sqrt(1 - alpha * alpha) * time);
+    float result = exponent * cosTerm;
+    return ((result *= a) + b);
+};
+
 /*
     const char *label: A string label for the spinner, used to identify it in ImGui.
     float radius: The radius of the spinner.
@@ -6117,7 +6126,7 @@ void ImGui::SpinnerVDots(const char *label, float radius, float thickness, const
     window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
 }
 
-void ImGui::SpinnerBounceDots(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t dots)
+void ImGui::SpinnerBounceDots(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t dots, int mode)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -6130,11 +6139,9 @@ void ImGui::SpinnerBounceDots(const char *label, float radius, float thickness, 
     float start = (float)ImGui::GetTime() * speed;
 
     const float offset = PI_DIV(dots);
-    for (size_t i = 0; i < dots; i++)
-    {
-        float a = start + (IM_PI - i * offset);
-        float sina = ImSin(a * heightSpeed);
-        float y = centre.y + sina * thickness * heightKoeff;
+    for (size_t i = 0; i < dots; i++) {
+        float a = mode ? damped_pring(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(dots*2), PI_2))) : start + (IM_PI - i * offset);
+        float y =  centre.y + ImSin(a * heightSpeed) * thickness * heightKoeff;
         window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + i * (thickness * nextItemKoeff), ImMin(y, centre.y)), thickness, color_alpha(color, 1.f), 8);
     }
 }
@@ -6398,7 +6405,7 @@ void ImGui::SpinnerMovingDots(const char *label, float radius, float thickness, 
     }
 }
 
-void ImGui::SpinnerRotateDots(const char *label, float radius, float thickness, const ImColor &color, float speed, int dots)
+void ImGui::SpinnerRotateDots(const char *label, float radius, float thickness, const ImColor &color, float speed, int dots, int mode)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -6424,7 +6431,8 @@ void ImGui::SpinnerRotateDots(const char *label, float radius, float thickness, 
 
     for (int i = 0; i < dots; i++)
     {
-        const float a = start + (i * PI_2_DIV(dots));
+        float a = mode ? start + i * PI_2_DIV(dots) + damped_pring(1, 10.f, 1.0f, ImSin(start + i * PI_2_DIV(dots)), PI_2_DIV(dots), 0)
+                       : start + (i * PI_2_DIV(dots));
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), thickness, color_alpha(color, 1.f), 8);
     }
 }
@@ -6626,14 +6634,14 @@ void ImGui::SpinnerTwinAng180(const char *label, float radius1, float radius2, f
     window->DrawList->PathStroke(color_alpha(color1, 1.f), false, thickness);
 }
 
-void ImGui::SpinnerTwinAng360(const char *label, float radius1, float radius2, float thickness, const ImColor &color1, const ImColor &color2, float speed1, float speed2)
+void ImGui::SpinnerTwinAng360(const char *label, float radius1, float radius2, float thickness, const ImColor &color1, const ImColor &color2, float speed1, float speed2, int mode)
 {
     const float radius = ImMax(radius1, radius2);
     SPINNER_HEADER(pos, size, centre, num_segments);
 
     num_segments *= 4;
-    const float start1 = ImFmod((float)ImGui::GetTime() * speed1, PI_2);
-    const float start2 = ImFmod((float)ImGui::GetTime() * speed2, PI_2);
+    float start1 = ImFmod((float)ImGui::GetTime() * speed1, PI_2);
+    float start2 = ImFmod((float)ImGui::GetTime() * speed2, PI_2);
     const float aoffset = ImFmod((float)ImGui::GetTime(), PI_2);
     const float bofsset = (aoffset > IM_PI) ? IM_PI : aoffset;
     const float angle_offset = PI_2 / num_segments;
@@ -6642,31 +6650,19 @@ void ImGui::SpinnerTwinAng360(const char *label, float radius1, float radius2, f
         ared_min = aoffset - IM_PI;
 
     window->DrawList->PathClear();
-    for (size_t i = 0; i <= num_segments + 1; i++)
-    {
-        ared = start1 + (i * angle_offset);
-
-        if (i * angle_offset < ared_min * 2)
-            continue;
-
-        if (i * angle_offset > bofsset * 2.f)
-            break;
-
+    for (size_t i = 0; i <= num_segments + 1; i++) {
+        ared = ( mode ? damped_pring(1, 10.f, 1.0f, ImSin(ImFmod(start1 + 0 * PI_DIV(2), PI_2))) : start1) + (i * angle_offset);
+        if (i * angle_offset < ared_min * 2) continue;
+        if (i * angle_offset > bofsset * 2.f) break;
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ared) * radius2, centre.y + ImSin(ared) * radius2));
     }
     window->DrawList->PathStroke(color_alpha(color2, 1.f), false, thickness);
 
     window->DrawList->PathClear();
-    for (size_t i = 0; i <= num_segments + 1; i++)
-    {
-        ared = start2 + (i * angle_offset);
-
-        if (i * angle_offset < ared_min * 2)
-            continue;
-
-        if (i * angle_offset > bofsset * 2.f)
-            break;
-
+    for (size_t i = 0; i <= num_segments + 1; i++) {
+        ared = (mode ? damped_pring(1, 10.f, 1.0f, ImSin(ImFmod(start2 + 1 * PI_DIV(2), PI_2))) : start2) + (i * angle_offset);
+        if (i * angle_offset < ared_min * 2) continue;
+        if (i * angle_offset > bofsset * 2.f) break;
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(-ared) * radius1, centre.y + ImSin(-ared) * radius1));
     }
     window->DrawList->PathStroke(color_alpha(color1, 1.f), false, thickness);
@@ -6931,25 +6927,11 @@ void ImGui::SpinnerMovingArcs(const char *label, float radius, float thickness, 
     SPINNER_HEADER(pos, size, centre, num_segments);
     const float start = (float)ImFmod(ImGui::GetTime() * speed, IM_PI * 2);
     const int half_segments = num_segments / 2;
-    auto calculateSpringOscillation = [] (double mass, double stiffness, double initialDisplacement, double time) {
-        double angularFrequency = sqrt(stiffness / mass);
-        double displacement = initialDisplacement * cos(angularFrequency * time);
-        return displacement;
-    };
-    auto calculateDampedSpringOscillation = [] (double mass, double stiffness, double damping, double time){
-        double omega = sqrt(stiffness / mass);
-        double alpha = damping / (2 * mass);
-        double exponent = exp(-alpha * time);
-        double cosTerm = cos(omega * sqrt(1 - alpha * alpha) * time); // ￊ￮￱￨￭￳￱￭￠￿ ￱￮￱￲￠￢￫￿￾￹￠￿
-        return exponent * cosTerm;
-    };
+
     for (int i = 0; i < arcs; ++i)
     {
         const float rb = (radius / arcs) * 1.3f * (i + 1);
-        //float a = calculateSpringOscillation(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(arcs), PI_2)));
-        float a = calculateDampedSpringOscillation(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(arcs), PI_2)));
-        a *= PI_DIV_2;
-        a += PI_DIV_2;
+        float a = damped_pring(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(arcs), PI_2)));
         const float angle = ImMax(PI_DIV_2, (1.f - i/(float)arcs) * IM_PI);
         circle([&] (int i) {
             const float b = a + (i * angle / num_segments);
@@ -8448,6 +8430,7 @@ void ImGui::SpinnerBarChartSine(const char *label, float radius, float thickness
     const float offset = IM_PI / bars;
     for (int i = 0; i < bars; i++)
     {
+        const float angle = ImMax(PI_DIV_2, (1.f - i/(float)bars) * IM_PI);
         float a = start + (IM_PI - i * offset);
         ImColor c = color_alpha(color, ImMax(0.1f, ImSin(a * heightSpeed)));
         float h = mode ? ImSin(a) * size.y / 2.f
