@@ -512,7 +512,7 @@ void ImDrawList::AddDrawCmd()
 void ImDrawList::_PopUnusedDrawCmd()
 {
     // Revise by Dicky, why?
-#if 0
+#if 1
     while (CmdBuffer.Size > 0)
     {
         ImDrawCmd* curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
