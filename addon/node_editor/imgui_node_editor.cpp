@@ -1498,6 +1498,10 @@ void ed::EditorContext::End()
 
 void ed::EditorContext::Update()
 {
+    for (auto node: m_Nodes)
+    {
+        node->m_IsLive = true;
+    }
     if (m_Settings.m_IsDirty && !m_CurrentAction)
         SaveSettings();
 }
