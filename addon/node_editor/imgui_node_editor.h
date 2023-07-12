@@ -329,6 +329,7 @@ IMGUI_API void PopStyleVar(int count = 1);
 
 IMGUI_API void Begin(const char* id, const ImVec2& size = ImVec2(0, 0));
 IMGUI_API void End();
+IMGUI_API void Update();
 
 IMGUI_API void BeginNode(NodeId id);
 IMGUI_API void BeginPin(PinId id, PinKind kind);

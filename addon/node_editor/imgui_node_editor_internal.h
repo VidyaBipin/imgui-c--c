@@ -1443,6 +1443,7 @@ struct IMGUI_API EditorContext
 
     void Begin(const char* id, const ImVec2& size = ImVec2(0, 0));
     void End();
+    void Update();
 
     bool DoLink(LinkId id, PinId startPinId, PinId endPinId, ImU32 color, float thickness);
 

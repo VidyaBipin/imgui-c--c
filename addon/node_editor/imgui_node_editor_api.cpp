@@ -124,6 +124,11 @@ void ax::NodeEditor::End()
     s_Editor->End();
 }
 
+void ax::NodeEditor::Update()
+{
+    s_Editor->Update();
+}
+
 void ax::NodeEditor::BeginNode(NodeId id)
 {
     s_Editor->GetNodeBuilder().Begin(id);

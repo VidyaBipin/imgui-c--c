@@ -1496,6 +1496,12 @@ void ed::EditorContext::End()
     m_IsFirstFrame = false;
 }
 
+void ed::EditorContext::Update()
+{
+    if (m_Settings.m_IsDirty && !m_CurrentAction)
+        SaveSettings();
+}
+
 bool ed::EditorContext::DoLink(LinkId id, PinId startPinId, PinId endPinId, ImU32 color, float thickness)
 {
     //auto& editorStyle = GetStyle();
