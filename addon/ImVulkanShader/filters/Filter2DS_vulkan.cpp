@@ -70,12 +70,12 @@ void Filter2DS_vulkan::upload_param(const VkMat& src, VkMat& dst) const
 
     std::vector<VkMat> column_bindings(9);
     if      (dst.type == IM_DT_INT8)     column_bindings[0] = vk_column;
-    else if (dst.type == IM_DT_INT16)    column_bindings[1] = vk_column;
+    else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)    column_bindings[1] = vk_column;
     else if (dst.type == IM_DT_FLOAT16)  column_bindings[2] = vk_column;
     else if (dst.type == IM_DT_FLOAT32)  column_bindings[3] = vk_column;
 
     if      (src.type == IM_DT_INT8)      column_bindings[4] = src;
-    else if (src.type == IM_DT_INT16)     column_bindings[5] = src;
+    else if (src.type == IM_DT_INT16 || src.type == IM_DT_INT16_BE)     column_bindings[5] = src;
     else if (src.type == IM_DT_FLOAT16)   column_bindings[6] = src;
     else if (src.type == IM_DT_FLOAT32)   column_bindings[7] = src;
     column_bindings[8] = vk_kernel;
@@ -89,7 +89,7 @@ void Filter2DS_vulkan::upload_param(const VkMat& src, VkMat& dst) const
 
     std::vector<VkMat> row_bindings(9);
     if      (dst.type == IM_DT_INT8)     row_bindings[0] = dst;
-    else if (dst.type == IM_DT_INT16)    row_bindings[1] = dst;
+    else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)    row_bindings[1] = dst;
     else if (dst.type == IM_DT_FLOAT16)  row_bindings[2] = dst;
     else if (dst.type == IM_DT_FLOAT32)  row_bindings[3] = dst;
 

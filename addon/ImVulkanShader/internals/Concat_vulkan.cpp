@@ -41,17 +41,17 @@ void Concat_vulkan::upload_param(const VkMat& src0, const VkMat& src1, VkMat& ds
 {
     std::vector<VkMat> bindings(12);
     if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
-    else if (dst.type == IM_DT_INT16)    bindings[1] = dst;
+    else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)    bindings[1] = dst;
     else if (dst.type == IM_DT_FLOAT16)  bindings[2] = dst;
     else if (dst.type == IM_DT_FLOAT32)  bindings[3] = dst;
 
     if      (src0.type == IM_DT_INT8)      bindings[4] = src0;
-    else if (src0.type == IM_DT_INT16)     bindings[5] = src0;
+    else if (src0.type == IM_DT_INT16 || src0.type == IM_DT_INT16_BE)     bindings[5] = src0;
     else if (src0.type == IM_DT_FLOAT16)   bindings[6] = src0;
     else if (src0.type == IM_DT_FLOAT32)   bindings[7] = src0;
 
     if      (src1.type == IM_DT_INT8)      bindings[8] = src1;
-    else if (src1.type == IM_DT_INT16)     bindings[9] = src1;
+    else if (src1.type == IM_DT_INT16 || src1.type == IM_DT_INT16_BE)     bindings[9] = src1;
     else if (src1.type == IM_DT_FLOAT16)   bindings[10] = src1;
     else if (src1.type == IM_DT_FLOAT32)   bindings[11] = src1;
 

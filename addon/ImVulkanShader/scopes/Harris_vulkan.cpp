@@ -113,12 +113,12 @@ void Harris_vulkan::upload_param(const VkMat& src, VkMat& dst, int _blurRadius, 
 
     std::vector<VkMat> prewitt_bindings(8);
     if      (vk_prewitt.type == IM_DT_INT8)     prewitt_bindings[0] = vk_prewitt;
-    else if (vk_prewitt.type == IM_DT_INT16)    prewitt_bindings[1] = vk_prewitt;
+    else if (vk_prewitt.type == IM_DT_INT16 || vk_prewitt.type == IM_DT_INT16_BE)    prewitt_bindings[1] = vk_prewitt;
     else if (vk_prewitt.type == IM_DT_FLOAT16)  prewitt_bindings[2] = vk_prewitt;
     else if (vk_prewitt.type == IM_DT_FLOAT32)  prewitt_bindings[3] = vk_prewitt;
 
     if      (src.type == IM_DT_INT8)     prewitt_bindings[4] = src;
-    else if (src.type == IM_DT_INT16)    prewitt_bindings[5] = src;
+    else if (src.type == IM_DT_INT16 || src.type == IM_DT_INT16_BE)    prewitt_bindings[5] = src;
     else if (src.type == IM_DT_FLOAT16)  prewitt_bindings[6] = src;
     else if (src.type == IM_DT_FLOAT32)  prewitt_bindings[7] = src;
     std::vector<vk_constant_type> prewitt_constants(11);
@@ -139,12 +139,12 @@ void Harris_vulkan::upload_param(const VkMat& src, VkMat& dst, int _blurRadius, 
     vk_column.create_like(vk_prewitt, opt.blob_vkallocator);
     std::vector<VkMat> column_bindings(9);
     if      (vk_column.type == IM_DT_INT8)     column_bindings[0] = vk_column;
-    else if (vk_column.type == IM_DT_INT16)    column_bindings[1] = vk_column;
+    else if (vk_column.type == IM_DT_INT16 || vk_column.type == IM_DT_INT16_BE)    column_bindings[1] = vk_column;
     else if (vk_column.type == IM_DT_FLOAT16)  column_bindings[2] = vk_column;
     else if (vk_column.type == IM_DT_FLOAT32)  column_bindings[3] = vk_column;
 
     if      (vk_prewitt.type == IM_DT_INT8)     column_bindings[4] = vk_prewitt;
-    else if (vk_prewitt.type == IM_DT_INT16)    column_bindings[5] = vk_prewitt;
+    else if (vk_prewitt.type == IM_DT_INT16 || vk_prewitt.type == IM_DT_INT16_BE)    column_bindings[5] = vk_prewitt;
     else if (vk_prewitt.type == IM_DT_FLOAT16)  column_bindings[6] = vk_prewitt;
     else if (vk_prewitt.type == IM_DT_FLOAT32)  column_bindings[7] = vk_prewitt;
     column_bindings[8] = vk_kernel;
@@ -170,12 +170,12 @@ void Harris_vulkan::upload_param(const VkMat& src, VkMat& dst, int _blurRadius, 
 
     std::vector<VkMat> row_bindings(9);
     if      (vk_blur.type == IM_DT_INT8)     row_bindings[0] = vk_blur;
-    else if (vk_blur.type == IM_DT_INT16)    row_bindings[1] = vk_blur;
+    else if (vk_blur.type == IM_DT_INT16 || vk_blur.type == IM_DT_INT16_BE)    row_bindings[1] = vk_blur;
     else if (vk_blur.type == IM_DT_FLOAT16)  row_bindings[2] = vk_blur;
     else if (vk_blur.type == IM_DT_FLOAT32)  row_bindings[3] = vk_blur;
 
     if      (vk_column.type == IM_DT_INT8)     row_bindings[4] = vk_column;
-    else if (vk_column.type == IM_DT_INT16)    row_bindings[5] = vk_column;
+    else if (vk_column.type == IM_DT_INT16 || vk_column.type == IM_DT_INT16_BE)    row_bindings[5] = vk_column;
     else if (vk_column.type == IM_DT_FLOAT16)  row_bindings[6] = vk_column;
     else if (vk_column.type == IM_DT_FLOAT32)  row_bindings[7] = vk_column;
     row_bindings[8] = vk_kernel;
@@ -200,12 +200,12 @@ void Harris_vulkan::upload_param(const VkMat& src, VkMat& dst, int _blurRadius, 
     vk_harris.create_type(dst.w, dst.h, vk_harris.type, opt.blob_vkallocator);
     std::vector<VkMat> harris_bindings(8);
     if      (vk_harris.type == IM_DT_INT8)     harris_bindings[0] = vk_harris;
-    else if (vk_harris.type == IM_DT_INT16)    harris_bindings[1] = vk_harris;
+    else if (vk_harris.type == IM_DT_INT16 || vk_harris.type == IM_DT_INT16_BE)    harris_bindings[1] = vk_harris;
     else if (vk_harris.type == IM_DT_FLOAT16)  harris_bindings[2] = vk_harris;
     else if (vk_harris.type == IM_DT_FLOAT32)  harris_bindings[3] = vk_harris;
 
     if      (vk_blur.type == IM_DT_INT8)     harris_bindings[4] = vk_blur;
-    else if (vk_blur.type == IM_DT_INT16)    harris_bindings[5] = vk_blur;
+    else if (vk_blur.type == IM_DT_INT16 || vk_blur.type == IM_DT_INT16_BE)    harris_bindings[5] = vk_blur;
     else if (vk_blur.type == IM_DT_FLOAT16)  harris_bindings[6] = vk_blur;
     else if (vk_blur.type == IM_DT_FLOAT32)  harris_bindings[7] = vk_blur;
 
@@ -226,17 +226,17 @@ void Harris_vulkan::upload_param(const VkMat& src, VkMat& dst, int _blurRadius, 
 
     std::vector<VkMat> nms_bindings(12);
     if      (dst.type == IM_DT_INT8)     nms_bindings[0] = dst;
-    else if (dst.type == IM_DT_INT16)    nms_bindings[1] = dst;
+    else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)    nms_bindings[1] = dst;
     else if (dst.type == IM_DT_FLOAT16)  nms_bindings[2] = dst;
     else if (dst.type == IM_DT_FLOAT32)  nms_bindings[3] = dst;
 
     if      (src.type == IM_DT_INT8)     nms_bindings[4] = src;
-    else if (src.type == IM_DT_INT16)    nms_bindings[5] = src;
+    else if (src.type == IM_DT_INT16 || src.type == IM_DT_INT16_BE)    nms_bindings[5] = src;
     else if (src.type == IM_DT_FLOAT16)  nms_bindings[6] = src;
     else if (src.type == IM_DT_FLOAT32)  nms_bindings[7] = src;
 
     if      (vk_harris.type == IM_DT_INT8)     nms_bindings[8] = vk_harris;
-    else if (vk_harris.type == IM_DT_INT16)    nms_bindings[9] = vk_harris;
+    else if (vk_harris.type == IM_DT_INT16 || vk_harris.type == IM_DT_INT16_BE)    nms_bindings[9] = vk_harris;
     else if (vk_harris.type == IM_DT_FLOAT16)  nms_bindings[10] = vk_harris;
     else if (vk_harris.type == IM_DT_FLOAT32)  nms_bindings[11] = vk_harris;
 

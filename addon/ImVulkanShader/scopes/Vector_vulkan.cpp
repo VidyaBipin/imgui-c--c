@@ -70,7 +70,7 @@ void Vector_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, flo
     
     std::vector<ImGui::VkMat> bindings(5);
     if      (src.type == IM_DT_INT8)     bindings[0] = src;
-    else if (src.type == IM_DT_INT16)    bindings[1] = src;
+    else if (src.type == IM_DT_INT16 || src.type == IM_DT_INT16_BE)    bindings[1] = src;
     else if (src.type == IM_DT_FLOAT16)  bindings[2] = src;
     else if (src.type == IM_DT_FLOAT32)  bindings[3] = src;
     bindings[4] = buffer_gpu;
@@ -87,7 +87,7 @@ void Vector_vulkan::upload_param(const ImGui::VkMat& src, ImGui::VkMat& dst, flo
 
     std::vector<ImGui::VkMat> bindings_merge(5);
     if      (dst.type == IM_DT_INT8)     bindings_merge[0] = dst;
-    else if (dst.type == IM_DT_INT16)    bindings_merge[1] = dst;
+    else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)    bindings_merge[1] = dst;
     else if (dst.type == IM_DT_FLOAT16)  bindings_merge[2] = dst;
     else if (dst.type == IM_DT_FLOAT32)  bindings_merge[3] = dst;
 

@@ -203,15 +203,15 @@ bool ColorConvert_vulkan::UploadParam(const VkMat& src, VkMat& dst, ImInterpolat
     // GRAY -> RGB
     if (srcClrCatg == 0 && dstClrCatg == 1)
     {
-        int bitDepth = src.depth != 0 ? src.depth : src.type == IM_DT_INT8 ? 8 : src.type == IM_DT_INT16 ? 16 : 8;
+        int bitDepth = src.depth != 0 ? src.depth : src.type == IM_DT_INT8 ? 8 : src.type == IM_DT_INT16 || src.type == IM_DT_INT16_BE ? 16 : 8;
 
         std::vector<VkMat> bindings(8);
         if      (dst.type == IM_DT_INT8)    bindings[0] = dst;
-        else if (dst.type == IM_DT_INT16)   bindings[1] = dst;
+        else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)   bindings[1] = dst;
         else if (dst.type == IM_DT_FLOAT16) bindings[2] = dst;
         else if (dst.type == IM_DT_FLOAT32) bindings[3] = dst;
         if      (src.type == IM_DT_INT8)    bindings[4] = src;
-        else if (src.type == IM_DT_INT16)   bindings[5] = src;
+        else if (src.type == IM_DT_INT16 || src.type == IM_DT_INT16_BE)   bindings[5] = src;
         else if (src.type == IM_DT_FLOAT16) bindings[6] = src;
         else if (src.type == IM_DT_FLOAT32) bindings[7] = src;
 
@@ -236,15 +236,15 @@ bool ColorConvert_vulkan::UploadParam(const VkMat& src, VkMat& dst, ImInterpolat
         VkMat vkCscCoefs;
         const ImMat cscCoefs = *color_table[0][src.color_range][src.color_space];
         cmd->record_clone(cscCoefs, vkCscCoefs, opt);
-        int bitDepth = src.depth != 0 ? src.depth : src.type == IM_DT_INT8 ? 8 : src.type == IM_DT_INT16 ? 16 : 8;
+        int bitDepth = src.depth != 0 ? src.depth : src.type == IM_DT_INT8 ? 8 : src.type == IM_DT_INT16 || src.type == IM_DT_INT16_BE ? 16 : 8;
 
         std::vector<VkMat> bindings(9);
         if      (dst.type == IM_DT_INT8)    bindings[0] = dst;
-        else if (dst.type == IM_DT_INT16)   bindings[1] = dst;
+        else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)   bindings[1] = dst;
         else if (dst.type == IM_DT_FLOAT16) bindings[2] = dst;
         else if (dst.type == IM_DT_FLOAT32) bindings[3] = dst;
         if      (src.type == IM_DT_INT8)    bindings[4] = src;
-        else if (src.type == IM_DT_INT16)   bindings[5] = src;
+        else if (src.type == IM_DT_INT16 || src.type == IM_DT_INT16_BE)   bindings[5] = src;
         else if (src.type == IM_DT_FLOAT16) bindings[6] = src;
         else if (src.type == IM_DT_FLOAT32) bindings[7] = src;
         bindings[8] = vkCscCoefs;
@@ -276,15 +276,15 @@ bool ColorConvert_vulkan::UploadParam(const VkMat& src, VkMat& dst, ImInterpolat
         VkMat vkCscCoefs;
         const ImMat cscCoefs = *color_table[1][dst.color_range][dst.color_space];
         cmd->record_clone(cscCoefs, vkCscCoefs, opt);
-        int bitDepth = dst.depth != 0 ? dst.depth : dst.type == IM_DT_INT8 ? 8 : dst.type == IM_DT_INT16 ? 16 : 8;
+        int bitDepth = dst.depth != 0 ? dst.depth : dst.type == IM_DT_INT8 ? 8 : dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE ? 16 : 8;
 
         std::vector<VkMat> bindings(9);
         if      (dst.type == IM_DT_INT8)    bindings[0] = dst;
-        else if (dst.type == IM_DT_INT16)   bindings[1] = dst;
+        else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)   bindings[1] = dst;
         else if (dst.type == IM_DT_FLOAT16) bindings[2] = dst;
         else if (dst.type == IM_DT_FLOAT32) bindings[3] = dst;
         if      (src.type == IM_DT_INT8)    bindings[4] = src;
-        else if (src.type == IM_DT_INT16)   bindings[5] = src;
+        else if (src.type == IM_DT_INT16 || src.type == IM_DT_INT16_BE)   bindings[5] = src;
         else if (src.type == IM_DT_FLOAT16) bindings[6] = src;
         else if (src.type == IM_DT_FLOAT32) bindings[7] = src;
         bindings[8] = vkCscCoefs;
@@ -311,11 +311,11 @@ bool ColorConvert_vulkan::UploadParam(const VkMat& src, VkMat& dst, ImInterpolat
     {
         std::vector<VkMat> bindings(8);
         if      (dst.type == IM_DT_INT8)    bindings[0] = dst;
-        else if (dst.type == IM_DT_INT16)   bindings[1] = dst;
+        else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)   bindings[1] = dst;
         else if (dst.type == IM_DT_FLOAT16) bindings[2] = dst;
         else if (dst.type == IM_DT_FLOAT32) bindings[3] = dst;
         if      (src.type == IM_DT_INT8)    bindings[4] = src;
-        else if (src.type == IM_DT_INT16)   bindings[5] = src;
+        else if (src.type == IM_DT_INT16 || src.type == IM_DT_INT16_BE)   bindings[5] = src;
         else if (src.type == IM_DT_FLOAT16) bindings[6] = src;
         else if (src.type == IM_DT_FLOAT32) bindings[7] = src;
 
@@ -352,12 +352,12 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_YUV, VkMat& dst, ImInterp
     cmd->record_clone(conv_mat_y2r, matrix_y2r_gpu, opt);
     std::vector<VkMat> bindings(9);
     if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
-    else if (dst.type == IM_DT_INT16)    bindings[1] = dst;
+    else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)    bindings[1] = dst;
     else if (dst.type == IM_DT_FLOAT16)  bindings[2] = dst;
     else if (dst.type == IM_DT_FLOAT32)  bindings[3] = dst;
 
     if      (Im_YUV.type == IM_DT_INT8)    bindings[4] = Im_YUV;
-    else if (Im_YUV.type == IM_DT_INT16)   bindings[5] = Im_YUV;
+    else if (Im_YUV.type == IM_DT_INT16 || Im_YUV.type == IM_DT_INT16_BE)   bindings[5] = Im_YUV;
     else if (Im_YUV.type == IM_DT_FLOAT16) bindings[6] = Im_YUV;
     else if (Im_YUV.type == IM_DT_FLOAT32) bindings[7] = Im_YUV;
 
@@ -366,7 +366,7 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_YUV, VkMat& dst, ImInterp
     bool resize = false;
     if (dst.w != 0 && dst.h != 0 && (dst.w != Im_YUV.w || dst.h != Im_YUV.h))
         resize = true;
-    int bitDepth = Im_YUV.depth != 0 ? Im_YUV.depth : Im_YUV.type == IM_DT_INT8 ? 8 : Im_YUV.type == IM_DT_INT16 ? 16 : 8;
+    int bitDepth = Im_YUV.depth != 0 ? Im_YUV.depth : Im_YUV.type == IM_DT_INT8 ? 8 : Im_YUV.type == IM_DT_INT16 || Im_YUV.type == IM_DT_INT16_BE ? 16 : 8;
     std::vector<vk_constant_type> constants(17);
     constants[0].i = Im_YUV.w;
     constants[1].i = Im_YUV.h;
@@ -447,22 +447,22 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_Y, const VkMat& Im_U, con
     cmd->record_clone(conv_mat_y2r, matrix_y2r_gpu, opt);
     std::vector<VkMat> bindings(17);
     if      (dst.type == IM_DT_INT8)     bindings[ 0] = dst;
-    else if (dst.type == IM_DT_INT16)    bindings[ 1] = dst;
+    else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)    bindings[ 1] = dst;
     else if (dst.type == IM_DT_FLOAT16)  bindings[ 2] = dst;
     else if (dst.type == IM_DT_FLOAT32)  bindings[ 3] = dst;
 
     if      (Im_Y.type == IM_DT_INT8)    bindings[ 4] = Im_Y;
-    else if (Im_Y.type == IM_DT_INT16)   bindings[ 5] = Im_Y;
+    else if (Im_Y.type == IM_DT_INT16 || Im_Y.type == IM_DT_INT16_BE)   bindings[ 5] = Im_Y;
     else if (Im_Y.type == IM_DT_FLOAT16) bindings[ 6] = Im_Y;
     else if (Im_Y.type == IM_DT_FLOAT32) bindings[ 7] = Im_Y;
 
     if      (Im_U.type == IM_DT_INT8)    bindings[ 8] = Im_U;
-    else if (Im_U.type == IM_DT_INT16)   bindings[ 9] = Im_U;
+    else if (Im_U.type == IM_DT_INT16 || Im_U.type == IM_DT_INT16_BE)   bindings[ 9] = Im_U;
     else if (Im_U.type == IM_DT_FLOAT16) bindings[10] = Im_U;
     else if (Im_U.type == IM_DT_FLOAT32) bindings[11] = Im_U;
 
     if      (Im_V.type == IM_DT_INT8)    bindings[12] = Im_V;
-    else if (Im_V.type == IM_DT_INT16)   bindings[13] = Im_V;
+    else if (Im_V.type == IM_DT_INT16 || Im_V.type == IM_DT_INT16_BE)   bindings[13] = Im_V;
     else if (Im_V.type == IM_DT_FLOAT16) bindings[14] = Im_V;
     else if (Im_V.type == IM_DT_FLOAT32) bindings[15] = Im_V;
 
@@ -474,7 +474,7 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_Y, const VkMat& Im_U, con
     if (Im_Y.dw != Im_Y.w || Im_Y.dh != Im_Y.h)
         resize = true;
 
-    int bitDepth = Im_Y.depth != 0 ? Im_Y.depth : Im_Y.type == IM_DT_INT8 ? 8 : Im_Y.type == IM_DT_INT16 ? 16 : 8;
+    int bitDepth = Im_Y.depth != 0 ? Im_Y.depth : Im_Y.type == IM_DT_INT8 ? 8 : Im_Y.type == IM_DT_INT16 || Im_Y.type == IM_DT_INT16_BE ? 16 : 8;
     std::vector<vk_constant_type> constants(17);
     constants[0].i = Im_Y.w;
     constants[1].i = Im_Y.h;
@@ -573,17 +573,17 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const
 void ColorConvert_vulkan::upload_param(const VkMat& Im_RGB, VkMat& dst, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int depth) const
 {
     VkMat matrix_r2y_gpu;
-    int bitDepth = depth != 0 ? depth : Im_RGB.type == IM_DT_INT8 ? 8 : Im_RGB.type == IM_DT_INT16 ? 16 : 8;
+    int bitDepth = depth != 0 ? depth : Im_RGB.type == IM_DT_INT8 ? 8 : Im_RGB.type == IM_DT_INT16 || Im_RGB.type == IM_DT_INT16_BE ? 16 : 8;
     const ImMat conv_mat_r2y = *color_table[1][color_range][color_space];
     cmd->record_clone(conv_mat_r2y, matrix_r2y_gpu, opt);
     std::vector<VkMat> bindings(9);
     if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
-    else if (dst.type == IM_DT_INT16)    bindings[1] = dst;
+    else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)    bindings[1] = dst;
     else if (dst.type == IM_DT_FLOAT16)  bindings[2] = dst;
     else if (dst.type == IM_DT_FLOAT32)  bindings[3] = dst;
 
     if      (Im_RGB.type == IM_DT_INT8)    bindings[4] = Im_RGB;
-    else if (Im_RGB.type == IM_DT_INT16)   bindings[5] = Im_RGB;
+    else if (Im_RGB.type == IM_DT_INT16 || Im_RGB.type == IM_DT_INT16_BE)   bindings[5] = Im_RGB;
     else if (Im_RGB.type == IM_DT_FLOAT16) bindings[6] = Im_RGB;
     else if (Im_RGB.type == IM_DT_FLOAT32) bindings[7] = Im_RGB;
 
@@ -656,12 +656,12 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im, VkMat& dst, ImColorSpace
 {
     std::vector<VkMat> bindings(8);
     if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
-    else if (dst.type == IM_DT_INT16)    bindings[1] = dst;
+    else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)    bindings[1] = dst;
     else if (dst.type == IM_DT_FLOAT16)  bindings[2] = dst;
     else if (dst.type == IM_DT_FLOAT32)  bindings[3] = dst;
 
     if      (Im.type == IM_DT_INT8)      bindings[4] = Im;
-    else if (Im.type == IM_DT_INT16)     bindings[5] = Im;
+    else if (Im.type == IM_DT_INT16 || Im.type == IM_DT_INT16_BE)     bindings[5] = Im;
     else if (Im.type == IM_DT_FLOAT16)   bindings[6] = Im;
     else if (Im.type == IM_DT_FLOAT32)   bindings[7] = Im;
 
@@ -731,12 +731,12 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im, VkMat& dst) const
 {
     std::vector<VkMat> bindings(8);
     if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
-    else if (dst.type == IM_DT_INT16)    bindings[1] = dst;
+    else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)    bindings[1] = dst;
     else if (dst.type == IM_DT_FLOAT16)  bindings[2] = dst;
     else if (dst.type == IM_DT_FLOAT32)  bindings[3] = dst;
 
     if      (Im.type == IM_DT_INT8)      bindings[4] = Im;
-    else if (Im.type == IM_DT_INT16)     bindings[5] = Im;
+    else if (Im.type == IM_DT_INT16 || Im.type == IM_DT_INT16_BE)     bindings[5] = Im;
     else if (Im.type == IM_DT_FLOAT16)   bindings[6] = Im;
     else if (Im.type == IM_DT_FLOAT32)   bindings[7] = Im;
 

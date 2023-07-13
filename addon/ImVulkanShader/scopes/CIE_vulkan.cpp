@@ -1194,7 +1194,7 @@ void CIE_vulkan::upload_param(const VkMat& src, VkMat& dst, float intensity, boo
 
     std::vector<VkMat> bindings(6);
     if      (src.type == IM_DT_INT8)     bindings[0] = src;
-    else if (src.type == IM_DT_INT16)    bindings[1] = src;
+    else if (src.type == IM_DT_INT16 || src.type == IM_DT_INT16_BE)    bindings[1] = src;
     else if (src.type == IM_DT_FLOAT16)  bindings[2] = src;
     else if (src.type == IM_DT_FLOAT32)  bindings[3] = src;
     bindings[4] = buffer;
@@ -1213,12 +1213,12 @@ void CIE_vulkan::upload_param(const VkMat& src, VkMat& dst, float intensity, boo
 
     std::vector<VkMat> bindings_merge(9);
     if      (dst.type == IM_DT_INT8)     bindings_merge[0] = dst;
-    else if (dst.type == IM_DT_INT16)    bindings_merge[1] = dst;
+    else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)    bindings_merge[1] = dst;
     else if (dst.type == IM_DT_FLOAT16)  bindings_merge[2] = dst;
     else if (dst.type == IM_DT_FLOAT32)  bindings_merge[3] = dst;
 
     if      (backgroud_gpu.type == IM_DT_INT8)     bindings_merge[4] = backgroud_gpu;
-    else if (backgroud_gpu.type == IM_DT_INT16)    bindings_merge[5] = backgroud_gpu;
+    else if (backgroud_gpu.type == IM_DT_INT16 || backgroud_gpu.type == IM_DT_INT16_BE)    bindings_merge[5] = backgroud_gpu;
     else if (backgroud_gpu.type == IM_DT_FLOAT16)  bindings_merge[6] = backgroud_gpu;
     else if (backgroud_gpu.type == IM_DT_FLOAT32)  bindings_merge[7] = backgroud_gpu;
 

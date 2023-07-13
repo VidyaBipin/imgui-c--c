@@ -42,7 +42,7 @@ void Substract_Mean_Normalize_vulkan::upload_param(const VkMat& src, VkMat& dst,
 {
     std::vector<VkMat> bindings(6);
     if      (src.type == IM_DT_INT8)     bindings[0] = src;
-    else if (src.type == IM_DT_INT16)    bindings[1] = src;
+    else if (src.type == IM_DT_INT16 || src.type == IM_DT_INT16_BE)    bindings[1] = src;
     else if (src.type == IM_DT_FLOAT16)  bindings[2] = src;
     else if (src.type == IM_DT_FLOAT32)  bindings[3] = src;
 
