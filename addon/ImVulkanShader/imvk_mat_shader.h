@@ -1231,3 +1231,26 @@ sfpvec4 hsv_to_rgb(sfpvec4 hsv) \n\
     return rgba; \n\
 } \
 "
+#define SHADER_LOAD_RGB_IMAGE \
+" \n\
+sfpvec4 load_rgb_image(int x, int y, int w, int h, int cstep, int format, int type) \n\
+{ \n\
+    sfpvec4 rgba_result = sfpvec4(0.f); \n\
+    if (format == CF_ABGR || format == CF_ARGB || format == CF_BGRA || format == CF_RGBA) \n\
+    { \n\
+        rgba_result = load_rgba(x, y, w, h, cstep, format, type); \n\
+    } \n\
+    else if (format == CF_BGR || format == CF_RGB) \n\
+    { \n\
+        sfpvec3 rgb = load_rgb(x, y, w, h, cstep, format, type); \n\
+        rgba_result = sfpvec4(rgb, sfp(1.0)); \n\
+    } \n\
+    else if (format == CF_GRAY) \n\
+    { \n\
+        sfp scale = type == DT_INT8 ? sfp(255) : type == DT_INT16 ? sfp(65535) : sfp(1.0); \n\
+        sfp gray = load_gray(x, y, w, h, cstep, format, type, scale); \n\
+        rgba_result = sfpvec4(gray, gray, gray, sfp(1.0)); \n\
+    } \n\
+    return rgba_result; \n\
+} \
+"
