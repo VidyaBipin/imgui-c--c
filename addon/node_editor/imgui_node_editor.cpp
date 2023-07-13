@@ -1629,7 +1629,7 @@ ImVec2 ed::EditorContext::GetNodePosition(NodeId nodeId)
 {
     auto node = FindNode(nodeId);
     if (!node)
-        return ImVec2(FLT_MAX, FLT_MAX);
+        return ImVec2(0, 0);
 
     return node->m_Bounds.Min;
 }
