@@ -584,6 +584,8 @@ void ed::Node::Draw(ImDrawList* drawList, DrawFlags flags)
 {
     if (flags == Detail::Object::None)
     {
+        if (drawList->_Splitter._Count <= m_Channel)
+            ImDrawList_ChannelsGrow(drawList, m_Channel + c_ChannelsPerNode);
         drawList->ChannelsSetCurrent(m_Channel + c_NodeBackgroundChannel);
 
         drawList->AddRectFilled(

@@ -847,7 +847,7 @@ void store_gray(sfp val, int x, int y, int w, int h, int cstep, int format, int 
         store_gray_int8(val, x, y, w, cstep, format); \n\
     else if (type == DT_INT16) \n\
         store_gray_int16(val, x, y, w, cstep, format); \n\
-    else if (type == DT_INT16BE) \n\
+    else if (type == DT_INT16_BE) \n\
         store_gray_int16be(val, x, y, w, cstep, format); \n\
     else if (type == DT_FLOAT16) \n\
         store_gray_float16(val, x, y, w, cstep, format); \n\
