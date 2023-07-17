@@ -1594,6 +1594,11 @@ void ed::EditorContext::SetGroupSize(NodeId nodeId, const ImVec2& size)
 void ed::EditorContext::SetNodeChanged(NodeId nodeId)
 {
     auto node = FindNode(nodeId);
+    if (!node)
+    {
+        node = CreateNode(nodeId);
+        node->m_IsLive = false;
+    }
     if (node)
     {
         MakeDirty(NodeEditor::SaveReasonFlags::Node, node);
@@ -2210,9 +2215,16 @@ bool ed::EditorContext::ApplyState(const NodesState& state)
     for (const auto& entry : state.m_Nodes)
     {
         auto& nodeState = entry.second;
+        auto node = FindNode(entry.first);
+        if (!node)
+        {
+            node = CreateNode(entry.first);
+            node->m_IsLive = false;
+        }
+        modified |= ApplyState(node, nodeState);
 
-        if (auto node = FindNode(entry.first))
-            modified |= ApplyState(node, nodeState);
+        //if (auto node = FindNode(entry.first))
+        //    modified |= ApplyState(node, nodeState);
     }
 
     m_State.m_NodesState = state;
