@@ -3265,7 +3265,7 @@ void ImGui::DrawContrastBand(ImVec2 const vpos, ImVec2 const size, ImVec4 const&
 		int seg = t * size.x;
         float v = ((seg & 1) == 0) ? 1.0 : (1 - t);
 		return IM_COL32(v * color.x * 255.f, v * color.y * 255.f, v * color.z * 255.f, color.w * 255.f);
-	}, size.x, 1.f);
+	}, size.x * 1.5, 1.f);
 }
 
 bool ImGui::ColorRing(const char* label, float thickness, int split)
@@ -3635,7 +3635,7 @@ void ImGui::ContrastSelector(char const* label, ImVec2 const size, float* conCen
     ImRect selectorRect = ImRect(curPos, curPos + size + ImVec2(0, arrowWidth));
     ImGui::BeginGroup();
     ImGui::InvisibleButton("##ZoneContrastSlider", selectorRect.GetSize());
-    ImU32 text_color = ImGui::IsItemDisabled() ? IM_COL32(255,255,0,128) : IM_COL32(255,255,0,255);
+    ImU32 text_color = ImGui::IsItemDisabled() ? IM_COL32(0,255,0,128) : IM_COL32(0,255,0,255);
     if (!rgb_color)
     {
         ImGui::DrawContrastBand(curPos, size, color);
@@ -3673,7 +3673,9 @@ void ImGui::ContrastSelector(char const* label, ImVec2 const size, float* conCen
     std::string value_str = oss.str();
     ImVec2 str_size = ImGui::CalcTextSize(value_str.c_str(), nullptr, true);
     ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, ImVec2(1, 1));
+    ImGui::PushStyleColor(ImGuiCol_TexGlyphShadow, ImVec4(0, 0, 0, 1.0));
     pDrawList->AddText(ImVec2(curPos.x + size.x / 2 - str_size.x * 0.5f, curPos.y + size.y / 2 - arrowWidth / 2), text_color, value_str.c_str());
+    ImGui::PopStyleColor();
     ImGui::PopStyleVar();
     ImGui::EndGroup();
     ImGui::PopID();
@@ -9618,11 +9620,12 @@ bool ImGui::MsgBox::Init(const char *title, const char *icon, const char *text, 
     return true;
 }
 
-int ImGui::MsgBox::Draw()
+int ImGui::MsgBox::Draw(float wrap_width)
 {
     int index = 0;
-
-    if (ImGui::BeginPopupModal(m_Title, NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
+    //if (ImGui::BeginPopupModal(m_Title, NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
+    if (ImGui::BeginPopupModal(m_Title, NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
     {
         if (m_DontAskAgain && m_Selected != 0)
         {
@@ -9638,21 +9641,28 @@ int ImGui::MsgBox::Draw()
                 float save_y = pos.y;
                 pos.y += size.y;
                 ImGui::SetCursorPos(pos);
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0, 1.0, 0.0, 1.0));
                 ImGui::Text("%s", m_Icon);
+                ImGui::PopStyleColor();
                 pos.x += size.x + pos.x;
                 pos.y = save_y;
                 ImGui::SetCursorPos(pos);
-                ImGui::TextWrapped("%s", m_Text);
+                ImGui::PushTextWrapPos(pos.x + wrap_width);
+                ImGui::TextUnformatted(m_Text);
+                ImGui::PopTextWrapPos();
             }
             else
             {
-                ImGui::TextWrapped("%s", m_Text);
+                ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + wrap_width);
+                ImGui::TextUnformatted(m_Text);
+                ImGui::PopTextWrapPos();
             }
             ImGui::Separator();
             if (m_ShowCheckbox)
             {
                 ImGui::Checkbox("Don't ask me again", &m_DontAskAgain);
             }
+            
             ImVec2 size = ImVec2(50.0f, 0.0f);
             int count;
             for (count = 0; m_Captions[count] != NULL; count++)
@@ -9665,7 +9675,7 @@ int ImGui::MsgBox::Draw()
                 }
                 ImGui::SameLine();
             }
-            size = ImVec2((4 - count) * 50.0f, 1.0f);
+            size = ImVec2((4 - count) * 50.0f, 0.0f);
             ImGui::Dummy(size);
             if (m_DontAskAgain)
             {

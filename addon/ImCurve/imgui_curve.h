@@ -75,7 +75,9 @@ struct IMGUI_API ImCurveEdit
         float m_max {0.f};
         float m_default {0.f};
         bool visible {true};
+        bool checked {false};
         int64_t m_id {-1};
+        int64_t m_sub_id {-1};
     };
 
     struct editPoint
@@ -138,10 +140,13 @@ struct IMGUI_API ImCurveEdit
         virtual float GetPointValue(size_t curveIndex, float t) = 0;
         virtual void ClearPoint(size_t curveIndex) = 0;
         virtual void DeletePoint(size_t curveIndex, size_t pointIndex) = 0;
-        virtual int AddCurve(std::string name, CurveType type, ImU32 color, bool visible, float _min, float _max, float _default) = 0;
+        virtual int AddCurve(std::string name, CurveType type, ImU32 color, bool visible, float _min, float _max, float _default, int64_t _id = -1, int64_t _sub_id = -1) = 0;
         virtual void DeleteCurve(size_t curveIndex) = 0;
         virtual void DeleteCurve(std::string name) = 0;
         virtual int GetCurveIndex(std::string name) = 0;
+        virtual int GetCurveIndex(int64_t id) = 0;
+        virtual const ImCurveEdit::keys* GetCurveKey(std::string name) = 0;
+        virtual const ImCurveEdit::keys* GetCurveKey(size_t curveIndex) = 0;
         virtual void SetCurveColor(size_t curveIndex, ImU32 color) = 0;
         virtual void SetCurveName(size_t curveIndex, std::string name) = 0;
         virtual void SetCurveVisible(size_t curveIndex, bool visible) = 0;
@@ -196,10 +201,13 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
     void AddPoint(size_t curveIndex, ImVec2 value, ImCurveEdit::CurveType type);
     void ClearPoint(size_t curveIndex);
     void DeletePoint(size_t curveIndex, size_t pointIndex);
-    int AddCurve(std::string name, ImCurveEdit::CurveType type, ImU32 color, bool visible, float _min, float _max, float _default);
+    int AddCurve(std::string name, ImCurveEdit::CurveType type, ImU32 color, bool visible, float _min, float _max, float _default, int64_t _id = -1, int64_t _sub_id = -1);
     void DeleteCurve(size_t curveIndex);
     void DeleteCurve(std::string name);
     int GetCurveIndex(std::string name);
+    int GetCurveIndex(int64_t id);
+    const ImCurveEdit::keys* GetCurveKey(std::string name);
+    const ImCurveEdit::keys* GetCurveKey(size_t curveIndex);
     float GetPointValue(size_t curveIndex, float t);
     float GetValue(size_t curveIndex, float t);
     void SetCurvePointDefault(size_t curveIndex, size_t pointIndex);
@@ -249,6 +257,7 @@ private:
 
 IMGUI_API bool ImCurveEditKey(std::string button_lable, ImGui::ImCurveEdit::keys * key, std::string name, float _min, float _max, float _default, float space = 0);
 IMGUI_API bool ImCurveCheckEditKey(std::string button_lable, ImGui::ImCurveEdit::keys * key, bool &check, std::string name, float _min, float _max, float _default, float space = 0);
+IMGUI_API bool ImCurveCheckEditKeyWithID(std::string button_lable, ImGui::ImCurveEdit::keys * key, bool check, std::string name, float _min, float _max, float _default, int64_t subid = -1, float space = 0);
 
 } // namespace ImGui
 #if IMGUI_BUILD_EXAMPLE

@@ -900,9 +900,11 @@ void ImGui::KeyPointEditor::DeletePoint(size_t curveIndex, size_t pointIndex)
     }
 }
 
-int ImGui::KeyPointEditor::AddCurve(std::string name, ImCurveEdit::CurveType type, ImU32 color, bool visible, float _min, float _max, float _default)
+int ImGui::KeyPointEditor::AddCurve(std::string name, ImCurveEdit::CurveType type, ImU32 color, bool visible, float _min, float _max, float _default, int64_t _id, int64_t _sub_id)
 {
     auto new_key = ImCurveEdit::keys(name, type, color, visible, _min, _max, _default);
+    new_key.m_id = _id;
+    new_key.m_sub_id = _sub_id;
     mKeys.push_back(new_key);
     return mKeys.size() - 1;
 }
@@ -939,6 +941,43 @@ int ImGui::KeyPointEditor::GetCurveIndex(std::string name)
     return index;
 }
 
+int ImGui::KeyPointEditor::GetCurveIndex(int64_t id)
+{
+    int index = -1;
+    auto iter = std::find_if(mKeys.begin(), mKeys.end(), [id](const ImCurveEdit::keys& key)
+    {
+        return key.m_id != -1 && key.m_id == id;
+    });
+    if (iter != mKeys.end())
+    {
+        index = iter - mKeys.begin();
+    }
+    return index;
+}
+
+const ImGui::ImCurveEdit::keys* ImGui::KeyPointEditor::GetCurveKey(std::string name)
+{
+    int index = -1;
+    auto iter = std::find_if(mKeys.begin(), mKeys.end(), [name](const ImCurveEdit::keys& key)
+    {
+        return key.name == name;
+    });
+    if (iter != mKeys.end())
+    {
+        index = iter - mKeys.begin();
+    }
+    if (index == -1)
+        return nullptr;
+    return &mKeys[index];
+}
+
+const ImGui::ImCurveEdit::keys* ImGui::KeyPointEditor::GetCurveKey(size_t curveIndex)
+{
+    if (curveIndex < mKeys.size())
+        return &mKeys[curveIndex];
+    return nullptr;
+}
+
 float ImGui::KeyPointEditor::GetPointValue(size_t curveIndex, float t)
 {
     auto value_range = GetCurveMax(curveIndex) - GetCurveMin(curveIndex); 
@@ -949,7 +988,7 @@ float ImGui::KeyPointEditor::GetPointValue(size_t curveIndex, float t)
 
 float ImGui::KeyPointEditor::GetValue(size_t curveIndex, float t)
 {
-    if (curveIndex <  mKeys.size())
+    if (curveIndex < mKeys.size())
     {
         auto range = GetMax() - GetMin() + ImVec2(1.f, 0.f); 
         auto value_range = fabs(GetCurveMax(curveIndex) - GetCurveMin(curveIndex)); 
@@ -1196,6 +1235,41 @@ bool ImGui::ImCurveCheckEditKey(std::string button_lable, ImGui::ImCurveEdit::ke
             key->m_max = _max;
             key->m_default = _default;
             check = true;
+            return true;
+        }
+        ImGui::ShowTooltipOnHover("Add Curve");
+    }
+    return false;
+}
+
+bool ImGui::ImCurveCheckEditKeyWithID(std::string button_lable, ImGui::ImCurveEdit::keys * key, bool check, std::string name, float _min, float _max, float _default, int64_t subid, float space)
+{
+    if (!key || name.empty() || button_lable.empty() || key->m_id == -1)
+        return false;
+    ImGui::SameLine(space);
+    std::string button_id_str = button_lable + "@" + std::to_string(key->m_id);
+    std::string key_name = name + "@" + std::to_string(key->m_id);
+    if (check)
+    {
+        if (ImGui::DiamondButton(button_id_str.c_str(), true)) 
+        {
+            key->name = key_name;
+            key->m_sub_id = subid;
+            key->checked = false;
+            return true;
+        }
+        ImGui::ShowTooltipOnHover("Remove Curve");
+    }
+    else
+    {
+        if (ImGui::DiamondButton(button_id_str.c_str(), false)) 
+        {
+            key->name = key_name;
+            key->m_min = _min;
+            key->m_max = _max;
+            key->m_default = _default;
+            key->m_sub_id = subid;
+            key->checked = true;
             return true;
         }
         ImGui::ShowTooltipOnHover("Add Curve");

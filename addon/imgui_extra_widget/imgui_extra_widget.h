@@ -688,7 +688,7 @@ public:
     virtual ~MsgBox() {};
     
     bool Init( const char* title, const char* icon, const char* text, const char** captions, bool show_checkbox = false );
-    int  Draw();
+    int  Draw(float wrap_width = 200.f);
     void Open();
 
     inline void AskAgain()
