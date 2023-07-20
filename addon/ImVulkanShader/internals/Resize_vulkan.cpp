@@ -73,8 +73,12 @@ double Resize_vulkan::Resize(const ImMat& src, ImMat& dst, float fx, float fy, I
         return ret;
     }
 
-    int dst_width = Im_AlignSize((fx == 0.f ? src.w : src.w * fx), 4);
-    int dst_height = Im_AlignSize((fx == 0.f ? src.h : fy == 0.f ? src.h * fx : src.h * fy), 4);\
+    int dst_width = dst.w;
+    if (dst_width <= 0)
+        dst_width = fx <= 0.f ? src.w : src.w * fx;
+    int dst_height = dst.h;
+    if (dst_height <= 0)
+        dst_height = fy <= 0.f ? (fx <= 0.f ? src.h : src.h * fx) : src.h * fy;
     auto color_format = dst.color_format;
     int channels = IM_ISALPHA(color_format) ? 4 : IM_ISRGB(color_format) ? 3 : IM_ISMONO(color_format) ? 1 : 4;
     VkMat dst_gpu;
