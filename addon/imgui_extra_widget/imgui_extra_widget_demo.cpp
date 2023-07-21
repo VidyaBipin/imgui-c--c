@@ -933,9 +933,13 @@ void ShowImKalmanDemoWindow()
     drawList->AddCircle(statePt, 3, IM_COL32(255,0,0,255));
     drawList->AddCircle(predictPt, 3, IM_COL32(0,255,0,255));
     drawList->AddCircle(io.MousePos, 3, IM_COL32(255,255,255,255));
-
+#if defined(__APPLE__) || defined(_WIN32)
     ImGui::Text("Predicted time: %lldus", predicted_time);
     ImGui::Text("   Update time: %lldus", update_time);
+#else
+    ImGui::Text("Predicted time: %ldus", predicted_time);
+    ImGui::Text("   Update time: %ldus", update_time);
+#endif
     if (ImGui::SliderInt("noise covariance pow", &noise_covariance_pow, 1, 5))
     {
         kalman.covariance(1.f / (pow(10, noise_covariance_pow)), 1.f / (pow(10, measurement_noise_covariance_pow)));

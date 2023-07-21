@@ -5539,6 +5539,7 @@ static std::string GetAppDataLocal() {
 #endif
 
 #if !defined(_WIN32) && !defined(__APPLE__)
+#include <fstream>
 static void PlatformFoldersAddFromFile(const std::string& filename, std::map<std::string, std::string>& folders) {
 	std::ifstream infile(filename.c_str());
 	std::string line;
@@ -5570,11 +5571,11 @@ static void PlatformFoldersFillData(std::map<std::string, std::string>& folders)
 	folders["XDG_PUBLICSHARE_DIR"] = "$HOME/Public";
 	folders["XDG_TEMPLATES_DIR"] = "$HOME/.Templates";
 	folders["XDG_VIDEOS_DIR"] = "$HOME/Videos";
-	PlatformFoldersAddFromFile( getConfigHome()+"/user-dirs.dirs", folders);
+	PlatformFoldersAddFromFile( ImGuiHelper::getConfigHome()+"/user-dirs.dirs", folders);
 	for (std::map<std::string, std::string>::iterator itr = folders.begin() ; itr != folders.end() ; ++itr ) {
 		std::string& value = itr->second;
 		if (value.compare(0, 5, "$HOME") == 0) {
-			value = getHome() + value.substr(5, std::string::npos);
+			value = ImGuiHelper::home_path() + value.substr(6, std::string::npos);
 		}
 	}
 }
@@ -5595,7 +5596,7 @@ static std::string getLinuxFolderDefault(const char* envName, const char* defaul
 		res = tempRes;
 		return res;
 	}
-	res = getHome() + "/" + defaultRelativePath;
+	res = ImGuiHelper::home_path() + defaultRelativePath;
 	return res;
 }
 
