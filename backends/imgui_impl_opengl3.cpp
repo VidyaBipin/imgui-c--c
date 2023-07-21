@@ -314,7 +314,13 @@ bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
     bd->GlProfileIsES3 = true;
 #endif
 
+// modify By Dicky for MacOS, using glBufferSubData to prevent leaks
+#if defined(__APPLE__)
+    bd->UseBufferSubData = true;
+#else
     bd->UseBufferSubData = false;
+#endif
+// modify By Dicky end
     /*
     // Query vendor to enable glBufferSubData kludge
 #ifdef _WIN32
