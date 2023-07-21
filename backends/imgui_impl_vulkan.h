@@ -25,6 +25,7 @@
 // Read comments in imgui_impl_vulkan.h.
 
 #pragma once
+#ifndef IMGUI_DISABLE
 #include "imgui.h"      // IMGUI_IMPL_API
 #include <string>       // add by Dicky
 #include <mutex>        // add by Dicky
@@ -207,3 +208,5 @@ IMGUI_IMPL_API ImVec4       ImGui_ImplVulkan_GetTexturePixel(ImTextureVk texture
 IMGUI_IMPL_API void         ImGui_ImplVulkan_DestroyTexture(ImTextureVk * texture);
 IMGUI_IMPL_API ImGui_ImplVulkan_InitInfo* ImGui_ImplVulkan_GetInitInfo();
 // add By Dicky end
+
+#endif // #ifndef IMGUI_DISABLE

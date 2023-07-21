@@ -33,6 +33,8 @@
 
 // FIXME: cfg.OversampleH, OversampleV are not supported (but perhaps not so necessary with this rasterizer).
 
+#include "imgui.h"
+#ifndef IMGUI_DISABLE
 #include "imgui_freetype.h"
 #include "imgui_internal.h"     // ImMin,ImMax,ImFontAtlasBuild*,
 #include <stdint.h>
@@ -809,6 +811,8 @@ void ImGuiFreeType::SetAllocatorFunctions(void* (*alloc_func)(size_t sz, void* u
     GImGuiFreeTypeAllocatorUserData = user_data;
 }
 
+//-----------------------------------------------------------------------------
+
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
@@ -816,3 +820,5 @@ void ImGuiFreeType::SetAllocatorFunctions(void* (*alloc_func)(size_t sz, void* u
 #ifdef _MSC_VER
 #pragma warning (pop)
 #endif
+
+#endif // #ifndef IMGUI_DISABLE

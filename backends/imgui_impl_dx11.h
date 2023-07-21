@@ -13,6 +13,7 @@
 
 #pragma once
 #include "imgui.h"      // IMGUI_IMPL_API
+#ifndef IMGUI_DISABLE
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;
@@ -28,3 +29,5 @@ IMGUI_IMPL_API bool     ImGui_ImplDX11_CreateDeviceObjects();
 
 // Add By Dicky
 IMGUI_IMPL_API void*    ImGui_ImplDX11_GetDevice(); 
+
+#endif // #ifndef IMGUI_DISABLE

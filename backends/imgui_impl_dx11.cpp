@@ -33,6 +33,7 @@
 //  2016-05-07: DirectX11: Disabling depth-write.
 
 #include "imgui.h"
+#ifndef IMGUI_DISABLE
 #include "imgui_impl_dx11.h"
 
 // DirectX
@@ -738,3 +739,7 @@ void * ImGui_ImplDX11_GetDevice()
     return bd->pd3dDevice;
 }
 // Add By Dicky end
+
+//-----------------------------------------------------------------------------
+
+#endif // #ifndef IMGUI_DISABLE

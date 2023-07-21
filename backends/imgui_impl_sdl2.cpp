@@ -77,6 +77,7 @@
 //  2016-10-15: Misc: Added a void* user_data parameter to Clipboard function handlers.
 
 #include "imgui.h"
+#ifndef IMGUI_DISABLE
 #include "imgui_impl_sdl2.h"
 
 // Clang warnings with -Weverything
@@ -168,11 +169,12 @@ static void ImGui_ImplSDL2_SetClipboardText(void*, const char* text)
 // Note: native IME will only display if user calls SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1") _before_ SDL_CreateWindow().
 static void ImGui_ImplSDL2_SetPlatformImeData(ImGuiViewport* viewport, ImGuiPlatformImeData* data)
 {
+ // modify by Dicky
     if (data->WantVisible)
     {
         SDL_Rect r;
         r.x = (int)(data->InputPos.x - viewport->Pos.x);
-        r.y = (int)(data->InputPos.y - viewport->Pos.y + data->InputLineHeight + 2); // modify by Dicky
+        r.y = (int)(data->InputPos.y - viewport->Pos.y + data->InputLineHeight + 2);
         r.w = 1;
         r.h = (int)data->InputLineHeight;
         SDL_SetTextInputRect(&r);
@@ -182,6 +184,7 @@ static void ImGui_ImplSDL2_SetPlatformImeData(ImGuiViewport* viewport, ImGuiPlat
     {
         SDL_StopTextInput();
     }
+ // modify by Dicky end
 }
 
 static ImGuiKey ImGui_ImplSDL2_KeycodeToImGuiKey(int keycode)
@@ -1218,6 +1221,10 @@ void ImGui_ImplSDL2_SetWindowIcon(SDL_Window* window, const char * icon_path)
 }
 // Add By Dicky end
 
+//-----------------------------------------------------------------------------
+
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
+
+#endif // #ifndef IMGUI_DISABLE

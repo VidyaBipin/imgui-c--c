@@ -68,7 +68,8 @@
 //  2016-10-18: Vulkan: Add location decorators & change to use structs as in/out in glsl, update embedded spv (produced with glslangValidator -x). Null the released resources.
 //  2016-08-27: Vulkan: Fix Vulkan example for use when a depth buffer is active.
 
-#include "imgui.h" // Add By Dicky
+#include "imgui.h"
+#ifndef IMGUI_DISABLE
 #include "imgui_impl_vulkan.h"
 #include <stdio.h>
 #include <stdexcept> // Add By Dicky
@@ -786,7 +787,7 @@ bool ImGui_ImplVulkan_CreateFontsTexture(VkCommandBuffer command_buffer)
     // Store our identifier
     // modify By Dicky
     io.Fonts->SetTexID((ImTextureID)font_texture);
-    // modify By Dicky
+    // modify By Dicky end
 
     return true;
 }
@@ -926,8 +927,8 @@ static void ImGui_ImplVulkan_CreatePipeline(VkDevice device, const VkAllocationC
     VkPipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo = {};
     pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     pipelineRenderingCreateInfo.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfo.pColorAttachmentFormats = &bd->VulkanInitInfo->ColorAttachmentFormat;
-    if (bd->VulkanInitInfo->UseDynamicRendering)
+    pipelineRenderingCreateInfo.pColorAttachmentFormats = &bd->VulkanInitInfo->ColorAttachmentFormat; // modify By Dicky
+    if (bd->VulkanInitInfo->UseDynamicRendering) // modify By Dicky
     {
         info.pNext = &pipelineRenderingCreateInfo;
         info.renderPass = VK_NULL_HANDLE; // Just make sure it's actually nullptr.
@@ -1852,7 +1853,7 @@ void ImGui_ImplVulkan_ShutdownPlatformInterface()
 }
 
 // Add By Dicky
-// Texture founction
+// Texture functions
 uint32_t findMemoryType(ImGui_ImplVulkan_InitInfo* v, uint32_t typeFilter, VkMemoryPropertyFlags properties) 
 {
     VkPhysicalDeviceMemoryProperties memProperties;
@@ -2518,3 +2519,7 @@ ImGui_ImplVulkan_InitInfo* ImGui_ImplVulkan_GetInitInfo()
     return v;
 }
 // Add By Dicky end
+
+//-----------------------------------------------------------------------------
+
+#endif // #ifndef IMGUI_DISABLE

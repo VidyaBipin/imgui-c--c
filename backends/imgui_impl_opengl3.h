@@ -25,6 +25,8 @@
 
 #pragma once
 #include "imgui.h"      // IMGUI_IMPL_API
+#ifndef IMGUI_DISABLE
+
 // add by Dicky
 #include <string>
 typedef struct ImTextureGL
@@ -76,3 +78,5 @@ IMGUI_IMPL_API std::string  ImGui_ImplOpenGL3_GLLoaderName();
 #endif
 
 #endif
+
+#endif // #ifndef IMGUI_DISABLE

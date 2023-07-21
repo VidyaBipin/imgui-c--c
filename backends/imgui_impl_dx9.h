@@ -13,6 +13,7 @@
 
 #pragma once
 #include "imgui.h"      // IMGUI_IMPL_API
+#ifndef IMGUI_DISABLE
 
 struct IDirect3DDevice9;
 
@@ -27,3 +28,5 @@ IMGUI_IMPL_API void     ImGui_ImplDX9_InvalidateDeviceObjects();
 
 // Add By Dicky
 IMGUI_IMPL_API void*    ImGui_ImplDX9_GetDevice(); 
+
+#endif // #ifndef IMGUI_DISABLE
