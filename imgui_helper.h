@@ -468,6 +468,91 @@ IMGUI_API size_t memory_usage();
 // return maximum memory resident set size used (in bytes)
 IMGUI_API size_t memory_max_usage();
 
+// The original files are hosted here: https://github.com/sago007/PlatformFolders
+/**
+ * Retrives the base folder for storing data files.
+ * You must add the program name yourself like this:
+ * @code{.cpp}
+ * string data_home = getDataHome()+"/My Program Name/";
+ * @endcode
+ * On Windows this defaults to %APPDATA% (Roaming profile)
+ * On Linux this defaults to ~/.local/share but can be configured by the user
+ * @return The base folder for storing program data.
+ */
+IMGUI_API std::string getDataHome();
+/**
+ * Retrives the base folder for storing config files.
+ * You must add the program name yourself like this:
+ * @code{.cpp}
+ * string data_home = getConfigHome()+"/My Program Name/";
+ * @endcode
+ * On Windows this defaults to %APPDATA% (Roaming profile)
+ * On Linux this defaults to ~/.config but can be configured by the user
+ * @return The base folder for storing config data.
+ */
+IMGUI_API std::string getConfigHome();
+/**
+ * Retrives the base folder for storing cache files.
+ * You must add the program name yourself like this:
+ * @code{.cpp}
+ * string data_home = getCacheDir()+"/My Program Name/cache/";
+ * @endcode
+ * On Windows this defaults to %APPDATALOCAL%
+ * On Linux this defaults to ~/.cache but can be configured by the user
+ * Note that it is recommended to append "cache" after the program name to prevent conflicting with "StateDir" under Windows
+ * @return The base folder for storing data that do not need to be backed up and might be deleted.
+ */
+IMGUI_API std::string getCacheDir();
+/**
+ * Retrives the base folder used for state files.
+ * You must add the program name yourself like this:
+ * @code{.cpp}
+ * string data_home = getStateDir()+"/My Program Name/";
+ * @endcode
+ * On Windows this defaults to %APPDATALOCAL%
+ * On Linux this defaults to ~/.local/state but can be configured by the user
+ * On OS X this is the same as getDataHome()
+ * @return The base folder for storing data that do not need to be backed up but should not be reguarly deleted either.
+ */
+IMGUI_API std::string getStateDir();
+/**
+ * The folder that represents the desktop.
+ * Normally you should try not to use this folder.
+ * @return Absolute path to the user's desktop
+ */
+IMGUI_API std::string getDesktopFolder();
+/**
+ * The folder to store user documents to
+ * @return Absolute path to the "Documents" folder
+ */
+IMGUI_API std::string getDocumentsFolder();
+/**
+ * The folder where files are downloaded.
+ * @return Absolute path to the folder where files are downloaded to.
+ */
+IMGUI_API std::string getDownloadFolder();
+/**
+ * The folder for storing the user's pictures.
+ * @return Absolute path to the "Picture" folder
+ */
+IMGUI_API std::string getPicturesFolder();
+/**
+ * This returns the folder that can be used for sharing files with other users on the same system.
+ * @return Absolute path to the "Public" folder
+ */
+IMGUI_API std::string getPublicFolder();
+/**
+ * The folder where music is stored
+ * @return Absolute path to the music folder
+ */
+IMGUI_API std::string getMusicFolder();
+/**
+ * The folder where video is stored
+ * @return Absolute path to the video folder
+ */
+IMGUI_API std::string getVideoFolder();
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 IMGUI_API std::string MillisecToString(int64_t millisec, int show_millisec = 0);
 
 class IMGUI_API Deserializer {

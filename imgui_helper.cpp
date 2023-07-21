@@ -18,8 +18,11 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <winerror.h>   // For SUCCEEDED macro
 #include <shellapi.h>	// ShellExecuteA(...) - Shell32.lib
 #include <objbase.h>    // CoInitializeEx(...)  - ole32.lib
+#include <shlobj.h>     // For SHGetFolderPathW and various CSIDL "magic numbers"
+#include <stringapiset.h>   // For WideCharToMultiByte
 #include <psapi.h> 
 #if IMGUI_RENDERING_DX11
 struct IUnknown;
@@ -5484,3 +5487,166 @@ void ImGui::ImageMatCopyTo(const ImGui::ImMat& src, ImGui::ImMat& dst, ImPoint p
         }
     }
 }
+
+// platform folders
+// https://github.com/sago007/PlatformFolders
+#ifdef _WIN32
+class FreeCoTaskMemory {
+	LPWSTR pointer = NULL;
+public:
+	explicit FreeCoTaskMemory(LPWSTR pointer) : pointer(pointer) {};
+	~FreeCoTaskMemory() {
+		CoTaskMemFree(pointer);
+	}
+};
+static std::string win32_utf16_to_utf8(const wchar_t* wstr) {
+	std::string res;
+	// If the 6th parameter is 0 then WideCharToMultiByte returns the number of bytes needed to store the result.
+	int actualSize = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, nullptr, 0, nullptr, nullptr);
+	if (actualSize > 0) {
+		//If the converted UTF-8 string could not be in the initial buffer. Allocate one that can hold it.
+		std::vector<char> buffer(actualSize);
+		actualSize = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, &buffer[0], static_cast<int>(buffer.size()), nullptr, nullptr);
+		res = buffer.data();
+	}
+	if (actualSize == 0) {
+		// WideCharToMultiByte return 0 for errors.
+		throw std::runtime_error("UTF16 to UTF8 failed with error code: " + std::to_string(GetLastError()));
+	}
+	return res;
+}
+static std::string GetKnownWindowsFolder(REFKNOWNFOLDERID folderId, const char* errorMsg) {
+	LPWSTR wszPath = NULL;
+	HRESULT hr;
+	hr = SHGetKnownFolderPath(folderId, KF_FLAG_CREATE, NULL, &wszPath);
+	FreeCoTaskMemory scopeBoundMemory(wszPath);
+
+	if (!SUCCEEDED(hr)) {
+		throw std::runtime_error(errorMsg);
+	}
+	return win32_utf16_to_utf8(wszPath);
+}
+static std::string GetAppData() {
+	return GetKnownWindowsFolder(FOLDERID_RoamingAppData, "RoamingAppData could not be found");
+}
+static std::string GetAppDataCommon() {
+	return GetKnownWindowsFolder(FOLDERID_ProgramData, "ProgramData could not be found");
+}
+
+static std::string GetAppDataLocal() {
+	return GetKnownWindowsFolder(FOLDERID_LocalAppData, "LocalAppData could not be found");
+}
+#endif
+
+namespace ImGuiHelper
+{
+std::string getDataHome() {
+#ifdef _WIN32
+	return GetAppData();
+#elif defined(__APPLE__)
+	return home_path()+"Library/Application Support";
+#else
+	return getLinuxFolderDefault("XDG_DATA_HOME", ".local/share");
+#endif
+}
+
+std::string getConfigHome() {
+#ifdef _WIN32
+	return GetAppData();
+#elif defined(__APPLE__)
+	return home_path()+"Library/Application Support";
+#else
+	return getLinuxFolderDefault("XDG_CONFIG_HOME", ".config");
+#endif
+}
+
+std::string getCacheDir() {
+#ifdef _WIN32
+	return GetAppDataLocal();
+#elif defined(__APPLE__)
+	return home_path()+"Library/Caches";
+#else
+	return getLinuxFolderDefault("XDG_CACHE_HOME", ".cache");
+#endif
+}
+
+std::string getStateDir() {
+#ifdef _WIN32
+	return GetAppDataLocal();
+#elif defined(__APPLE__)
+	return home_path()+"Library/Application Support";
+#else
+	return getLinuxFolderDefault("XDG_STATE_HOME", ".local/state");
+#endif
+}
+
+std::string getDocumentsFolder() {
+#ifdef _WIN32
+	return GetKnownWindowsFolder(FOLDERID_Documents, "Failed to find My Documents folder");
+#elif defined(__APPLE__)
+	return home_path()+"Documents";
+#else
+	return data->folders["XDG_DOCUMENTS_DIR"];
+#endif
+}
+
+std::string getDesktopFolder() {
+#ifdef _WIN32
+	return GetKnownWindowsFolder(FOLDERID_Desktop, "Failed to find Desktop folder");
+#elif defined(__APPLE__)
+	return home_path()+"Desktop";
+#else
+	return data->folders["XDG_DESKTOP_DIR"];
+#endif
+}
+
+std::string getPicturesFolder() {
+#ifdef _WIN32
+	return GetKnownWindowsFolder(FOLDERID_Pictures, "Failed to find My Pictures folder");
+#elif defined(__APPLE__)
+	return home_path()+"Pictures";
+#else
+	return data->folders["XDG_PICTURES_DIR"];
+#endif
+}
+
+std::string getPublicFolder() {
+#ifdef _WIN32
+	return GetKnownWindowsFolder(FOLDERID_Public, "Failed to find the Public folder");
+#elif defined(__APPLE__)
+	return home_path()+"Public";
+#else
+	return data->folders["XDG_PUBLICSHARE_DIR"];
+#endif
+}
+
+std::string getDownloadFolder() {
+#ifdef _WIN32
+	return GetKnownWindowsFolder(FOLDERID_Downloads, "Failed to find My Downloads folder");
+#elif defined(__APPLE__)
+	return home_path()+"Downloads";
+#else
+	return data->folders["XDG_DOWNLOAD_DIR"];
+#endif
+}
+
+std::string getMusicFolder() {
+#ifdef _WIN32
+	return GetKnownWindowsFolder(FOLDERID_Music, "Failed to find My Music folder");
+#elif defined(__APPLE__)
+	return home_path()+"Music";
+#else
+	return data->folders["XDG_MUSIC_DIR"];
+#endif
+}
+
+std::string getVideoFolder() {
+#ifdef _WIN32
+	return GetKnownWindowsFolder(FOLDERID_Videos, "Failed to find My Video folder");
+#elif defined(__APPLE__)
+	return home_path()+"Movies";
+#else
+	return data->folders["XDG_VIDEOS_DIR"];
+#endif
+}
+} // namespace ImGuiHelper
