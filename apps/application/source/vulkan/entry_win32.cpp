@@ -259,6 +259,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     auto ctx = ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGuiContext& g = *GImGui;
+    io.ApplicationName = property.name.c_str();
     io.Fonts->AddFontDefault(property.font_scale);
     io.FontGlobalScale = 1.0f / property.font_scale;
     if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;

@@ -190,6 +190,7 @@ int main(int argc, char** argv)
     ImGuiContext& g = *GImGui;
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImVec2 display_scale = ImVec2(1.0, 1.0);
+    io.ApplicationName = property.name.c_str();
     io.Fonts->AddFontDefault(property.font_scale);
     io.FontGlobalScale = 1.0f / property.font_scale;
     io.DisplayFramebufferScale = display_scale;

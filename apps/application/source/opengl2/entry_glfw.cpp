@@ -162,6 +162,7 @@ int main(int argc, char** argv)
     auto ctx = ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGuiContext& g = *GImGui;
+    io.ApplicationName = property.name.c_str();
     io.Fonts->AddFontDefault(property.font_scale);
     io.FontGlobalScale = 1.0f / property.font_scale;
     io.DisplayFramebufferScale = display_scale;

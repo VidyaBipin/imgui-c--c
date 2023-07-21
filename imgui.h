@@ -2109,6 +2109,7 @@ struct ImGuiIO
     const char* LogFilename;                    // = "imgui_log.txt"// Path to .log file (default parameter to ImGui::LogToFile when no file is specified).
     // Add by Dicky
     const char* LanguagePath;                   // = "languages"    // Path to language files, Set Null to disable multi-language support
+    const char* ApplicationName;                // = ""             // contain application name if we setting
     // Add by Dicky end
     void*       UserData;                       // = NULL           // Store your own data.
 
