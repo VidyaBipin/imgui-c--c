@@ -5538,6 +5538,69 @@ static std::string GetAppDataLocal() {
 }
 #endif
 
+#if !defined(_WIN32) && !defined(__APPLE__)
+static void PlatformFoldersAddFromFile(const std::string& filename, std::map<std::string, std::string>& folders) {
+	std::ifstream infile(filename.c_str());
+	std::string line;
+	while (std::getline(infile, line)) {
+		if (line.length() == 0 || line.at(0) == '#' || line.substr(0, 4) != "XDG_" || line.find("_DIR") == std::string::npos) {
+			continue;
+		}
+		try {
+			std::size_t splitPos = line.find('=');
+			std::string key = line.substr(0, splitPos);
+			std::size_t valueStart = line.find('"', splitPos);
+			std::size_t valueEnd = line.find('"', valueStart+1);
+			std::string value = line.substr(valueStart+1, valueEnd - valueStart - 1);
+			folders[key] = value;
+		}
+		catch (std::exception&  e) {
+			std::cerr << "WARNING: Failed to process \"" << line << "\" from \"" << filename << "\". Error: "<< e.what() << "\n";
+			continue;
+		}
+	}
+}
+
+static void PlatformFoldersFillData(std::map<std::string, std::string>& folders) {
+	folders["XDG_DOCUMENTS_DIR"] = "$HOME/Documents";
+	folders["XDG_DESKTOP_DIR"] = "$HOME/Desktop";
+	folders["XDG_DOWNLOAD_DIR"] = "$HOME/Downloads";
+	folders["XDG_MUSIC_DIR"] = "$HOME/Music";
+	folders["XDG_PICTURES_DIR"] = "$HOME/Pictures";
+	folders["XDG_PUBLICSHARE_DIR"] = "$HOME/Public";
+	folders["XDG_TEMPLATES_DIR"] = "$HOME/.Templates";
+	folders["XDG_VIDEOS_DIR"] = "$HOME/Videos";
+	PlatformFoldersAddFromFile( getConfigHome()+"/user-dirs.dirs", folders);
+	for (std::map<std::string, std::string>::iterator itr = folders.begin() ; itr != folders.end() ; ++itr ) {
+		std::string& value = itr->second;
+		if (value.compare(0, 5, "$HOME") == 0) {
+			value = getHome() + value.substr(5, std::string::npos);
+		}
+	}
+}
+
+static void throwOnRelative(const char* envName, const char* envValue) {
+	if (envValue[0] != '/') {
+		char buffer[200];
+		std::snprintf(buffer, sizeof(buffer), "Environment \"%s\" does not start with an '/'. XDG specifies that the value must be absolute. The current value is: \"%s\"", envName, envValue);
+		throw std::runtime_error(buffer);
+	}
+}
+
+static std::string getLinuxFolderDefault(const char* envName, const char* defaultRelativePath) {
+	std::string res;
+	const char* tempRes = std::getenv(envName);
+	if (tempRes) {
+		throwOnRelative(envName, tempRes);
+		res = tempRes;
+		return res;
+	}
+	res = getHome() + "/" + defaultRelativePath;
+	return res;
+}
+
+#endif
+
 namespace ImGuiHelper
 {
 std::string getDataHome() {
@@ -5586,7 +5649,9 @@ std::string getDocumentsFolder() {
 #elif defined(__APPLE__)
 	return home_path()+"Documents";
 #else
-	return data->folders["XDG_DOCUMENTS_DIR"];
+    std::map<std::string, std::string> folders;
+    PlatformFoldersFillData(folders);
+	return folders["XDG_DOCUMENTS_DIR"];
 #endif
 }
 
@@ -5596,7 +5661,9 @@ std::string getDesktopFolder() {
 #elif defined(__APPLE__)
 	return home_path()+"Desktop";
 #else
-	return data->folders["XDG_DESKTOP_DIR"];
+    std::map<std::string, std::string> folders;
+    PlatformFoldersFillData(folders);
+	return folders["XDG_DESKTOP_DIR"];
 #endif
 }
 
@@ -5606,7 +5673,9 @@ std::string getPicturesFolder() {
 #elif defined(__APPLE__)
 	return home_path()+"Pictures";
 #else
-	return data->folders["XDG_PICTURES_DIR"];
+    std::map<std::string, std::string> folders;
+    PlatformFoldersFillData(folders);
+	return folders["XDG_PICTURES_DIR"];
 #endif
 }
 
@@ -5616,7 +5685,9 @@ std::string getPublicFolder() {
 #elif defined(__APPLE__)
 	return home_path()+"Public";
 #else
-	return data->folders["XDG_PUBLICSHARE_DIR"];
+    std::map<std::string, std::string> folders;
+    PlatformFoldersFillData(folders);
+	return folders["XDG_PUBLICSHARE_DIR"];
 #endif
 }
 
@@ -5626,7 +5697,9 @@ std::string getDownloadFolder() {
 #elif defined(__APPLE__)
 	return home_path()+"Downloads";
 #else
-	return data->folders["XDG_DOWNLOAD_DIR"];
+    std::map<std::string, std::string> folders;
+    PlatformFoldersFillData(folders);
+	return folders["XDG_DOWNLOAD_DIR"];
 #endif
 }
 
@@ -5636,7 +5709,9 @@ std::string getMusicFolder() {
 #elif defined(__APPLE__)
 	return home_path()+"Music";
 #else
-	return data->folders["XDG_MUSIC_DIR"];
+    std::map<std::string, std::string> folders;
+    PlatformFoldersFillData(folders);
+	return folders["XDG_MUSIC_DIR"];
 #endif
 }
 
@@ -5646,7 +5721,9 @@ std::string getVideoFolder() {
 #elif defined(__APPLE__)
 	return home_path()+"Movies";
 #else
-	return data->folders["XDG_VIDEOS_DIR"];
+    std::map<std::string, std::string> folders;
+    PlatformFoldersFillData(folders);
+	return folders["XDG_VIDEOS_DIR"];
 #endif
 }
 } // namespace ImGuiHelper
