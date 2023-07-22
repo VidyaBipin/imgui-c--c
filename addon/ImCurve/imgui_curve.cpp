@@ -702,6 +702,8 @@ void ImGui::KeyPointEditor::Load(const imgui_json::value& keypoint)
             float _min = 0.f;
             float _max = 0.f;
             float _default = 0.f;
+            int64_t _id = -1;
+            int64_t _sub_id = -1;
             if (curve.contains("Name"))
             {
                 auto& val = curve["Name"];
@@ -737,9 +739,19 @@ void ImGui::KeyPointEditor::Load(const imgui_json::value& keypoint)
                 auto& val = curve["Default"];
                 if (val.is_number()) _default = val.get<imgui_json::number>();
             }
+            if (curve.contains("ID"))
+            {
+                auto& val = curve["ID"];
+                if (val.is_number()) _id = val.get<imgui_json::number>();
+            }
+            if (curve.contains("SubID"))
+            {
+                auto& val = curve["SubID"];
+                if (val.is_number()) _sub_id = val.get<imgui_json::number>();
+            }
             if (!name.empty())
             {
-                auto curve_index = AddCurve(name, (ImGui::ImCurveEdit::CurveType)type, color, visible, _min, _max, _default);
+                auto curve_index = AddCurve(name, (ImGui::ImCurveEdit::CurveType)type, color, visible, _min, _max, _default, _id, _sub_id);
                 const imgui_json::array* pointArray = nullptr;
                 if (imgui_json::GetPtrTo(curve, "KeyPoints", pointArray))
                 {
@@ -783,6 +795,8 @@ void ImGui::KeyPointEditor::Save(imgui_json::value& keypoint)
         curve["Min"] = imgui_json::number(GetCurveMin(i));
         curve["Max"] = imgui_json::number(GetCurveMax(i));
         curve["Default"] = imgui_json::number(GetCurveDefault(i));
+        curve["ID"] = imgui_json::number(GetCurveID(i));
+        curve["SubID"] = imgui_json::number(GetCurveSubID(i));
         // save curve key point
         imgui_json::value points;
         for (int p = 0; p < GetCurvePointCount(i); p++)

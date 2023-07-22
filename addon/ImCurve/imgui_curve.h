@@ -129,6 +129,8 @@ struct IMGUI_API ImCurveEdit
         virtual size_t GetCurvePointCount(size_t curveIndex) = 0;
         virtual ImU32 GetCurveColor(size_t curveIndex) = 0;
         virtual std::string GetCurveName(size_t curveIndex) = 0;
+        virtual int64_t GetCurveID(size_t curveIndex) = 0;
+        virtual int64_t GetCurveSubID(size_t curveIndex) = 0;
         virtual KeyPoint* GetPoints(size_t curveIndex) = 0;
         virtual KeyPoint GetPoint(size_t curveIndex, size_t pointIndex) = 0;
         virtual ImVec2 GetPrevPoint(float pos) = 0;
@@ -221,6 +223,8 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
     void SetGraticuleColor(ImU32 color) { GraticuleColor = color; }
     size_t GetCurveCount() { return mKeys.size(); }
     std::string GetCurveName(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].name; return ""; }
+    int64_t GetCurveID(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].m_id; return -1; }
+    int64_t GetCurveSubID(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].m_sub_id; return -1; }
     size_t GetCurvePointCount(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].points.size(); return 0; }
     ImU32 GetCurveColor(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].color; return 0; }
     ImCurveEdit::CurveType GetCurveType(size_t curveIndex) const { if (curveIndex < mKeys.size()) return mKeys[curveIndex].type; return ImCurveEdit::Linear; }
