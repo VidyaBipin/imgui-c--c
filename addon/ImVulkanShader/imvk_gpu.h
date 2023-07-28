@@ -50,9 +50,6 @@ extern int support_VK_EXT_debug_utils;
 extern int support_VK_EXT_validation_features;
 extern int support_VK_EXT_validation_flags;
 
-// VK_KHR_cooperative_matrix
-extern PFN_vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR;
-
 // VK_KHR_external_memory_capabilities
 extern PFN_vkGetPhysicalDeviceExternalBufferPropertiesKHR vkGetPhysicalDeviceExternalBufferPropertiesKHR;
 
