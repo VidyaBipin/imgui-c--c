@@ -66,10 +66,11 @@ typedef struct VkPhysicalDeviceCooperativeMatrixPropertiesKHR
     VkShaderStageFlags cooperativeMatrixSupportedStages;
 } VkPhysicalDeviceCooperativeMatrixPropertiesKHR;
 typedef VkResult(VKAPI_PTR* PFN_vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR)(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkCooperativeMatrixPropertiesKHR* pProperties);
-#endif // VK_HEADER_VERSION < 255
 
 // VK_KHR_cooperative_matrix
 extern PFN_vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR;
+
+#endif // VK_HEADER_VERSION < 255
 
 // There is known issue that vkDestroyDebugUtilsMessengerEXT crash on exit when vulkan validation layer enabled
 // upstream fix https://github.com/KhronosGroup/Vulkan-Loader/pull/539
