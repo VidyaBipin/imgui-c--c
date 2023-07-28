@@ -26,7 +26,19 @@ union vk_constant_type
 };
 
 // instance
+
+// Create VkInstance and initialize some objects that need to be calculated by GPU
+// Creates a VkInstance object, Checks the extended attributes supported by the Vulkan instance concerned,
+// Initializes, and creates Vulkan validation layers (if ENABLE_VALIDATION_LAYER is enabled),
+// Iterates over all supported physical devices, etc.
 VKSHADER_API int create_gpu_instance();
+
+// Get global VkInstance variable
+// Must be called after create_gpu_instance() and before destroy_gpu_instance()
+VKSHADER_API VkInstance get_gpu_instance();
+
+// Destroy VkInstance object and free the memory of the associated object
+// Usually called in the destructor of the main program exit
 VKSHADER_API void destroy_gpu_instance();
 
 // instance extension capability
@@ -37,6 +49,9 @@ extern int support_VK_KHR_surface;
 extern int support_VK_EXT_debug_utils;
 extern int support_VK_EXT_validation_features;
 extern int support_VK_EXT_validation_flags;
+
+// VK_KHR_cooperative_matrix
+extern PFN_vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR;
 
 // VK_KHR_external_memory_capabilities
 extern PFN_vkGetPhysicalDeviceExternalBufferPropertiesKHR vkGetPhysicalDeviceExternalBufferPropertiesKHR;
@@ -154,6 +169,8 @@ public:
     // cooperative matrix feature
     bool support_cooperative_matrix() const;
     bool support_cooperative_matrix_16_8_8() const;
+    bool support_cooperative_matrix_16_8_16() const;
+    bool support_cooperative_matrix_16_16_16() const;
 
     // extension capability
     int support_VK_KHR_8bit_storage() const;
@@ -161,6 +178,7 @@ public:
     int support_VK_KHR_bind_memory2() const;
     int support_VK_KHR_buffer_device_address() const;
     int support_VK_KHR_create_renderpass2() const;
+    int support_VK_KHR_cooperative_matrix() const;
     int support_VK_KHR_dedicated_allocation() const;
     int support_VK_KHR_descriptor_update_template() const;
     int support_VK_KHR_external_memory() const;
