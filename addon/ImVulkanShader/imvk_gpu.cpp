@@ -1531,7 +1531,7 @@ int create_gpu_instance()
             }
 
             // query cooperative_matrix
-            VkPhysicalDeviceCooperativeMatrixFeaturesKHR queryCooperativeMatrixFeatures;
+            ImGui::VkPhysicalDeviceCooperativeMatrixFeaturesKHR queryCooperativeMatrixFeatures;
             queryCooperativeMatrixFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_FEATURES_KHR;
             queryCooperativeMatrixFeatures.pNext = 0;
             VkPhysicalDeviceCooperativeMatrixFeaturesNV queryCooperativeMatrixFeaturesNV;
@@ -1624,7 +1624,7 @@ int create_gpu_instance()
                     fprintf(stderr, "vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR failed %d", ret);
                 }
 
-                std::vector<VkCooperativeMatrixPropertiesKHR> properties(propertyCount);
+                std::vector<ImGui::VkCooperativeMatrixPropertiesKHR> properties(propertyCount);
                 ret = vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR(physicalDevice, &propertyCount, properties.data());
                 if (ret != VK_SUCCESS)
                 {
@@ -1633,7 +1633,7 @@ int create_gpu_instance()
 
                 for (uint32_t j = 0; j < properties.size(); j++)
                 {
-                    const VkCooperativeMatrixPropertiesKHR& cmp = properties[j];
+                    const ImGui::VkCooperativeMatrixPropertiesKHR& cmp = properties[j];
                     // fprintf(stderr, "cpm %2d %2d %2d  %d %d %d %d  %d", cmp.MSize, cmp.NSize, cmp.KSize, cmp.AType, cmp.BType, cmp.CType, cmp.ResultType, cmp.scope);
 
                     if (cmp.MSize == 16 && cmp.NSize == 8 && cmp.KSize == 8
@@ -2191,7 +2191,7 @@ VulkanDevice::VulkanDevice(int device_index)
     }
 
     // enable cooperative matrix
-    VkPhysicalDeviceCooperativeMatrixFeaturesKHR queryCooperativeMatrixFeatures;
+    ImGui::VkPhysicalDeviceCooperativeMatrixFeaturesKHR queryCooperativeMatrixFeatures;
     queryCooperativeMatrixFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_FEATURES_KHR;
     queryCooperativeMatrixFeatures.pNext = 0;
     queryCooperativeMatrixFeatures.cooperativeMatrix = info.support_cooperative_matrix();

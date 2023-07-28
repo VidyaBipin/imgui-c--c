@@ -383,6 +383,7 @@ typedef uint64_t(VKAPI_PTR* PFN_vkGetDeviceMemoryOpaqueCaptureAddressKHR)(VkDevi
 #define VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_FEATURES_KHR   (VkStructureType)1000506000
 #define VK_STRUCTURE_TYPE_COOPERATIVE_MATRIX_PROPERTIES_KHR                 (VkStructureType)1000506001
 #define VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_PROPERTIES_KHR (VkStructureType)1000506002
+namespace ImGui {
 typedef enum VkComponentTypeKHR
 {
     VK_COMPONENT_TYPE_FLOAT16_KHR = 0,
@@ -434,4 +435,5 @@ typedef struct VkPhysicalDeviceCooperativeMatrixPropertiesKHR
     VkShaderStageFlags cooperativeMatrixSupportedStages;
 } VkPhysicalDeviceCooperativeMatrixPropertiesKHR;
 typedef VkResult(VKAPI_PTR* PFN_vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR)(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkCooperativeMatrixPropertiesKHR* pProperties);
+} // namespace ImGui
 #endif // VK_HEADER_VERSION < 255
