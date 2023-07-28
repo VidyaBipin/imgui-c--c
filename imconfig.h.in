@@ -170,7 +170,7 @@
 // Read about ImGuiBackendFlags_RendererHasVtxOffset for details.
 //#ifdef _WIN32
 #if IMGUI_APPLICATION_RENDERING_GL3 || IMGUI_APPLICATION_RENDERING_GL2
-#define ImDrawIdx unsigned int
+//#define ImDrawIdx unsigned int
 #endif
 //#endif
 
