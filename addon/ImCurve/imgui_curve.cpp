@@ -206,7 +206,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
         ImGui::InvisibleButton("CurveTimelineBar", headerSize);
         draw_list->AddRectFilled(window_pos, window_pos + headerSize, IM_COL32( 33,  33,  38, 255), 0);
         ImRect movRect(window_pos, window_pos + headerSize);
-        if (!delegate->MovingCurrentTime && movRect.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left) && !point_selected && !curve_selected)
+        if (editable && !delegate->MovingCurrentTime && movRect.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left) && !point_selected && !curve_selected)
         {
             delegate->MovingCurrentTime = true;
         }
@@ -283,7 +283,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     // handle zoom and VScroll
     if (flags & CURVE_EDIT_FLAG_SCROLL_V)
     {
-        if (container.Contains(io.MousePos))
+        if (editable && container.Contains(io.MousePos))
         {
             if (fabsf(io.MouseWheel) > FLT_EPSILON)
             {
@@ -308,7 +308,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
         }
     }
 
-    if ((flags & CURVE_EDIT_FLAG_SCROLL_V) && delegate->scrollingV)
+    if ((flags & CURVE_EDIT_FLAG_SCROLL_V) && delegate->scrollingV && editable)
     {
         float deltaH = io.MouseDelta.y * _range.y * sizeOfPixel.y;
         vmin.y -= deltaH;
@@ -388,7 +388,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
         {
             editPoint point(c, p);
             const int drawState = DrawPoint(draw_list, pointToRange(pts[p].point), viewSize, offset, (delegate->selectedPoints.find(point) != delegate->selectedPoints.end() && delegate->movingCurve == -1/* && !scrollingV*/));
-            if (drawState && delegate->movingCurve == -1 && !delegate->selectingQuad)
+            if (editable && drawState && delegate->movingCurve == -1 && !delegate->selectingQuad)
             {
                 overCurveOrPoint = true;
                 delegate->overSelectedPoint = true;
@@ -408,7 +408,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
         delegate->overCurve = -1;
 
     // move selection
-    if (delegate->overSelectedPoint && ImGui::IsMouseDown(ImGuiMouseButton_Left))
+    if (editable && delegate->overSelectedPoint && ImGui::IsMouseDown(ImGuiMouseButton_Left))
     {
         if ((fabsf(io.MouseDelta.x) > 0.f || fabsf(io.MouseDelta.y) > 0.f) && !delegate->selectedPoints.empty())
         {
@@ -482,7 +482,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     }
 
     // add point with double left click 
-    if (delegate->overCurve != -1 && io.MouseDoubleClicked[0])
+    if (editable && delegate->overCurve != -1 && io.MouseDoubleClicked[0])
     {
         ImVec2 np = rangeToPoint((io.MousePos - offset) / viewSize);
         const CurveType t = delegate->GetCurveType(delegate->overCurve);
@@ -497,7 +497,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     }
 
     // draw value in tooltip
-    if (localOverCurve != -1 && localOverPoint != -1 && ImGui::BeginTooltip())
+    if (editable && localOverCurve != -1 && localOverPoint != -1 && ImGui::BeginTooltip())
     {
         auto value_range = fabs(delegate->GetCurveMax(localOverCurve) - delegate->GetCurveMin(localOverCurve)); 
         const KeyPoint* pts = delegate->GetPoints(localOverCurve);
@@ -509,7 +509,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     }
 
     // delete point with right click
-    if (localOverCurve !=-1 && localOverPoint != -1 && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && editable && bEnableDelete)
+    if (editable && localOverCurve !=-1 && localOverPoint != -1 && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && editable && bEnableDelete)
     {
         bool deletable = true;
         if (flags & CURVE_EDIT_FLAG_KEEP_BEGIN_END)
@@ -533,7 +533,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     }
 
     // move curve
-    if (flags & CURVE_EDIT_FLAG_MOVE_CURVE)
+    if (editable && (flags & CURVE_EDIT_FLAG_MOVE_CURVE))
     {
         if (delegate->movingCurve != -1)
         {
@@ -594,7 +594,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
     }
 
     // quad selection
-    if (delegate->selectingQuad)
+    if (editable && delegate->selectingQuad)
     {
         const ImVec2 bmin = ImMin(delegate->quadSelection, io.MousePos);
         const ImVec2 bmax = ImMax(delegate->quadSelection, io.MousePos);
@@ -627,7 +627,7 @@ bool ImGui::ImCurveEdit::Edit(ImDrawList* draw_list, Delegate* delegate, const I
             delegate->selectingQuad = false;
         }
     }
-    if (!overCurveOrPoint && ImGui::IsMouseClicked(0) && !delegate->selectingQuad && delegate->movingCurve == -1 && !delegate->overSelectedPoint && container.Contains(io.MousePos))
+    if (editable && !overCurveOrPoint && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !delegate->selectingQuad && delegate->movingCurve == -1 && !delegate->overSelectedPoint && container.Contains(io.MousePos))
     {
         delegate->selectingQuad = true;
         delegate->quadSelection = io.MousePos;
