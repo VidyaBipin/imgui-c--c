@@ -4871,43 +4871,61 @@ inline void ImMat::alphablend(int x, int y, float alpha, ImPixel color)
     switch (type)
     {
         case IM_DT_INT8:
+        {
+            float alpha_org = c > 2 ? at<uint8_t>(x, y, 3) / (float)UINT8_MAX : 1;
             if (c > 0) at<uint8_t>(x, y, 0) = at<uint8_t>(x, y, 0) * (1 - alpha) + color.r * alpha * UINT8_MAX;
             if (c > 1) at<uint8_t>(x, y, 1) = at<uint8_t>(x, y, 1) * (1 - alpha) + color.g * alpha * UINT8_MAX;
             if (c > 2) at<uint8_t>(x, y, 2) = at<uint8_t>(x, y, 2) * (1 - alpha) + color.b * alpha * UINT8_MAX;
-            if (c > 3) at<uint8_t>(x, y, 3) = (uint8_t)(color.a * UINT8_MAX);
+            if (c > 3) at<uint8_t>(x, y, 3) = (uint8_t)((1.0 - (1.0 - alpha_org) * (1.0 - color.a * alpha)) * UINT8_MAX);
+        }
         break;
         case IM_DT_INT16:
+        {
+            float alpha_org = c > 2 ? at<uint16_t>(x, y, 3) / (float)UINT16_MAX : 1;
             if (c > 0) at<uint16_t>(x, y, 0) = at<uint16_t>(x, y, 0) * (1 - alpha) + color.r * alpha * UINT16_MAX;
             if (c > 1) at<uint16_t>(x, y, 1) = at<uint16_t>(x, y, 1) * (1 - alpha) + color.g * alpha * UINT16_MAX;
             if (c > 2) at<uint16_t>(x, y, 2) = at<uint16_t>(x, y, 2) * (1 - alpha) + color.b * alpha * UINT16_MAX;
-            if (c > 3) at<uint16_t>(x, y, 3) = (uint16_t)(color.a * UINT16_MAX);
+            if (c > 3) at<uint16_t>(x, y, 3) = (uint16_t)((1.0 - (1.0 - alpha_org) * (1.0 - color.a * alpha)) * UINT16_MAX);
+        }
         break;
         case IM_DT_INT32:
+        {
+            float alpha_org = c > 2 ? at<uint16_t>(x, y, 3) / (float)UINT32_MAX : 1;
             if (c > 0) at<uint32_t>(x, y, 0) = at<uint32_t>(x, y, 0) * (1 - alpha) + color.r * alpha * (float)UINT32_MAX;
             if (c > 1) at<uint32_t>(x, y, 1) = at<uint32_t>(x, y, 1) * (1 - alpha) + color.g * alpha * (float)UINT32_MAX;
             if (c > 2) at<uint32_t>(x, y, 2) = at<uint32_t>(x, y, 2) * (1 - alpha) + color.b * alpha * (float)UINT32_MAX;
-            if (c > 3) at<uint32_t>(x, y, 3) = (uint32_t)(color.a * (float)UINT32_MAX);
+            if (c > 3) at<uint32_t>(x, y, 3) = (uint32_t)((1.0 - (1.0 - alpha_org) * (1.0 - color.a * alpha)) * UINT32_MAX);
+        }
         break;
         case IM_DT_INT64:
+        {
+            float alpha_org = c > 2 ? at<uint64_t>(x, y, 3) / (float)UINT64_MAX : 1;
             if (c > 0) at<uint64_t>(x, y, 0) = at<uint64_t>(x, y, 0) * (1 - alpha) + color.r * alpha * (float)UINT64_MAX;
             if (c > 1) at<uint64_t>(x, y, 1) = at<uint64_t>(x, y, 1) * (1 - alpha) + color.g * alpha * (float)UINT64_MAX;
             if (c > 2) at<uint64_t>(x, y, 2) = at<uint64_t>(x, y, 2) * (1 - alpha) + color.b * alpha * (float)UINT64_MAX;
-            if (c > 3) at<uint64_t>(x, y, 3) = (uint64_t)(color.a * (float)UINT64_MAX);
+            if (c > 3) at<uint64_t>(x, y, 3) = (uint64_t)((1.0 - (1.0 - alpha_org) * (1.0 - color.a * alpha)) * UINT64_MAX);
+        }
         break;
         case IM_DT_FLOAT16:
             // TODO::Dicky add FLOAT16 alphablend
         break;
         case IM_DT_FLOAT32:
+        {
+            float alpha_org = c > 2 ? at<float>(x, y, 3) : 1;
             if (c > 0) at<float>(x, y, 0) = at<float>(x, y, 0) * (1 - alpha) + color.r * alpha;
             if (c > 1) at<float>(x, y, 1) = at<float>(x, y, 1) * (1 - alpha) + color.g * alpha;
             if (c > 2) at<float>(x, y, 2) = at<float>(x, y, 2) * (1 - alpha) + color.b * alpha;
-            if (c > 3) at<float>(x, y, 3) = color.a;
+            if (c > 3) at<float>(x, y, 3) = 1.0 - (1.0 - alpha_org) * (1.0 - color.a * alpha);
+        }
         break;
         case IM_DT_FLOAT64:
+        {
+            double alpha_org = c > 2 ? at<double>(x, y, 3) : 1;
             if (c > 0) at<double>(x, y, 0) = at<double>(x, y, 0) * (1 - alpha) + color.r * alpha;
             if (c > 1) at<double>(x, y, 1) = at<double>(x, y, 1) * (1 - alpha) + color.g * alpha;
             if (c > 2) at<double>(x, y, 2) = at<double>(x, y, 2) * (1 - alpha) + color.b * alpha;
-            if (c > 3) at<double>(x, y, 3) = (double)color.a;
+            if (c > 3) at<double>(x, y, 3) = (double)(1.0 - (1.0 - alpha_org) * (1.0 - color.a * alpha));
+        }
         break;
         default: break;
     }
@@ -4916,10 +4934,6 @@ inline void ImMat::alphablend(int x, int y, float alpha, ImPixel color)
 inline void ImMat::draw_line(float x1, float y1, float x2, float y2, float t, ImPixel color)
 {
     assert(dims == 3);
-    assert(x1 >= 0 && x1 < w);
-    assert(x2 >= 0 && x2 < w);
-    assert(y1 >= 0 && y1 < h);
-    assert(y2 >= 0 && y2 < h);
 
     int _x0 = CLAMP((int)floorf(fminf(x1, x2) - t), 0, w - 1);
     int _x1 = CLAMP((int) ceilf(fmaxf(x1, x2) + t), 0, w - 1);
