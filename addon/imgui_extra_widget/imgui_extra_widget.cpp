@@ -5199,6 +5199,52 @@ int ImGui::PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_get
     return idx_hovered;
 }
 
+void ImGui::PlotMatEx(ImGui::ImMat& mat, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 frame_size, bool filled)
+{
+    if (values_count < 2) return;
+    if (mat.empty() || mat.w != (int)frame_size.x || mat.h != (int)frame_size.y)
+    {
+        mat.create_type(frame_size.x, frame_size.y, 4);
+        mat.elempack = 4;
+    }
+
+    auto line_color = ImGui::GetStyleColorVec4(ImGuiCol_PlotLines);
+    auto histogram_color = ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram);
+    int res_w = ImMin((int)frame_size.x, values_count) - 1;
+    int item_count = values_count - 1;
+    const float t_step = 1.0f / (float)res_w;
+    const float inv_scale = (scale_min == scale_max) ? 0.0f : (1.0f / (scale_max - scale_min));
+    float v0 = values_getter(data, (0 + values_offset) % values_count);
+    float t0 = 0.0f;
+    ImVec2 tp0 = ImVec2( t0, 1.0f - ImSaturate((v0 - scale_min) * inv_scale) );                       // Point in the normalized space of our target rectangle
+    float histogram_zero_line_t = (scale_min * scale_max < 0.0f) ? (1 + scale_min * inv_scale) : (scale_min < 0.0f ? 0.0f : 1.0f);   // Where does the zero line stands
+    for (int n = 0; n < res_w; n++)
+    {
+        const float t1 = t0 + t_step;
+        int v1_idx = (int)(t0 * item_count + 0.5f);
+        if (v1_idx < 0) v1_idx = 0;
+        if (v1_idx > values_count) v1_idx = values_count;
+        const float v1 = values_getter(data, (v1_idx + values_offset + 1) % values_count);
+        const ImVec2 tp1 = ImVec2( t1, 1.0f - ImSaturate((v1 - scale_min) * inv_scale) );
+        ImVec2 pos0 = ImLerp(ImVec2(0, 0), frame_size, tp0);
+        ImVec2 pos1 = ImLerp(ImVec2(0, 0), frame_size, tp1);
+        mat.draw_line(ImPoint(pos0.x, pos0.y), ImPoint(pos1.x, pos1.y), 0.5, ImPixel(line_color.x, line_color.y, line_color.z, line_color.w));
+        if (filled)
+        {
+            ImVec2 _pos1 = ImLerp(ImVec2(0, 0), frame_size, ImVec2(tp1.x, histogram_zero_line_t));
+            mat.draw_line(ImPoint(pos0.x, pos0.y), ImPoint(pos0.x, _pos1.y), 0.5, ImPixel(histogram_color.x, histogram_color.y, histogram_color.z, histogram_color.w));
+        }
+        t0 = t1;
+        tp0 = tp1;
+    }
+    if (filled)
+    {
+        ImVec2 _pos0 = ImLerp(ImVec2(0, 0), frame_size, ImVec2(0, histogram_zero_line_t));
+        ImVec2 _pos1 = ImLerp(ImVec2(0, 0), frame_size, ImVec2(res_w - 1, histogram_zero_line_t));
+        mat.draw_line(ImPoint(_pos0.x, _pos0.y), ImPoint(_pos1.x, _pos1.y), 0.5, ImPixel(line_color.x, line_color.y, line_color.z, line_color.w));
+    }
+}
+
 struct ImGuiPlotArrayGetterData
 {
     const float* Values;
@@ -5223,6 +5269,17 @@ void ImGui::PlotLinesEx(const char* label, const float* values, int values_count
 void ImGui::PlotLinesEx(const char* label, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size, bool b_tooltips, bool b_comband)
 {
     PlotEx(ImGuiPlotType_Lines, label, values_getter, data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size, b_tooltips, b_comband);
+}
+
+void ImGui::PlotMat(ImGui::ImMat& mat, const float* values, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 graph_size, int stride, bool b_comband)
+{
+    ImGuiPlotArrayGetterData data(values, stride);
+    PlotMatEx(mat, &Plot_ArrayGetter, (void*)&data, values_count, values_offset, scale_min, scale_max, graph_size, b_comband);
+}
+
+void ImGui::PlotMat(ImGui::ImMat& mat, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 graph_size, bool b_comband)
+{
+    PlotMatEx(mat, values_getter, data, values_count, values_offset, scale_min, scale_max, graph_size, b_comband);
 }
 
 static bool IsRootOfOpenMenuSet()
