@@ -584,8 +584,11 @@ public:
     void draw_dot(int x, int y, ImPixel color);
     void draw_dot(ImPoint p, ImPixel color);
     void alphablend(int x, int y, float alpha, ImPixel color);
+    void alphablend(int x, int y, ImPixel color);
     void draw_line(float x1, float y1, float x2, float y2, float t, ImPixel color);
     void draw_line(ImPoint p1, ImPoint p2, float t, ImPixel color);
+    void draw_line(float x1, float y1, float x2, float y2, ImPixel color);
+    void draw_line(ImPoint p1, ImPoint p2, ImPixel color);
     void draw_circle(float x, float y, float r, ImPixel color);
     void draw_circle(ImPoint p, float r, ImPixel color);
     void draw_circle(float x, float y, float r, float t, ImPixel color);
@@ -4876,7 +4879,7 @@ inline void ImMat::alphablend(int x, int y, float alpha, ImPixel color)
             if (c > 0) at<uint8_t>(x, y, 0) = at<uint8_t>(x, y, 0) * (1 - alpha) + color.r * alpha * UINT8_MAX;
             if (c > 1) at<uint8_t>(x, y, 1) = at<uint8_t>(x, y, 1) * (1 - alpha) + color.g * alpha * UINT8_MAX;
             if (c > 2) at<uint8_t>(x, y, 2) = at<uint8_t>(x, y, 2) * (1 - alpha) + color.b * alpha * UINT8_MAX;
-            if (c > 3) at<uint8_t>(x, y, 3) = (uint8_t)((1.0 - (1.0 - alpha_org) * (1.0 - color.a * alpha)) * UINT8_MAX);
+            if (c > 3) at<uint8_t>(x, y, 3) = (uint8_t)(CLAMP(color.a + alpha_org + alpha, 0.f, 1.f) * UINT8_MAX); //(uint8_t)((1.0 - (1.0 - alpha_org) * (1.0 - color.a * alpha)) * UINT8_MAX);
         }
         break;
         case IM_DT_INT16:
@@ -4931,6 +4934,71 @@ inline void ImMat::alphablend(int x, int y, float alpha, ImPixel color)
     }
 }
 
+inline void ImMat::alphablend(int x, int y, ImPixel color)
+{
+    switch (type)
+    {
+        case IM_DT_INT8:
+        {
+            float alpha_org = c > 2 ? at<uint8_t>(x, y, 3) / (float)UINT8_MAX : 1;
+            if (c > 0) at<uint8_t>(x, y, 0) = at<uint8_t>(x, y, 0) * (1 - color.a) + color.r * color.a * UINT8_MAX;
+            if (c > 1) at<uint8_t>(x, y, 1) = at<uint8_t>(x, y, 1) * (1 - color.a) + color.g * color.a * UINT8_MAX;
+            if (c > 2) at<uint8_t>(x, y, 2) = at<uint8_t>(x, y, 2) * (1 - color.a) + color.b * color.a * UINT8_MAX;
+            if (c > 3) at<uint8_t>(x, y, 3) = (uint8_t)(CLAMP(color.a + alpha_org, 0.f, 1.f) * UINT8_MAX);
+        }
+        break;
+        case IM_DT_INT16:
+        {
+            float alpha_org = c > 2 ? at<uint16_t>(x, y, 3) / (float)UINT16_MAX : 1;
+            if (c > 0) at<uint16_t>(x, y, 0) = at<uint16_t>(x, y, 0) * (1 - color.a) + color.r * color.a * UINT16_MAX;
+            if (c > 1) at<uint16_t>(x, y, 1) = at<uint16_t>(x, y, 1) * (1 - color.a) + color.g * color.a * UINT16_MAX;
+            if (c > 2) at<uint16_t>(x, y, 2) = at<uint16_t>(x, y, 2) * (1 - color.a) + color.b * color.a * UINT16_MAX;
+            if (c > 3) at<uint16_t>(x, y, 3) = (uint16_t)(CLAMP(color.a + alpha_org, 0.f, 1.f) * UINT16_MAX);
+        }
+        break;
+        case IM_DT_INT32:
+        {
+            float alpha_org = c > 2 ? at<uint16_t>(x, y, 3) / (float)UINT32_MAX : 1;
+            if (c > 0) at<uint32_t>(x, y, 0) = at<uint32_t>(x, y, 0) * (1 - color.a) + color.r * color.a * (float)UINT32_MAX;
+            if (c > 1) at<uint32_t>(x, y, 1) = at<uint32_t>(x, y, 1) * (1 - color.a) + color.g * color.a * (float)UINT32_MAX;
+            if (c > 2) at<uint32_t>(x, y, 2) = at<uint32_t>(x, y, 2) * (1 - color.a) + color.b * color.a * (float)UINT32_MAX;
+            if (c > 3) at<uint32_t>(x, y, 3) = (uint32_t)(CLAMP(color.a + alpha_org, 0.f, 1.f) * UINT32_MAX);
+        }
+        break;
+        case IM_DT_INT64:
+        {
+            float alpha_org = c > 2 ? at<uint64_t>(x, y, 3) / (float)UINT64_MAX : 1;
+            if (c > 0) at<uint64_t>(x, y, 0) = at<uint64_t>(x, y, 0) * (1 - color.a) + color.r * color.a * (float)UINT64_MAX;
+            if (c > 1) at<uint64_t>(x, y, 1) = at<uint64_t>(x, y, 1) * (1 - color.a) + color.g * color.a * (float)UINT64_MAX;
+            if (c > 2) at<uint64_t>(x, y, 2) = at<uint64_t>(x, y, 2) * (1 - color.a) + color.b * color.a * (float)UINT64_MAX;
+            if (c > 3) at<uint64_t>(x, y, 3) = (uint64_t)(CLAMP(color.a + alpha_org, 0.f, 1.f) * UINT64_MAX);
+        }
+        break;
+        case IM_DT_FLOAT16:
+            // TODO::Dicky add FLOAT16 alphablend
+        break;
+        case IM_DT_FLOAT32:
+        {
+            float alpha_org = c > 2 ? at<float>(x, y, 3) : 1;
+            if (c > 0) at<float>(x, y, 0) = at<float>(x, y, 0) * (1 - color.a) + color.r * color.a;
+            if (c > 1) at<float>(x, y, 1) = at<float>(x, y, 1) * (1 - color.a) + color.g * color.a;
+            if (c > 2) at<float>(x, y, 2) = at<float>(x, y, 2) * (1 - color.a) + color.b * color.a;
+            if (c > 3) at<float>(x, y, 3) = CLAMP(color.a + alpha_org, 0.f, 1.f);
+        }
+        break;
+        case IM_DT_FLOAT64:
+        {
+            double alpha_org = c > 2 ? at<double>(x, y, 3) : 1;
+            if (c > 0) at<double>(x, y, 0) = at<double>(x, y, 0) * (1 - color.a) + color.r * color.a;
+            if (c > 1) at<double>(x, y, 1) = at<double>(x, y, 1) * (1 - color.a) + color.g * color.a;
+            if (c > 2) at<double>(x, y, 2) = at<double>(x, y, 2) * (1 - color.a) + color.b * color.a;
+            if (c > 3) at<double>(x, y, 3) = (double)(CLAMP(color.a + alpha_org, 0.0, 1.0));
+        }
+        break;
+        default: break;
+    }
+}
+
 inline void ImMat::draw_line(float x1, float y1, float x2, float y2, float t, ImPixel color)
 {
     assert(dims == 3);
@@ -4957,6 +5025,54 @@ inline void ImMat::draw_line(float x1, float y1, float x2, float y2, float t, Im
 inline void ImMat::draw_line(ImPoint p1, ImPoint p2, float t, ImPixel color)
 {
     draw_line(p1.x, p1.y, p2.x, p2.y, t, color);
+}
+
+inline void ImMat::draw_line(float x1, float y1, float x2, float y2, ImPixel color)
+{
+    // Bresenham
+    x1 = CLAMP(x1, 0.f, w - 1.f);
+    x2 = CLAMP(x2, 0.f, w - 1.f);
+    y1 = CLAMP(y1, 0.f, h - 1.f);
+    y2 = CLAMP(y2, 0.f, h - 1.f);
+    int x = x1;
+	int y = y1;
+	int dx = abs(x2 - x1);
+	int dy = abs(y2 - y1);
+	int s1 = x2 > x1 ? 1 : -1;
+	int s2 = y2 > y1 ? 1 : -1;
+
+	char interchange = 0;
+	if (dy > dx)
+	{
+		int temp = dx;
+		dx = dy;
+		dy = temp;
+		interchange = 1;
+	}
+
+	int p = 2 * dy - dx;
+	for(int i = 0; i < dx; i++)
+	{
+        alphablend(x, y, color);
+		if (p >= 0)
+		{
+			if (!interchange)
+				y += s2;
+			else
+				x += s1;
+			p -= 2 * dx;
+		}
+		if (!interchange)
+			x += s1;
+		else
+			y += s2;
+		p += 2 * dy;
+	}
+}
+
+inline void ImMat::draw_line(ImPoint p1, ImPoint p2, ImPixel color)
+{
+    draw_line(p1.x, p1.y, p2.x, p2.y, color);
 }
 
 inline void ImMat::draw_circle(float x1, float y1, float r, ImPixel color)

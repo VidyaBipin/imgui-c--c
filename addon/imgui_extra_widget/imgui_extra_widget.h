@@ -109,9 +109,9 @@ IMGUI_API int   PlotEx(ImGuiPlotType plot_type, const char* label, float (*value
 IMGUI_API void  PlotLinesEx(const char* label, const float* values, int values_count, int values_offset = 0, const char* overlay_text = NULL, float scale_min = FLT_MAX, float scale_max = FLT_MAX, ImVec2 graph_size = ImVec2(0, 0), int stride = sizeof(float), bool b_tooltips = true, bool b_comband = false);
 IMGUI_API void  PlotLinesEx(const char* label, float(*values_getter)(void* data, int idx), void* data, int values_count, int values_offset = 0, const char* overlay_text = NULL, float scale_min = FLT_MAX, float scale_max = FLT_MAX, ImVec2 graph_size = ImVec2(0, 0), bool b_tooltips = true, bool b_comband = false);
 
-IMGUI_API void  PlotMatEx(ImGui::ImMat& mat, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 frame_size, bool filled = false, float thick = 0.5);
-IMGUI_API void  PlotMat(ImGui::ImMat& mat, const float* values, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 graph_size, int stride, bool b_comband = false, float thick = 0.5);
-IMGUI_API void  PlotMat(ImGui::ImMat& mat, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 graph_size, bool b_comband = false, float thick = 0.5);
+IMGUI_API void  PlotMatEx(ImGui::ImMat& mat, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 frame_size, bool filled = false, bool b_fast = false, float thick = 0.5);
+IMGUI_API void  PlotMat(ImGui::ImMat& mat, const float* values, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 graph_size, int stride, bool b_comband = false, bool b_fast = false, float thick = 0.5);
+IMGUI_API void  PlotMat(ImGui::ImMat& mat, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 graph_size, bool b_comband = false, bool b_fast = false, float thick = 0.5);
 // new menu item
 IMGUI_API bool  MenuItemEx(const char* label, const char* icon, const char* shortcut = NULL, bool selected = false, bool enabled = true, const char* subscript = nullptr);
 IMGUI_API bool  MenuItem(const char* label, const char* shortcut, bool selected, bool enabled, const char* subscript);  

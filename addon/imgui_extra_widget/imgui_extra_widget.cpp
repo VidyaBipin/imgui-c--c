@@ -5199,7 +5199,7 @@ int ImGui::PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_get
     return idx_hovered;
 }
 
-void ImGui::PlotMatEx(ImGui::ImMat& mat, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 frame_size, bool filled, float thick)
+void ImGui::PlotMatEx(ImGui::ImMat& mat, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 frame_size, bool filled, bool b_fast, float thick)
 {
     if (values_count < 2) return;
     if (mat.empty() || mat.w != (int)frame_size.x || mat.h != (int)frame_size.y)
@@ -5228,20 +5228,17 @@ void ImGui::PlotMatEx(ImGui::ImMat& mat, float (*values_getter)(void* data, int 
         const ImVec2 tp1 = ImVec2( t1, 1.0f - ImSaturate((v1 - scale_min) * inv_scale) );
         ImVec2 pos0 = ImLerp(ImVec2(0, 0), frame_size, tp0);
         ImVec2 pos1 = ImLerp(ImVec2(0, 0), frame_size, tp1);
-        mat.draw_line(ImPoint(pos0.x, pos0.y), ImPoint(pos1.x, pos1.y), thick, ImPixel(line_color.x, line_color.y, line_color.z, line_color.w));
+        if (b_fast)
+            mat.draw_line(ImPoint(pos0.x, pos0.y), ImPoint(pos1.x, pos1.y), ImPixel(line_color.x, line_color.y, line_color.z, line_color.w));
+        else
+            mat.draw_line(ImPoint(pos0.x, pos0.y), ImPoint(pos1.x, pos1.y), thick, ImPixel(line_color.x, line_color.y, line_color.z, line_color.w));
         if (filled)
         {
             ImVec2 _pos1 = ImLerp(ImVec2(0, 0), frame_size, ImVec2(tp1.x, histogram_zero_line_t));
-            mat.draw_line(ImPoint(pos0.x, pos0.y), ImPoint(pos0.x, _pos1.y), thick, ImPixel(histogram_color.x, histogram_color.y, histogram_color.z, histogram_color.w));
+            mat.draw_line(ImPoint(pos0.x, pos0.y), ImPoint(pos0.x, pos0.y > _pos1.y ? _pos1.y - 1 : _pos1.y + 1), ImPixel(histogram_color.x, histogram_color.y, histogram_color.z, histogram_color.w));
         }
         t0 = t1;
         tp0 = tp1;
-    }
-    if (filled)
-    {
-        ImVec2 _pos0 = ImLerp(ImVec2(0, 0), frame_size, ImVec2(0, histogram_zero_line_t));
-        ImVec2 _pos1 = ImLerp(ImVec2(0, 0), frame_size, ImVec2(res_w - 1, histogram_zero_line_t));
-        mat.draw_line(ImPoint(_pos0.x, _pos0.y), ImPoint(_pos1.x, _pos1.y), 0.5, ImPixel(line_color.x, line_color.y, line_color.z, line_color.w));
     }
 }
 
@@ -5271,15 +5268,15 @@ void ImGui::PlotLinesEx(const char* label, float (*values_getter)(void* data, in
     PlotEx(ImGuiPlotType_Lines, label, values_getter, data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size, b_tooltips, b_comband);
 }
 
-void ImGui::PlotMat(ImGui::ImMat& mat, const float* values, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 graph_size, int stride, bool b_comband, float thick)
+void ImGui::PlotMat(ImGui::ImMat& mat, const float* values, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 graph_size, int stride, bool b_comband, bool b_fast, float thick)
 {
     ImGuiPlotArrayGetterData data(values, stride);
-    PlotMatEx(mat, &Plot_ArrayGetter, (void*)&data, values_count, values_offset, scale_min, scale_max, graph_size, b_comband, thick);
+    PlotMatEx(mat, &Plot_ArrayGetter, (void*)&data, values_count, values_offset, scale_min, scale_max, graph_size, b_comband, b_fast, thick);
 }
 
-void ImGui::PlotMat(ImGui::ImMat& mat, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 graph_size, bool b_comband, float thick)
+void ImGui::PlotMat(ImGui::ImMat& mat, float (*values_getter)(void* data, int idx), void* data, int values_count, int values_offset, float scale_min, float scale_max, ImVec2 graph_size, bool b_comband, bool b_fast, float thick)
 {
-    PlotMatEx(mat, values_getter, data, values_count, values_offset, scale_min, scale_max, graph_size, b_comband, thick);
+    PlotMatEx(mat, values_getter, data, values_count, values_offset, scale_min, scale_max, graph_size, b_comband, b_fast, thick);
 }
 
 static bool IsRootOfOpenMenuSet()
