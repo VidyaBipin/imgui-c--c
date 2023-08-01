@@ -85,14 +85,20 @@ inline size_t Im_AlignSize(size_t sz, int n)
 inline void* Im_FastMalloc(size_t size)
 {
 #if _MSC_VER
-    return _aligned_malloc(size, IM_MALLOC_ALIGN);
+    void* ptr = _aligned_malloc(size, IM_MALLOC_ALIGN);
+    if (ptr) memset(ptr, 0, size);
+    return ptr;
 #elif (defined(__unix__) || defined(__APPLE__)) && _POSIX_C_SOURCE >= 200112L || (__ANDROID__ && __ANDROID_API__ >= 17)
-    void* ptr = 0;
+    void* ptr = nullptr;
     if (posix_memalign(&ptr, IM_MALLOC_ALIGN, size + IM_MALLOC_OVERREAD))
-        ptr = 0;
+        ptr = nullptr;
+    else
+        memset(ptr, 0, size);
     return ptr;
 #elif __ANDROID__ && __ANDROID_API__ < 17
-    return memalign(IM_MALLOC_ALIGN, size + IM_MALLOC_OVERREAD);
+    void* ptr = memalign(IM_MALLOC_ALIGN, size + IM_MALLOC_OVERREAD);
+    if (ptr) memset(ptr, 0, size);
+    return ptr;
 #else
     unsigned char* udata = (unsigned char*)malloc(size + sizeof(void*) + IM_MALLOC_ALIGN + IM_MALLOC_OVERREAD);
     if (!udata)
@@ -489,7 +495,7 @@ public:
     // external packed dim
     ImMat(int w, int h, int c, void* data, size_t elemsize, int elempack, Allocator* allocator = 0);
     // release
-    ~ImMat();
+    virtual ~ImMat();
     // assign
     ImMat& operator=(const ImMat& m);
     // allocate vec
