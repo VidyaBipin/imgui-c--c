@@ -642,6 +642,10 @@ IMGUI_API void ThemeGenerator(const char* name, bool* p_open = NULL, ImGuiWindow
 
 } // ImGuiHelper
 
+static inline ImPoint Vec2Point(ImVec2 in) { return ImPoint(in.x, in.y); }
+static inline ImPixel Vec2Color(ImVec4 in) { return ImPixel(in.x, in.y, in.z, in.w); }
+static inline ImPixel U32Color(ImU32 in) { auto color = ImGui::ColorConvertU32ToFloat4(in); return ImPixel(color.x, color.y, color.z, color.w); }
+
 #ifndef NO_IMGUIKNOWNCOLOR_DEFINITIONS
 #define KNOWNIMGUICOLOR_ALICEBLUE IM_COL32(240,248,255,255)
 #define KNOWNIMGUICOLOR_ANTIQUEWHITE IM_COL32(250,235,215,255)
