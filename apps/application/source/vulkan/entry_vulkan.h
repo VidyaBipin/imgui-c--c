@@ -13,7 +13,7 @@
 #ifdef _DEBUG
 #define IMGUI_VULKAN_DEBUG_REPORT
 #endif
-
+#define MAX_DESCRIPTORPOOL  2048
 // Data
 static VkAllocationCallbacks*   g_Allocator = nullptr;
 static VkInstance               g_Instance = VK_NULL_HANDLE;
@@ -223,22 +223,22 @@ static void SetupVulkan(ImVector<const char*>& instance_extensions, int gpu = -1
     {
         VkDescriptorPoolSize pool_sizes[] =
         {
-            { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-            { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-            { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+            { VK_DESCRIPTOR_TYPE_SAMPLER, MAX_DESCRIPTORPOOL },
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, MAX_DESCRIPTORPOOL },
+            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, MAX_DESCRIPTORPOOL },
+            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, MAX_DESCRIPTORPOOL },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, MAX_DESCRIPTORPOOL },
+            { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, MAX_DESCRIPTORPOOL },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, MAX_DESCRIPTORPOOL },
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, MAX_DESCRIPTORPOOL },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, MAX_DESCRIPTORPOOL },
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, MAX_DESCRIPTORPOOL },
+            { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, MAX_DESCRIPTORPOOL }
         };
         VkDescriptorPoolCreateInfo pool_info = {};
         pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-        pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
+        pool_info.maxSets = MAX_DESCRIPTORPOOL * IM_ARRAYSIZE(pool_sizes);
         pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
         pool_info.pPoolSizes = pool_sizes;
         err = vkCreateDescriptorPool(g_Device, &pool_info, g_Allocator, &g_DescriptorPool);
