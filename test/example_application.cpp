@@ -21,6 +21,7 @@
 #include <ImGuiZmo.h>
 #include <imgui_toggle.h>
 #include <imgui_tex_inspect.h>
+#include <ImCoolbar.h>
 #include <portable-file-dialogs.h>
 
 #if IMGUI_VULKAN_SHADER
@@ -158,6 +159,110 @@ static void ImVulkanTestWindow(const char* name, bool* p_open, ImGuiWindowFlags 
 }
 #endif
 
+static void Show_Coolbar_demo_window()
+{
+    auto coolbar_button     = [](const char* label) -> bool
+    {
+		float w         = ImGui::GetCoolBarItemWidth();
+        ImGui::SetWindowFontScale(ImGui::GetCoolBarItemScale());
+		bool res = ImGui::Button(label, ImVec2(w, w));
+        ImGui::SetWindowFontScale(1.0);
+		return res;
+	};
+    ImGui::ImCoolBarConfig config;
+    auto viewport = ImGui::GetWindowViewport();
+    config.anchor = ImVec2(0.5, 1.0);
+    ImGui::SetNextWindowViewport(viewport->ID);
+    if (ImGui::BeginCoolBar("##CoolBarHorizontal", ImCoolBarFlags_Horizontal, config))
+    {
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("A")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("B")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("C")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("D")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("E")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("F")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("G")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("H")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("I")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("J")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("K")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("L")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("M")) { }
+		}
+		ImGui::EndCoolBar();
+	}
+    config.anchor = ImVec2(1.0, 0.5);
+    ImGui::SetNextWindowViewport(viewport->ID);
+    if (ImGui::BeginCoolBar("##CoolBarVertical", ImCoolBarFlags_Vertical, config))
+    {
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("a")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("b")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("c")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("d")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("e")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("f")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("g")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("h")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("i")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("j")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("k")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("l")) { }
+		}
+		if (ImGui::CoolBarItem()) {
+			if (coolbar_button("m")) { }
+		}
+		ImGui::EndCoolBar();
+	}
+}
+
 class Example
 {
 public:
@@ -236,7 +341,7 @@ public:
     bool show_toggle_window = false;
     bool show_tex_inspect_window = false;
     bool show_portable_file_dialogs = false;
-
+    bool show_coolbar_window = false;
 public:
     void DrawLineDemo();
     void WarpMatrixDemo();
@@ -565,6 +670,7 @@ bool Example_Frame(void* handle, bool app_will_quit)
         ImGui::Checkbox("Zmo Demo Window", &example->show_zmo_window);
         ImGui::Checkbox("Toggle Demo Window", &example->show_toggle_window);
         ImGui::Checkbox("TexInspect Window", &example->show_tex_inspect_window);
+        ImGui::Checkbox("Coolbar Window", &example->show_coolbar_window);
 
 #if IMGUI_VULKAN_SHADER
         ImGui::Checkbox("Show Vulkan Shader Test Window", &example->show_shader_window);
@@ -902,6 +1008,12 @@ bool Example_Frame(void* handle, bool app_will_quit)
     if (example->show_tex_inspect_window)
     {
         ImGuiTexInspect::ShowImGuiTexInspectDemo(&example->show_tex_inspect_window);
+    }
+
+    // Show ImCoolbar Window
+    if (example->show_coolbar_window)
+    {
+        Show_Coolbar_demo_window();
     }
 
 #if IMGUI_VULKAN_SHADER

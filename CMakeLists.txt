@@ -1136,6 +1136,20 @@ if(IMGUI_BUILD_EXAMPLE)
     )
 endif(IMGUI_BUILD_EXAMPLE)
 
+# ImCoolbar
+set(IMGUI_SRC
+    ${IMGUI_SRC}
+    addon/ImCoolbar/ImCoolbar.cpp
+)
+set(IMGUI_INCS
+    ${IMGUI_INCS}
+    addon/ImCoolbar/ImCoolbar.h
+)
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImCoolbar
+)
+
 # ZLib
 if(ZLIB_FOUND)
     add_definitions(-DIMGUI_USE_ZLIB)

@@ -4,6 +4,8 @@
 ## Features
 Fork from *Dear ImGui(https://github.com/ocornut/imgui)* docking/multiview branch and stack layout support and add CMake build script
 Add following addon collection also：
+* ImCoolBar(https://github.com/aiekick/ImCoolBar)
+  ![ImCoolBar view Image](images/ImCoolBar.jpg)
 * ImGuiTexInspect(https://github.com/andyborrell/imgui_tex_inspect)
   ![ImGuiTexInspect view Image](images/ImGuiTexInspect.jpg)
 * ImGuiZmo(https://github.com/CedricGuillemet/ImGuizmo)
