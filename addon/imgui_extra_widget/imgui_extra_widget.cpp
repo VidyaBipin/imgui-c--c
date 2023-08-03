@@ -9689,8 +9689,8 @@ int ImGui::MsgBox::Draw(float wrap_width)
 {
     int index = 0;
     ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
-    //if (ImGui::BeginPopupModal(m_Title, NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
-    if (ImGui::BeginPopupModal(m_Title, NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+    if (ImGui::BeginPopupModal(m_Title, NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
+    //if (ImGui::BeginPopupModal(m_Title, NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
     {
         if (m_DontAskAgain && m_Selected != 0)
         {
@@ -9704,7 +9704,7 @@ int ImGui::MsgBox::Draw(float wrap_width)
                 ImVec2 size = ImGui::CalcTextSize(m_Icon);
                 ImVec2 pos = ImGui::GetCursorPos();
                 float save_y = pos.y;
-                pos.y += size.y;
+                pos.y += size.y / 2;
                 ImGui::SetCursorPos(pos);
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0, 1.0, 0.0, 1.0));
                 ImGui::Text("%s", m_Icon);
