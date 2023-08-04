@@ -2654,7 +2654,8 @@ IM_MSVC_RUNTIME_CHECKS_RESTORE
 #define IM_COL32_WHITE       IM_COL32(255,255,255,255)  // Opaque white = 0xFFFFFFFF
 #define IM_COL32_BLACK       IM_COL32(0,0,0,255)        // Opaque black
 #define IM_COL32_BLACK_TRANS IM_COL32(0,0,0,0)          // Transparent black = 0x00000000
-
+#define IM_COL32_INVERSE(C)  ((~(ImU32)(C)) | IM_COL32_A_MASK)                                  // Add By Dicky for inverse color
+#define IM_COL32_ALPHA(C,A)  (((ImU32)(C) & ~IM_COL32_A_MASK) | ((ImU32)(A)<<IM_COL32_A_SHIFT)) // Add By Dicky for change color alpha
 // Helper: ImColor() implicitly converts colors to either ImU32 (packed 4x1 byte) or ImVec4 (4x1 float)
 // Prefer using IM_COL32() macros if you want a guaranteed compile-time ImU32 for usage with ImDrawList API.
 // **Avoid storing ImColor! Store either u32 of ImVec4. This is not a full-featured color class. MAY OBSOLETE.
