@@ -5235,7 +5235,10 @@ void ImGui::PlotMatEx(ImGui::ImMat& mat, float (*values_getter)(void* data, int 
         if (filled)
         {
             ImVec2 _pos1 = ImLerp(ImVec2(0, 0), frame_size, ImVec2(tp1.x, histogram_zero_line_t));
-            mat.draw_line(ImPoint(pos0.x + offset.x, pos0.y + offset.y), ImPoint(pos0.x + offset.x, pos0.y > _pos1.y ? _pos1.y + offset.y - 1 : _pos1.y + offset.y + 1), ImPixel(histogram_color.x, histogram_color.y, histogram_color.z, histogram_color.w));
+            if (b_fast)
+                mat.draw_line(ImPoint(pos0.x + offset.x, pos0.y + offset.y), ImPoint(pos0.x + offset.x, pos0.y > _pos1.y ? _pos1.y + offset.y - 1 : _pos1.y + offset.y + 1), ImPixel(histogram_color.x, histogram_color.y, histogram_color.z, histogram_color.w));
+            else
+                mat.draw_line(ImPoint(pos0.x + offset.x, pos0.y + offset.y), ImPoint(pos0.x + offset.x, pos0.y > _pos1.y ? _pos1.y + offset.y - 1 : _pos1.y + offset.y + 1), thick, ImPixel(histogram_color.x, histogram_color.y, histogram_color.z, histogram_color.w));
         }
         t0 = t1;
         tp0 = tp1;
