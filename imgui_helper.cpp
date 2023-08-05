@@ -1115,7 +1115,7 @@ bool IsItemDisabled()    {
 
 void ShowTooltipOnHoverV(const char* fmt, va_list args)
 {
-    if (ImGui::IsItemHovered() && ImGui::BeginTooltip())
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && ImGui::BeginTooltip())
     {
         ImGui::TextV(fmt, args);
         ImGui::EndTooltip();
