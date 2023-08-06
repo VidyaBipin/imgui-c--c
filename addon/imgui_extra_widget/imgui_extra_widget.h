@@ -65,7 +65,7 @@ IMGUI_API bool ToggleButton(const char *str_id, bool *v, const ImVec2 &size);
 IMGUI_API bool BulletToggleButton(const char* label,bool* v, ImVec2 &pos, ImVec2 &size);
 
 // RotateButton
-IMGUI_API bool RotateButton(const char* label, const ImVec2& size_arg, int rotate = 0);
+IMGUI_API bool RotateButton(const char* label, const ImVec2& size_arg = ImVec2(0, 0), int rotate = 0);
 
 // Input with int64
 IMGUI_API bool InputInt64(const char* label, int64_t* v, int step = 1, int step_fast = 100, ImGuiInputTextFlags flags = 0);
