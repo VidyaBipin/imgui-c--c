@@ -1247,6 +1247,7 @@ ImGuiStyle::ImGuiStyle()
 
     // add by Dicky
     LayoutAlign             = 0.5f;             // Element alignment inside horizontal and vertical layouts (0.0f - left/top, 1.0f - right/bottom, 0.5f - center).
+    TextSpacing             = 1.0f;             // Default text spacing
     TextInternationalize    = 0;                // Default isn't using multi-language for text
     TexGlyphShadowOffset    = ImVec2(0, 0);     // Default no Shadow
     // add by Dicky end
@@ -3236,6 +3237,7 @@ static const ImGuiDataVarInfo GStyleVarInfo[] =
     { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, DockingSeparatorSize) },   // ImGuiStyleVar_DockingSeparatorSize
     // add by Dicky
     { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, LayoutAlign) },         // ImGuiStyleVar_LayoutAlign
+    { ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImGuiStyle, TextSpacing) },         // ImGuiStyleVar_TextSpacing
     { ImGuiDataType_S32,   1, (ImU32)IM_OFFSETOF(ImGuiStyle, TextInternationalize) },// ImGuiStyleVar_TextInternationalize
     { ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImGuiStyle, TexGlyphShadowOffset) },// ImGuiStyleVar_TexGlyphShadowOffset
     // add by Dicky end

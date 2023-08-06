@@ -1777,6 +1777,7 @@ enum ImGuiStyleVar_
     ImGuiStyleVar_DockingSeparatorSize,// float     DockingSeparatorSize
 	// add By Dicky
     ImGuiStyleVar_LayoutAlign,         // float     LayoutAlign
+    ImGuiStyleVar_TextSpacing,         // float     TextSpacing
     ImGuiStyleVar_TextInternationalize,// int       TextInternationalize
     ImGuiStyleVar_TexGlyphShadowOffset,// ImVec2    TexGlyphShadowOffset
 	// add By Dicky end
@@ -2072,6 +2073,7 @@ struct ImGuiStyle
 
     // Add by Dicky for stack layout, text shadow and Internationlize
     float       LayoutAlign;                // Element alignment inside horizontal and vertical layouts (0.0f - left/top, 1.0f - right/bottom, 0.5f - center).
+    float       TextSpacing;                // Text character spacing, default is 1.0
     ImVec2      TexGlyphShadowOffset;       // If you would like to use shadows with your text use this. Defaults to (0, 0). Defines horizontal and vertical shadows. Can only be positive at the moment.
     int         TextInternationalize;       // If you need multi-language supported, set this to 1
     // Add by Dicky end
@@ -3224,7 +3226,7 @@ struct ImFont
     IMGUI_API bool              IsGlyphRangeUnused(unsigned int c_begin, unsigned int c_last);
 
     // add By Dicky
-    IMGUI_API void              RenderTextEx(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0.0f, bool cpu_fine_clip = false) const;
+    IMGUI_API void              RenderTextEx(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0.0f, bool cpu_fine_clip = false, float spacing = 1.0) const;
     // Modiaddfy By Dicky end
 };
 

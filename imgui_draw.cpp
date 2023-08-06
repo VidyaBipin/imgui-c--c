@@ -3848,7 +3848,7 @@ void ImFont::RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
 // modify by dicky, add RenderText to handle shadow text
-void ImFont::RenderTextEx(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip) const
+void ImFont::RenderTextEx(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip, float spacing) const
 {
     if (!text_end)
         text_end = text_begin + strlen(text_begin); // ImGui:: functions generally already provides a valid text_end, so this is merely to handle direct calls.
@@ -3957,7 +3957,7 @@ void ImFont::RenderTextEx(ImDrawList* draw_list, float size, const ImVec2& pos, 
         if (glyph == NULL)
             continue;
 
-        float char_width = glyph->AdvanceX * scale;
+        float char_width = glyph->AdvanceX * scale * spacing;
         if (glyph->Visible)
         {
             // We don't do a second finer clipping test on the Y axis as we've already skipped anything before clip_rect.y and exit once we pass clip_rect.w
@@ -4037,11 +4037,12 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 {
     ImGuiContext& g = *GImGui;
     ImVec2 offset = g.Style.TexGlyphShadowOffset;
+    float spacing = g.Style.TextSpacing;
     if (!FLOAT_IS_ZERO(offset.x) || !FLOAT_IS_ZERO(offset.y))
     {
-        RenderTextEx(draw_list, size, pos + offset, ImGui::GetColorU32(ImGuiCol_TexGlyphShadow), clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
+        RenderTextEx(draw_list, size, pos + offset, ImGui::GetColorU32(ImGuiCol_TexGlyphShadow), clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip, spacing);
     }
-    RenderTextEx(draw_list, size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip);
+    RenderTextEx(draw_list, size, pos, col, clip_rect, text_begin, text_end, wrap_width, cpu_fine_clip, spacing);
 }
 // add by Dicky end
 

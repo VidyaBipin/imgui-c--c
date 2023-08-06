@@ -10157,3 +10157,60 @@ ImGuiKey ImGui::VirtualKeyboard(VirtualKeyboardFlags flags,KeyboardLogicalLayout
     }
     else return mouseClickedKey;
 }
+
+#if IMGUI_ICONS
+#define DIGITAL_0       ICON_FAD_DIGITAL0
+#define DIGITAL_1       ICON_FAD_DIGITAL1
+#define DIGITAL_2       ICON_FAD_DIGITAL2
+#define DIGITAL_3       ICON_FAD_DIGITAL3
+#define DIGITAL_4       ICON_FAD_DIGITAL4
+#define DIGITAL_5       ICON_FAD_DIGITAL5
+#define DIGITAL_6       ICON_FAD_DIGITAL6
+#define DIGITAL_7       ICON_FAD_DIGITAL7
+#define DIGITAL_8       ICON_FAD_DIGITAL8
+#define DIGITAL_9       ICON_FAD_DIGITAL9
+#define DIGITAL_DOT     ICON_FAD_DIGITAL_DOT
+#define DIGITAL_COLON   ICON_FAD_DIGITAL_COLON
+#else
+#define DIGITAL_0       "0"
+#define DIGITAL_1       "1"
+#define DIGITAL_2       "2"
+#define DIGITAL_3       "3"
+#define DIGITAL_4       "4"
+#define DIGITAL_5       "5"
+#define DIGITAL_6       "6"
+#define DIGITAL_7       "7"
+#define DIGITAL_8       "8"
+#define DIGITAL_9       "9"
+#define DIGITAL_DOT     "."
+#define DIGITAL_COLON   ":"
+#endif
+
+static std::vector<std::string> DIGITALS = {DIGITAL_0, DIGITAL_1, DIGITAL_2, DIGITAL_3, DIGITAL_4, DIGITAL_5, DIGITAL_6, DIGITAL_7, DIGITAL_8, DIGITAL_9};
+
+void ImGui::ShowDigitalTime(ImDrawList *draw_list, int64_t millisec, int show_millisec, ImVec2 pos, ImU32 color)
+{
+    auto ReplaceDigital = [](std::string str)
+    {
+        if (str.empty()) return str;
+        std::string result = "";
+        for (auto c : str)
+        {
+            if (c >= 0x30 && c <= 0x39)
+                result += DIGITALS[c - 0x30];
+            else if (c == 0x3A)
+                result += DIGITAL_COLON;
+            else if (c == 0x2E)
+                result += DIGITAL_DOT;
+            else
+                result += c;
+        }
+        return result;
+    };
+    auto time_str = ImGuiHelper::MillisecToString(millisec, show_millisec);
+    auto show_text = ReplaceDigital(time_str);
+    ImGui::PushStyleVar(ImGuiStyleVar_TextSpacing, 0.75f);
+    draw_list->AddText(pos, color, show_text.c_str());
+    ImGui::PopStyleVar();
+}
+
