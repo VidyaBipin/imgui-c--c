@@ -403,6 +403,7 @@ inline void VkImageMat::create_like(const ImMat& m, VkAllocator* _allocator)
     time_stamp = m.time_stamp;
     duration = m.duration;
     depth = m.depth;
+    index_count = m.index_count;
     allocator = _allocator;
     device = IM_DD_VULKAN_IMAGE;
     device_number = _allocator ? _allocator->getDeviceIndex() : -1;
@@ -424,6 +425,7 @@ inline void VkImageMat::create_like(const VkImageMat& m, VkAllocator* _allocator
     time_stamp = m.time_stamp;
     duration = m.duration;
     depth = m.depth;
+    index_count = m.index_count;
     allocator = _allocator;
     device = IM_DD_VULKAN_IMAGE;
     device_number = _allocator ? _allocator->getDeviceIndex() : -1;
