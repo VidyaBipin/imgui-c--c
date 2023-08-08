@@ -1,4 +1,4 @@
-// dear imgui, v1.89.8
+// dear imgui, v1.89.9 WIP
 // (drawing and font code)
 
 /*
@@ -634,7 +634,7 @@ int ImDrawList::_CalcCircleAutoSegmentCount(float radius) const
 {
     // Automatic segment count
     const int radius_idx = (int)(radius + 0.999999f); // ceil to never reduce accuracy
-    if (radius_idx < IM_ARRAYSIZE(_Data->CircleSegmentCounts))
+    if (radius_idx >= 0 && radius_idx < IM_ARRAYSIZE(_Data->CircleSegmentCounts))
         return _Data->CircleSegmentCounts[radius_idx]; // Use cached value
     else
         return IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, _Data->CircleSegmentMaxError);
@@ -3957,7 +3957,7 @@ void ImFont::RenderTextEx(ImDrawList* draw_list, float size, const ImVec2& pos, 
         if (glyph == NULL)
             continue;
 
-        float char_width = glyph->AdvanceX * scale * spacing;
+        float char_width = glyph->AdvanceX * scale * spacing; // modify by Dicky
         if (glyph->Visible)
         {
             // We don't do a second finer clipping test on the Y axis as we've already skipped anything before clip_rect.y and exit once we pass clip_rect.w
