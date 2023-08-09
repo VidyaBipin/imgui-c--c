@@ -240,7 +240,8 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
     void SetCurveMax(size_t curveIndex, float _max) { if (curveIndex < mKeys.size()) mKeys[curveIndex].m_max = _max;  }
     float GetCurveDefault(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].m_default; return 0.f; }
     void SetCurveDefault(size_t curveIndex, float _default) { if (curveIndex < mKeys.size()) mKeys[curveIndex].m_default = _default; }
-    void SetCurveAlign(ImVec2 align) { mAlign = align; }
+    void SetCurveAlignX(ImVec2 align) { mAlignX = align; }
+    void SetCurveAlignY(ImVec2 align) { mAlignY = align; }
     void SetRangeX(float _min, float _max, bool dock) { SetMin(ImVec2(_min, 0.f), dock); SetMax(ImVec2(_max, 1.f), dock); }
     bool IsVisible(size_t curveIndex) { if (curveIndex < mKeys.size()) return mKeys[curveIndex].visible; return false; }
 
@@ -251,7 +252,8 @@ private:
     std::vector<ImCurveEdit::keys> mKeys;
     ImVec2 mMin {-1.f, -1.f};
     ImVec2 mMax {-1.f, -1.f};
-    ImVec2 mAlign {0.f, 0.f};
+    ImVec2 mAlignX {0.f, 0.f};
+    ImVec2 mAlignY {0.f, 0.f};
     ImU32 BackgroundColor {IM_COL32(24, 24, 24, 255)};
     ImU32 GraticuleColor {IM_COL32(48, 48, 48, 128)};
 

@@ -862,19 +862,15 @@ int ImGui::KeyPointEditor::EditPoint(size_t curveIndex, size_t pointIndex, ImVec
 
 void ImGui::KeyPointEditor::AlignValue(ImVec2& value)
 {
-    if (mAlign.x > 0)
+    if (mAlignX.y > 0)
     {
-        int64_t value_x = value.x;
-        int64_t index = (int64_t)floor((double)value_x / mAlign.x);
-        value_x = index * mAlign.x;
-        value.x = value_x;
+        int64_t index = (int64_t)floor((double)value.x * mAlignX.x / mAlignX.y);
+        value.x = round(index * mAlignX.y / mAlignX.x);
     }
-    if (mAlign.y > 0)
+    if (mAlignY.y > 0)
     {
-        int64_t value_y = value.y;
-        int64_t index = (int64_t)floor((double)value_y / mAlign.y);
-        value_y = index * mAlign.y;
-        value.y = value_y;
+        int64_t index = (int64_t)floor((double)value.y * mAlignY.x / mAlignY.y);
+        value.y = round(index * mAlignY.y / mAlignY.x);
     }
 }
 
