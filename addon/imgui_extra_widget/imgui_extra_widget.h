@@ -459,7 +459,14 @@ namespace ImGui
 {
 // Set of nice spinners for imgui
 // https://github.com/dalerank/imspinner
-#define DECLPROP(name,type,def) struct name { type value = def; operator type() { return value; } };
+
+#define DECLPROP(name, type, def) \
+    struct name { \
+        type value = def; \
+        operator type() { return value; } \
+        name(const type& v) : value(v) {} \
+    };
+
     enum SpinnerTypeT {
         e_st_rainbow = 0,
         e_st_angle,
