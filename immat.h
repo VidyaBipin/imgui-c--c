@@ -4932,7 +4932,7 @@ inline void ImMat::alphablend(int x, int y, float alpha, ImPixel color)
             if (c > 0) at<uint32_t>(x, y, 0) = at<uint32_t>(x, y, 0) * (1 - alpha) + color.r * alpha * (float)UINT32_MAX;
             if (c > 1) at<uint32_t>(x, y, 1) = at<uint32_t>(x, y, 1) * (1 - alpha) + color.g * alpha * (float)UINT32_MAX;
             if (c > 2) at<uint32_t>(x, y, 2) = at<uint32_t>(x, y, 2) * (1 - alpha) + color.b * alpha * (float)UINT32_MAX;
-            if (c > 3) at<uint32_t>(x, y, 3) = (uint32_t)(CLAMP(color.a * alpha + alpha_org, 0.f, 1.f) * UINT32_MAX);
+            if (c > 3) at<uint32_t>(x, y, 3) = (uint32_t)(CLAMP(color.a * alpha + alpha_org, 0.f, 1.f) * (float)UINT32_MAX);
         }
         break;
         case IM_DT_INT64:
@@ -4941,7 +4941,7 @@ inline void ImMat::alphablend(int x, int y, float alpha, ImPixel color)
             if (c > 0) at<uint64_t>(x, y, 0) = at<uint64_t>(x, y, 0) * (1 - alpha) + color.r * alpha * (float)UINT64_MAX;
             if (c > 1) at<uint64_t>(x, y, 1) = at<uint64_t>(x, y, 1) * (1 - alpha) + color.g * alpha * (float)UINT64_MAX;
             if (c > 2) at<uint64_t>(x, y, 2) = at<uint64_t>(x, y, 2) * (1 - alpha) + color.b * alpha * (float)UINT64_MAX;
-            if (c > 3) at<uint64_t>(x, y, 3) = (uint64_t)(CLAMP(color.a * alpha + alpha_org, 0.f, 1.f) * UINT64_MAX);
+            if (c > 3) at<uint64_t>(x, y, 3) = (uint64_t)(CLAMP(color.a * alpha + alpha_org, 0.f, 1.f) * (float)UINT64_MAX);
         }
         break;
         case IM_DT_FLOAT16:
@@ -4997,7 +4997,7 @@ inline void ImMat::alphablend(int x, int y, ImPixel color)
             if (c > 0) at<uint32_t>(x, y, 0) = at<uint32_t>(x, y, 0) * (1 - color.a) + color.r * color.a * (float)UINT32_MAX;
             if (c > 1) at<uint32_t>(x, y, 1) = at<uint32_t>(x, y, 1) * (1 - color.a) + color.g * color.a * (float)UINT32_MAX;
             if (c > 2) at<uint32_t>(x, y, 2) = at<uint32_t>(x, y, 2) * (1 - color.a) + color.b * color.a * (float)UINT32_MAX;
-            if (c > 3) at<uint32_t>(x, y, 3) = (uint32_t)(CLAMP(color.a + alpha_org, 0.f, 1.f) * UINT32_MAX);
+            if (c > 3) at<uint32_t>(x, y, 3) = (uint32_t)(CLAMP(color.a + alpha_org, 0.f, 1.f) * (float)UINT32_MAX);
         }
         break;
         case IM_DT_INT64:
@@ -5006,7 +5006,7 @@ inline void ImMat::alphablend(int x, int y, ImPixel color)
             if (c > 0) at<uint64_t>(x, y, 0) = at<uint64_t>(x, y, 0) * (1 - color.a) + color.r * color.a * (float)UINT64_MAX;
             if (c > 1) at<uint64_t>(x, y, 1) = at<uint64_t>(x, y, 1) * (1 - color.a) + color.g * color.a * (float)UINT64_MAX;
             if (c > 2) at<uint64_t>(x, y, 2) = at<uint64_t>(x, y, 2) * (1 - color.a) + color.b * color.a * (float)UINT64_MAX;
-            if (c > 3) at<uint64_t>(x, y, 3) = (uint64_t)(CLAMP(color.a + alpha_org, 0.f, 1.f) * UINT64_MAX);
+            if (c > 3) at<uint64_t>(x, y, 3) = (uint64_t)(CLAMP(color.a + alpha_org, 0.f, 1.f) * (float)UINT64_MAX);
         }
         break;
         case IM_DT_FLOAT16:
