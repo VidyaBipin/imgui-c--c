@@ -68,6 +68,10 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     // Set window alpha
     glfwSetWindowOpacity(window, property.splash_screen_alpha);
 
+    GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode * mode = glfwGetVideoMode(pMonitor);
+    glfwSetWindowPos(window, (mode->width - property.splash_screen_width) / 2, (mode->height - property.splash_screen_height) / 2);
+
     // Setup Vulkan
     if (!glfwVulkanSupported())
     {
@@ -193,7 +197,6 @@ int main(int argc, char** argv)
     io.ApplicationName = property.name.c_str();
     io.Fonts->AddFontDefault(property.font_scale);
     io.FontGlobalScale = 1.0f / property.font_scale;
-    io.DisplayFramebufferScale = display_scale;
     if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
     if (property.navigator)
     {
@@ -244,12 +247,13 @@ int main(int argc, char** argv)
 #if GLFW_HAS_MONITOR_WORK_AREA
         glfwGetMonitorWorkarea(pMonitor, &x, &y, &w, &h);
 #endif
-        property.pos_x = (x > 0 && x < 100) ? x : x + FULLSCREEN_OFFSET_X;
-        property.pos_y = y + FULLSCREEN_OFFSET_Y;
-        property.width = mode->width - FULLSCREEN_WIDTH_ADJ;
-        property.height = mode->height - y;
+        //property.pos_x = x;
+        //property.pos_y = y;
+        //property.width = w > 0 ? w : mode->width;
+        //property.height = h > 0 ? h : mode->height;
         property.center = false;
         glfwWindowHint(GLFW_DECORATED, false);
+        glfwWindowHint(GLFW_MAXIMIZED, true);
     }
     else
     {
@@ -284,16 +288,18 @@ int main(int argc, char** argv)
         ImGui_ImplGlfw_SetWindowIcon(window, property.icon_path.c_str());
     }
 
+    glfwSetDropCallback(window, DropCallback);
+
+    // Get/Set frame buffer scale
 #if !defined(__APPLE__) && GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >=3
     float x_scale, y_scale;
     glfwGetWindowContentScale(window, &x_scale, &y_scale);
     if (x_scale != 1.0 || y_scale != 1.0)
     {
-        property.scale = x_scale == 1.0 ? x_scale : y_scale;
         display_scale = ImVec2(x_scale, y_scale);
     }
 #endif
-    glfwSetDropCallback(window, DropCallback);
+    io.DisplayFramebufferScale = display_scale;
     
     // Setup Vulkan
     if (!glfwVulkanSupported())

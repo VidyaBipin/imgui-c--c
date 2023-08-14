@@ -200,12 +200,12 @@ int main(int argc, char** argv)
         SDL_GetCurrentDisplayMode(0, &DM);
         SDL_Rect r;
         SDL_GetDisplayUsableBounds(0, &r);
-        property.pos_x = (r.x > 0 && r.x < 100) ? r.x : r.x + FULLSCREEN_OFFSET_X;
-        property.pos_y = r.y + FULLSCREEN_OFFSET_Y;
-        property.width = DM.w - FULLSCREEN_WIDTH_ADJ;
-        property.height = DM.h - r.y;
+        property.pos_x = r.x;
+        property.pos_y = r.y;
+        property.width = r.w > 0 ? r.w : DM.w;
+        property.height = r.h > 0 ? r.h : DM.h;
         property.center = false;
-        window_flags |= SDL_WINDOW_BORDERLESS;
+        window_flags |= SDL_WINDOW_BORDERLESS | SDL_WINDOW_MAXIMIZED;
     }
     else if (property.full_screen)
     {
@@ -341,7 +341,7 @@ int main(int argc, char** argv)
     ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
 
     UpdateVulkanFont(wd);
-
+    SDL_GetWindowSize(window, &property.width, &property.height);
 #if IMGUI_VULKAN_SHADER
     ImGui::ImVulkanShaderInit();
 #endif

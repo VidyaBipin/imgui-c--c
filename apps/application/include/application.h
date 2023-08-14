@@ -2,22 +2,6 @@
 #include <imgui.h>
 #include <string>
 #include <vector>
-#if defined(__APPLE__)
-#define FULLSCREEN_OFFSET_X  0
-#define FULLSCREEN_OFFSET_Y  0
-#define FULLSCREEN_WIDTH_ADJ  0
-#define FULLSCREEN_HEIGHT_ADJ  0
-#elif defined(__linux__)
-#define FULLSCREEN_OFFSET_X  72
-#define FULLSCREEN_OFFSET_Y  0
-#define FULLSCREEN_WIDTH_ADJ  64
-#define FULLSCREEN_HEIGHT_ADJ  0
-#else
-#define FULLSCREEN_OFFSET_X  0
-#define FULLSCREEN_OFFSET_Y  0
-#define FULLSCREEN_WIDTH_ADJ  0
-#define FULLSCREEN_HEIGHT_ADJ  32
-#endif
 
 typedef void (*SetupContext)(ImGuiContext* ctx, bool in_splash);
 typedef void (*Initialize)(void** handle);

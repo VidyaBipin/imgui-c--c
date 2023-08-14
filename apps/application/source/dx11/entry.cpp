@@ -153,10 +153,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     {
         UINT width = GetSystemMetrics(SM_CXSCREEN);
         UINT height = GetSystemMetrics(SM_CYSCREEN);
-        property.pos_x = 0 + FULLSCREEN_OFFSET_X;
-        property.pos_y = 0 + FULLSCREEN_OFFSET_Y;
-        property.width = width - FULLSCREEN_WIDTH_ADJ;
-        property.height = height - FULLSCREEN_HEIGHT_ADJ;
+        property.pos_x = 0;
+        property.pos_y = 0;
+        property.width = width;
+        property.height = height;
         property.center = false;
     }
 
