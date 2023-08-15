@@ -234,16 +234,14 @@ int main(int argc, char** argv)
     if (property.resizable) window_flags |= SDL_WINDOW_RESIZABLE;
     if (property.full_size)
     {
-#if defined(__APPLE__) || defined(_WIN32)
         SDL_DisplayMode DM;
-        SDL_GetCurrentDisplayMode(0, &DM);
+        SDL_GetDesktopDisplayMode(0, &DM);
         SDL_Rect r;
         SDL_GetDisplayUsableBounds(0, &r);
         property.pos_x = r.x;
         property.pos_y = r.y;
         property.width = r.w > 0 ? r.w : DM.w;
         property.height = r.h > 0 ? r.h : DM.h;
-#endif
         property.center = false;
         window_flags |= SDL_WINDOW_BORDERLESS | SDL_WINDOW_MAXIMIZED;
     }
@@ -343,6 +341,9 @@ int main(int argc, char** argv)
         style.WindowRounding = 0.0f;
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
+
+    //int max_w = 0, max_h = 0;
+    //SDL_GetWindowMaximumSize(window, &max_w, &max_h);
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
