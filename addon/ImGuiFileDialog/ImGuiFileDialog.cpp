@@ -3015,7 +3015,7 @@ IGFD_API bool IGFD::BookMarkFeature::prDrawBookmarkPane(FileDialogInternal& vFil
                     IGFD::Utils::ResetBuffer(prBookmarkEditBuffer);
                     IGFD::Utils::AppendToBuffer(prBookmarkEditBuffer, MAX_FILE_DIALOG_NAME_BUFFER, bookmark.name);
 
-                    if (ImGui::IsMouseDoubleClicked(0))  // apply path
+                    if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))  // apply path
                     {
                         vFileDialogInternal.puFileManager.SetCurrentPath(bookmark.path);
                         vFileDialogInternal.puFileManager.OpenCurrentPath(vFileDialogInternal);
@@ -4136,7 +4136,7 @@ IGFD_API void IGFD::FileDialog::prSelectableItem(int vidx, std::shared_ptr<FileI
                 // Modify By Dicky aways using double click to chooser
 				if (fdi.puDLGDirectoryMode) // directory chooser
 				{
-					if (ImGui::IsMouseDoubleClicked(0))
+					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 					{
                         fdi.puPathClicked = fdi.SelectDirectory(vInfos);
 					}
@@ -4147,7 +4147,7 @@ IGFD_API void IGFD::FileDialog::prSelectableItem(int vidx, std::shared_ptr<FileI
 				}
 				else
 				{
-					if (ImGui::IsMouseDoubleClicked(0))
+					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 					{
                         fdi.puPathClicked = fdi.SelectDirectory(vInfos);
 					}
@@ -4158,7 +4158,7 @@ IGFD_API void IGFD::FileDialog::prSelectableItem(int vidx, std::shared_ptr<FileI
 				}
                 /*
                 // little fix for get back the mouse behavior in nav system
-                if (ImGui::IsMouseDoubleClicked(0))  // 0 -> left mouse button double click
+                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))  // 0 -> left mouse button double click
                 {
                     fdi.puPathClicked = fdi.SelectDirectory(vInfos);
                 } else if (fdi.puDLGDirectoryMode)  // directory chooser
@@ -4171,7 +4171,7 @@ IGFD_API void IGFD::FileDialog::prSelectableItem(int vidx, std::shared_ptr<FileI
                 // Modify By Dicky end
             } else  // no nav system => classic behavior
             {
-                if (ImGui::IsMouseDoubleClicked(0))  // 0 -> left mouse button double click
+                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))  // 0 -> left mouse button double click
                 {
                     fdi.puPathClicked = fdi.SelectDirectory(vInfos);
                 } else if (fdi.puDLGDirectoryMode)  // directory chooser
@@ -4182,7 +4182,7 @@ IGFD_API void IGFD::FileDialog::prSelectableItem(int vidx, std::shared_ptr<FileI
         } else {
             fdi.SelectFileName(prFileDialogInternal, vInfos);
 
-            if (ImGui::IsMouseDoubleClicked(0)) {
+            if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
                 prFileDialogInternal.puIsOk = true;
             }
         }
@@ -4739,6 +4739,14 @@ IGFD_API bool IGFD::FileDialog::prConfirm_Or_OpenOverWriteFileDialog_IfNeeded(bo
         bool res = false;
 
         ImGui::OpenPopup(name.c_str());
+        // modify by dicky, if using multiviewport, make sure we display on top
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            const ImGuiViewportP* viewport = (ImGuiViewportP*) ImGui::GetMainViewport();
+            ImGui::SetNextWindowViewport(viewport->ID);
+        }
+        // modify by dicky edit
         if (ImGui::BeginPopupModal(name.c_str(), (bool*)0, vFlags | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
             ImGui::SetWindowPos(prFileDialogInternal.puDialogCenterPos - ImGui::GetWindowSize() * 0.5f);  // next frame needed for GetWindowSize to work
 

@@ -2588,7 +2588,8 @@ std::string settings_path(std::string app_name)
     // NB: use the env.variable $HOME to allow system to specify
     // another directory (e.g. inside a snap)
 #ifdef _WIN32
-    std::string home(getenv("HOMEPATH"));
+    std::string homeDrive = std::string(getenv("HOMEDRIVE"));
+    std::string home = homeDrive + std::string(getenv("HOMEPATH"));
 #else
     std::string home(getenv("HOME"));
 #endif

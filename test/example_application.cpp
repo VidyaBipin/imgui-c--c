@@ -1067,7 +1067,7 @@ bool Example_Splash_Screen(void* handle, bool app_will_quit)
 void Application_Setup(ApplicationWindowProperty& property)
 {
     property.name = "Application_Example";
-    property.font_scale = 1.5f;
+    property.font_scale = 2.0f;
     property.splash_screen_width = 600;
     property.splash_screen_height = 300;
     property.splash_screen_alpha = 0.9;

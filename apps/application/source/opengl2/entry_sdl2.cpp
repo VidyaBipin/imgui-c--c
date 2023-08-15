@@ -167,10 +167,11 @@ int main(int argc, char** argv)
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-    int window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
+    int window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_INPUT_FOCUS;
     if (property.resizable) window_flags |= SDL_WINDOW_RESIZABLE;
     if (property.full_size)
     {
+#if defined(__APPLE__) || defined(_WIN32)
         SDL_DisplayMode DM;
         SDL_GetCurrentDisplayMode(0, &DM);
         SDL_Rect r;
@@ -179,6 +180,7 @@ int main(int argc, char** argv)
         property.pos_y = r.y;
         property.width = r.w > 0 ? r.w : DM.w;
         property.height = r.h > 0 ? r.h : DM.h;
+#endif
         property.center = false;
         window_flags |= SDL_WINDOW_BORDERLESS | SDL_WINDOW_MAXIMIZED;
     }

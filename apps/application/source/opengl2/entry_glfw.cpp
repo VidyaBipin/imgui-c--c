@@ -214,16 +214,18 @@ int main(int argc, char** argv)
     else glfwWindowHint(GLFW_RESIZABLE, false);
     if (property.full_size || property.full_screen)
     {
+#if defined(__APPLE__) || defined(_WIN32)
         GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
         const GLFWvidmode * mode = glfwGetVideoMode(pMonitor);
         int x = 0, y = 0, w = 0, h = 0;
 #if GLFW_HAS_MONITOR_WORK_AREA
         glfwGetMonitorWorkarea(pMonitor, &x, &y, &w, &h);
 #endif
-        //property.pos_x = x;
-        //property.pos_y = y;
-        //property.width = w > 0 ? w : mode->width;
-        //property.height = h > 0 ? h : mode->height;
+        property.pos_x = x;
+        property.pos_y = y;
+        property.width = w > 0 ? w : mode->width;
+        property.height = h > 0 ? h : mode->height;
+#endif
         property.center = false;
         glfwWindowHint(GLFW_DECORATED, false);
         glfwWindowHint(GLFW_MAXIMIZED, true);
