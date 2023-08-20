@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2022 Evan Pezent
+// Copyright (c) 2023 Evan Pezent
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// ImPlot v0.15
+// ImPlot v0.16
 
 /*
 
@@ -2559,7 +2559,7 @@ void SetupFinish() {
     // (2) get y tick labels (needed for left/right pad)
     for (int i = 0; i < IMPLOT_NUM_Y_AXES; i++) {
         ImPlotAxis& axis = plot.YAxis(i);
-        if (axis.WillRender() && axis.ShowDefaultTicks) {
+        if (axis.WillRender() && axis.ShowDefaultTicks && plot_height > 0) {
             axis.Locator(axis.Ticker, axis.Range, plot_height, true, axis.Formatter, axis.FormatterData);
         }
     }
@@ -2572,7 +2572,7 @@ void SetupFinish() {
     // (4) get x ticks
     for (int i = 0; i < IMPLOT_NUM_X_AXES; i++) {
         ImPlotAxis& axis = plot.XAxis(i);
-        if (axis.WillRender() && axis.ShowDefaultTicks) {
+        if (axis.WillRender() && axis.ShowDefaultTicks && plot_width > 0) {
             axis.Locator(axis.Ticker, axis.Range, plot_width, false, axis.Formatter, axis.FormatterData);
         }
     }
@@ -3359,7 +3359,7 @@ bool BeginSubplots(const char* title, int rows, int cols, const ImVec2& size, Im
     subplot.FrameRect = ImRect(Window->DC.CursorPos, Window->DC.CursorPos + frame_size);
     subplot.GridRect.Min = subplot.FrameRect.Min + half_pad + ImVec2(0,pad_top);
     subplot.GridRect.Max = subplot.FrameRect.Max - half_pad;
-    subplot.FrameHovered = subplot.FrameRect.Contains(ImGui::GetMousePos()) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows);
+    subplot.FrameHovered = subplot.FrameRect.Contains(ImGui::GetMousePos()) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows|ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
 
     // outside legend adjustments (TODO: make function)
     const bool share_items = ImHasFlag(subplot.Flags, ImPlotSubplotFlags_ShareItems);
@@ -3476,7 +3476,7 @@ bool BeginSubplots(const char* title, int rows, int cols, const ImVec2& size, Im
     PushStyleColor(ImPlotCol_FrameBg, IM_COL32_BLACK_TRANS);
     PushStyleVar(ImPlotStyleVar_PlotPadding, half_pad);
     PushStyleVar(ImPlotStyleVar_PlotMinSize, ImVec2(0,0));
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize,0);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.f); // modify by Dicky
 
     // set initial cursor pos
     Window->DC.CursorPos = subplot.GridRect.Min;

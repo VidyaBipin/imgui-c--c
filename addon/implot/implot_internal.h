@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2022 Evan Pezent
+// Copyright (c) 2023 Evan Pezent
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// ImPlot v0.15
+// ImPlot v0.16
 
 // You may use this file to debug, understand or extend ImPlot features but we
 // don't provide any guarantee of forward compatibility!
@@ -907,8 +907,9 @@ struct ImPlotAxis
     }
 
     void PullLinks() {
-        if (LinkedMin) { SetMin(*LinkedMin,true); }
-        if (LinkedMax) { SetMax(*LinkedMax,true); }
+        if (LinkedMin && LinkedMax) { SetRange(*LinkedMin, *LinkedMax); }
+        else if (LinkedMin) { SetMin(*LinkedMin,true); }
+        else if (LinkedMax) { SetMax(*LinkedMax,true); }
     }
 };
 
