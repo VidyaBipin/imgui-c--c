@@ -1070,7 +1070,7 @@ void ShowImFFTDemoWindow()
     ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2f, 0.2f, 0.2f, 1.f));
 
     // draw time domain
-    if (ImPlot::BeginPlot("##time_domain", channel_view_size, ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoChild | ImPlotFlags_NoInputs))
+    if (ImPlot::BeginPlot("##time_domain", channel_view_size, ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs))
     {
         ImPlot::SetupAxes(NULL, NULL, ImPlotAxisFlags_NoDecorations, ImPlotAxisFlags_NoDecorations);
         ImPlot::SetupAxesLimits(0, time_domain.w, -1.0 * wave_scale, 1.0 * wave_scale, ImGuiCond_Always);
@@ -1118,7 +1118,7 @@ void ShowImFFTDemoWindow()
         default: break;
     }
 
-    if (ImPlot::BeginPlot("##fft_domain", channel_view_size, ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoChild | ImPlotFlags_NoInputs))
+    if (ImPlot::BeginPlot("##fft_domain", channel_view_size, ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs))
     {
         ImPlot::SetupAxes(NULL, NULL, ImPlotAxisFlags_NoDecorations, ImPlotAxisFlags_NoDecorations);
         ImPlot::SetupAxesLimits(0, data_count, f_min * fft_scale, f_max * fft_scale, ImGuiCond_Always);
@@ -1138,7 +1138,7 @@ void ShowImFFTDemoWindow()
     }
 
     // draw time domain out(ifft)
-    if (ImPlot::BeginPlot("##time_domain_out", channel_view_size, ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoChild | ImPlotFlags_NoInputs))
+    if (ImPlot::BeginPlot("##time_domain_out", channel_view_size, ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs))
     {
         ImPlot::SetupAxes(NULL, NULL, ImPlotAxisFlags_NoDecorations, ImPlotAxisFlags_NoDecorations);
         ImPlot::SetupAxesLimits(0, time_domain_out.w, -1.0 * wave_scale, 1.0 * wave_scale, ImGuiCond_Always);
@@ -1319,7 +1319,7 @@ void ShowImSTFTDemoWindow()
     ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2f, 0.2f, 0.2f, 1.f));
 
     // draw time domain
-    if (ImPlot::BeginPlot("##time_domain", channel_view_size, ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoChild | ImPlotFlags_NoInputs))
+    if (ImPlot::BeginPlot("##time_domain", channel_view_size, ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs))
     {
         ImPlot::SetupAxes(NULL, NULL, ImPlotAxisFlags_NoDecorations, ImPlotAxisFlags_NoDecorations);
         ImPlot::SetupAxesLimits(0, time_domain.w, -1.0 * wave_scale, 1.0 * wave_scale, ImGuiCond_Always);
@@ -1342,7 +1342,7 @@ void ShowImSTFTDemoWindow()
     }
 
     // draw stft domain (amplitude)
-    if (ImPlot::BeginPlot("##stft_domain", channel_view_size, ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoChild | ImPlotFlags_NoInputs))
+    if (ImPlot::BeginPlot("##stft_domain", channel_view_size, ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs))
     {
         ImPlot::SetupAxes(NULL, NULL, ImPlotAxisFlags_NoDecorations, ImPlotAxisFlags_NoDecorations);
         ImPlot::SetupAxesLimits(0, short_time_amplitude.w, 0.0 * fft_scale, 1.0 * fft_scale, ImGuiCond_Always);
@@ -1362,7 +1362,7 @@ void ShowImSTFTDemoWindow()
     }
 
     // draw time domain out(istft)
-    if (ImPlot::BeginPlot("##time_domain_out", channel_view_size, ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoChild | ImPlotFlags_NoInputs))
+    if (ImPlot::BeginPlot("##time_domain_out", channel_view_size, ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs))
     {
         ImPlot::SetupAxes(NULL, NULL, ImPlotAxisFlags_NoDecorations, ImPlotAxisFlags_NoDecorations);
         ImPlot::SetupAxesLimits(0, short_time_domain_out.w, -1.0 * wave_scale, 1.0 * wave_scale, ImGuiCond_Always);
