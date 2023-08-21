@@ -418,6 +418,9 @@ if(SDL2_FOUND)
         ${LINK_LIBS}
         ${SDL2_STATIC_LDFLAGS}
     )
+    if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+        list(REMOVE_ITEM LINK_LIBS "-mwindows")
+    endif ()
 endif(SDL2_FOUND)
 
 # Find Backend Rendering
