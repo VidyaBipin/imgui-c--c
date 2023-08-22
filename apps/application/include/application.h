@@ -3,23 +3,23 @@
 #include <string>
 #include <vector>
 
-typedef void (*SetupContext)(ImGuiContext* ctx, bool in_splash);
-typedef void (*Initialize)(void** handle);
-typedef void (*Finalize)(void** handle);
-typedef bool (*SplashScreen)(void* handle, bool app_will_quit);
-typedef void (*SplashFinalize)(void** handle);
-typedef bool (*Frame)(void* handle, bool app_will_quit);
-typedef void (*DropFromSystem)(std::vector<std::string>& drops);
+typedef void (*APP_SETUPCONTEXT)(ImGuiContext* ctx, bool in_splash);
+typedef void (*APP_INITIALIZE)(void** handle);
+typedef void (*APP_FINALIZE)(void** handle);
+typedef bool (*APP_SPLASHSCREEN)(void* handle, bool app_will_quit);
+typedef void (*APP_SPLASHFINALIZE)(void** handle);
+typedef bool (*APP_FRAME)(void* handle, bool app_will_quit);
+typedef void (*APP_DROPFROMSYSTEM)(std::vector<std::string>& drops);
 
 typedef struct ApplicationFrameworks
 {
-    SetupContext        Application_SetupContext    {nullptr};
-    Initialize          Application_Initialize      {nullptr};
-    Finalize            Application_Finalize        {nullptr};
-    SplashScreen        Application_SplashScreen    {nullptr};
-    SplashFinalize      Application_SplashFinalize  {nullptr};
-    Frame               Application_Frame           {nullptr};
-    DropFromSystem      Application_DropFromSystem  {nullptr};
+    APP_SETUPCONTEXT        Application_SetupContext    {nullptr};
+    APP_INITIALIZE          Application_Initialize      {nullptr};
+    APP_FINALIZE            Application_Finalize        {nullptr};
+    APP_SPLASHSCREEN        Application_SplashScreen    {nullptr};
+    APP_SPLASHFINALIZE      Application_SplashFinalize  {nullptr};
+    APP_FRAME               Application_Frame           {nullptr};
+    APP_DROPFROMSYSTEM      Application_DropFromSystem  {nullptr};
 } ApplicationFrameworks;
 
 typedef struct ApplicationWindowProperty
