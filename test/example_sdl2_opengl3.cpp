@@ -332,7 +332,7 @@ int main(int, char**)
             mdConfig.linkCallback =         LinkCallback;
             mdConfig.tooltipCallback =      nullptr;
             mdConfig.imageCallback =        ImageCallback;
-            mdConfig.linkIcon =             ICON_FA_LINK;
+            mdConfig.linkIcon =             "->";
             mdConfig.headingFormats[0] =    { io.Fonts->Fonts[0], true };
             mdConfig.headingFormats[1] =    { io.Fonts->Fonts.size() > 1 ? io.Fonts->Fonts[1] : nullptr, true };
             mdConfig.headingFormats[2] =    { io.Fonts->Fonts.size() > 2 ? io.Fonts->Fonts[2] : nullptr, false };

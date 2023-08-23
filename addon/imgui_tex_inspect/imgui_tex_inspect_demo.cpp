@@ -389,7 +389,7 @@ void ShowImGuiTexInspectDemo(bool* p_open)
         ImGui::SameLine();
         if (ImGui::Button("Open Image", ImVec2(140, 60)))
         {
-            ImGuiFileDialog::Instance()->OpenDialog("##TexInspectDemoFileDlgKey", ICON_IGFD_FOLDER_OPEN " Choose Image File", 
+            ImGuiFileDialog::Instance()->OpenDialog("##TexInspectDemoFileDlgKey", "Choose Image File", 
                                                     image_filter.c_str(),
                                                     ".",
                                                     1, 

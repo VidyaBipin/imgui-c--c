@@ -4,6 +4,10 @@
 #include <imgui_extra_widget.h>
 #include <implot.h>
 
+#if !IMGUI_ICONS
+#define ICON_MD_WARNING "!"
+#endif
+
 namespace ImGui
 {
 static void HelpMarker(const char* desc)

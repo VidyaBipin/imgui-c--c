@@ -3,6 +3,10 @@
 #include <fstream>
 #include "ImGuiFileDialog.h"
 #include "imgui_internal.h"
+#if !IMGUI_ICONS
+#define ICON_IGFD_FOLDER_OPEN ">"
+#define ICON_IGFD_SAVE	"^"
+#endif
 
 static bool canValidateDialog = false;
 
