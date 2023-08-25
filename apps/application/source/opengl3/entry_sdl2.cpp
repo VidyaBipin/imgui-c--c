@@ -324,6 +324,8 @@ int main(int argc, char** argv)
         ImGui_ImplSDL2_SetWindowIcon(window, property.icon_path.c_str());
     }
     
+    if (property.full_size) SDL_SetWindowResizable(window, SDL_FALSE);
+    
     SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
@@ -341,9 +343,6 @@ int main(int argc, char** argv)
         style.WindowRounding = 0.0f;
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
-
-    //int max_w = 0, max_h = 0;
-    //SDL_GetWindowMaximumSize(window, &max_w, &max_h);
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);

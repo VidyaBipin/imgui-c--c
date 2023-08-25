@@ -285,6 +285,8 @@ int main(int argc, char** argv)
         ImGui_ImplSDL2_SetWindowIcon(window, property.icon_path.c_str());
     }
 
+    if (property.full_size) SDL_SetWindowResizable(window, SDL_FALSE);
+    
     // Setup Vulkan
     ImVector<const char*> extensions;
     uint32_t extensions_count = 0;
