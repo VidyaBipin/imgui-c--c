@@ -323,9 +323,9 @@ int main(int argc, char** argv)
     {
         ImGui_ImplSDL2_SetWindowIcon(window, property.icon_path.c_str());
     }
-    
+#ifdef __APPLE__
     if (property.full_size) SDL_SetWindowResizable(window, SDL_FALSE);
-    
+#endif
     SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
