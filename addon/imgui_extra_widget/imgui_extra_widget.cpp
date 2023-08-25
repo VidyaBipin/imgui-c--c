@@ -3730,6 +3730,7 @@ bool ImGui::BalanceSelector(char const* label, ImVec2 const size, ImVec4 * rgba,
 {
     bool reset = false;
     ImGuiIO &io = ImGui::GetIO();
+    ImGuiContext& g = *GImGui;
 	ImGuiID const iID = ImGui::GetID(label);
 	ImGui::PushID(iID);
     auto curPos = ImGui::GetCursorScreenPos();
@@ -3746,6 +3747,7 @@ bool ImGui::BalanceSelector(char const* label, ImVec2 const size, ImVec4 * rgba,
     auto center_point = ringPos + ImVec2(ringRadius, ringRadius);
     auto ringSize = ImVec2(size.x, ringDiameter + 10);
     ImGui::SetCursorScreenPos(ringPos);
+    ImGuiID const iIDr = ImGui::GetID("##ZoneBalanceSlider");
     ImGui::InvisibleButton("##ZoneBalanceSlider", ringSize);
     pDrawList->AddCircle(center_point, ringRadius + 2, IM_COL32_WHITE, 0, 2);
     ImGui::DrawColorRingEx< true >(pDrawList, ringPos, ImVec2(ringDiameter, ringDiameter), thickness, [rgba, is_Enabled](float t)
@@ -3812,7 +3814,7 @@ bool ImGui::BalanceSelector(char const* label, ImVec2 const size, ImVec4 * rgba,
                 }
                 reset = true;
             }
-            else if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+            else if (g.ActiveId == iIDr && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
             {
                 float x_offset = ( io.MouseDelta.x * speed + point.x) / ringRadius;
                 float y_offset = (-io.MouseDelta.y * speed - point.y) / ringRadius;
