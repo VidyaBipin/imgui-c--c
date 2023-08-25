@@ -5210,7 +5210,7 @@ void ImGui::PlotMatEx(ImGui::ImMat& mat, float (*values_getter)(void* data, int 
 
     auto line_color = ImGui::GetStyleColorVec4(ImGuiCol_PlotLines);
     auto histogram_color = ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram);
-    int res_w = ImMin((int)frame_size.x, values_count) - 1;
+    int res_w = ImMin((int)frame_size.x, values_count);
     int item_count = values_count - 1;
     const float t_step = 1.0f / (float)res_w;
     const float inv_scale = (scale_min == scale_max) ? 0.0f : (1.0f / (scale_max - scale_min));
