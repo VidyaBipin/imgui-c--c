@@ -26,6 +26,8 @@
 
 #if IMGUI_VULKAN_SHADER
 #include <ImVulkanShader.h>
+#include <imvk_mat_shader.h>
+//#define TEST_VKIMAGEMAT
 #endif
 #include <immat.h>
 #include "Config.h"
@@ -76,88 +78,6 @@ static inline void gray_bar(ImGui::ImMat& image, int x1,int y1,int x2,int y2,int
         box(image, x1 + len * i / step, y1, x1 + len * (i + 1) / step - 1, y2, 255 * i / step, 255 * i / step, 255 * i / step);
     }
 }
-
-#if IMGUI_VULKAN_SHADER
-// VulkanShader Demo
-static std::string print_result(float gflops)
-{
-    if (gflops == -1)
-            return "  error";
-
-    if (gflops == -233)
-        return "  not supported";
-
-    if (gflops == 0)
-        return "  not tested";
-
-    if (gflops > 1000)
-        return "  " + std::to_string(gflops / 1000.0) + " TFLOPS";
-    return "  " + std::to_string(gflops) + " GFLOPS";
-}
-
-static void ImVulkanTestWindow(const char* name, bool* p_open, ImGuiWindowFlags flags)
-{
-    ImGui::Begin(name, p_open, flags);
-    static int loop_count = 200;
-    static int block_count = 20;
-    static int cmd_count = 1;
-    static float fp32[8] = {0.f};
-    static float fp32v4[8] = {0.f};
-    static float fp32v8[8] = {0.f};
-    static float fp16pv4[8] = {0.f};
-    static float fp16pv8[8] = {0.f};
-    static float fp16s[8] = {0.f};
-    static float fp16sv4[8] = {0.f};
-    static float fp16sv8[8] = {0.f};
-    int device_count = ImGui::get_gpu_count();
-    for (int i = 0; i < device_count; i++)
-    {
-        ImGui::VulkanDevice* vkdev = ImGui::get_gpu_device(i);
-        uint32_t driver_version = vkdev->info.driver_version();
-        uint32_t api_version = vkdev->info.api_version();
-        int device_type = vkdev->info.type();
-        std::string driver_ver = std::to_string(VK_VERSION_MAJOR(driver_version)) + "." + 
-                                std::to_string(VK_VERSION_MINOR(driver_version)) + "." +
-                                std::to_string(VK_VERSION_PATCH(driver_version));
-        std::string api_ver =   std::to_string(VK_VERSION_MAJOR(api_version)) + "." + 
-                                std::to_string(VK_VERSION_MINOR(api_version)) + "." +
-                                std::to_string(VK_VERSION_PATCH(api_version));
-        std::string device_name = vkdev->info.device_name();
-        uint32_t gpu_memory_budget = vkdev->get_heap_budget();
-        uint32_t gpu_memory_usage = vkdev->get_heap_usage();
-        ImGui::Text("Device[%d]", i);
-        ImGui::Text("Driver:%s", driver_ver.c_str());
-        ImGui::Text("   API:%s", api_ver.c_str());
-        ImGui::Text("  Name:%s", device_name.c_str());
-        ImGui::Text("Memory:%uMB/%uMB", gpu_memory_usage, gpu_memory_budget);
-        ImGui::Text("Device Type:%s", device_type == 0 ? "Discrete" : device_type == 1 ? "Integrated" : device_type == 2 ? "Virtual" : "CPU");
-        std::string buffon_label = "Perf Test##" + std::to_string(i);
-        if (ImGui::Button(buffon_label.c_str(), ImVec2(120, 20)))
-        {
-            int _loop_count = device_type == 0 ? loop_count : loop_count / 5;
-            fp32[i]     = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 0, 0, 0);
-            fp32v4[i]   = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 0, 0, 1);
-            fp32v8[i]   = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 0, 0, 2);
-            fp16pv4[i]  = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 1, 1, 1);
-            fp16pv8[i]  = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 1, 1, 2);
-            fp16s[i]    = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 2, 1, 0);
-            fp16sv4[i]  = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 2, 1, 1);
-            fp16sv8[i]  = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 2, 1, 2);
-        }
-        ImGui::Text(" FP32 Scalar :%s", print_result(fp32[i]).c_str());
-        ImGui::Text("   FP32 Vec4 :%s", print_result(fp32v4[i]).c_str());
-        ImGui::Text("   FP32 Vec8 :%s", print_result(fp32v8[i]).c_str());
-        ImGui::Text("  FP16p Vec4 :%s", print_result(fp16pv4[i]).c_str());
-        ImGui::Text("  FP16p Vec8 :%s", print_result(fp16pv8[i]).c_str());
-        ImGui::Text("FP16s Scalar :%s", print_result(fp16s[i]).c_str());
-        ImGui::Text("  FP16s Vec4 :%s", print_result(fp16sv4[i]).c_str());
-        ImGui::Text("  FP16s Vec8 :%s", print_result(fp16sv8[i]).c_str());
-        
-        ImGui::Separator();
-    }
-    ImGui::End();
-}
-#endif
 
 static void Show_Coolbar_demo_window()
 {
@@ -287,6 +207,53 @@ public:
         gray_bar(image, 0, 192, 255, 255, 13);
         // init draw mat
         draw_mat.clean(ImPixel(0.f, 0.f, 0.f, 1.f));
+#if IMGUI_VULKAN_SHADER
+        ImGui::ImMat test_image(256, 256, 4, 1u, 4);
+        for (int y = 0; y < 256; y++)
+        {
+            for (int x = 0; x < 256; x++)
+            {
+                float dx = x + .5f;
+                float dy = y + .5f;
+                float dv = sinf(x * 0.02f) + sinf(0.03f * (x + y)) + sinf(sqrtf(0.4f * (dx * dx + dy * dy) + 1.f));
+                test_image.at<unsigned char>(x, y, 3) = UCHAR_MAX;
+                test_image.at<unsigned char>(x, y, 2) = fabsf(sinf(dv * 3.141592f + 4.f * 3.141592f / 3.f)) * UCHAR_MAX;
+                test_image.at<unsigned char>(x, y, 1) = fabsf(sinf(dv * 3.141592f + 2.f * 3.141592f / 3.f)) * UCHAR_MAX;
+                test_image.at<unsigned char>(x, y, 0) = fabsf(sinf(dv * 3.141592f)) * UCHAR_MAX;
+            }
+        }
+
+        vkdev = ImGui::get_gpu_device(ImGui::get_default_gpu_index());
+        ImGui::VkTransfer tran(vkdev);
+#ifdef TEST_VKIMAGEMAT
+        opt_vkimage.use_image_storage = true;
+        opt_vkimage.blob_vkallocator = vkdev->acquire_blob_allocator();
+        opt_vkimage.staging_vkallocator = vkdev->acquire_staging_allocator();
+        tran.record_upload(test_image, test_vkImageMat, opt_vkimage, false);
+        tran.submit_and_wait();
+#else
+        opt.blob_vkallocator = vkdev->acquire_blob_allocator();
+        opt.staging_vkallocator = vkdev->acquire_staging_allocator();
+        tran.record_upload(test_image, test_vkMat, opt, false);
+        tran.submit_and_wait();
+#endif
+
+        std::vector<ImGui::vk_specialization_type> specializations(0);
+        std::vector<uint32_t> spirv_data;
+#ifdef TEST_VKIMAGEMAT
+        if (ImGui::compile_spirv_module(glsl_copy, opt_vkimage, spirv_data) == 0)
+        {
+            vkimage_copy = new ImGui::Pipeline(vkdev);
+            vkimage_copy->create(spirv_data.data(), spirv_data.size() * 4, specializations);
+        }
+#else
+        if (ImGui::compile_spirv_module(glsl_copy, opt, spirv_data) == 0)
+        {
+            vk_copy = new ImGui::Pipeline(vkdev);
+            vk_copy->create(spirv_data.data(), spirv_data.size() * 4, specializations);
+        }
+#endif
+#endif
     };
     ~Example() 
     {
@@ -302,6 +269,22 @@ public:
         end_file_dialog_demo_window(&filedialog, bookmark_path.c_str());
         if (ImageTexture) { ImGui::ImDestroyTexture(ImageTexture); ImageTexture = 0; }
         if (DrawMatTexture) { ImGui::ImDestroyTexture(DrawMatTexture); DrawMatTexture = 0; }
+#if IMGUI_VULKAN_SHADER
+        if (vkdev)
+        {
+#ifdef TEST_VKIMAGEMAT
+            test_vkImageMat.release();
+            if (opt_vkimage.blob_vkallocator) { vkdev->reclaim_blob_allocator(opt_vkimage.blob_vkallocator); }
+            if (opt_vkimage.staging_vkallocator) { vkdev->reclaim_staging_allocator(opt_vkimage.staging_vkallocator); }
+            if (vkimage_copy) delete vkimage_copy;
+#else
+            test_vkMat.release();
+            if (opt.blob_vkallocator) { vkdev->reclaim_blob_allocator(opt.blob_vkallocator); }
+            if (opt.staging_vkallocator) { vkdev->reclaim_staging_allocator(opt.staging_vkallocator); }
+            if (vk_copy) delete vk_copy;
+#endif
+        }
+#endif
     }
 
 public:
@@ -345,6 +328,7 @@ public:
 public:
     void DrawLineDemo();
     void WarpMatrixDemo();
+    void ImVulkanTestWindow(const char* name, bool* p_open, ImGuiWindowFlags flags);
     std::string get_file_contents(const char *filename);
     static ImGui::MarkdownImageData ImageCallback( ImGui::MarkdownLinkCallbackData data_ );
     static void LinkCallback( ImGui::MarkdownLinkCallbackData data_ );
@@ -353,6 +337,16 @@ public:
 #if IMGUI_VULKAN_SHADER
 public:
     bool show_shader_window = false;
+#ifdef TEST_VKIMAGEMAT
+    ImGui::VkImageMat test_vkImageMat;
+    ImGui::Option opt_vkimage;
+    ImGui::Pipeline * vkimage_copy = nullptr;
+#else
+    ImGui::VkMat test_vkMat;
+    ImGui::Option opt;
+    ImGui::Pipeline * vk_copy = nullptr;
+#endif
+    ImGui::VulkanDevice* vkdev = nullptr;
 #endif
 public:
     ImGui::ImMat image {ImGui::ImMat(256, 256, 4, 1u, 4)};
@@ -594,6 +588,145 @@ void Example::WarpMatrixDemo()
         }
     }
 }
+
+#if IMGUI_VULKAN_SHADER
+void Example::ImVulkanTestWindow(const char* name, bool* p_open, ImGuiWindowFlags flags)
+{
+    ImGui::Begin(name, p_open, flags);
+    static int loop_count = 200;
+    static int block_count = 20;
+    static int cmd_count = 1;
+    static float fp32[8] = {0.f};
+    static float fp32v4[8] = {0.f};
+    static float fp32v8[8] = {0.f};
+    static float fp16pv4[8] = {0.f};
+    static float fp16pv8[8] = {0.f};
+    static float fp16s[8] = {0.f};
+    static float fp16sv4[8] = {0.f};
+    static float fp16sv8[8] = {0.f};
+    int device_count = ImGui::get_gpu_count();
+    auto print_result = [](float gflops)
+    {
+        std::string result;
+        if (gflops == -1)
+            result = "  error";
+        if (gflops == -233)
+            result = "  not supported";
+        if (gflops == 0)
+            result = "  not tested";
+        if (gflops > 1000)
+            result = "  " + std::to_string(gflops / 1000.0) + " TFLOPS";
+        else
+            result = "  " + std::to_string(gflops) + " GFLOPS";
+        return result;
+    };
+    for (int i = 0; i < device_count; i++)
+    {
+        ImGui::VulkanDevice* vkdev = ImGui::get_gpu_device(i);
+        uint32_t driver_version = vkdev->info.driver_version();
+        uint32_t api_version = vkdev->info.api_version();
+        int device_type = vkdev->info.type();
+        std::string driver_ver = std::to_string(VK_VERSION_MAJOR(driver_version)) + "." + 
+                                std::to_string(VK_VERSION_MINOR(driver_version)) + "." +
+                                std::to_string(VK_VERSION_PATCH(driver_version));
+        std::string api_ver =   std::to_string(VK_VERSION_MAJOR(api_version)) + "." + 
+                                std::to_string(VK_VERSION_MINOR(api_version)) + "." +
+                                std::to_string(VK_VERSION_PATCH(api_version));
+        std::string device_name = vkdev->info.device_name();
+        uint32_t gpu_memory_budget = vkdev->get_heap_budget();
+        uint32_t gpu_memory_usage = vkdev->get_heap_usage();
+        ImGui::Text("Device[%d]", i);
+        ImGui::Text("Driver:%s", driver_ver.c_str());
+        ImGui::Text("   API:%s", api_ver.c_str());
+        ImGui::Text("  Name:%s", device_name.c_str());
+        ImGui::Text("Memory:%uMB/%uMB", gpu_memory_usage, gpu_memory_budget);
+        ImGui::Text("Device Type:%s", device_type == 0 ? "Discrete" : device_type == 1 ? "Integrated" : device_type == 2 ? "Virtual" : "CPU");
+        std::string buffon_label = "Perf Test##" + std::to_string(i);
+        if (ImGui::Button(buffon_label.c_str(), ImVec2(120, 20)))
+        {
+            int _loop_count = device_type == 0 ? loop_count : loop_count / 5;
+            fp32[i]     = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 0, 0, 0);
+            fp32v4[i]   = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 0, 0, 1);
+            fp32v8[i]   = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 0, 0, 2);
+            fp16pv4[i]  = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 1, 1, 1);
+            fp16pv8[i]  = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 1, 1, 2);
+            fp16s[i]    = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 2, 1, 0);
+            fp16sv4[i]  = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 2, 1, 1);
+            fp16sv8[i]  = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 2, 1, 2);
+        }
+        ImGui::Text(" FP32 Scalar :%s", print_result(fp32[i]).c_str());
+        ImGui::Text("   FP32 Vec4 :%s", print_result(fp32v4[i]).c_str());
+        ImGui::Text("   FP32 Vec8 :%s", print_result(fp32v8[i]).c_str());
+        ImGui::Text("  FP16p Vec4 :%s", print_result(fp16pv4[i]).c_str());
+        ImGui::Text("  FP16p Vec8 :%s", print_result(fp16pv8[i]).c_str());
+        ImGui::Text("FP16s Scalar :%s", print_result(fp16s[i]).c_str());
+        ImGui::Text("  FP16s Vec4 :%s", print_result(fp16sv4[i]).c_str());
+        ImGui::Text("  FP16s Vec8 :%s", print_result(fp16sv8[i]).c_str());
+        
+        ImGui::Separator();
+    }
+
+    static double avg_copy_time = 0;
+#ifdef TEST_VKIMAGEMAT
+    ImGui::VkImageMat image_result;
+    image_result.create_like(test_vkImageMat, opt_vkimage.blob_vkallocator);
+    if (ImGui::Button("Test Copy", ImVec2(120, 20)))
+    {
+        double time = 0;
+        ImGui::VkCompute cmd_image(vkdev, "VkImageCopy");
+        std::vector<ImGui::VkImageMat> bindings_image(2);
+        bindings_image[0] = test_vkImageMat;
+        bindings_image[1] = image_result;
+        std::vector<ImGui::vk_constant_type> constants_image(4);
+        constants_image[0].i = test_vkImageMat.w;
+        constants_image[1].i = test_vkImageMat.h;
+        constants_image[2].i = test_vkImageMat.c;
+        constants_image[3].i = test_vkImageMat.cstep;
+        for (int i =0; i < 100; i++)
+        {
+            double t0 = GetSysCurrentTime();
+            cmd_image.record_pipeline(vkimage_copy, bindings_image, constants_image, image_result);
+            cmd_image.submit_and_wait();
+            time += GetSysCurrentTime() - t0;
+        }
+        avg_copy_time = time / 100;
+    }
+#else
+    ImGui::VkMat result;
+    result.create_like(test_vkMat, opt.blob_vkallocator);
+    if (ImGui::Button("Test Copy", ImVec2(120, 20)))
+    {
+        double time = 0;
+        ImGui::VkCompute cmd(vkdev, "VkMatCopy");
+        std::vector<ImGui::VkMat> bindings(2);
+        bindings[0] = test_vkMat;
+        bindings[1] = result;
+        std::vector<ImGui::vk_constant_type> constants(4);
+        constants[0].i = test_vkMat.w;
+        constants[1].i = test_vkMat.h;
+        constants[2].i = test_vkMat.c;
+        constants[3].i = test_vkMat.cstep;
+        for (int i =0; i < 100; i++)
+        {
+            double t0 = GetSysCurrentTime();
+            cmd.record_pipeline(vk_copy, bindings, constants, result);
+            cmd.submit_and_wait();
+            time += GetSysCurrentTime() - t0;
+            cmd.reset();
+        }
+        avg_copy_time = time / 100;
+    }
+    ImGui::Text("VkMat copy avg:%fs", avg_copy_time);
+    if (!result.empty())
+    {
+        ImTextureID vk_texture = nullptr;
+        ImGui::ImMatToTexture(result, vk_texture);
+        ImGui::Image(vk_texture, ImVec2(result.w, result.h));
+    }
+#endif
+    ImGui::End();
+}
+#endif
 
 void Example_Initialize(void** handle)
 {
@@ -1020,7 +1153,7 @@ bool Example_Frame(void* handle, bool app_will_quit)
     // Show Vulkan Shader Test Window
     if (example->show_shader_window)
     {
-        ImVulkanTestWindow("ImGui Vulkan test", &example->show_shader_window, 0);
+        example->ImVulkanTestWindow("ImGui Vulkan test", &example->show_shader_window, 0);
     }
 #endif
     if (app_will_quit)

@@ -122,6 +122,45 @@ void main()
 }
 )";
 
+static const char glsl_copy[] = R"(
+#version 450
+#if ImVulkan_fp16_storage
+#extension GL_EXT_shader_16bit_storage: require
+#endif
+#if ImVulkan_fp16_arithmetic
+#extension GL_EXT_shader_explicit_arithmetic_types_float16: require
+#endif
+#if ImVulkan_image_shader
+layout (binding = 0) uniform unfp sampler3D bottom_blob_3d;
+layout (binding = 1, imfmtc1) writeonly uniform unfp image3D top_blob_3d;
+#else
+layout (binding = 0) readonly buffer bottom_blob { sfp bottom_blob_data[]; };
+layout (binding = 1) writeonly buffer top_blob { sfp top_blob_data[]; };
+#endif
+layout (push_constant) uniform parameter
+{
+    int w;
+    int h;
+    int c;
+    int cstep;
+} p;
+void main()
+{
+    int gx = int(gl_GlobalInvocationID.x);
+    int gy = int(gl_GlobalInvocationID.y);
+    int gz = int(gl_GlobalInvocationID.z);
+
+    if (gx >= p.w || gy >= p.h || gz >= p.c)
+        return;
+#if ImVulkan_image_shader
+    image3d_cp1(top_blob_3d, ivec3(gx, gy, gz), bottom_blob_3d, ivec3(gx, gy, gz));
+#else
+    const int gi = gz * p.cstep + gy * p.w + gx;
+    buffer_cp1(top_blob_data, gi, bottom_blob_data, gi);
+#endif
+}
+)";
+
 // for shader common header
 #define SHADER_HEADER \
 "\
