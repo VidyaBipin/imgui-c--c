@@ -215,7 +215,7 @@ public:
             {
                 float dx = x + .5f;
                 float dy = y + .5f;
-                float dv = sinf(x * 0.02f) + sinf(0.03f * (x + y)) + sinf(sqrtf(0.4f * (dx * dx + dy * dy) + 1.f));
+                float dv = sinf(x * 0.02f) + sinf(0.03f * (x + y)) + sinf(sqrtf(0.04f * (dx * dx + dy * dy) + 1.f));
                 test_image.at<unsigned char>(x, y, 3) = UCHAR_MAX;
                 test_image.at<unsigned char>(x, y, 2) = fabsf(sinf(dv * 3.141592f + 4.f * 3.141592f / 3.f)) * UCHAR_MAX;
                 test_image.at<unsigned char>(x, y, 1) = fabsf(sinf(dv * 3.141592f + 2.f * 3.141592f / 3.f)) * UCHAR_MAX;
@@ -229,7 +229,7 @@ public:
         opt_vkimage.use_image_storage = true;
         opt_vkimage.blob_vkallocator = vkdev->acquire_blob_allocator();
         opt_vkimage.staging_vkallocator = vkdev->acquire_staging_allocator();
-        tran.record_upload(test_image, test_vkImageMat, opt_vkimage, false);
+        tran.record_upload(test_image, test_vkImageMat, opt_vkimage);
         tran.submit_and_wait();
 #else
         opt.blob_vkallocator = vkdev->acquire_blob_allocator();
@@ -674,16 +674,16 @@ void Example::ImVulkanTestWindow(const char* name, bool* p_open, ImGuiWindowFlag
     {
         double time = 0;
         ImGui::VkCompute cmd_image(vkdev, "VkImageCopy");
-        std::vector<ImGui::VkImageMat> bindings_image(2);
-        bindings_image[0] = test_vkImageMat;
-        bindings_image[1] = image_result;
-        std::vector<ImGui::vk_constant_type> constants_image(4);
-        constants_image[0].i = test_vkImageMat.w;
-        constants_image[1].i = test_vkImageMat.h;
-        constants_image[2].i = test_vkImageMat.c;
-        constants_image[3].i = test_vkImageMat.cstep;
         for (int i =0; i < 100; i++)
         {
+            std::vector<ImGui::VkImageMat> bindings_image(2);
+            bindings_image[0] = test_vkImageMat;
+            bindings_image[1] = image_result;
+            std::vector<ImGui::vk_constant_type> constants_image(4);
+            constants_image[0].i = test_vkImageMat.w;
+            constants_image[1].i = test_vkImageMat.h;
+            constants_image[2].i = test_vkImageMat.c;
+            constants_image[3].i = test_vkImageMat.cstep;
             double t0 = GetSysCurrentTime();
             cmd_image.record_pipeline(vkimage_copy, bindings_image, constants_image, image_result);
             cmd_image.submit_and_wait();
@@ -691,6 +691,7 @@ void Example::ImVulkanTestWindow(const char* name, bool* p_open, ImGuiWindowFlag
         }
         avg_copy_time = time / 100;
     }
+    ImGui::Text("VkImageMat copy avg:%fs", avg_copy_time);
 #else
     ImGui::VkMat result;
     result.create_like(test_vkMat, opt.blob_vkallocator);
@@ -698,21 +699,20 @@ void Example::ImVulkanTestWindow(const char* name, bool* p_open, ImGuiWindowFlag
     {
         double time = 0;
         ImGui::VkCompute cmd(vkdev, "VkMatCopy");
-        std::vector<ImGui::VkMat> bindings(2);
-        bindings[0] = test_vkMat;
-        bindings[1] = result;
-        std::vector<ImGui::vk_constant_type> constants(4);
-        constants[0].i = test_vkMat.w;
-        constants[1].i = test_vkMat.h;
-        constants[2].i = test_vkMat.c;
-        constants[3].i = test_vkMat.cstep;
         for (int i =0; i < 100; i++)
         {
+            std::vector<ImGui::VkMat> bindings(2);
+            bindings[0] = test_vkMat;
+            bindings[1] = result;
+            std::vector<ImGui::vk_constant_type> constants(4);
+            constants[0].i = test_vkMat.w;
+            constants[1].i = test_vkMat.h;
+            constants[2].i = test_vkMat.c;
+            constants[3].i = test_vkMat.cstep;
             double t0 = GetSysCurrentTime();
             cmd.record_pipeline(vk_copy, bindings, constants, result);
             cmd.submit_and_wait();
             time += GetSysCurrentTime() - t0;
-            cmd.reset();
         }
         avg_copy_time = time / 100;
     }

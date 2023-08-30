@@ -200,7 +200,7 @@ VkComputePrivate::~VkComputePrivate()
             // no userspace reference and we are the last command reference
             vkDestroyImageView(vkdev->vkdevice(), ptr->imageview, 0);
             vkDestroyImage(vkdev->vkdevice(), ptr->image, 0);
-
+            memset(ptr, 0, sizeof(VkImageMemory));
             delete ptr;
         }
         else
@@ -2828,6 +2828,7 @@ void VkTransfer::record_upload(const ImMat& src, VkImageMat& dst, const Option& 
 {
     
     // NOTE keep the hack here ?
+    /*
     if (src.elemsize == src.elempack * 4u)
     {
         if (opt.use_fp16_storage || (opt.use_fp16_packed && src.elempack % 4 == 0))
@@ -2840,6 +2841,7 @@ void VkTransfer::record_upload(const ImMat& src, VkImageMat& dst, const Option& 
             return;
         }
     }
+    */
 
     // create dst
     dst.create_like(src, opt.blob_vkallocator);
@@ -2847,6 +2849,7 @@ void VkTransfer::record_upload(const ImMat& src, VkImageMat& dst, const Option& 
         return;
 
     VkImageMemory* _d_data = (VkImageMemory*)dst.data;
+
     // create staging
     VkMat dst_staging;
     dst_staging.create_like(src, opt.staging_vkallocator);

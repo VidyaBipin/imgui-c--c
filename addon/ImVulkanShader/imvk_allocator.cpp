@@ -710,16 +710,13 @@ void VkBlobAllocator::fastFree(VkImageMemory* ptr)
 
     if (block_index == -1)
     {
-        fprintf(stderr, "FATAL ERROR! unlocked VkBlobAllocator get wild %p", ptr->memory);
-
-        if (!ptr->command_refcount)
+        if (!ptr->command_refcount && ptr->memory)
         {
+            fprintf(stderr, "FATAL ERROR! unlocked VkBlobAllocator get wild %p", ptr->memory);
             vkDestroyImageView(vkdev->vkdevice(), ptr->imageview, 0);
             vkDestroyImage(vkdev->vkdevice(), ptr->image, 0);
-
             delete ptr;
         }
-
         return;
     }
 
@@ -766,7 +763,7 @@ void VkBlobAllocator::fastFree(VkImageMemory* ptr)
         }
     }
 
-    if (!ptr->command_refcount)
+    if (!ptr->command_refcount && ptr->memory)
     {
         vkDestroyImageView(vkdev->vkdevice(), ptr->imageview, 0);
         vkDestroyImage(vkdev->vkdevice(), ptr->image, 0);
