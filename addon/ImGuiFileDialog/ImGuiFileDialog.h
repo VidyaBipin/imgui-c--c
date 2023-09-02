@@ -1252,7 +1252,8 @@ public:
     float GetFilterComboBoxWidth() const;                                                                                                             // will return the current combo box widget width
     bool DrawFilterComboBox(FileDialogInternal& vFileDialogInternal);                                                                                 // draw the filter combobox 	// get the current selected filter
     std::string ReplaceExtentionWithCurrentFilter(const std::string& vFile) const;                                                                    // replace the extention of the current file by the selected filter
-    void SetDefaultFilterIfNotDefined();                                                                                                              // define the first filter if no filter is selected
+    void SetDefaultFilterIfNotDefined();    
+    std::unordered_map<std::string, std::shared_ptr<FileStyle>>& GetFileStyles(const IGFD_FileStyleFlags& vFlags);
 };
 
 #pragma endregion
@@ -1783,6 +1784,7 @@ public:
     // add By Dicky
 	void SetLightStyle();
 	void SetDarkStyle();
+    std::unordered_map<std::string, std::shared_ptr<FileStyle>>& GetFileStyles(const IGFD_FileStyleFlags& vFlags) { return prFileDialogInternal.puFilterManager.GetFileStyles(vFlags); };
 	// add By Dicky end
 
 protected:

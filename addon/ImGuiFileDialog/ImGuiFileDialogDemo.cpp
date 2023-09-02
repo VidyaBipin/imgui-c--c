@@ -274,6 +274,38 @@ void show_file_dialog_demo_window(ImGuiFileDialog * dlg, bool * open)
         }
 
 		ImGui::Separator();
+		ImGui::Indent();
+		{
+
+			static int check_flags = IGFD_FileStyleByExtention;
+			ImGui::RadioButton("File", &check_flags, IGFD_FileStyleByTypeFile); ImGui::SameLine();
+			ImGui::RadioButton("Dir", &check_flags, IGFD_FileStyleByTypeDir); ImGui::SameLine();
+			ImGui::RadioButton("Link", &check_flags, IGFD_FileStyleByTypeLink); ImGui::SameLine();
+			ImGui::RadioButton("Ext", &check_flags, IGFD_FileStyleByExtention); ImGui::SameLine();
+			ImGui::RadioButton("FullName", &check_flags, IGFD_FileStyleByFullName); ImGui::SameLine();
+			ImGui::RadioButton("Contained", &check_flags, IGFD_FileStyleByContainedInFullName);
+
+			IGFD_FileStyleFlags flags = check_flags;
+			auto filesStyle = dlg->GetFileStyles(flags);
+			for (auto style : filesStyle)
+			{
+				ImGui::Text("%s : ", style.first.c_str());
+				ImVec4 out_color;
+				std::string icon;
+				ImFont* out_font;
+				if (dlg->GetFileStyle(flags, style.first, &out_color, &icon, &out_font))
+				{
+					ImGui::SameLine();
+					ImGui::TextUnformatted(icon.c_str());
+					ImGui::SameLine();
+					ImGui::ColorEdit4("##file_sytle_color", (float*)&out_color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop);
+				}
+			}
+
+		}
+		ImGui::Unindent();
+
+		ImGui::Separator();
 
 		ImVec2 minSize = ImVec2(0, 0);
 		ImVec2 maxSize = ImVec2(FLT_MAX, FLT_MAX);

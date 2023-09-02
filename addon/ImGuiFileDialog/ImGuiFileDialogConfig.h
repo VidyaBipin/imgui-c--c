@@ -63,6 +63,8 @@
 //#define IMGUI_BUTTON ImGui::Button
 
 // locales string
+#include "icons/folder.h" // add by Dicky
+
 #if IMGUI_ICONS
 #define createDirButtonString ICON_IGFD_ADD
 #define okButtonString ICON_IGFD_OK " OK"

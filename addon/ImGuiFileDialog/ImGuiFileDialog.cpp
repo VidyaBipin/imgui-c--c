@@ -1143,7 +1143,7 @@ IGFD_API bool IGFD::FilterManager::prFillFileStyle(std::shared_ptr<FileInfos> vF
                 }
 
                 if (_flag.first & IGFD_FileStyleByExtention) {
-                    if (_file.first.find("((") != std::string::npos) {
+                    if (_file.first.find(".") != std::string::npos) { // modify by dicky, for ext parser issue
                         if (std::regex_search(vFileInfos->fileExtLevels[0], std::regex(_file.first)) ||  // last dot
                             std::regex_search(vFileInfos->fileExtLevels[0], std::regex(_file.first))) {  // first dot
                             vFileInfos->fileStyle = _file.second;
@@ -1368,6 +1368,11 @@ IGFD_API void IGFD::FilterManager::SetDefaultFilterIfNotDefined() {
         !prParsedFilters.empty()) {                   // filter exist
         prSelectedFilter = *prParsedFilters.begin();  // we take the first filter
     }
+}
+
+std::unordered_map<std::string, std::shared_ptr<FileStyle>>& IGFD::FilterManager::GetFileStyles(const IGFD_FileStyleFlags& vFlags)
+{
+    return prFilesStyle[vFlags];
 }
 
 #pragma endregion
