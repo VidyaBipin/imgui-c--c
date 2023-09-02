@@ -9,6 +9,31 @@
 #define ICON_MIN_IGFD 0xf002
 #define ICON_MAX_IGFD 0xf1c9
 
+#if !IMGUI_ICONS
+#define ICON_IGFD_ADD "+ "
+#define ICON_IGFD_BOOKMARK "B "
+#define ICON_IGFD_CANCEL "x "
+#define ICON_IGFD_CHEVRON_DOWN "v "
+#define ICON_IGFD_CHEVRON_UP "^ "
+#define ICON_IGFD_DRIVES "D "
+#define ICON_IGFD_EDIT "E "
+#define ICON_IGFD_FILE "F "
+#define ICON_IGFD_FILE_GRID_THUMBNAILS "t "
+#define ICON_IGFD_FILE_LIST "L "
+#define ICON_IGFD_FILE_LIST_THUMBNAILS "T "
+#define ICON_IGFD_FILE_PIC "P "
+#define ICON_IGFD_FOLDER "D "
+#define ICON_IGFD_FOLDER_OPEN "O "
+#define ICON_IGFD_LINK "l "
+#define ICON_IGFD_OK "o "
+#define ICON_IGFD_REFRESH "r "
+#define ICON_IGFD_REMOVE "R "
+#define ICON_IGFD_RESET "B "
+#define ICON_IGFD_SAVE "S "
+#define ICON_IGFD_SEARCH "s "
+#define ICON_IGFD_STEP_FORWARD "f "
+#define ICON_IGFD_HIDDEN_FILE "H "
+#else
 #define ICON_IGFD_ADD u8"\uf067"
 #define ICON_IGFD_BOOKMARK u8"\uf02e"
 #define ICON_IGFD_CANCEL u8"\uf00d"
@@ -32,5 +57,5 @@
 #define ICON_IGFD_SEARCH u8"\uf002"
 #define ICON_IGFD_STEP_FORWARD u8"\uf051"
 #define ICON_IGFD_HIDDEN_FILE u8"\ue882" // Add Bu Dicky
-
+#endif
 extern const char FONT_ICON_BUFFER_NAME_IGFD[];
