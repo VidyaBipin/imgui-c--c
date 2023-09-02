@@ -64,6 +64,13 @@ inline bool operator!=(const ImRect& lhs, const ImRect& rhs)
     return !(lhs == rhs);
 }
 
+inline ImVec2 ImGui_GetMouseClickPos(ImGuiMouseButton buttonIndex)
+{
+    if (ImGui::IsMouseDown(buttonIndex))
+        return ImGui::GetIO().MouseClickedPos[buttonIndex];
+    else
+        return ImGui::GetMousePos();
+}
 
 
 //------------------------------------------------------------------------------

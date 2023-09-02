@@ -166,9 +166,9 @@ void ImGui::ShowNodeEditorWindow()
                         // visual feedback by changing link thickness and color.
                     }
                 }
+                ed::EndCreate(); // Wraps up object creation action handling.
             }
-            ed::EndCreate(); // Wraps up object creation action handling.
-            
+
             // Handle deletion action
             if (ed::BeginDelete())
             {
@@ -506,8 +506,8 @@ void ImGui::ShowNodeEditorWindow()
                         }
                     }
                 }
+                ed::EndCreate();
             }
-            ed::EndCreate();
 
             // Handle deletion action ---------------------------------------------------------------------------
             if (ed::BeginDelete())

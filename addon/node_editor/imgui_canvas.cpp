@@ -43,6 +43,13 @@ struct VtxCurrentOffsetRef
     }
 };
 
+static void SentinelDrawCallback(const ImDrawList* parent_list, const ImDrawCmd* cmd)
+{
+    // This is a sentinel draw callback, it's only purpose is to mark draw list command.
+    //IM_ASSERT(false && "This draw callback should never be called.");
+    //TODO::Dicky why?
+}
+
 } // namespace ImCanvasDetails
 
 // Returns a reference to _FringeScale extension to ImDrawList
@@ -92,8 +99,6 @@ bool ImGuiEx::Canvas::Begin(ImGuiID id, const ImVec2& size)
 
     // #debug: Canvas content.
     //m_DrawList->AddRectFilled(m_StartPos, m_StartPos + m_CurrentSize, IM_COL32(0, 0, 0, 64));
-    //m_DrawList->AddRect(m_WidgetRect.Min, m_WidgetRect.Max, IM_COL32(255, 0, 255, 64));
-    
     m_DrawList->AddRect(m_WidgetRect.Min, m_WidgetRect.Max, IM_COL32(255, 0, 255, 64));
 
     ImGui::SetCursorScreenPos(ImVec2(0.0f, 0.0f));
@@ -109,6 +114,10 @@ bool ImGuiEx::Canvas::Begin(ImGuiID id, const ImVec2& size)
     m_WindowCursorMaxBackup = ImGui::GetCurrentWindow()->DC.CursorMaxPos;
 
     EnterLocalSpace();
+
+# if IMGUI_VERSION_NUM >= 18967
+    ImGui::SetNextItemAllowOverlap();
+# endif
 
     // Emit dummy widget matching bounds of the canvas.
     ImGui::SetCursorScreenPos(m_ViewRect.Min);
@@ -141,7 +150,9 @@ void ImGuiEx::Canvas::End()
 
     ImGui::GetCurrentWindow()->DC.CursorMaxPos = m_WindowCursorMaxBackup;
 
+# if IMGUI_VERSION_NUM < 18967
     ImGui::SetItemAllowOverlap();
+# endif
 
     // Emit dummy widget matching bounds of the canvas.
     ImGui::SetCursorScreenPos(m_WidgetPosition);
@@ -341,8 +352,13 @@ void ImGuiEx::Canvas::SaveViewportState()
     m_WindowPosBackup = window->Pos;
     m_ViewportPosBackup = viewport->Pos;
     m_ViewportSizeBackup = viewport->Size;
+# if IMGUI_VERSION_NUM > 18002
     m_ViewportWorkPosBackup = viewport->WorkPos;
     m_ViewportWorkSizeBackup = viewport->WorkSize;
+# else
+    m_ViewportWorkOffsetMinBackup = viewport->WorkOffsetMin;
+    m_ViewportWorkOffsetMaxBackup = viewport->WorkOffsetMax;
+# endif
 # endif
 }
 
@@ -355,8 +371,13 @@ void ImGuiEx::Canvas::RestoreViewportState()
     window->Pos = m_WindowPosBackup;
     viewport->Pos = m_ViewportPosBackup;
     viewport->Size = m_ViewportSizeBackup;
+# if IMGUI_VERSION_NUM > 18002
     viewport->WorkPos = m_ViewportWorkPosBackup;
     viewport->WorkSize = m_ViewportWorkSizeBackup;
+# else
+    viewport->WorkOffsetMin = m_ViewportWorkOffsetMinBackup;
+    viewport->WorkOffsetMax = m_ViewportWorkOffsetMaxBackup;
+# endif
 # endif
 }
 
@@ -390,7 +411,7 @@ void ImGuiEx::Canvas::EnterLocalSpace()
     //
     //     More investigation is needed. To get to the bottom of this.
     if ((!m_DrawList->CmdBuffer.empty() && m_DrawList->CmdBuffer.back().ElemCount > 0) || m_DrawList->_Splitter._Count > 1)
-        ;m_DrawList->AddDrawCmd();
+        m_DrawList->AddCallback(&ImCanvasDetails::SentinelDrawCallback, nullptr);
 
 # if IMGUI_EX_CANVAS_DEFERED()
     m_Ranges.resize(m_Ranges.Size + 1);
@@ -416,8 +437,14 @@ void ImGuiEx::Canvas::EnterLocalSpace()
     auto viewport = ImGui::GetWindowViewport();
     viewport->Pos  = viewport_min;
     viewport->Size = viewport_max - viewport_min;
+
+# if IMGUI_VERSION_NUM > 18002
     viewport->WorkPos  = m_ViewportWorkPosBackup  * m_View.InvScale;
     viewport->WorkSize = m_ViewportWorkSizeBackup * m_View.InvScale;
+# else
+    viewport->WorkOffsetMin = m_ViewportWorkOffsetMinBackup * m_View.InvScale;
+    viewport->WorkOffsetMax = m_ViewportWorkOffsetMaxBackup * m_View.InvScale;
+# endif
 # endif
 
     // Clip rectangle in parent canvas space and move it to local space.
@@ -502,10 +529,13 @@ void ImGuiEx::Canvas::LeaveLocalSpace()
         }
     }
 
+    // Remove sentinel draw command if present
+    if (m_DrawListCommadBufferSize > 0 && m_DrawList->CmdBuffer.size() >= m_DrawListCommadBufferSize && m_DrawList->CmdBuffer[m_DrawListCommadBufferSize - 1].UserCallback == &ImCanvasDetails::SentinelDrawCallback)
+        m_DrawList->CmdBuffer.erase(m_DrawList->CmdBuffer.Data + m_DrawListCommadBufferSize - 1);
+
     auto& fringeScale = ImFringeScaleRef(m_DrawList);
     fringeScale = m_LastFringeScale;
 
-    m_DrawList->AddDrawCmd();
     // And pop \o/
     ImGui::PopClipRect();
 
