@@ -5996,13 +5996,14 @@ void ImGui::SpinnerAng(const char *label, float radius, float thickness, const I
 {
     SPINNER_HEADER(pos, size, centre, num_segments);                            // Get the position, size, centre, and number of segments of the spinner using the SPINNER_HEADER macro.
     float start = (float)ImGui::GetTime() * speed;                        // The start angle of the spinner is calculated based on the current time and the specified speed.
+    radius = (mode == 2) ? (0.8f + ImCos(start) * 0.2f) * radius : radius;
 
     circle([&] (int i) {                                                         // Draw the background of the spinner using the `circle` function, with the specified background color and thickness.
         const float a = start + (i * (PI_2 / (num_segments - 1)));               // Calculate the angle for each segment based on the start angle and the number of segments.
         return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
     }, color_alpha(bg, 1.f), thickness);
 
-    const float b = mode ? damped_gravity(ImSin(start * 1.1f)) * angle : 0.f;
+    const float b = (mode == 1) ? damped_gravity(ImSin(start * 1.1f)) * angle : 0.f;
     circle([&] (int i) {                                                        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
         const float a = start - b + (i * angle / num_segments);
         return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
