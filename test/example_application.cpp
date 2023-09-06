@@ -23,6 +23,7 @@
 #include <imgui_tex_inspect.h>
 #include <ImCoolbar.h>
 #include <portable-file-dialogs.h>
+#include <imgui_cpu.h>
 
 #if IMGUI_VULKAN_SHADER
 #include <ImVulkanShader.h>
@@ -303,6 +304,7 @@ public:
 
 public:
     bool show_demo_window = true;
+    bool show_cpu_info = false;
     bool show_viewport_fullscreen = false;
     bool show_another_window = false;
     bool show_implot_window = false;
@@ -762,6 +764,9 @@ bool Example_Frame(void* handle, bool app_will_quit)
     if (example->show_demo_window)
         ImGui::ShowDemoWindow(&example->show_demo_window);
 
+    if (example->show_cpu_info)
+        ImGui::CPUInfo();
+
     // Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
     {
         static float f = 0.0f;
@@ -771,6 +776,7 @@ bool Example_Frame(void* handle, bool app_will_quit)
 
         ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
         ImGui::Checkbox("Demo Window", &example->show_demo_window);      // Edit bools storing our window open/close state
+        ImGui::Checkbox("CPU info", &example->show_cpu_info);            // Edit bools Show CPU info
         if (ImGui::Checkbox("Full Screen Window", &example->show_viewport_fullscreen))
         {
             if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
