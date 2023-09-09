@@ -5512,8 +5512,8 @@ void ImGui::Piano::draw_keyboard(ImVec2 size, bool input)
                 col = IM_COL32(velocity, 255, velocity, 255);
             }
         }
-        draw_list->AddRectFilled(key_rect.Min, key_rect.Max, col, 2, ImDrawCornerFlags_All);
-        draw_list->AddRect(key_rect.Min, key_rect.Max, Black, 2, ImDrawCornerFlags_All);
+        draw_list->AddRectFilled(key_rect.Min, key_rect.Max, col, 2, ImDrawFlags_RoundCornersAll);
+        draw_list->AddRect(key_rect.Min, key_rect.Max, Black, 2, ImDrawFlags_RoundCornersAll);
         if (draw_text && key_name_str != ' ')
         {
             ImFormatString(buf, 4, "%c\n", key_name_str);
@@ -5571,8 +5571,8 @@ void ImGui::Piano::draw_keyboard(ImVec2 size, bool input)
                     col = IM_COL32(255, velocity, velocity, 255);
                 }
             }
-            draw_list->AddRectFilled(key_rect.Min, key_rect.Max, col, 2, ImDrawCornerFlags_All);
-            draw_list->AddRect(key_rect.Min, key_rect.Max, Black, 2, ImDrawCornerFlags_All);
+            draw_list->AddRectFilled(key_rect.Min, key_rect.Max, col, 2, ImDrawFlags_RoundCornersAll);
+            draw_list->AddRect(key_rect.Min, key_rect.Max, Black, 2, ImDrawFlags_RoundCornersAll);
             if (draw_text && key_name_str != ' ')
             {
                 ImFormatString(buf, 4, "%c\n", key_name_str);
