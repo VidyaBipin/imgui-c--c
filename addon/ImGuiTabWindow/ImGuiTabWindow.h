@@ -220,12 +220,20 @@ enum TabState {
     TAB_STATE_SELECTED_MODIFIED,
     TAB_STATE_COUNT
 };
+enum TabPosition {
+    TAB_POSITION_TOP,
+    TAB_POSITION_BOTTOM,
+    TAB_POSITION_LEFT,
+    TAB_POSITION_RIGHT
+};
+
 int fontStyles[TAB_STATE_COUNT];    // Users should add TabLabelStyle::ImGuiFonts to map them for these to work
 
 ImVec4 tabWindowLabelBackgroundColor;
 bool tabWindowLabelShowAreaSeparator;
 ImVec4 tabWindowSplitterColor;
 float tabWindowSplitterSize;
+int tabPosition;
 
 IMGUI_API TabLabelStyle();
 
@@ -240,7 +248,7 @@ IMGUI_API static void ShiftHue(TabLabelStyle& style,float amountIn0_1);
 IMGUI_API static void InvertColors(TabLabelStyle& style=TabLabelStyle::Get(),float saturationThreshould=0.1f); // in [0.f,0.5f] AFAIR
 IMGUI_API static void LightenBackground(TabLabelStyle& style=TabLabelStyle::Get(),float amount=0.15f);
 IMGUI_API static void DarkenBackground(TabLabelStyle& style=TabLabelStyle::Get(),float amount=0.15f);
-
+IMGUI_API static void SetTablePosition(TabLabelStyle& style=TabLabelStyle::Get(), int pos = TAB_POSITION_TOP);
 
 #if (defined(IMGUIHELPER_H_))
 IMGUI_API static bool Save(const TabLabelStyle& style,ImGuiHelper::Serializer& s);
@@ -542,7 +550,7 @@ typedef TabWindow::TabLabel TabWindowLabel;
  * pOptionalClosedTabIndex (requires allowTabClosing): out variable (int pointer) that returns the index of the closed tab in last call or -1.
  * pOptionalClosedTabIndexInsideItemOrdering (requires allowTabClosing): same as above, but index inside the pOptionalItemOrdering array. Users can use this value to prevent single tabs from closing when their close button is clicked (since we can't mix closable and non-closable tabs here).
 */
-IMGUI_API bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& tableSize, const char** tabLabelTooltips = NULL, bool wrapMode=true, bool breathing_select = false, int* pOptionalHoveredIndex=NULL, int* pOptionalItemOrdering=NULL, bool allowTabReorder=true, bool allowTabClosing=false, int* pOptionalClosedTabIndex=NULL,int * pOptionalClosedTabIndexInsideItemOrdering=NULL);
+IMGUI_API bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& tableSize, const char** tabLabelTooltips = NULL, bool wrapMode=true, bool breathing_select = false, int* pOptionalHoveredIndex=NULL, int* pOptionalItemOrdering=NULL, bool allowTabReorder=true, bool allowTabClosing=false, int* pOptionalClosedTabIndex=NULL,int * pOptionalClosedTabIndexInsideItemOrdering=NULL,bool invertRounding=false);
 
 // ImGui::TabLabelsVertical() are similiar to ImGui::TabLabels(), but they do not support WrapMode.
 IMGUI_API bool TabLabelsVertical(bool textIsRotatedCCW,int numTabs, const char** tabLabels, int& selectedIndex, const char** tabLabelTooltips = NULL, bool breathing_select = false, int* pOptionalHoveredIndex=NULL, int* pOptionalItemOrdering=NULL, bool allowTabReorder=false, bool allowTabClosing=false, int* pOptionalClosedTabIndex=NULL,int * pOptionalClosedTabIndexInsideItemOrdering=NULL,bool invertRounding=false);

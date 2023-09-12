@@ -12,24 +12,29 @@ void ShowAddonsTabWindow()
     static int tabItemOrdering[numTabs] = {0,1,2,3,4,5,6,7,8,9,10,11};
     static int selectedTab = 0;
     static int optionalHoveredTab = 0;
-    static bool allowTabLabelDragAndDrop=true;static bool tabLabelWrapMode = true;static bool allowClosingTabs = false;
+    static bool allowTabLabelDragAndDrop=true;
+    static bool tabLabelWrapMode = true;
+    static bool allowClosingTabs = false;
+    static bool tableAtBottom = false;
     int justClosedTabIndex=-1,justClosedTabIndexInsideTabItemOrdering = -1,oldSelectedTab = selectedTab;
 
     ImGui::Checkbox("Wrap Mode##TabLabelWrapMode",&tabLabelWrapMode);
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s","WrapMode is only available\nin horizontal TabLabels");
     ImGui::SameLine();ImGui::Checkbox("Drag And Drop##TabLabelDragAndDrop",&allowTabLabelDragAndDrop);
     ImGui::SameLine();ImGui::Checkbox("Closable##TabLabelClosing",&allowClosingTabs);ImGui::SameLine();
+    ImGui::Checkbox("At bottom##TabLabelAtbottom",&tableAtBottom);
     bool resetTabLabels = ImGui::SmallButton("Reset Tabs");if (resetTabLabels) {selectedTab=0;for (int i=0;i<numTabs;i++) tabItemOrdering[i] = i;}
 
     ImVec2 table_size;
-    /*const bool tabSelectedChanged =*/ ImGui::TabLabels(numTabs,tabNames,selectedTab,table_size,tabTooltips,tabLabelWrapMode,false,&optionalHoveredTab,&tabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,&justClosedTabIndex,&justClosedTabIndexInsideTabItemOrdering);
-    // Optional stuff
-    if (justClosedTabIndex==1) {
-        tabItemOrdering[justClosedTabIndexInsideTabItemOrdering] = justClosedTabIndex;   // Prevent the user from closing Tab "Layers"
-        selectedTab = oldSelectedTab;   // This is safer, in case we had closed the selected tab
+    if (!tableAtBottom)
+    {
+        ImGui::TabLabels(numTabs,tabNames,selectedTab,table_size,tabTooltips,tabLabelWrapMode,false,&optionalHoveredTab,&tabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,&justClosedTabIndex,&justClosedTabIndexInsideTabItemOrdering);
+        // Optional stuff
+        if (justClosedTabIndex==1) {
+            tabItemOrdering[justClosedTabIndexInsideTabItemOrdering] = justClosedTabIndex;   // Prevent the user from closing Tab "Layers"
+            selectedTab = oldSelectedTab;   // This is safer, in case we had closed the selected tab
+        }
     }
-    //if (optionalHoveredTab>=0) ImGui::Text("Mouse is hovering Tab Label: \"%s\".\n\n",tabNames[optionalHoveredTab]);
-
     // Draw tab page
     ImGui::BeginChild("MyTabLabelsChild",ImVec2(0,150),true);
     ImGui::Text("Tab Page For Tab: \"%s\" here.",selectedTab>=0?tabNames[selectedTab]:"None!");
@@ -47,6 +52,15 @@ void ShowAddonsTabWindow()
         }
     }
     ImGui::EndChild();
+    if (tableAtBottom)
+    {
+        ImGui::TabLabels(numTabs,tabNames,selectedTab,table_size,tabTooltips,tabLabelWrapMode,false,&optionalHoveredTab,&tabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,&justClosedTabIndex,&justClosedTabIndexInsideTabItemOrdering, true);
+        // Optional stuff
+        if (justClosedTabIndex==1) {
+            tabItemOrdering[justClosedTabIndexInsideTabItemOrdering] = justClosedTabIndex;   // Prevent the user from closing Tab "Layers"
+            selectedTab = oldSelectedTab;   // This is safer, in case we had closed the selected tab
+        }
+    }
 
     // ImGui::TabLabelsVertical() are similiar to ImGui::TabLabels(), but they do not support WrapMode.
     // ImGui::TabLabelsVertical() example usage

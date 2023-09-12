@@ -120,6 +120,7 @@ TabLabelStyle::TabLabelStyle()    {
 
     fillColorGradientDeltaIn0_05 = 0.0f;rounding = 6.f;borderWidth = 0.f;
     closeButtonRounding = 0.f;closeButtonBorderWidth = 1.f;closeButtonTextWidth = 2.5f;//3.f;
+    tabPosition = TAB_POSITION_TOP;
 
     TabLabelStyleSetSelectedTabColors(*this,ImColor(0.267f,0.282f,0.396f,1.0f),ImColor(0.925f,0.945f,0.957,1.0f),ImColor(0.090f,0.106f,0.157f,0.000f));
     TabLabelStyleSetTabColors(*this,ImColor(0.161f,0.188f,0.204f,1.f),ImColor(0.239f,0.259f,0.275f,1.f),ImColor(0.549f,0.565f,0.576f,0.784f),ColorDarken(colors[Col_TabLabelSelectedBorder],.0225f));
@@ -299,6 +300,7 @@ void TabLabelStyle::LightenBackground(TabLabelStyle &style, float amount)   {
     //s.colors[Col_TabLabelSelectedText]    = ColorLighten(s.colors[Col_TabLabelSelectedText],amount);
 }
 void TabLabelStyle::DarkenBackground(TabLabelStyle &style, float amount)    {LightenBackground(style,-amount);}
+void TabLabelStyle::SetTablePosition(TabLabelStyle &style, int pos) { style.tabPosition = pos; }
 
 bool ResetTabLabelStyle(int tabLabelStyleEnum,ImGui::TabLabelStyle& style) {    
     if (tabLabelStyleEnum<0 || tabLabelStyleEnum>=ImGuiTabLabelStyle_Count) return false;
@@ -404,6 +406,7 @@ bool TabLabelStyle::Save(const TabLabelStyle &style, ImGuiHelper::Serializer& s)
     s.save(ImGui::FT_FLOAT,&style.closeButtonRounding,"closeButtonRounding");
     s.save(ImGui::FT_FLOAT,&style.closeButtonBorderWidth,"closeButtonBorderWidth");
     s.save(ImGui::FT_FLOAT,&style.closeButtonTextWidth,"closeButtonTextWidth");
+    s.save(ImGui::FT_INT,&style.tabPosition,"tabPosition");
 
     //s.save(&style.antialiasing,"antialiasing");
 
@@ -435,6 +438,7 @@ static bool TabLabelStyleParser(ImGuiHelper::FieldType ft,int /*numArrayElements
 	else if (strcmp(name,"closeButtonRounding")==0)			s.closeButtonRounding = tmp.x;
 	else if (strcmp(name,"closeButtonBorderWidth")==0)		s.closeButtonBorderWidth = tmp.x;
 	else if (strcmp(name,"closeButtonTextWidth")==0)		s.closeButtonTextWidth = tmp.x;
+    else if (strcmp(name, "tabPosition") == 0)              s.tabPosition = tmp.x;
 	else if (strcmp(name,"tabWindowSplitterSize")==0)		{s.tabWindowSplitterSize = tmp.x;return true;}	// Returning true at the end allows queuing serialized elements in a single file
     break;
     case ImGui::FT_INT:
@@ -582,7 +586,7 @@ static bool TabButton(const char *label, bool selected, bool *pCloseButtonPresse
     if (!drawListOverride) drawListOverride = window->DrawList;
 
     // Canvas
-    ImGui::AddRectWithVerticalGradient(drawListOverride,bb.Min, bb.Max,col,(selected || hovered || held)?tabStyle.fillColorGradientDeltaIn0_05:(-tabStyle.fillColorGradientDeltaIn0_05),tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedBorder : TabLabelStyle::Col_TabLabelBorder],tabStyle.rounding,ImDrawFlags_RoundCornersTop,tabStyle.borderWidth);
+    ImGui::AddRectWithVerticalGradient(drawListOverride,bb.Min, bb.Max,col,(selected || hovered || held)?tabStyle.fillColorGradientDeltaIn0_05:(-tabStyle.fillColorGradientDeltaIn0_05),tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedBorder : TabLabelStyle::Col_TabLabelBorder],tabStyle.rounding, tabStyle.tabPosition == TabLabelStyle::TAB_POSITION_BOTTOM ? ImDrawFlags_RoundCornersBottom : ImDrawFlags_RoundCornersTop,tabStyle.borderWidth);
 
     // Text
     ImVec4 textcol = ImGui::ColorConvertU32ToFloat4(colText);
@@ -2368,8 +2372,10 @@ TabWindow::TabLabel *TabWindow::FindTabLabelFromUserText(const char *userText, c
 }
 
 // Based on the code by krys-spectralpixel (https://github.com/krys-spectralpixel), posted here: https://github.com/ocornut/imgui/issues/261
-bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& tableSize, const char** tabLabelTooltips, bool wrapMode, bool breathing_select, int *pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int *pOptionalClosedTabIndex, int *pOptionalClosedTabIndexInsideItemOrdering) {
+bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& tableSize, const char** tabLabelTooltips, bool wrapMode, bool breathing_select, int *pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int *pOptionalClosedTabIndex, int *pOptionalClosedTabIndexInsideItemOrdering,bool invertRounding) {
     ImGuiStyle& style = ImGui::GetStyle();
+    if (invertRounding) TabLabelStyle::SetTablePosition(TabLabelStyle::Get(), TabLabelStyle::TAB_POSITION_BOTTOM);
+    else TabLabelStyle::SetTablePosition(TabLabelStyle::Get(), TabLabelStyle::TAB_POSITION_TOP);
     const TabLabelStyle& tabStyle = TabLabelStyle::GetMergedWithWindowAlpha();
 
     const ImVec2 itemSpacing =  style.ItemSpacing;
@@ -2682,7 +2688,7 @@ namespace ImGui {
 //=======================================================================================
 // Main method to draw the tab label
 // The TabLabelStyle used by this method won't be merged with the Window Alpha (please provide a pOptionalStyleToUseIn using TabLabelStyle::GetMergedWithWindowAlpha() if needed).
-static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, bool *pCloseButtonPressedOut=NULL, const char* textOverrideIn=NULL, ImVec2 *pJustReturnItsSizeHereOut=NULL, const TabLabelStyle* pOptionalStyleToUseIn=NULL,ImFont *fontOverride=NULL, ImVec2 *pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset=NULL, ImDrawList *drawListOverride=NULL,bool privateReuseLastCalculatedLabelSizeDoNotUse = false,bool forceActiveColorLook = false,bool invertRounding=false, bool breathingSelected = false)  {
+static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, bool *pCloseButtonPressedOut=NULL, const char* textOverrideIn=NULL, ImVec2 *pJustReturnItsSizeHereOut=NULL, const TabLabelStyle* pOptionalStyleToUseIn=NULL,ImFont *fontOverride=NULL, ImVec2 *pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset=NULL, ImDrawList *drawListOverride=NULL,bool privateReuseLastCalculatedLabelSizeDoNotUse = false,bool forceActiveColorLook = false, bool breathingSelected = false)  {
     // Based on ImGui::ButtonEx(...)
     bool *pHoveredOut = NULL;           // removed from args (can be queried from outside)
     bool *pCloseButtonHovered = NULL;   // removed from args (who cares if the close button is hovered?)
@@ -2696,9 +2702,9 @@ static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, b
 
     //ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = ImGui::GetStyle();
-    const TabLabelStyle& tabStyle = pOptionalStyleToUseIn ? *pOptionalStyleToUseIn : TabLabelStyle::Get();
     const ImGuiID id = isFakeControl ? 0 : window->GetID(label);
     if (textOverrideIn) label = textOverrideIn;
+    const TabLabelStyle& tabStyle = pOptionalStyleToUseIn ? *pOptionalStyleToUseIn : TabLabelStyle::Get();
 
     if (!fontOverride) fontOverride = (ImFont*) (selected ? TabLabelStyle::ImGuiFonts[tabStyle.fontStyles[TabLabelStyle::TAB_STATE_SELECTED]] : TabLabelStyle::ImGuiFonts[tabStyle.fontStyles[TabLabelStyle::TAB_STATE_NORMAL]]);
     if (fontOverride) ImGui::PushFont(fontOverride);
@@ -2753,8 +2759,8 @@ static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, b
     if (!drawListOverride) drawListOverride = window->DrawList;
 
     // Canvas
-    if (rotateCCW) ImGui::AddRectWithHorizontalGradient(drawListOverride,bb.Min, bb.Max,col,(selected || hovered || held)?tabStyle.fillColorGradientDeltaIn0_05:(-tabStyle.fillColorGradientDeltaIn0_05),tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedBorder : TabLabelStyle::Col_TabLabelBorder],tabStyle.rounding,invertRounding ? ImDrawFlags_RoundCornersRight : ImDrawFlags_RoundCornersLeft,tabStyle.borderWidth);
-    else ImGui::AddRectWithHorizontalGradient(drawListOverride,bb.Min, bb.Max,col,(selected || hovered || held)?(-tabStyle.fillColorGradientDeltaIn0_05):tabStyle.fillColorGradientDeltaIn0_05,tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedBorder : TabLabelStyle::Col_TabLabelBorder],tabStyle.rounding,invertRounding ? ImDrawFlags_RoundCornersLeft : ImDrawFlags_RoundCornersRight,tabStyle.borderWidth);
+    if (rotateCCW) ImGui::AddRectWithHorizontalGradient(drawListOverride,bb.Min, bb.Max,col,(selected || hovered || held)?tabStyle.fillColorGradientDeltaIn0_05:(-tabStyle.fillColorGradientDeltaIn0_05),tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedBorder : TabLabelStyle::Col_TabLabelBorder],tabStyle.rounding,tabStyle.tabPosition == TabLabelStyle::TAB_POSITION_RIGHT ? ImDrawFlags_RoundCornersRight : ImDrawFlags_RoundCornersLeft,tabStyle.borderWidth);
+    else ImGui::AddRectWithHorizontalGradient(drawListOverride,bb.Min, bb.Max,col,(selected || hovered || held)?(-tabStyle.fillColorGradientDeltaIn0_05):tabStyle.fillColorGradientDeltaIn0_05,tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedBorder : TabLabelStyle::Col_TabLabelBorder],tabStyle.rounding,tabStyle.tabPosition == TabLabelStyle::TAB_POSITION_LEFT ? ImDrawFlags_RoundCornersLeft : ImDrawFlags_RoundCornersRight,tabStyle.borderWidth);
 
     // Text
     ImVec4 textcol = ImGui::ColorConvertU32ToFloat4(colText);
@@ -2823,6 +2829,8 @@ static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, b
 
 bool TabLabelsVertical(bool textIsRotatedCCW, int numTabs, const char** tabLabels, int& selectedIndex, const char** tabLabelTooltips, bool breathing_select, int* pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int* pOptionalClosedTabIndex, int * pOptionalClosedTabIndexInsideItemOrdering, bool invertRounding)    {
     ImGuiStyle& style = ImGui::GetStyle();
+    if (invertRounding) TabLabelStyle::SetTablePosition(TabLabelStyle::Get(), TabLabelStyle::TAB_POSITION_RIGHT);
+    else TabLabelStyle::SetTablePosition(TabLabelStyle::Get(), TabLabelStyle::TAB_POSITION_LEFT);
     const TabLabelStyle& tabStyle = TabLabelStyle::GetMergedWithWindowAlpha();
 
     const ImVec2 itemSpacing =  style.ItemSpacing;
@@ -2880,7 +2888,7 @@ bool TabLabelsVertical(bool textIsRotatedCCW, int numTabs, const char** tabLabel
 
         // Draw the button
         ImGui::PushID(i);   // otherwise two tabs with the same name would clash.
-        if (ImGui::TabButtonVertical(textIsRotatedCCW,tabLabels[i],i == selectedIndex,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,invertRounding,breathing_select))   {
+        if (ImGui::TabButtonVertical(textIsRotatedCCW,tabLabels[i],i == selectedIndex,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select))   {
             selection_changed = (selectedIndex!=i);
             newSelectedIndex = i;
         }
@@ -2953,7 +2961,7 @@ bool TabLabelsVertical(bool textIsRotatedCCW, int numTabs, const char** tabLabel
                     ImGui::GetForegroundDrawList();
             const TabLabelStyle& tabStyle = TabLabelStyleGetMergedWithAlphaForOverlayUsage();
             ImFont* fontOverride = (ImFont*) (draggingTabWasSelected ? TabLabelStyle::ImGuiFonts[tabStyle.fontStyles[TabLabelStyle::TAB_STATE_SELECTED]] : TabLabelStyle::ImGuiFonts[tabStyle.fontStyles[TabLabelStyle::TAB_STATE_NORMAL]]);
-            ImGui::TabButtonVertical(textIsRotatedCCW,tabLabels[pOptionalItemOrdering[draggingTabIndex]],draggingTabWasSelected,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,fontOverride,&start,drawList,false,true,invertRounding);
+            ImGui::TabButtonVertical(textIsRotatedCCW,tabLabels[pOptionalItemOrdering[draggingTabIndex]],draggingTabWasSelected,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,fontOverride,&start,drawList,false,true);
             ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
 
             if (TabWindow::DockPanelIconTextureID)	{
