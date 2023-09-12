@@ -15,7 +15,7 @@ struct LinkInfo
     ed::PinId  OutputId;
 };
 
-static const char* DemoTabNames[] = {
+static const std::vector<std::string> DemoTabNames = {
     "Basic",
     "Widget",
     "Canvas"
@@ -72,10 +72,9 @@ void ImGui::ShowNodeEditorWindow()
     static bool                 m_FirstWidgetFrame = true;
     if (!m_Context) m_Context = ed::CreateEditor();
     auto& io = ImGui::GetIO();
-    static const int numTabs = sizeof(DemoTabNames)/sizeof(DemoTabNames[0]);
     static int tab_index = 0;
     static ImVec2 table_size;
-    ImGui::TabLabels(numTabs, DemoTabNames, tab_index, table_size, nullptr , false, false, nullptr, nullptr, false, false, nullptr, nullptr);
+    ImGui::TabLabels(DemoTabNames, tab_index, table_size, std::vector<std::string>() , false, false, nullptr, nullptr, false, false, nullptr, nullptr);
     switch (tab_index)
     {
         case 0:

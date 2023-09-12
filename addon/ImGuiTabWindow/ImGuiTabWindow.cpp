@@ -2372,7 +2372,7 @@ TabWindow::TabLabel *TabWindow::FindTabLabelFromUserText(const char *userText, c
 }
 
 // Based on the code by krys-spectralpixel (https://github.com/krys-spectralpixel), posted here: https://github.com/ocornut/imgui/issues/261
-bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& tableSize, const char** tabLabelTooltips, bool wrapMode, bool breathing_select, int *pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int *pOptionalClosedTabIndex, int *pOptionalClosedTabIndexInsideItemOrdering,bool invertRounding) {
+bool TabLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImVec2& tableSize, const std::vector<std::string> tabLabelTooltips, bool wrapMode, bool breathing_select, int *pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int *pOptionalClosedTabIndex, int *pOptionalClosedTabIndexInsideItemOrdering,bool invertRounding) {
     ImGuiStyle& style = ImGui::GetStyle();
     if (invertRounding) TabLabelStyle::SetTablePosition(TabLabelStyle::Get(), TabLabelStyle::TAB_POSITION_BOTTOM);
     else TabLabelStyle::SetTablePosition(TabLabelStyle::Get(), TabLabelStyle::TAB_POSITION_TOP);
@@ -2382,7 +2382,7 @@ bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& 
     style.ItemSpacing.x =       3;
     style.ItemSpacing.y =       3;
 
-    if (numTabs>0 && (selectedIndex<0 || selectedIndex>=numTabs)) {
+    if (!tabLabels.empty() && (selectedIndex<0 || selectedIndex>=tabLabels.size())) {
         if (!pOptionalItemOrdering)  selectedIndex = 0;
         else selectedIndex = -1;
     }
@@ -2409,7 +2409,7 @@ bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& 
     ImVec2 tabButtonSz(0,0);bool mustCloseTab = false;bool canUseSizeOptimization = false;
     const bool isWindowHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
     bool selection_changed = false;bool noButtonDrawn = true;
-    for (int j = 0,i; j < numTabs; j++)
+    for (int j = 0,i; j < tabLabels.size(); j++)
     {
         i = pOptionalItemOrdering ? pOptionalItemOrdering[j] : j;
         if (i==-1) continue;
@@ -2417,7 +2417,7 @@ bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& 
         if (!wrapMode) {if (!noButtonDrawn) ImGui::SameLine();canUseSizeOptimization=false;}
         else if (sumX > 0.f) {
             sumX+=style.ItemSpacing.x;   // Maybe we can skip it if we use SameLine(0,0) below
-            ImGui::TabButton(tabLabels[i],(i == selectedIndex),allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select);
+            ImGui::TabButton(tabLabels[i].c_str(),(i == selectedIndex),allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select);
             sumX+=tabButtonSz.x;
             if (sumX>windowWidth) sumX = 0.f;
             else ImGui::SameLine();
@@ -2427,7 +2427,7 @@ bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& 
 
         // Draw the button
         ImGui::PushID(i);   // otherwise two tabs with the same name would clash.
-        if (ImGui::TabButton(tabLabels[i],i == selectedIndex,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select))   {
+        if (ImGui::TabButton(tabLabels[i].c_str(),i == selectedIndex,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select))   {
             selection_changed = (selectedIndex!=i);
             newSelectedIndex = i;
         }
@@ -2446,7 +2446,7 @@ bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& 
 
         if (isWindowHovered && ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly) && !mustCloseTab) {
             if (pOptionalHoveredIndex) *pOptionalHoveredIndex = i;
-            if (tabLabelTooltips && !isRMBclicked && tabLabelTooltips[i] && strlen(tabLabelTooltips[i])>0)  ImGui::SetTooltip("%s",tabLabelTooltips[i]);
+            if (!tabLabelTooltips.empty() && !isRMBclicked && !tabLabelTooltips[i].empty())  ImGui::SetTooltip("%s",tabLabelTooltips[i].c_str());
 
             if (pOptionalItemOrdering)  {
                 if (allowTabReorder)  {
@@ -2464,7 +2464,7 @@ bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& 
 
                         }
                     }
-                    else if (draggingTabIndex>=0 && draggingTabIndex<numTabs && draggingTabIndex!=j){
+                    else if (draggingTabIndex >= 0 && draggingTabIndex < tabLabels.size() && draggingTabIndex != j){
                         draggingTabTargetIndex = j; // For some odd reasons this seems to get called only when draggingTabIndex < i ! (Probably during mouse dragging ImGui owns the mouse someway and sometimes ImGui::IsItemHovered() is not getting called)
                     }
                 }
@@ -2483,7 +2483,7 @@ bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& 
     ImVec2 groupSize = ImGui::GetItemRectSize();
 
     // Draw tab label while mouse drags it
-    if (draggingTabIndex>=0 && draggingTabIndex<numTabs) {
+    if (draggingTabIndex >= 0 && draggingTabIndex < tabLabels.size()) {
         const ImVec2 wp = ImGui::GetWindowPos();
         startGroupCursorPos.x+=wp.x;
         startGroupCursorPos.y+=wp.y;
@@ -2500,7 +2500,7 @@ bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& 
                     ImGui::GetForegroundDrawList();
             const TabLabelStyle& tabStyle = TabLabelStyleGetMergedWithAlphaForOverlayUsage();
             ImFont* fontOverride = (ImFont*) (draggingTabWasSelected ? TabLabelStyle::ImGuiFonts[tabStyle.fontStyles[TabLabelStyle::TAB_STATE_SELECTED]] : TabLabelStyle::ImGuiFonts[tabStyle.fontStyles[TabLabelStyle::TAB_STATE_NORMAL]]);
-            ImGui::TabButton(tabLabels[pOptionalItemOrdering[draggingTabIndex]],draggingTabWasSelected,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,fontOverride,&start,drawList,false,true);
+            ImGui::TabButton(tabLabels[pOptionalItemOrdering[draggingTabIndex]].c_str(),draggingTabWasSelected,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,fontOverride,&start,drawList,false,true);
             ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
 
             if (TabWindow::DockPanelIconTextureID)	{
@@ -2539,7 +2539,7 @@ bool TabLabels(int numTabs, const char** tabLabels, int& selectedIndex, ImVec2& 
     // Change selected tab when user closes the selected tab
     if (selectedIndex == justClosedTabIndex && selectedIndex>=0)    {
         selectedIndex = -1;
-        for (int j = 0,i; j < numTabs; j++) {
+        for (int j = 0,i; j < tabLabels.size(); j++) {
             i = pOptionalItemOrdering ? pOptionalItemOrdering[j] : j;
             if (i==-1) continue;
             selectedIndex = i;
@@ -2827,7 +2827,7 @@ static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, b
 //========================================================================================
 
 
-bool TabLabelsVertical(bool textIsRotatedCCW, int numTabs, const char** tabLabels, int& selectedIndex, const char** tabLabelTooltips, bool breathing_select, int* pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int* pOptionalClosedTabIndex, int * pOptionalClosedTabIndexInsideItemOrdering, bool invertRounding)    {
+bool TabLabelsVertical(const std::vector<std::string> tabLabels, int& selectedIndex, const std::vector<std::string> tabLabelTooltips, bool breathing_select, int* pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int* pOptionalClosedTabIndex, int * pOptionalClosedTabIndexInsideItemOrdering, bool invertRounding, bool textIsRotatedCCW)    {
     ImGuiStyle& style = ImGui::GetStyle();
     if (invertRounding) TabLabelStyle::SetTablePosition(TabLabelStyle::Get(), TabLabelStyle::TAB_POSITION_RIGHT);
     else TabLabelStyle::SetTablePosition(TabLabelStyle::Get(), TabLabelStyle::TAB_POSITION_LEFT);
@@ -2837,7 +2837,7 @@ bool TabLabelsVertical(bool textIsRotatedCCW, int numTabs, const char** tabLabel
     style.ItemSpacing.x =       1;
     style.ItemSpacing.y =       1;
 
-    if (numTabs>0 && (selectedIndex<0 || selectedIndex>=numTabs)) {
+    if (!tabLabels.empty() && (selectedIndex < 0 || selectedIndex >= tabLabels.size())) {
         if (!pOptionalItemOrdering)  selectedIndex = 0;
         else selectedIndex = -1;
     }
@@ -2866,7 +2866,7 @@ bool TabLabelsVertical(bool textIsRotatedCCW, int numTabs, const char** tabLabel
     bool mustCloseTab = false;bool canUseSizeOptimization = false;
     const bool isWindowHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
     bool selection_changed = false;//bool noButtonDrawn = true;
-    for (int j = 0,i; j < numTabs; j++)
+    for (int j = 0,i; j < tabLabels.size(); j++)
     {
         i = pOptionalItemOrdering ? pOptionalItemOrdering[j] : j;
         if (i==-1) continue;
@@ -2888,7 +2888,7 @@ bool TabLabelsVertical(bool textIsRotatedCCW, int numTabs, const char** tabLabel
 
         // Draw the button
         ImGui::PushID(i);   // otherwise two tabs with the same name would clash.
-        if (ImGui::TabButtonVertical(textIsRotatedCCW,tabLabels[i],i == selectedIndex,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select))   {
+        if (ImGui::TabButtonVertical(textIsRotatedCCW,tabLabels[i].c_str(),i == selectedIndex,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select))   {
             selection_changed = (selectedIndex!=i);
             newSelectedIndex = i;
         }
@@ -2907,7 +2907,7 @@ bool TabLabelsVertical(bool textIsRotatedCCW, int numTabs, const char** tabLabel
 
         if (isWindowHovered && ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly) && !mustCloseTab) {
             if (pOptionalHoveredIndex) *pOptionalHoveredIndex = i;
-            if (tabLabelTooltips && !isRMBclicked && tabLabelTooltips[i] && strlen(tabLabelTooltips[i])>0)  ImGui::SetTooltip("%s",tabLabelTooltips[i]);
+            if (!tabLabelTooltips.empty() && !isRMBclicked && !tabLabelTooltips[i].empty() )  ImGui::SetTooltip("%s",tabLabelTooltips[i].c_str());
 
             if (pOptionalItemOrdering)  {
                 if (allowTabReorder)  {
@@ -2925,7 +2925,7 @@ bool TabLabelsVertical(bool textIsRotatedCCW, int numTabs, const char** tabLabel
 
                         }
                     }
-                    else if (draggingTabIndex>=0 && draggingTabIndex<numTabs && draggingTabIndex!=j){
+                    else if (draggingTabIndex >= 0 && draggingTabIndex < tabLabels.size() && draggingTabIndex != j){
                         draggingTabTargetIndex = j; // For some odd reasons this seems to get called only when draggingTabIndex < i ! (Probably during mouse dragging ImGui owns the mouse someway and sometimes ImGui::IsItemHovered() is not getting called)
                     }
                 }
@@ -2944,7 +2944,7 @@ bool TabLabelsVertical(bool textIsRotatedCCW, int numTabs, const char** tabLabel
     ImVec2 groupSize = ImGui::GetItemRectSize();
 
     // Draw tab label while mouse drags it
-    if (draggingTabIndex>=0 && draggingTabIndex<numTabs) {
+    if (draggingTabIndex >= 0 && draggingTabIndex < tabLabels.size()) {
         const ImVec2 wp = ImGui::GetWindowPos();
         startGroupCursorPos.x+=wp.x;
         startGroupCursorPos.y+=wp.y;
@@ -2961,7 +2961,7 @@ bool TabLabelsVertical(bool textIsRotatedCCW, int numTabs, const char** tabLabel
                     ImGui::GetForegroundDrawList();
             const TabLabelStyle& tabStyle = TabLabelStyleGetMergedWithAlphaForOverlayUsage();
             ImFont* fontOverride = (ImFont*) (draggingTabWasSelected ? TabLabelStyle::ImGuiFonts[tabStyle.fontStyles[TabLabelStyle::TAB_STATE_SELECTED]] : TabLabelStyle::ImGuiFonts[tabStyle.fontStyles[TabLabelStyle::TAB_STATE_NORMAL]]);
-            ImGui::TabButtonVertical(textIsRotatedCCW,tabLabels[pOptionalItemOrdering[draggingTabIndex]],draggingTabWasSelected,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,fontOverride,&start,drawList,false,true);
+            ImGui::TabButtonVertical(textIsRotatedCCW,tabLabels[pOptionalItemOrdering[draggingTabIndex]].c_str(),draggingTabWasSelected,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,fontOverride,&start,drawList,false,true);
             ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
 
             if (TabWindow::DockPanelIconTextureID)	{
@@ -3000,7 +3000,7 @@ bool TabLabelsVertical(bool textIsRotatedCCW, int numTabs, const char** tabLabel
     // Change selected tab when user closes the selected tab
     if (selectedIndex == justClosedTabIndex && selectedIndex>=0)    {
         selectedIndex = -1;
-        for (int j = 0,i; j < numTabs; j++) {
+        for (int j = 0,i; j < tabLabels.size(); j++) {
             i = pOptionalItemOrdering ? pOptionalItemOrdering[j] : j;
             if (i==-1) continue;
             selectedIndex = i;
