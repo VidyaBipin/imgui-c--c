@@ -247,7 +247,7 @@ FORCE_INLINE void _sse2neon_smp_mb(void)
 #endif
 
 /* Apple Silicon cache lines are double of what is commonly used by Intel, AMD
- * and other Arm microarchtectures use.
+ * and other Arm microarchitectures use.
  * From sysctl -a on Apple M1:
  * hw.cachelinesize: 128
  */
@@ -575,7 +575,7 @@ FORCE_INLINE uint32_t _mm_crc32_u8(uint32_t, uint8_t);
 
 // Older gcc does not define vld1q_u8_x4 type
 #if defined(__GNUC__) && !defined(__clang__) &&                        \
-    ((__GNUC__ <= 12 && defined(__arm__)) ||                           \
+    ((__GNUC__ <= 13 && defined(__arm__)) ||                           \
      (__GNUC__ == 10 && __GNUC_MINOR__ < 3 && defined(__aarch64__)) || \
      (__GNUC__ <= 9 && defined(__aarch64__)))
 FORCE_INLINE uint8x16x4_t _sse2neon_vld1q_u8_x4(const uint8_t *p)
@@ -658,7 +658,7 @@ FORCE_INLINE uint16_t _sse2neon_vaddvq_u16(uint16x8_t a)
  * This last part, <data_type>, is a little complicated. It identifies the
  * content of the input values, and can be set to any of the following values:
  * + ps - vectors contain floats (ps stands for packed single-precision)
- * + pd - vectors cantain doubles (pd stands for packed double-precision)
+ * + pd - vectors contain doubles (pd stands for packed double-precision)
  * + epi8/epi16/epi32/epi64 - vectors contain 8-bit/16-bit/32-bit/64-bit
  *                            signed integers
  * + epu8/epu16/epu32/epu64 - vectors contain 8-bit/16-bit/32-bit/64-bit
@@ -1105,7 +1105,7 @@ FORCE_INLINE __m128i _mm_shuffle_epi_3332(__m128i a)
 
 // Shuffle 16-bit integers in the low 64 bits of a using the control in imm8.
 // Store the results in the low 64 bits of dst, with the high 64 bits being
-// copied from from a to dst.
+// copied from a to dst.
 // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_shufflelo_epi16
 #define _mm_shufflelo_epi16_function(a, imm)                                  \
     _sse2neon_define1(                                                        \
@@ -1122,7 +1122,7 @@ FORCE_INLINE __m128i _mm_shuffle_epi_3332(__m128i a)
 
 // Shuffle 16-bit integers in the high 64 bits of a using the control in imm8.
 // Store the results in the high 64 bits of dst, with the low 64 bits being
-// copied from from a to dst.
+// copied from a to dst.
 // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_shufflehi_epi16
 #define _mm_shufflehi_epi16_function(a, imm)                                   \
     _sse2neon_define1(                                                         \
@@ -2235,7 +2235,7 @@ FORCE_INLINE __m128 _mm_or_ps(__m128 a, __m128 b)
 #define _m_pmulhuw(a, b) _mm_mulhi_pu16(a, b)
 
 // Fetch the line of data from memory that contains address p to a location in
-// the cache heirarchy specified by the locality hint i.
+// the cache hierarchy specified by the locality hint i.
 // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_prefetch
 FORCE_INLINE void _mm_prefetch(char const *p, int i)
 {
@@ -2315,7 +2315,7 @@ FORCE_INLINE __m128 _mm_rsqrt_ps(__m128 in)
     float32x4_t out = vrsqrteq_f32(vreinterpretq_f32_m128(in));
 
     // Generate masks for detecting whether input has any 0.0f/-0.0f
-    // (which becomes positive/negative infinity by IEEE-754 arthimetic rules).
+    // (which becomes positive/negative infinity by IEEE-754 arithmetic rules).
     const uint32x4_t pos_inf = vdupq_n_u32(0x7F800000);
     const uint32x4_t neg_inf = vdupq_n_u32(0xFF800000);
     const uint32x4_t has_pos_zero =
@@ -4915,7 +4915,7 @@ FORCE_INLINE __m128d _mm_set_sd(double a)
 #endif
 }
 
-// Broadcast 16-bit integer a to all all elements of dst.
+// Broadcast 16-bit integer a to all elements of dst.
 // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_set1_epi16
 FORCE_INLINE __m128i _mm_set1_epi16(short w)
 {
@@ -6930,7 +6930,7 @@ FORCE_INLINE __m128i _mm_cvtepu8_epi32(__m128i a)
     return vreinterpretq_m128i_u32(u32x4);
 }
 
-// Zero extend packed unsigned 8-bit integers in the low 8 byte sof a to packed
+// Zero extend packed unsigned 8-bit integers in the low 8 bytes of a to packed
 // 64-bit integers, and store the results in dst.
 // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cvtepu8_epi64
 FORCE_INLINE __m128i _mm_cvtepu8_epi64(__m128i a)
@@ -8274,6 +8274,9 @@ FORCE_INLINE int _mm_cmpestrs(__m128i a,
                               int lb,
                               const int imm8)
 {
+    (void) a;
+    (void) b;
+    (void) lb;
     SSE2NEON_CMPSTR_SET_UPPER(bound, imm8);
     return la <= (bound - 1);
 }
@@ -8287,6 +8290,9 @@ FORCE_INLINE int _mm_cmpestrz(__m128i a,
                               int lb,
                               const int imm8)
 {
+    (void) a;
+    (void) b;
+    (void) la;
     SSE2NEON_CMPSTR_SET_UPPER(bound, imm8);
     return lb <= (bound - 1);
 }
@@ -8368,6 +8374,7 @@ FORCE_INLINE int _mm_cmpistro(__m128i a, __m128i b, const int imm8)
 // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpistrs
 FORCE_INLINE int _mm_cmpistrs(__m128i a, __m128i b, const int imm8)
 {
+    (void) b;
     SSE2NEON_CMPSTR_SET_UPPER(bound, imm8);
     int la;
     SSE2NEON_CMPISTRX_LENGTH(a, la, imm8);
@@ -8379,6 +8386,7 @@ FORCE_INLINE int _mm_cmpistrs(__m128i a, __m128i b, const int imm8)
 // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_cmpistrz
 FORCE_INLINE int _mm_cmpistrz(__m128i a, __m128i b, const int imm8)
 {
+    (void) a;
     SSE2NEON_CMPSTR_SET_UPPER(bound, imm8);
     int lb;
     SSE2NEON_CMPISTRX_LENGTH(b, lb, imm8);
@@ -8708,7 +8716,7 @@ FORCE_INLINE __m128i _mm_aesdec_si128(__m128i a, __m128i RoundKey)
     v = vqtbx4q_u8(v, _sse2neon_vld1q_u8_x4(_sse2neon_rsbox + 0xc0), w - 0xc0);
 
     // inverse mix columns
-    // muliplying 'v' by 4 in GF(2^8)
+    // multiplying 'v' by 4 in GF(2^8)
     w = (v << 1) ^ (uint8x16_t) (((int8x16_t) v >> 7) & 0x1b);
     w = (w << 1) ^ (uint8x16_t) (((int8x16_t) w >> 7) & 0x1b);
     v ^= w;
