@@ -630,6 +630,132 @@ static bool TabButton(const char *label, bool selected, bool *pCloseButtonPresse
 
     return pressed;
 }
+
+static bool TabImageButton(const char *label, bool selected, ImTextureID texture, ImVec2 * texture_size = NULL, bool *pCloseButtonPressedOut=NULL, const char* textOverrideIn=NULL, ImVec2 *pJustReturnItsSizeHereOut=NULL, const TabLabelStyle* pOptionalStyleToUseIn=NULL,ImFont *fontOverride=NULL, ImVec2 *pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset=NULL, ImDrawList *drawListOverride=NULL,bool privateReuseLastCalculatedLabelSizeDoNotUse = false,bool forceActiveColorLook = false, bool breathingSelected = false)  {
+    // Based on ImGui::ButtonEx(...)
+    bool *pHoveredOut = NULL;           // removed from args (can be queried from outside)
+    bool *pCloseButtonHovered = NULL;   // removed from args (who cares if the close button is hovered?)
+    const int flags = 0;                // what's this ?
+    const bool hasCloseButton = pCloseButtonHovered || pCloseButtonPressedOut;
+    const bool isFakeControl = pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset || pJustReturnItsSizeHereOut;
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window && window->SkipItems && !isFakeControl)  return false;
+    auto texture_width = texture_size ? texture_size->x : ImGui::ImGetTextureWidth(texture);
+    auto texture_height = texture_size? texture_size->y : ImGui::ImGetTextureHeight(texture);
+    //ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = ImGui::GetStyle();
+    const TabLabelStyle& tabStyle = pOptionalStyleToUseIn ? *pOptionalStyleToUseIn : TabLabelStyle::Get();
+    const ImGuiID id = isFakeControl ? 0 : window->GetID(label);
+    if (textOverrideIn) label = textOverrideIn;
+
+    if (!fontOverride) fontOverride = (ImFont*) (selected ? TabLabelStyle::ImGuiFonts[tabStyle.fontStyles[TabLabelStyle::TAB_STATE_SELECTED]] : TabLabelStyle::ImGuiFonts[tabStyle.fontStyles[TabLabelStyle::TAB_STATE_NORMAL]]);
+    if (fontOverride) ImGui::PushFont(fontOverride);
+    static ImVec2 staticLabelSize(0,0);
+    ImVec2 label_size(0,0);
+    ImVec2 text_size(0,0);
+    if (!privateReuseLastCalculatedLabelSizeDoNotUse) text_size = staticLabelSize = ImGui::CalcTextSize(label, NULL, true);
+    else text_size = staticLabelSize;
+    label_size.x = texture_width > 0 ? texture_width : ImMax(text_size.x, (float)texture_width);
+    label_size.y = text_size.y + texture_height;
+    bool rolling_text = texture_width > 0 ? text_size.x > texture_width : false;
+
+    ImVec2 pos = window ? window->DC.CursorPos : ImVec2(0,0);
+    if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window->DC.CurrLineTextBaseOffset)    pos.y += window->DC.CurrLineTextBaseOffset - style.FramePadding.y;
+    ImVec2 size(label_size.x + (style.FramePadding.x+tabStyle.borderWidth) * 2.0f, label_size.y + (style.FramePadding.y+tabStyle.borderWidth) * 2.0f);
+    float btnWidth = label_size.y*0.25f,btnSpacingX = label_size.y*0.25f;
+    float extraWidthForBtn = hasCloseButton ? (btnSpacingX*2.f) : 0;
+    if (hasCloseButton) size.x+=extraWidthForBtn;
+    if (pJustReturnItsSizeHereOut) {*pJustReturnItsSizeHereOut=size;if (fontOverride) ImGui::PopFont();return false;}
+
+    const ImRect bb(pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset ? *pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset : pos,
+                    (pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset ? *pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset : pos) + size);
+    if (!pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset) {
+        ItemSize(bb, style.FramePadding.y);
+        if (!ItemAdd(bb, id)) {if (fontOverride) ImGui::PopFont();return false;}
+    }
+
+    //if (window->DC.ItemFlags & ImGuiItemFlags_ButtonRepeat) flags |= ImGuiButtonFlags_Repeat;    // What's this ?
+    bool hovered=false, held=false;
+    bool pressed = isFakeControl ? false : ButtonBehavior(bb, id, &hovered, &held, flags);
+    bool btnHovered = false;
+    bool btnPressed = false;
+    ImVec2 startBtn(0,0),endBtn(0,0);
+    if (hasCloseButton)    {
+        startBtn = ImVec2(bb.Max.x-extraWidthForBtn+btnSpacingX*0.25f,bb.Min.y+(size.y-btnWidth)*0.5f - texture_height / 4);
+        endBtn = ImVec2(startBtn.x+btnWidth,startBtn.y+btnWidth);
+        if (!isFakeControl) {
+            btnHovered = hovered && ImGui::IsMouseHoveringRect(startBtn,endBtn);
+            btnPressed = pressed && btnHovered;
+            if (btnPressed) pressed = false;
+            if (pCloseButtonHovered) *pCloseButtonHovered = btnHovered;
+            if (pCloseButtonPressedOut) * pCloseButtonPressedOut = btnPressed;
+        }
+    }
+    if (pHoveredOut) *pHoveredOut = hovered && !btnHovered;  // We may choose not to return "hovered" when the close btn is hovered.
+    if (forceActiveColorLook) {hovered = held = true;}
+
+    // Render
+
+    const ImU32 col = (hovered && !btnHovered && held) ? tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedActive : TabLabelStyle::Col_TabLabelActive] : (hovered && !btnHovered) ? tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedHovered : TabLabelStyle::Col_TabLabelHovered] : tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelected : TabLabelStyle::Col_TabLabel];
+    ImU32 colText = tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedText : TabLabelStyle::Col_TabLabelText];
+
+    if (!drawListOverride) drawListOverride = window->DrawList;
+
+    // Canvas
+    ImGui::AddRectWithVerticalGradient(drawListOverride,bb.Min, bb.Max,col,(selected || hovered || held)?tabStyle.fillColorGradientDeltaIn0_05:(-tabStyle.fillColorGradientDeltaIn0_05),tabStyle.colors[selected ? TabLabelStyle::Col_TabLabelSelectedBorder : TabLabelStyle::Col_TabLabelBorder],tabStyle.rounding, tabStyle.tabPosition == TabLabelStyle::TAB_POSITION_BOTTOM ? ImDrawFlags_RoundCornersBottom : ImDrawFlags_RoundCornersTop,tabStyle.borderWidth);
+
+    // Text
+    ImVec4 textcol = ImGui::ColorConvertU32ToFloat4(colText);
+    if (selected && breathingSelected)
+    {
+        textcol = textcol * breathing;
+        breathing -= breathing_step;
+        if (breathing <= breathing_min)
+        {
+            breathing = breathing_min;
+            breathing_step = -breathing_step;
+        }
+        else if (breathing >= breathing_max)
+        {
+            breathing = breathing_max;
+            breathing_step = -breathing_step;
+        }
+    }
+
+    ImGui::PushStyleColor(ImGuiCol_Text, textcol);
+    ImVec2 textPos(bb.Min.x+(bb.Max.x-bb.Min.x-label_size.x-extraWidthForBtn)*0.5f,bb.Min.y+texture_height+(bb.Max.y-bb.Min.y-label_size.y)*0.5f);
+    if (rolling_text)
+    {
+        ImGui::AddTextRolling(drawListOverride, NULL, 0, textPos, ImVec2(size.x - style.FramePadding.x * 2.f, text_size.y), ImGui::ColorConvertFloat4ToU32(textcol), 4, label);
+    }
+    else
+        drawListOverride->AddText(textPos,colText,label);
+
+    ImGui::PopStyleColor();
+
+    // Texture
+    if (texture)
+    {
+        auto t_offset = style.FramePadding.x / 2;
+        drawListOverride->AddImage(texture, bb.Min + ImVec2(t_offset, 0), bb.Min + ImVec2(texture_width + t_offset * 2.0f, texture_height));
+    }
+
+    //fprintf(stderr,"bb.Min=%d,%d bb.Max=%d,%d label_size=%d,%d extraWidthForBtn=%d\n",(int)bb.Min.x,(int)bb.Min.y,(int)bb.Max.x,(int)bb.Max.y,(int)label_size.x,(int)label_size.y,(int)extraWidthForBtn);
+    if (hasCloseButton) {
+    const ImU32 col = (held && btnHovered) ? tabStyle.colors[TabLabelStyle::Col_TabLabelCloseButtonActive] : btnHovered ? tabStyle.colors[TabLabelStyle::Col_TabLabelCloseButtonHovered] : 0;
+    if (btnHovered) ImGui::AddRect(drawListOverride,startBtn, endBtn, col,tabStyle.colors[TabLabelStyle::Col_TabLabelCloseButtonBorder],tabStyle.closeButtonRounding,ImDrawFlags_RoundCornersAll,tabStyle.closeButtonBorderWidth);
+
+        const float cross_extent = (btnWidth * 0.5f * 0.7071f);// - 1.0f;
+        const ImVec2 center((startBtn.x+endBtn.x)*0.5f,(startBtn.y+endBtn.y)*0.5f);
+        const ImU32 cross_col = tabStyle.colors[(btnHovered) ? TabLabelStyle::Col_TabLabelCloseButtonTextHovered : selected ? TabLabelStyle::Col_TabLabelSelectedText : TabLabelStyle::Col_TabLabelText];//btnHovered ? 0xFFFF0000 : ImGui::GetColorU32(ImGuiCol_Text);
+        drawListOverride->AddLine(center + ImVec2(+cross_extent,+cross_extent), center + ImVec2(-cross_extent,-cross_extent), cross_col,tabStyle.closeButtonTextWidth);
+        drawListOverride->AddLine(center + ImVec2(+cross_extent,-cross_extent), center + ImVec2(-cross_extent,+cross_extent), cross_col,tabStyle.closeButtonTextWidth);
+
+    }
+    if (fontOverride) ImGui::PopFont();
+
+    return pressed;
+}
 //========================================================================================
 // Main code starts here
 TabWindow::TabLabel::TabLabel(const TabLabel &o) {
@@ -2374,9 +2500,9 @@ TabWindow::TabLabel *TabWindow::FindTabLabelFromUserText(const char *userText, c
 // Based on the code by krys-spectralpixel (https://github.com/krys-spectralpixel), posted here: https://github.com/ocornut/imgui/issues/261
 bool TabLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImVec2& tableSize, const std::vector<std::string> tabLabelTooltips, bool wrapMode, bool breathing_select, int *pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int *pOptionalClosedTabIndex, int *pOptionalClosedTabIndexInsideItemOrdering,bool invertRounding) {
     ImGuiStyle& style = ImGui::GetStyle();
-    if (invertRounding) TabLabelStyle::SetTablePosition(TabLabelStyle::Get(), TabLabelStyle::TAB_POSITION_BOTTOM);
-    else TabLabelStyle::SetTablePosition(TabLabelStyle::Get(), TabLabelStyle::TAB_POSITION_TOP);
-    const TabLabelStyle& tabStyle = TabLabelStyle::GetMergedWithWindowAlpha();
+    auto tabStyle = TabLabelStyle::GetMergedWithWindowAlpha();
+    if (invertRounding) TabLabelStyle::SetTablePosition(tabStyle, TabLabelStyle::TAB_POSITION_BOTTOM);
+    else TabLabelStyle::SetTablePosition(tabStyle, TabLabelStyle::TAB_POSITION_TOP);
 
     const ImVec2 itemSpacing =  style.ItemSpacing;
     style.ItemSpacing.x =       3;
@@ -2498,9 +2624,192 @@ bool TabLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImV
             //const ImVec2 end(start.x+draggingTabSize.x,start.y+draggingTabSize.y);
             ImDrawList* drawList = //ImGui::GetWindowDrawList();
                     ImGui::GetForegroundDrawList();
-            const TabLabelStyle& tabStyle = TabLabelStyleGetMergedWithAlphaForOverlayUsage();
-            ImFont* fontOverride = (ImFont*) (draggingTabWasSelected ? TabLabelStyle::ImGuiFonts[tabStyle.fontStyles[TabLabelStyle::TAB_STATE_SELECTED]] : TabLabelStyle::ImGuiFonts[tabStyle.fontStyles[TabLabelStyle::TAB_STATE_NORMAL]]);
-            ImGui::TabButton(tabLabels[pOptionalItemOrdering[draggingTabIndex]].c_str(),draggingTabWasSelected,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,fontOverride,&start,drawList,false,true);
+            auto _tabStyle = TabLabelStyleGetMergedWithAlphaForOverlayUsage();
+            _tabStyle.tabPosition = tabStyle.tabPosition;
+            ImFont* fontOverride = (ImFont*) (draggingTabWasSelected ? TabLabelStyle::ImGuiFonts[_tabStyle.fontStyles[TabLabelStyle::TAB_STATE_SELECTED]] : TabLabelStyle::ImGuiFonts[_tabStyle.fontStyles[TabLabelStyle::TAB_STATE_NORMAL]]);
+            ImGui::TabButton(tabLabels[pOptionalItemOrdering[draggingTabIndex]].c_str(),draggingTabWasSelected,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&_tabStyle,fontOverride,&start,drawList,false,true);
+            ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+
+            if (TabWindow::DockPanelIconTextureID)	{
+                // Optional: draw prohibition sign when dragging too far (you can remove this if you want)
+                startGroupCursorPos.y+=deltaY*.5f;
+                groupSize.y-=deltaY;
+                if (!ImGui::IsMouseHoveringRect(startGroupCursorPos,startGroupCursorPos+groupSize))  {
+                    const float signWidth = draggingTabSize.y*1.25f;
+                    start.x+=(draggingTabSize.x-signWidth)*0.5f;
+                    start.y+=(draggingTabSize.y-signWidth)*0.5f;
+                    const ImVec2 end(start.x+signWidth,start.y+signWidth);
+                    const ImVec4 color(1.f,1.f,1.f,0.85f);
+                    drawList->AddImage(TabWindow::DockPanelIconTextureID,start,end,ImVec2(0.5f,0.75f),ImVec2(0.75f,1.f),ImGui::ColorConvertFloat4ToU32(color));
+                }
+            }
+        }
+        else {
+            draggingTabIndex = -1;draggingTabTargetIndex=-1;
+            draggingLocked = true;// consume one mouse release
+        }
+    }
+
+    // Drop tab label
+    if (draggingTabTargetIndex!=-1) {
+        // swap draggingTabIndex and draggingTabTargetIndex in pOptionalItemOrdering
+        const int tmp = pOptionalItemOrdering[draggingTabTargetIndex];
+        pOptionalItemOrdering[draggingTabTargetIndex] = pOptionalItemOrdering[draggingTabIndex];
+        pOptionalItemOrdering[draggingTabIndex] = tmp;
+        //fprintf(stderr,"%d %d\n",draggingTabIndex,draggingTabTargetIndex);
+        draggingTabTargetIndex = draggingTabIndex = -1;
+    }
+
+    // Reset draggingTabIndex if necessary
+    if (!isMouseDragging) {draggingTabIndex = -1;draggingLocked=false;}
+
+    // Change selected tab when user closes the selected tab
+    if (selectedIndex == justClosedTabIndex && selectedIndex>=0)    {
+        selectedIndex = -1;
+        for (int j = 0,i; j < tabLabels.size(); j++) {
+            i = pOptionalItemOrdering ? pOptionalItemOrdering[j] : j;
+            if (i==-1) continue;
+            selectedIndex = i;
+            break;
+        }
+    }
+
+    // Restore the style
+    style.ItemSpacing =                     itemSpacing;
+    tableSize = groupSize;
+    return selection_changed;
+}
+
+bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImVec2& tableSize, const std::vector<std::string> tabLabelTooltips, const std::vector<ImTextureID> tabTextures, ImVec2 texture_size, bool wrapMode, bool breathing_select, int *pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int *pOptionalClosedTabIndex, int *pOptionalClosedTabIndexInsideItemOrdering,bool invertRounding) {
+    ImGuiStyle& style = ImGui::GetStyle();
+    auto tabStyle = TabLabelStyle::GetMergedWithWindowAlpha();
+    if (invertRounding) TabLabelStyle::SetTablePosition(tabStyle, TabLabelStyle::TAB_POSITION_BOTTOM);
+    else TabLabelStyle::SetTablePosition(tabStyle, TabLabelStyle::TAB_POSITION_TOP);
+
+    const ImVec2 itemSpacing =  style.ItemSpacing;
+    style.ItemSpacing.x =       3;
+    style.ItemSpacing.y =       3;
+
+    if (!tabLabels.empty() && (selectedIndex<0 || selectedIndex>=tabLabels.size())) {
+        if (!pOptionalItemOrdering)  selectedIndex = 0;
+        else selectedIndex = -1;
+    }
+    if (pOptionalHoveredIndex) *pOptionalHoveredIndex = -1;
+    if (pOptionalClosedTabIndex) *pOptionalClosedTabIndex = -1;
+    if (pOptionalClosedTabIndexInsideItemOrdering) *pOptionalClosedTabIndexInsideItemOrdering = -1;
+
+    float windowWidth = 0.f,sumX=0.f;
+    if (wrapMode) windowWidth = ImGui::GetWindowWidth() - style.WindowPadding.x - (ImGui::GetScrollMaxY()>0 ? style.ScrollbarSize : 0.f);
+
+    static int draggingTabIndex = -1;int draggingTabTargetIndex = -1;   // These are indices inside pOptionalItemOrdering
+    static bool draggingTabWasSelected = false;
+    static ImVec2 draggingTabSize(0,0);
+    static ImVec2 draggingTabOffset(0,0);
+    static bool draggingLocked = false;
+
+    const bool isRMBclicked = ImGui::IsMouseClicked(1);
+    const bool isMouseDragging = ImGui::IsMouseDragging(0,3.f);
+    const bool isMouseDraggingJustStarted = isMouseDragging && (ImGui::GetIO().MouseDownDuration[0] < 0.35f);// ImGui::GetIO().MouseDown[0] does not work!
+    int justClosedTabIndex = -1,newSelectedIndex = selectedIndex;
+
+    ImVec2 startGroupCursorPos = ImGui::GetCursorPos();
+    ImGui::BeginGroup();
+    ImVec2 tabButtonSz(0,0);bool mustCloseTab = false;bool canUseSizeOptimization = false;
+    const bool isWindowHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+    bool selection_changed = false;bool noButtonDrawn = true;
+    for (int j = 0,i; j < tabLabels.size(); j++)
+    {
+        i = pOptionalItemOrdering ? pOptionalItemOrdering[j] : j;
+        if (i==-1) continue;
+
+        if (!wrapMode) {if (!noButtonDrawn) ImGui::SameLine();canUseSizeOptimization=false;}
+        else if (sumX > 0.f) {
+            sumX+=style.ItemSpacing.x;   // Maybe we can skip it if we use SameLine(0,0) below
+            ImGui::TabImageButton(tabLabels[i].c_str(),(i == selectedIndex),tabTextures[i],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select);
+            sumX+=tabButtonSz.x;
+            if (sumX>windowWidth) sumX = 0.f;
+            else ImGui::SameLine();
+            canUseSizeOptimization = true;
+        }
+        else canUseSizeOptimization = false;
+
+        // Draw the button
+        ImGui::PushID(i);   // otherwise two tabs with the same name would clash.
+        if (ImGui::TabImageButton(tabLabels[i].c_str(),i == selectedIndex,tabTextures[i],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select))   {
+            selection_changed = (selectedIndex!=i);
+            newSelectedIndex = i;
+        }
+        ImGui::PopID();
+        noButtonDrawn = false;
+
+        if (wrapMode) {
+            if (sumX==0.f) sumX = style.WindowPadding.x + ImGui::GetItemRectSize().x; // First element of a line
+        }
+        else if (isMouseDragging && allowTabReorder && pOptionalItemOrdering) {
+            // We still need sumX
+            if (sumX==0.f) sumX = style.WindowPadding.x + ImGui::GetItemRectSize().x; // First element of a line
+            else sumX+=style.ItemSpacing.x + ImGui::GetItemRectSize().x;
+
+        }
+
+        if (isWindowHovered && ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly) && !mustCloseTab) {
+            if (pOptionalHoveredIndex) *pOptionalHoveredIndex = i;
+            if (!tabLabelTooltips.empty() && !isRMBclicked && !tabLabelTooltips[i].empty())  ImGui::SetTooltip("%s",tabLabelTooltips[i].c_str());
+
+            if (pOptionalItemOrdering)  {
+                if (allowTabReorder)  {
+                    if (isMouseDragging) {
+                        if (draggingTabIndex==-1 && !draggingLocked && isMouseDraggingJustStarted) {
+                            draggingTabIndex = j;
+                            draggingTabWasSelected = (i == selectedIndex);
+                            draggingTabSize = ImGui::GetItemRectSize();
+                            const ImVec2& mp = ImGui::GetIO().MousePos;
+                            const ImVec2 draggingTabCursorPos = ImGui::GetCursorPos();
+                            draggingTabOffset=ImVec2(
+                                        mp.x+draggingTabSize.x*0.5f-sumX+ImGui::GetScrollX(),
+                                        mp.y+draggingTabSize.y*0.5f-draggingTabCursorPos.y+ImGui::GetScrollY()
+                                        );
+
+                        }
+                    }
+                    else if (draggingTabIndex >= 0 && draggingTabIndex < tabLabels.size() && draggingTabIndex != j){
+                        draggingTabTargetIndex = j; // For some odd reasons this seems to get called only when draggingTabIndex < i ! (Probably during mouse dragging ImGui owns the mouse someway and sometimes ImGui::IsItemHovered() is not getting called)
+                    }
+                }
+            }
+        }
+        if (mustCloseTab)   {
+            justClosedTabIndex = i;
+            if (pOptionalClosedTabIndex) *pOptionalClosedTabIndex = i;
+            if (pOptionalClosedTabIndexInsideItemOrdering) *pOptionalClosedTabIndexInsideItemOrdering = j;
+            if (pOptionalItemOrdering) pOptionalItemOrdering[j] = -1;
+        }
+
+    }
+    selectedIndex = newSelectedIndex;
+    ImGui::EndGroup();
+    ImVec2 groupSize = ImGui::GetItemRectSize();
+
+    // Draw tab label while mouse drags it
+    if (draggingTabIndex >= 0 && draggingTabIndex < tabLabels.size()) {
+        const ImVec2 wp = ImGui::GetWindowPos();
+        startGroupCursorPos.x+=wp.x;
+        startGroupCursorPos.y+=wp.y;
+        startGroupCursorPos.x-=ImGui::GetScrollX();
+        startGroupCursorPos.y-=ImGui::GetScrollY();
+        const float deltaY = ImGui::GetTextLineHeightWithSpacing()*2.5f;
+        startGroupCursorPos.y-=deltaY;
+        groupSize.y+=2.f*deltaY;
+        if (ImGui::IsMouseHoveringRect(startGroupCursorPos,startGroupCursorPos+groupSize))  {
+            const ImVec2& mp = ImGui::GetIO().MousePos;
+            ImVec2 start(wp.x+mp.x-draggingTabOffset.x-draggingTabSize.x*0.5f,wp.y+mp.y-draggingTabOffset.y-draggingTabSize.y*0.5f);
+            //const ImVec2 end(start.x+draggingTabSize.x,start.y+draggingTabSize.y);
+            ImDrawList* drawList = //ImGui::GetWindowDrawList();
+                    ImGui::GetForegroundDrawList();
+            auto _tabStyle = TabLabelStyleGetMergedWithAlphaForOverlayUsage();
+            _tabStyle.tabPosition = tabStyle.tabPosition;
+            ImFont* fontOverride = (ImFont*) (draggingTabWasSelected ? TabLabelStyle::ImGuiFonts[_tabStyle.fontStyles[TabLabelStyle::TAB_STATE_SELECTED]] : TabLabelStyle::ImGuiFonts[_tabStyle.fontStyles[TabLabelStyle::TAB_STATE_NORMAL]]);
+            ImGui::TabImageButton(tabLabels[pOptionalItemOrdering[draggingTabIndex]].c_str(),draggingTabWasSelected,tabTextures[draggingTabIndex],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&_tabStyle,fontOverride,&start,drawList,false,true);
             ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
 
             if (TabWindow::DockPanelIconTextureID)	{
@@ -2829,9 +3138,9 @@ static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, b
 
 bool TabLabelsVertical(const std::vector<std::string> tabLabels, int& selectedIndex, const std::vector<std::string> tabLabelTooltips, bool breathing_select, int* pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int* pOptionalClosedTabIndex, int * pOptionalClosedTabIndexInsideItemOrdering, bool invertRounding, bool textIsRotatedCCW)    {
     ImGuiStyle& style = ImGui::GetStyle();
-    if (invertRounding) TabLabelStyle::SetTablePosition(TabLabelStyle::Get(), TabLabelStyle::TAB_POSITION_RIGHT);
-    else TabLabelStyle::SetTablePosition(TabLabelStyle::Get(), TabLabelStyle::TAB_POSITION_LEFT);
-    const TabLabelStyle& tabStyle = TabLabelStyle::GetMergedWithWindowAlpha();
+    auto tabStyle = TabLabelStyle::GetMergedWithWindowAlpha();
+    if (invertRounding) TabLabelStyle::SetTablePosition(tabStyle, TabLabelStyle::TAB_POSITION_RIGHT);
+    else TabLabelStyle::SetTablePosition(tabStyle, TabLabelStyle::TAB_POSITION_LEFT);
 
     const ImVec2 itemSpacing =  style.ItemSpacing;
     style.ItemSpacing.x =       1;

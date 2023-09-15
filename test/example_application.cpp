@@ -260,7 +260,7 @@ public:
     {
         if (data)
             free(data); 
-
+        ImGui::ReleaseTabWindow();
         // Store file dialog bookmark
 #ifdef DEFAULT_CONFIG_PATH
         std::string bookmark_path = std::string(DEFAULT_CONFIG_PATH) + "bookmark.ini";

@@ -4896,9 +4896,12 @@ void ImGui::AddTextRolling(ImDrawList* drawList, const ImFont* font, float font_
         return;
 
     ImRect bb(pos, pos + size);
-    ItemSize(size);
-    if (!ItemAdd(bb, 0))
-        return;
+    if (!drawList)
+    {
+        ItemSize(size);
+        if (!ItemAdd(bb, 0))
+            return;
+    }
 
     const char * _text_begin = text_begin;
     const char * _text_end = text_end;

@@ -249,7 +249,7 @@ IMGUI_API static void ShiftHue(TabLabelStyle& style,float amountIn0_1);
 IMGUI_API static void InvertColors(TabLabelStyle& style=TabLabelStyle::Get(),float saturationThreshould=0.1f); // in [0.f,0.5f] AFAIR
 IMGUI_API static void LightenBackground(TabLabelStyle& style=TabLabelStyle::Get(),float amount=0.15f);
 IMGUI_API static void DarkenBackground(TabLabelStyle& style=TabLabelStyle::Get(),float amount=0.15f);
-IMGUI_API static void SetTablePosition(TabLabelStyle& style=TabLabelStyle::Get(), int pos = TAB_POSITION_TOP);
+IMGUI_API static void SetTablePosition(TabLabelStyle& style, int pos = TAB_POSITION_TOP);
 
 #if (defined(IMGUIHELPER_H_))
 IMGUI_API static bool Save(const TabLabelStyle& style,ImGuiHelper::Serializer& s);
@@ -553,6 +553,8 @@ typedef TabWindow::TabLabel TabWindowLabel;
 */
 IMGUI_API bool TabLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImVec2& tableSize, const std::vector<std::string> tabLabelTooltips, bool wrapMode=true, bool breathing_select = false, int* pOptionalHoveredIndex=NULL, int* pOptionalItemOrdering=NULL, bool allowTabReorder=true, bool allowTabClosing=false, int* pOptionalClosedTabIndex=NULL,int * pOptionalClosedTabIndexInsideItemOrdering=NULL,bool invertRounding=false);
 
+IMGUI_API bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImVec2& tableSize, const std::vector<std::string> tabLabelTooltips, const std::vector<ImTextureID> tabTextures, ImVec2 texture_size, bool wrapMode=true, bool breathing_select = false, int* pOptionalHoveredIndex=NULL, int* pOptionalItemOrdering=NULL, bool allowTabReorder=true, bool allowTabClosing=false, int* pOptionalClosedTabIndex=NULL,int * pOptionalClosedTabIndexInsideItemOrdering=NULL,bool invertRounding=false);
+
 // ImGui::TabLabelsVertical() are similiar to ImGui::TabLabels(), but they do not support WrapMode.
 IMGUI_API bool TabLabelsVertical(const std::vector<std::string> tabLabels, int& selectedIndex, const std::vector<std::string> tabLabelTooltips, bool breathing_select = false, int* pOptionalHoveredIndex=NULL, int* pOptionalItemOrdering=NULL, bool allowTabReorder=false, bool allowTabClosing=false, int* pOptionalClosedTabIndex=NULL,int * pOptionalClosedTabIndexInsideItemOrdering=NULL,bool invertRounding=false,bool textIsRotatedCCW = false);
 IMGUI_API float CalcVerticalTabLabelsWidth();
@@ -570,6 +572,7 @@ IMGUI_API float CalcVerticalTabLabelsWidth();
 
 #if IMGUI_BUILD_EXAMPLE
 IMGUI_API void          ShowAddonsTabWindow();
+IMGUI_API void          ReleaseTabWindow();
 #endif
 
 } // namespace ImGui

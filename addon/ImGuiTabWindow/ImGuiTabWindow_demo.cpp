@@ -1,7 +1,9 @@
 #include "ImGuiTabWindow.h"
+#include <imgui_helper.h>
 #include <string>
 namespace ImGui
 {
+static ImTextureID textue = nullptr;
 void ShowAddonsTabWindow()
 {
     ImGui::Spacing();
@@ -16,7 +18,6 @@ void ShowAddonsTabWindow()
     static bool allowClosingTabs = false;
     static bool tableAtBottom = false;
     int justClosedTabIndex=-1,justClosedTabIndexInsideTabItemOrdering = -1,oldSelectedTab = selectedTab;
-
     ImGui::Checkbox("Wrap Mode##TabLabelWrapMode",&tabLabelWrapMode);
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s","WrapMode is only available\nin horizontal TabLabels");
     ImGui::SameLine();ImGui::Checkbox("Drag And Drop##TabLabelDragAndDrop",&allowTabLabelDragAndDrop);
@@ -25,6 +26,7 @@ void ShowAddonsTabWindow()
     bool resetTabLabels = ImGui::SmallButton("Reset Tabs");if (resetTabLabels) {selectedTab=0;for (int i=0;i<tabNames.size();i++) tabItemOrdering[i] = i;}
 
     ImVec2 table_size;
+
     if (!tableAtBottom)
     {
         ImGui::TabLabels(tabNames,selectedTab,table_size,tabTooltips,tabLabelWrapMode,false,&optionalHoveredTab,&tabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,&justClosedTabIndex,&justClosedTabIndexInsideTabItemOrdering);
@@ -73,7 +75,7 @@ void ShowAddonsTabWindow()
 
     const float verticalTabsWidth = ImGui::CalcVerticalTabLabelsWidth();
     if (verticalTabLabelsAtLeft)	{
-        ImGui::TabLabelsVertical(verticalTabNames,selectedVerticalTab,verticalTabTooltips,false,&optionalHoveredVerticalTab,&verticalTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,false,verticalTabLabelsAtLeft);
+        ImGui::TabLabelsVertical(verticalTabNames,selectedVerticalTab,verticalTabTooltips,false,&optionalHoveredVerticalTab,&verticalTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,!verticalTabLabelsAtLeft,false);
         ImGui::SameLine(0,0);
     }
     // Draw tab page
@@ -82,7 +84,55 @@ void ShowAddonsTabWindow()
     ImGui::EndChild();
     if (!verticalTabLabelsAtLeft)	{
         ImGui::SameLine(0,0);
-        ImGui::TabLabelsVertical(verticalTabNames,selectedVerticalTab,verticalTabTooltips,false,&optionalHoveredVerticalTab,&verticalTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,false,verticalTabLabelsAtLeft);
+        ImGui::TabLabelsVertical(verticalTabNames,selectedVerticalTab,verticalTabTooltips,false,&optionalHoveredVerticalTab,&verticalTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,!verticalTabLabelsAtLeft,false);
     }
+
+    // ImGui::TabImageLabels() example usage
+    if (!textue)
+    {
+        ImGui::ImMat test_image(128, 72, 4, 1u, 4);
+        for (int y = 0; y < 72; y++)
+        {
+            for (int x = 0; x < 128; x++)
+            {
+                float dx = x + .5f;
+                float dy = y + .5f;
+                float dv = sinf(x * 0.02f) + sinf(0.03f * (x + y)) + sinf(sqrtf(0.04f * (dx * dx + dy * dy) + 1.f));
+                test_image.at<unsigned char>(x, y, 3) = UCHAR_MAX;
+                test_image.at<unsigned char>(x, y, 2) = fabsf(sinf(dv * 3.141592f + 4.f * 3.141592f / 3.f)) * UCHAR_MAX;
+                test_image.at<unsigned char>(x, y, 1) = fabsf(sinf(dv * 3.141592f + 2.f * 3.141592f / 3.f)) * UCHAR_MAX;
+                test_image.at<unsigned char>(x, y, 0) = fabsf(sinf(dv * 3.141592f)) * UCHAR_MAX;
+            }
+        }
+        ImGui::ImMatToTexture(test_image, textue);
+    }
+
+    static int selectedImageTab = 0;
+    static int optionalHoveredImageTab = 0;
+    static int tab_num = 3;
+    static std::vector<std::string> imageTabNames = {"Image1 it is long text string test","Image2","Image3"};
+    static std::vector<ImTextureID> imageTabTextures = { textue, textue, textue };
+    static std::vector<int> imageTabItemOrdering = {0, 1, 2};
+    if (ImGui::SliderInt("image number", &tab_num, 3, 20))
+    {
+        imageTabNames.resize(tab_num);
+        imageTabTextures.resize(tab_num);
+        imageTabItemOrdering.resize(tab_num);
+        for (int i = 3; i < tab_num; i++)
+        {
+            imageTabNames[i] = "Image" + std::to_string(i + 1);
+            imageTabTextures[i] = textue;
+            imageTabItemOrdering[i] = i;
+        }
+    }
+    // Draw tab page
+    ImGui::BeginChild("MyImageTabLabelsChild",ImVec2(0,300),true);
+    ImGui::Text("Tab Page For Image Tab: \"%s\" here.",selectedImageTab >= 0 ? imageTabNames[selectedImageTab].c_str() : "None!");
+    ImGui::EndChild();
+    ImGui::TabImageLabels(imageTabNames,selectedImageTab,table_size,std::vector<std::string>(),imageTabTextures,ImVec2(96,54),tabLabelWrapMode,false,&optionalHoveredImageTab,&imageTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,true);
+}
+void  ReleaseTabWindow()
+{
+    if (textue) { ImGui::ImDestroyTexture(textue); textue = nullptr; }
 }
 } // namespace ImGui
