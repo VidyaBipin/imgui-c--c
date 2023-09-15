@@ -129,7 +129,7 @@ void ShowAddonsTabWindow()
     ImGui::BeginChild("MyImageTabLabelsChild",ImVec2(0,300),true);
     ImGui::Text("Tab Page For Image Tab: \"%s\" here.",selectedImageTab >= 0 ? imageTabNames[selectedImageTab].c_str() : "None!");
     ImGui::EndChild();
-    ImGui::TabImageLabels(imageTabNames,selectedImageTab,table_size,std::vector<std::string>(),imageTabTextures,ImVec2(96,54),tabLabelWrapMode,false,&optionalHoveredImageTab,&imageTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,true);
+    ImGui::TabImageLabels(imageTabNames,selectedImageTab,table_size,std::vector<std::string>(),imageTabTextures,ImVec2(64,36),tabLabelWrapMode,false,&optionalHoveredImageTab,&imageTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,true);
 }
 void  ReleaseTabWindow()
 {

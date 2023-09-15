@@ -653,7 +653,12 @@ static bool TabImageButton(const char *label, bool selected, ImTextureID texture
     static ImVec2 staticLabelSize(0,0);
     ImVec2 label_size(0,0);
     ImVec2 text_size(0,0);
-    if (!privateReuseLastCalculatedLabelSizeDoNotUse) text_size = staticLabelSize = ImGui::CalcTextSize(label, NULL, true);
+    if (!privateReuseLastCalculatedLabelSizeDoNotUse) 
+    {
+        ImGui::SetWindowFontScale(0.75);
+        text_size = staticLabelSize = ImGui::CalcTextSize(label, NULL, true);
+        ImGui::SetWindowFontScale(1.0);
+    }
     else text_size = staticLabelSize;
     label_size.x = texture_width > 0 ? texture_width : ImMax(text_size.x, (float)texture_width);
     label_size.y = text_size.y + texture_height;
@@ -724,13 +729,14 @@ static bool TabImageButton(const char *label, bool selected, ImTextureID texture
 
     ImGui::PushStyleColor(ImGuiCol_Text, textcol);
     ImVec2 textPos(bb.Min.x+(bb.Max.x-bb.Min.x-label_size.x-extraWidthForBtn)*0.5f,bb.Min.y+texture_height+(bb.Max.y-bb.Min.y-label_size.y)*0.5f);
+    ImGui::SetWindowFontScale(0.75);
     if (rolling_text)
     {
         ImGui::AddTextRolling(drawListOverride, NULL, 0, textPos, ImVec2(size.x - style.FramePadding.x * 2.f, text_size.y), ImGui::ColorConvertFloat4ToU32(textcol), 4, label);
     }
     else
         drawListOverride->AddText(textPos,colText,label);
-
+    ImGui::SetWindowFontScale(1.0);
     ImGui::PopStyleColor();
 
     // Texture
@@ -2685,7 +2691,7 @@ bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex
     auto tabStyle = TabLabelStyle::GetMergedWithWindowAlpha();
     if (invertRounding) TabLabelStyle::SetTablePosition(tabStyle, TabLabelStyle::TAB_POSITION_BOTTOM);
     else TabLabelStyle::SetTablePosition(tabStyle, TabLabelStyle::TAB_POSITION_TOP);
-
+    auto button_size = ImGui::CalcTextSize("<") + style.WindowPadding;
     const ImVec2 itemSpacing =  style.ItemSpacing;
     style.ItemSpacing.x =       3;
     style.ItemSpacing.y =       3;
@@ -2699,15 +2705,17 @@ bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex
     if (pOptionalClosedTabIndexInsideItemOrdering) *pOptionalClosedTabIndexInsideItemOrdering = -1;
 
     float windowWidth = 0.f,sumX=0.f;
-    if (wrapMode) windowWidth = ImGui::GetWindowWidth() - style.WindowPadding.x - (ImGui::GetScrollMaxY()>0 ? style.ScrollbarSize : 0.f);
+    /*if (wrapMode) */windowWidth = ImGui::GetWindowWidth() - style.WindowPadding.x - (ImGui::GetScrollMaxY()>0 ? style.ScrollbarSize : 0.f);
 
     static int draggingTabIndex = -1;int draggingTabTargetIndex = -1;   // These are indices inside pOptionalItemOrdering
     static bool draggingTabWasSelected = false;
     static ImVec2 draggingTabSize(0,0);
     static ImVec2 draggingTabOffset(0,0);
     static bool draggingLocked = false;
+    static int first_index = 0;
 
     const bool isRMBclicked = ImGui::IsMouseClicked(1);
+    const bool isWindowHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
     const bool isMouseDragging = ImGui::IsMouseDragging(0,3.f);
     const bool isMouseDraggingJustStarted = isMouseDragging && (ImGui::GetIO().MouseDownDuration[0] < 0.35f);// ImGui::GetIO().MouseDown[0] does not work!
     int justClosedTabIndex = -1,newSelectedIndex = selectedIndex;
@@ -2715,15 +2723,32 @@ bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex
     ImVec2 startGroupCursorPos = ImGui::GetCursorPos();
     ImGui::BeginGroup();
     ImVec2 tabButtonSz(0,0);bool mustCloseTab = false;bool canUseSizeOptimization = false;
-    const bool isWindowHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
     bool selection_changed = false;bool noButtonDrawn = true;
     for (int j = 0,i; j < tabLabels.size(); j++)
     {
         i = pOptionalItemOrdering ? pOptionalItemOrdering[j] : j;
         if (i==-1) continue;
 
-        if (!wrapMode) {if (!noButtonDrawn) ImGui::SameLine();canUseSizeOptimization=false;}
-        else if (sumX > 0.f) {
+        if (!wrapMode)
+        {
+            if (!noButtonDrawn) ImGui::SameLine();
+            ImGui::TabImageButton(tabLabels[i].c_str(),(i == selectedIndex),tabTextures[i],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select);
+            if (noButtonDrawn)
+            {
+                if (first_index > 0)
+                {
+                    if (ImGui::Button("<##tab_prev", ImVec2(0, tabButtonSz.y))) first_index--;
+                }
+                else
+                    ImGui::Dummy(ImVec2(button_size.x, 0));
+                ImGui::SameLine();
+            }
+            else
+                sumX+=tabButtonSz.x;
+            canUseSizeOptimization=true;
+        }
+        else if (sumX > 0.f)
+        {
             sumX+=style.ItemSpacing.x;   // Maybe we can skip it if we use SameLine(0,0) below
             ImGui::TabImageButton(tabLabels[i].c_str(),(i == selectedIndex),tabTextures[i],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select);
             sumX+=tabButtonSz.x;
@@ -2732,25 +2757,33 @@ bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex
             canUseSizeOptimization = true;
         }
         else canUseSizeOptimization = false;
-
-        // Draw the button
-        ImGui::PushID(i);   // otherwise two tabs with the same name would clash.
-        if (ImGui::TabImageButton(tabLabels[i].c_str(),i == selectedIndex,tabTextures[i],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select))   {
-            selection_changed = (selectedIndex!=i);
-            newSelectedIndex = i;
+        if (!wrapMode && j < first_index)
+        {
+            sumX-=tabButtonSz.x;
+            noButtonDrawn = false;
+            continue;
         }
-        ImGui::PopID();
+        // Draw the button
+        if (wrapMode || sumX < windowWidth - button_size.x * 2)
+        {
+            ImGui::PushID(i);   // otherwise two tabs with the same name would clash.
+            if (ImGui::TabImageButton(tabLabels[i].c_str(),i == selectedIndex,tabTextures[i],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select))   {
+                selection_changed = (selectedIndex!=i);
+                newSelectedIndex = i;
+            }
+            ImGui::PopID();
+        }
+        if (!wrapMode && sumX >= windowWidth - button_size.x * 2)
+        {
+            if (ImGui::Button(">##tab_next", ImVec2(0, tabButtonSz.y)))
+            {
+                first_index++;
+            }
+            break;
+        }
         noButtonDrawn = false;
 
-        if (wrapMode) {
-            if (sumX==0.f) sumX = style.WindowPadding.x + ImGui::GetItemRectSize().x; // First element of a line
-        }
-        else if (isMouseDragging && allowTabReorder && pOptionalItemOrdering) {
-            // We still need sumX
-            if (sumX==0.f) sumX = style.WindowPadding.x + ImGui::GetItemRectSize().x; // First element of a line
-            else sumX+=style.ItemSpacing.x + ImGui::GetItemRectSize().x;
-
-        }
+        if (sumX==0.f) sumX = style.WindowPadding.x + ImGui::GetItemRectSize().x; // First element of a line
 
         if (isWindowHovered && ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly) && !mustCloseTab) {
             if (pOptionalHoveredIndex) *pOptionalHoveredIndex = i;
