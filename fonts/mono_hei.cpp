@@ -1,5 +1,8 @@
 // File: 'monohei.ttf' (2206840 bytes)
 // Exported using binary_to_compressed_c.cpp
+#ifdef _MSC_VER
+pragma comment(linker, "/STACK:8388608")
+#endif
 extern const char mono_hei_compressed_data_base85[2194205+1] =
     "7])#######j'YfI'/###I),##aq0hLTbH##JZn42J@]^Z&fkA#KukU%3vA0F,Bv&hrI###xeD>#4`6'IM2rnBr#bY#r:$##]NV-Gd@tRFM7>>#Zm###8tw<Bl#Jk4#)PV-V%4F%7%HkE"
     "$2qC[7R`Y#/l[Y,i@@UC$rQ:e6Fo-6r1dD4AJr9.3bqrZo$,p8V3dW.;h^`IQKKg+/DDYn5a^Sgo6Q<B^79KD+4pK2a9=/c0iR/G8=1?5MEUJD-&4A-qmnUCfD^YgS)bk<EE]>G@C=GH"

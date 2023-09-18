@@ -1,5 +1,8 @@
 // File: 'MonoNarrow-Regular.ttf' (39972 bytes)
 // Exported using binary_to_compressed_c.cpp
+#ifdef _MSC_VER
+pragma comment(linker, "/STACK:8388608")
+#endif
 extern const char MonoNarrow_compressed_data_base85[29840+1] =
     "7])#######9l-e.'/###S),##2(V$#Q6>##u%1S:.'%b3mPc.U?####RZn42s*9I`a->>#j&g<6aNV=BRJhb';(35&]PUV$.2XGH=W]X#5tbf(c&-p/xIk7D7(88UM[gC-C(wX.(a(*H"
     "MY`=-%U^C-:r:T.#-0%J@p8gL;Cg$5'x9'#b';9CQ1s_k#Df%uU2cD4AJr9.9PFMgnB3_A.T#KD<c?pD@2p'M;w(:#I79jEWCD-#h<S%#%7HxL(e$0FrV:G$=Ht$M=/moLsLNDFxE%F-"

@@ -5968,6 +5968,27 @@ void ImGui::SpinnerRainbow(const char *label, float radius, float thickness, con
     }
 }
 
+void ImGui::SpinnerRainbowMix(const char *label, float radius, float thickness, const ImColor &color, float speed, float ang_min, float ang_max, int arcs, int mode)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    float out_h, out_s, out_v;
+    ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+    for (int i = 0; i < arcs; ++i)
+    {
+        const float rb = (radius / arcs) * (i + 1);
+        const float start = ImAbs(ImSin((float)ImGui::GetTime()) * (num_segments - 5));
+        const float a_min = ImMax(ang_min, PI_2 * ((float)start) / (float)num_segments + (IM_PI / arcs) * i);
+        const float a_max = ImMin(ang_max, PI_2 * ((float)num_segments + 3 * (i + 1)) / (float)num_segments);
+        const float koeff = mode ? (1.1f - 1.f / (i+1)) : 1.f;
+        ImColor c = ImColor::HSV(out_h + i * (1.f / arcs), out_s, out_v);
+        circle([&] (int i) {
+            const float a =  a_min + ((float)i / (float)num_segments) * (a_max - a_min);
+            const float rspeed = a + (float)ImGui::GetTime() * speed * koeff;
+            return ImVec2(ImCos(rspeed) * rb, ImSin(rspeed) * rb);
+        }, color_alpha(c, 1.f), thickness);
+    }
+}
+
 // This function draws a rotating heart spinner. 
 void ImGui::SpinnerRotatingHeart(const char *label, float radius, float thickness, const ImColor &color, float speed, float ang_min)
 {
@@ -6011,6 +6032,23 @@ void ImGui::SpinnerAng(const char *label, float radius, float thickness, const I
         const float a = start - b + (i * angle / num_segments);
         return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
     }, color_alpha(color, 1.f), thickness);
+}
+
+void ImGui::SpinnerAngMix(const char *label, float radius, float thickness, const ImColor &color, float speed, float angle, int arcs, int mode)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);                            // Get the position, size, centre, and number of segments of the spinner using the SPINNER_HEADER macro.
+    for (int i = 0; i < arcs; ++i)
+    {
+        const float koeff = (1.1f - 1.f / (i+1));
+        float start = (float)ImGui::GetTime() * speed * koeff;                        // The start angle of the spinner is calculated based on the current time and the specified speed.
+        radius = (mode == 2) ? (0.8f + ImCos(start) * 0.2f) * radius : radius;
+        const float rb = (radius / arcs) * (i + 1);
+        const float b = (mode == 1) ? damped_gravity(ImSin(start * 1.1f)) * angle : 0.f;
+        circle([&] (int i) {                                                        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
+            const float a = start - b + (i * angle / num_segments);
+            return ImVec2(ImCos(a) * rb, ImSin(a) * rb);
+        }, color_alpha(color, 1.f), thickness);
+    }
 }
 
 void ImGui::SpinnerLoadingRing(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bg, float speed, int segments)
@@ -6337,7 +6375,7 @@ void ImGui::SpinnerWaveDots(const char *label, float radius, float thickness, co
     }
 }
 
-void ImGui::SpinnerFadeDots(const char *label, float radius, float thickness, const ImColor &color, float speed, int lt)
+void ImGui::SpinnerFadeDots(const char *label, float radius, float thickness, const ImColor &color, float speed, int lt, int mode)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
     const float start = (float)ImGui::GetTime() * speed;
@@ -6346,8 +6384,10 @@ void ImGui::SpinnerFadeDots(const char *label, float radius, float thickness, co
     const float heightSpeed = 0.8f;
     for (size_t i = 0; i < dots; i++)
     {
-        float a = start + (IM_PI - i * (IM_PI / dots));
-        window->DrawList->AddCircleFilled(ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff, centre.y), thickness, color_alpha(color, ImMax(0.1f, ImSin(a * heightSpeed))), lt);
+        float a = mode 
+                    ? damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start + (IM_PI - i * (IM_PI / dots)), PI_2)))
+                    : ImSin(start + (IM_PI - i * (IM_PI / dots)) * heightSpeed);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff, centre.y), thickness, color_alpha(color, ImMax(0.1f, a)), lt);
     }
 }
 
@@ -7099,6 +7139,33 @@ void ImGui::SpinnerBounceBall(const char *label, float radius, float thickness, 
             float maxht = damped_gravity(ImSin(ImFmod(hmax, IM_PI))) * radius;
             window->DrawList->AddCircleFilled(ImVec2(centre.x + offset, centre.y + radius - ImSin(start) * 2.f * maxht), thickness, c, 8);
         }
+    }
+}
+
+void ImGui::SpinnerPulsarBall(const char *label, float radius, float thickness, const ImColor &color, float speed, bool shadow, int mode)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    ImGuiStorage* storage = window->DC.StateStorage;
+    const int iterations = shadow ? 4 : 1;
+    for (int j = 0; j < iterations; j++) {
+        ImColor c = color_alpha(color, 1.f - 0.15f * j);
+        float start = ImFmod((float)ImGui::GetTime() * speed - (IM_PI / 12.f) * j, IM_PI);
+        float maxht = damped_gravity(ImSin(ImFmod(start, IM_PI))) * (radius * 0.6f);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x, centre.y), maxht, c, num_segments);
+    }
+    const float angle_offset = PI_DIV_2 / num_segments;
+    const int arcs = 2;
+    for (size_t arc_num = 0; arc_num < arcs; ++arc_num) {
+        window->DrawList->PathClear();
+        float arc_start = 2 * IM_PI / arcs;
+        float start = ImFmod((float)ImGui::GetTime() * speed - (IM_PI * arc_num), IM_PI);
+        float b = mode ? start + damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start + arc_num * PI_DIV(2) / arcs, IM_PI)), 1, 0) : start;
+        float maxht = (damped_gravity(ImSin(ImFmod(start, IM_PI))) * 0.3f + 0.7f) * radius;
+        for (size_t i = 0; i < num_segments; i++) {
+            const float a = b + arc_start * arc_num + (i * angle_offset);
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * maxht, centre.y + ImSin(a) * maxht));
+        }
+        window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
     }
 }
 
@@ -8646,7 +8713,7 @@ void ImGui::SpinnerSquareRandomDots(const char *label, float radius, float thick
     }
 }
 
-void ImGui::SpinnerScaleBlocks(const char *label, float radius, float thickness, const ImColor &color, float speed)
+void ImGui::SpinnerScaleBlocks(const char *label, float radius, float thickness, const ImColor &color, float speed, int mode)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -8657,12 +8724,21 @@ void ImGui::SpinnerScaleBlocks(const char *label, float radius, float thickness,
     constexpr float rkoeff[9] = {0.1f, 0.15f, 0.17f, 0.25f, 0.6f, 0.15f, 0.1f, 0.12f, 0.22f};
 
     int ti = 0;
+    float out_h, out_s, out_v;
+    ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
     for (const auto &rpos: poses)
     {
-        float h = (0.8f + 0.4f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[ti % 9])));
-        window->DrawList->AddRectFilled(ImVec2(lt.x + rpos.x * (offset_block), lt.y + rpos.y * offset_block),
-                                        ImVec2(lt.x + rpos.x * (offset_block) + h * thickness, lt.y + rpos.y * offset_block + h * thickness),
-                                        color_alpha(color, 1.f));
+        ImColor c = ImColor::HSV(out_h + ti * 0.1f, out_s, out_v);
+        if (mode) {
+            float h = (0.1f + 0.4f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[ti % 9])));
+            window->DrawList->AddCircleFilled(ImVec2(lt.x + rpos.x * (offset_block), lt.y + rpos.y * offset_block), std::max<float>(1.f, h * thickness),
+                                            color_alpha(c, 1.f));
+        } else {
+            float h = (0.8f + 0.4f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[ti % 9])));
+            window->DrawList->AddRectFilled(ImVec2(lt.x + rpos.x * (offset_block), lt.y + rpos.y * offset_block),
+                                            ImVec2(lt.x + rpos.x * (offset_block) + h * thickness, lt.y + rpos.y * offset_block + h * thickness),
+                                            color_alpha(c, 1.f));
+        }
         ti++;
     }
 }
@@ -8687,6 +8763,28 @@ void ImGui::SpinnerScaleSquares(const char *label, float radius, float thikness,
                                         ImVec2(lt.x + hside + (rpos.x * offset_block) + side, lt.y + hside + (rpos.y * offset_block) + side),
                                         color_alpha(c, 1.f));
         ti++;
+    }
+}
+
+void ImGui::SpinnerSquishSquare(const char *label, float radius, const ImColor &color, float speed)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    
+    float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+    const float side = ImSin((float)-start) * radius;
+    bool type = (start > IM_PI) ? 1 : 0;
+    if (type) {
+        if (start > IM_PI && start < IM_PI + PI_DIV_2) {
+            window->DrawList->AddRectFilled(ImVec2(centre.x - side, centre.y - radius), ImVec2(centre.x + side, centre.y + radius), color_alpha(color, 1.f));
+        } else {
+            window->DrawList->AddRectFilled(ImVec2(centre.x - radius, centre.y - side), ImVec2(centre.x + radius, centre.y + side), color_alpha(color, 1.f));
+        }
+    } else {
+        if (start < PI_DIV_2) {
+            window->DrawList->AddRectFilled(ImVec2(centre.x - radius, centre.y - side), ImVec2(centre.x + radius, centre.y + side), color_alpha(color, 1.f));
+        } else {
+            window->DrawList->AddRectFilled(ImVec2(centre.x - side, centre.y - radius), ImVec2(centre.x + side, centre.y + radius), color_alpha(color, 1.f));
+        }
     }
 }
 

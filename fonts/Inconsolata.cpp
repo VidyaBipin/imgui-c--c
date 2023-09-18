@@ -1,5 +1,8 @@
 // File: 'Inconsolata-Medium.otf' (60052 bytes)
 // Exported using binary_to_compressed_c.cpp
+#ifdef _MSC_VER
+pragma comment(linker, "/STACK:8388608")
+#endif
 extern const char Inconsolata_compressed_data_base85[57990+1] =
     "7])#######M71mR'/###xG8+>*<MM'Ql#v#cRNT9uMs)b($+##q-%##:QAt8r+2fbFD$##SH$##;x+h<5#-1@J,+##+#&##Kc'e=wAbI3#Z$##fx&##)Ppe=5,4gtp:Vw0Nk%##TuA0F"
     "Opw31B?%##R:l--Okt<Bf<$t.3S###kWh--w@=UCM34iqcEJ_&anr-$f'TqLrk.d`Yf&F7N(]w'E3n0F$#+q%?po92uD'##gRS=B)wmxb#ZnA#5'-p/g=00F'C*DXuU+41.RUV$M$S+H"

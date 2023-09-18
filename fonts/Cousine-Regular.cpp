@@ -1,5 +1,8 @@
 // File: 'Cousine-Regular.ttf' (43912 bytes)
 // Exported using binary_to_compressed_c.cpp
+#ifdef _MSC_VER
+pragma comment(linker, "/STACK:8388608")
+#endif
 extern const char Cousine_Regular_compressed_data_base85[47040+1] =
     "7])#######WNWrN'/###I),##bw9hLQXH##j$1S:'>pgL@Kt(9668X%QUQl;1TmEd;Q^rEN@4',:a`T9-V:;$wmZJ;V'q?-'Tx-31s(U<h2TlSQv$sAqV,-G+D1>V,nHS[J)-5J<gXG-"
     "EXd;^*1kHVn[<?6$jg0Ffc:jLH^^/1/%@W$%J%/GDhno%IU%d3-q+5(,5LsC8%JsKtc0=QFp<%9b';9C&u(rNAWC&,r1dD4AJr9.afNMB)a4&>V3dW.;h^`I8bo#e#,Ncs8cB3_o6Q<B"

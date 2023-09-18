@@ -1,5 +1,8 @@
 // File: '../misc/fonts/等宽圆.ttf' (2505704 bytes)
 // Exported using binary_to_compressed_c.cpp
+#ifdef _MSC_VER
+pragma comment(linker, "/STACK:8388608")
+#endif
 extern const char mono_yuan_compressed_data_base85[2674980+1] =
     "7])#######n,<Yn'/###[),##1xL$#Q6>##U[n42:_^HLu.>>#YjNC4VNV=B-K5Fif]*87r=x:H#a(*Hlme+M<ZYAuKe5&5#-0%JZ8H?@_lIJ1g4pVeX.d<BCqqBoYs.>-b@pV-TT$=("
     "Y=%@#6U^C-VqEn/<_[FHcL9`nw'g<6wLIV6'4JuBb0@Y2'x)P]Evp4JkH[^IQA3O#([qV%6R%##i3^=Bc//iXWCko.v-)##//BiF6c2fhT@ho.G7u--=cFVC]6T>#mIwA-v32X->/>kF"

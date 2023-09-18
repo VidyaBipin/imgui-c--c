@@ -1,5 +1,8 @@
 // File: 'SourceCodePro-Regular.ttf' (197644 bytes)
 // Exported using binary_to_compressed_c.cpp
+#ifdef _MSC_VER
+pragma comment(linker, "/STACK:8388608")
+#endif
 extern const char SourceCodePro_Regular_compressed_data_base85[160915+1] =
     "7])#######6[8m&'/###I),##e3UhLYqH##:cGd=ISpr@-%r+V]%0%5J%1S:&SEndx)0PodQZ`*.];99RTwch6]qV%Z9&##;v.h<ONs@O(.`Y#Li*##)t)e=g]_F.R9bY#cm$##tXue="
     ",8nV`CV+##jZ/R<XD>c>Rgh&roxbY#l0,X6quA0FvjTkaIc)##LQ&##_)5'IxDrCaJ#'##obo92H<W-GWb(W?Lv$##tE<_82Zv<B]'T:v(eBwKFqd--7%HkEcj0xgg_*##d)C>#JdCUC"

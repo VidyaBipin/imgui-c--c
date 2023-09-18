@@ -1,5 +1,8 @@
 // File: 'Karla-Regular.ttf' (16848 bytes)
 // Exported using binary_to_compressed_c.cpp
+#ifdef _MSC_VER
+pragma comment(linker, "/STACK:8388608")
+#endif
 extern const char Karla_Regular_compressed_data_base85[15900+1] =
     "7])#######5Z9sf'/###I),##bw9hLQXH##j$1S:'>pgLZvaAd668X%QUQl;*31Qg3R9s/N@4',:a`T9n&)Seo$,p8ZW%q/^6se=K9C[HP>JeE';G##Uu/>8i1i86<CDmLg@AS@'Tx-3"
     "`Nc4qh2TlS^^ppAqV,-GZ6%GT0MXVRk3r]l%J%/GBgO2(%qY>-B)PY%,5LsC_Ta.SPQ)mfLbFe<b';9Cnfx2aceA&,r1dD4AJr9.s+`G2)a4&>V3dW.;h^`I^bcMU375esm]u.Uo6Q<B"

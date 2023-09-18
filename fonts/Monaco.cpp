@@ -1,5 +1,8 @@
 // File: 'Monaco.ttf' (65704 bytes)
 // Exported using binary_to_compressed_c.cpp
+#ifdef _MSC_VER
+pragma comment(linker, "/STACK:8388608")
+#endif
 extern const char Monaco_compressed_data_base85[60395+1] =
     "7])#######xkSxX'/###I),##bw9hLTbH##'HJf=t(KRG7JYe<F^'8I'Tx-3@P=ObUQG=5?PWm/b%lj;3:7YFH4Xc2&RUV$6PV=BVMWDnX(2>5nI:;$D0XGHsxhJ18vsj0*>uu#RLk7D"
     "xbL)7^/f;%+B^01la(*HUYI%#<_+/(UpbU%2=HkEGmrFgBn(##$m###)W#:C/aa-<Xr)##S**##E#EUC/NP65jZ&##ME4v-D'TqL5;kmfi$M-QoTvE75x$KDp0`Vq_11)#`_f*#b'5vE"

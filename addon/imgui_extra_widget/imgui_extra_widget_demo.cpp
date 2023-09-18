@@ -358,7 +358,7 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SliderFloat("Speed", &velocity, 0.0f, 10.0f, "velocity = %.3f");
         
         static ImVec2 selected{0, 0};
-        constexpr int sidex = 11, sidey = 15;
+        constexpr int sidex = 13, sidey = 14;
 
         float widget_size = 50.f;
         static ImColor spinner_filling_meb_bg;
@@ -541,6 +541,16 @@ void ShowExtraWidgetDemoWindow()
                     case 160: ImGui::SpinnerArcRotation("SpinnerArcRotation", 13, 2.5, ImColor(255, 255, 255), 3 * velocity, 15, 1); ImGui::ShowTooltipOnHover("SpinnerArcRotation"); break;
                     case 161: ImGui::SpinnerAng("SpinnerAng90Gravity", 16, 1, ImColor(255, 255, 255), ImColor(255, 255, 255, 128), 8.f * velocity, PI_DIV_2, 1); ImGui::ShowTooltipOnHover("SpinnerAng90Gravity"); break;
                     case 162: ImGui::SpinnerAng("SpinnerAng90SinRad", 16, 1, ImColor(255, 255, 255), ImColor(255, 255, 255, 0), 8.f * velocity, 0.75f * PI_2, 2); ImGui::ShowTooltipOnHover("SpinnerAng90SinRad"); break;
+                    case 163: ImGui::SpinnerSquishSquare("SpinnerSquishSquare", 16, ImColor(255, 255, 255), 8.f * velocity); ImGui::ShowTooltipOnHover("SpinnerSquishSquare"); break;
+                    case 164: ImGui::SpinnerPulsarBall("SpinnerBounceBall", 16, 2, ImColor(255, 255, 255), 4 * velocity, 1); ImGui::ShowTooltipOnHover("SpinnerBounceBall"); break;
+                    case 165: ImGui::SpinnerRainbowMix("SpinnerRainbowMix", 16, 2, ImColor::HSV(0.005f, 0.8f, 0.8f), 8 * velocity, 0.f, PI_2, 5, 1); ImGui::ShowTooltipOnHover("SpinnerRainbowMix"); break;
+                    case 166: ImGui::SpinnerAngMix("SpinnerAngMix", 16, 1, ImColor(255, 255, 255), 8.f * velocity, IM_PI, 4, 0); ImGui::ShowTooltipOnHover("SpinnerAngMix"); break;
+                    case 167: ImGui::SpinnerAngMix("SpinnerAngMixGravity", 16, 1, ImColor(255, 255, 255), 8.f * velocity, PI_DIV_2, 6, 1); ImGui::ShowTooltipOnHover("SpinnerAngMixGravity"); break;
+                    case 168: ImGui::SpinnerScaleBlocks("SpinnerScaleBlocks", 16, 8, ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), 5 * velocity, 1); ImGui::ShowTooltipOnHover("SpinnerScaleBlocks"); break;
+                    case 169: ImGui::SpinnerFadeDots("SpinnerFadeDots3", 16, 6, ImColor(255, 255, 255), 8 * velocity, 4, 1); ImGui::ShowTooltipOnHover("SpinnerFadeDots3"); break;
+                    case 170: ImGui::SpinnerFadeDots("SpinnerFadeDots6", 16, 3, ImColor(255, 255, 255), 8 * velocity, 4, 1); ImGui::ShowTooltipOnHover("SpinnerFadeDots6"); break;
+                    case 171: ImGui::SpinnerFadeDots("SpinnerFadeDots2", 16, 2, ImColor(255, 255, 255), 5 * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerFadeDots2"); break;
+                    case 172: ImGui::SpinnerScaleDots("SpinnerScaleDots2", 16, 2, ImColor(255, 255, 255), 4 * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerScaleDots2"); break;
 
                     // ...
                     default: break;

@@ -1,5 +1,8 @@
 // File: 'Roboto-Medium.ttf' (162588 bytes)
 // Exported using binary_to_compressed_c.cpp
+#ifdef _MSC_VER
+pragma comment(linker, "/STACK:8388608")
+#endif
 extern const char Roboto_Medium_compressed_data_base85[144680+1] =
     "7])#######hb'0,'/###I),##bw9hLbu2@$v(+h<CiTgY#3_Y#)u(###9'e=N9o6U.0bY#9D)##G)te=1?`b&6K)##u3k34;vA0F[Px;/3''##Tj&##-V:'ISHUPSCX%##[/k--'/Y-G"
     "nvS2t0))##:I0R3&7#=BejUS%ns1_A,$j--r2/-DtuF'[dvp;#9TM:#%Z$^DUj<d6jDH&#dg[0#'m@aDGigjs*GCgLspIiLh$tLD8-s8&;.#wL)mGoL<x$KDLG?a.)RX*MgXL=#+cunE"

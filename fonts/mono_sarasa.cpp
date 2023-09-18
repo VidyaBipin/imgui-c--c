@@ -1,5 +1,8 @@
 // File: 'sarasa.ttf' (2198768 bytes)
 // Exported using binary_to_compressed_c.cpp
+#ifdef _MSC_VER
+pragma comment(linker, "/STACK:8388608")
+#endif
 extern const char mono_sarasa_compressed_data_base85[2215575+1] =
     "7])#######mNL=q'/###I),##aq0hLYqH##JZn42$`#D[_.>>#*KG=6aNV=BcKl,pqoao7iD')3w0XGHLiEh+oWVM0wUBd3nIk7DaX^>1>C+;HE*El]La(*Hr>EY.Oi%d<A'[#5#-0%J"
     "c/]G)tH3DW1Zi(X?/d<BDUTNe1VhlLW$tLD6q;W%U=YwLoaamL<x$KDiD9a7be&jLWPf;#LPnvEHiisTGV07#+r.(##]a:FKU9P35AmlLM:SqLoqNDFJ]xpq&bX*#oGs:#II>,G%?c+v"

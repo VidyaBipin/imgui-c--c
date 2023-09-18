@@ -1,5 +1,8 @@
 // File: 'tahoma.ttf' (310752 bytes)
 // Exported using binary_to_compressed_c.cpp
+#ifdef _MSC_VER
+pragma comment(linker, "/STACK:8388608")
+#endif
 extern const char Tahoma_compressed_data_base85[292280+1] =
     "7])#######q8V6l'/###I),##f9_hLjKI##T%1S:98:03PuLJU)^v%+<Z;99viXJ6o^fi^'Kdp/:FxF>u5b.=9euH2/[qr$EHJf=bgg46uOT`3F?^01WZn42PmpJ42->>#ahWX%P@pu8"
     "oKjoiL(&##(/$##/MF0Fl@mlcV`)##`R$##p1:'I-DDJuLt+##ii(##61_-GI`CFQ4H%##bv,R<<xs<BtFCD*uBLk+E:*R<vJS-DMs<kN23Q9#o%;'#d06bDX0B&Si<Q7#6fD5#oFKTD"
