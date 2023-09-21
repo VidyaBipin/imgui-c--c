@@ -1056,6 +1056,48 @@ void ImMatToTexture(ImGui::ImMat mat, ImTextureID& texture)
     ImGui::ImGenerateOrUpdateTexture(texture, mat.w, mat.h, mat.c, (const unsigned char *)&mat, true);
 }
 
+void ImTextureToMat(ImTextureID texture, ImGui::ImMat& mat, ImVec2 offset, ImVec2 size)
+{
+    int ret = -1;
+    if (!texture) return;
+    int width = ImGui::ImGetTextureWidth(texture);
+    int height = ImGui::ImGetTextureHeight(texture);
+    int channels = 4; // TODO::Dicky need check
+    
+    if (!width || !height || !channels)
+    {
+        return;
+    }
+
+    if (offset.x == 0 && offset.y == 0 && (size.x == 0 || size.y == 0))
+    {
+        mat.create(width, height, channels, (size_t)1, 4);
+        ret = ImGetTextureData(texture, mat.data);
+        if (ret != 0) mat.release();
+    }
+    else
+    {
+        auto _size_x = ImMin((float)width - offset.x, size.x);
+        auto _size_y = ImMin((float)height - offset.y, size.y);
+        void* data = IM_ALLOC(width * height * channels);
+        ret = ImGetTextureData(texture, data);
+        if (ret != 0)
+        {
+            IM_FREE(data);
+            return;
+        }
+        mat.create(_size_x, _size_y, channels, (size_t)1, 4);
+        int line_size = _size_x * 4;
+        for (int i = 0; i < _size_y; i++)
+        {
+            char * src_ptr = (char *)data + (int)((offset.y + i) * width * 4 + offset.x * 4);
+            char * dst_ptr = (char *)mat.data + i * line_size;
+            memcpy(dst_ptr, src_ptr, line_size);
+        }
+        IM_FREE(data);
+    }
+}
+
 bool OpenWithDefaultApplication(const char* url,bool exploreModeForWindowsOS)	
 {
 #       ifdef _WIN32

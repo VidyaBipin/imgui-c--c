@@ -631,7 +631,7 @@ static bool TabButton(const char *label, bool selected, bool *pCloseButtonPresse
     return pressed;
 }
 
-static bool TabImageButton(const char *label, bool selected, ImTextureID texture, ImVec2 * texture_size = NULL, bool *pCloseButtonPressedOut=NULL, const char* textOverrideIn=NULL, ImVec2 *pJustReturnItsSizeHereOut=NULL, const TabLabelStyle* pOptionalStyleToUseIn=NULL,ImFont *fontOverride=NULL, ImVec2 *pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset=NULL, ImDrawList *drawListOverride=NULL,bool privateReuseLastCalculatedLabelSizeDoNotUse = false,bool forceActiveColorLook = false, bool breathingSelected = false)  {
+static bool TabImageButton(const char *label, bool selected, ImTextureID texture, ImVec4 roi, ImVec2 * texture_size = NULL, bool *pCloseButtonPressedOut=NULL, const char* textOverrideIn=NULL, ImVec2 *pJustReturnItsSizeHereOut=NULL, const TabLabelStyle* pOptionalStyleToUseIn=NULL,ImFont *fontOverride=NULL, ImVec2 *pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset=NULL, ImDrawList *drawListOverride=NULL,bool privateReuseLastCalculatedLabelSizeDoNotUse = false,bool forceActiveColorLook = false, bool breathingSelected = false)  {
     // Based on ImGui::ButtonEx(...)
     bool *pHoveredOut = NULL;           // removed from args (can be queried from outside)
     bool *pCloseButtonHovered = NULL;   // removed from args (who cares if the close button is hovered?)
@@ -743,7 +743,9 @@ static bool TabImageButton(const char *label, bool selected, ImTextureID texture
     if (texture)
     {
         auto t_offset = style.FramePadding.x / 2;
-        drawListOverride->AddImage(texture, bb.Min + ImVec2(t_offset, 0), bb.Min + ImVec2(texture_width + t_offset * 2.0f, texture_height));
+        ImVec2 uv_min(roi.x, roi.y);
+        ImVec2 uv_max(roi.z, roi.w);
+        drawListOverride->AddImage(texture, bb.Min + ImVec2(t_offset, 0), bb.Min + ImVec2(texture_width + t_offset * 2.0f, texture_height), uv_min, uv_max);
     }
 
     //fprintf(stderr,"bb.Min=%d,%d bb.Max=%d,%d label_size=%d,%d extraWidthForBtn=%d\n",(int)bb.Min.x,(int)bb.Min.y,(int)bb.Max.x,(int)bb.Max.y,(int)label_size.x,(int)label_size.y,(int)extraWidthForBtn);
@@ -2686,7 +2688,7 @@ bool TabLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImV
     return selection_changed;
 }
 
-bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImVec2& tableSize, const std::vector<std::string> tabLabelTooltips, const std::vector<ImTextureID> tabTextures, ImVec2 texture_size, bool wrapMode, bool breathing_select, int *pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int *pOptionalClosedTabIndex, int *pOptionalClosedTabIndexInsideItemOrdering,bool invertRounding) {
+bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImVec2& tableSize, const std::vector<std::string> tabLabelTooltips, const std::vector<ImTextureID> tabTextures, const std::vector<ImVec4> textureROI, ImVec2 texture_size, bool wrapMode, bool breathing_select, int *pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int *pOptionalClosedTabIndex, int *pOptionalClosedTabIndexInsideItemOrdering,bool invertRounding) {
     ImGuiStyle& style = ImGui::GetStyle();
     auto tabStyle = TabLabelStyle::GetMergedWithWindowAlpha();
     if (invertRounding) TabLabelStyle::SetTablePosition(tabStyle, TabLabelStyle::TAB_POSITION_BOTTOM);
@@ -2695,6 +2697,8 @@ bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex
     const ImVec2 itemSpacing =  style.ItemSpacing;
     style.ItemSpacing.x =       3;
     style.ItemSpacing.y =       3;
+    if (tabStyle.tabPosition != TabLabelStyle::TAB_POSITION_NONE)
+        tabStyle.rounding = 6;
 
     if (!tabLabels.empty() && (selectedIndex<0 || selectedIndex>=tabLabels.size())) {
         if (!pOptionalItemOrdering)  selectedIndex = 0;
@@ -2732,7 +2736,7 @@ bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex
         if (!wrapMode)
         {
             if (!noButtonDrawn) ImGui::SameLine();
-            ImGui::TabImageButton(tabLabels[i].c_str(),(i == selectedIndex),tabTextures[i],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select);
+            ImGui::TabImageButton(tabLabels[i].c_str(),(i == selectedIndex),tabTextures[i],textureROI[i],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select);
             if (noButtonDrawn)
             {
                 if (first_index > 0)
@@ -2750,7 +2754,7 @@ bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex
         else if (sumX > 0.f)
         {
             sumX+=style.ItemSpacing.x;   // Maybe we can skip it if we use SameLine(0,0) below
-            ImGui::TabImageButton(tabLabels[i].c_str(),(i == selectedIndex),tabTextures[i],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select);
+            ImGui::TabImageButton(tabLabels[i].c_str(),(i == selectedIndex),tabTextures[i],textureROI[i],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select);
             sumX+=tabButtonSz.x;
             if (sumX>windowWidth) sumX = 0.f;
             else ImGui::SameLine();
@@ -2767,7 +2771,7 @@ bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex
         if (wrapMode || sumX < windowWidth - button_size.x * 2)
         {
             ImGui::PushID(i);   // otherwise two tabs with the same name would clash.
-            if (ImGui::TabImageButton(tabLabels[i].c_str(),i == selectedIndex,tabTextures[i],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select))   {
+            if (ImGui::TabImageButton(tabLabels[i].c_str(),i == selectedIndex,tabTextures[i],textureROI[i],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select))   {
                 selection_changed = (selectedIndex!=i);
                 newSelectedIndex = i;
             }
@@ -2842,7 +2846,7 @@ bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex
             auto _tabStyle = TabLabelStyleGetMergedWithAlphaForOverlayUsage();
             _tabStyle.tabPosition = tabStyle.tabPosition;
             ImFont* fontOverride = (ImFont*) (draggingTabWasSelected ? TabLabelStyle::ImGuiFonts[_tabStyle.fontStyles[TabLabelStyle::TAB_STATE_SELECTED]] : TabLabelStyle::ImGuiFonts[_tabStyle.fontStyles[TabLabelStyle::TAB_STATE_NORMAL]]);
-            ImGui::TabImageButton(tabLabels[pOptionalItemOrdering[draggingTabIndex]].c_str(),draggingTabWasSelected,tabTextures[draggingTabIndex],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&_tabStyle,fontOverride,&start,drawList,false,true);
+            ImGui::TabImageButton(tabLabels[pOptionalItemOrdering[draggingTabIndex]].c_str(),draggingTabWasSelected,tabTextures[draggingTabIndex],textureROI[draggingTabIndex],&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&_tabStyle,fontOverride,&start,drawList,false,true);
             ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
 
             if (TabWindow::DockPanelIconTextureID)	{

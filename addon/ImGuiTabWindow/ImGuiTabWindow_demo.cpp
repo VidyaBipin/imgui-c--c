@@ -112,24 +112,27 @@ void ShowAddonsTabWindow()
     static int tab_num = 3;
     static std::vector<std::string> imageTabNames = {"Image1 it is long text string test","Image2","Image3"};
     static std::vector<ImTextureID> imageTabTextures = { textue, textue, textue };
+    static std::vector<ImVec4> imageTabTextureROIs = { ImVec4(0, 0, 1, 1), ImVec4(0, 0, 1, 1), ImVec4(0, 0, 1, 1) };
     static std::vector<int> imageTabItemOrdering = {0, 1, 2};
     if (ImGui::SliderInt("image number", &tab_num, 3, 20))
     {
         imageTabNames.resize(tab_num);
         imageTabTextures.resize(tab_num);
         imageTabItemOrdering.resize(tab_num);
+        imageTabTextureROIs.resize(tab_num);
         for (int i = 3; i < tab_num; i++)
         {
             imageTabNames[i] = "Image" + std::to_string(i + 1);
             imageTabTextures[i] = textue;
             imageTabItemOrdering[i] = i;
+            imageTabTextureROIs[i] = ImVec4(0, 0, 1, 1);
         }
     }
     // Draw tab page
     ImGui::BeginChild("MyImageTabLabelsChild",ImVec2(0,300),true);
     ImGui::Text("Tab Page For Image Tab: \"%s\" here.",selectedImageTab >= 0 ? imageTabNames[selectedImageTab].c_str() : "None!");
     ImGui::EndChild();
-    ImGui::TabImageLabels(imageTabNames,selectedImageTab,table_size,std::vector<std::string>(),imageTabTextures,ImVec2(64,36),tabLabelWrapMode,false,&optionalHoveredImageTab,&imageTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,true);
+    ImGui::TabImageLabels(imageTabNames,selectedImageTab,table_size,std::vector<std::string>(),imageTabTextures,imageTabTextureROIs,ImVec2(64,36),tabLabelWrapMode,false,&optionalHoveredImageTab,&imageTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,true);
 }
 void  ReleaseTabWindow()
 {
