@@ -4885,8 +4885,6 @@ void ImGui::RenderTextVerticalClipped(const ImVec2& pos_min, const ImVec2& pos_m
 void ImGui::AddTextRolling(ImDrawList* drawList, const ImFont* font, float font_size, const ImVec2& pos, const ImVec2& size, ImU32 col, const int speed, const char* text_begin, const char* text_end)
 {
     static int start_offset = 0;
-    static int count = 0;
-    static int speed_internal = speed > 0 ? speed : 10;
     if ((col & IM_COL32_A_MASK) == 0)
         return;
 
@@ -4915,6 +4913,7 @@ void ImGui::AddTextRolling(ImDrawList* drawList, const ImFont* font, float font_
             _text_end = _text_begin + changed;
         }
     }
+
     
     // Note: This is one of the few instance of breaking the encapsulation of ImDrawList, as we pull this from ImGui state, but it is just SO useful.
     // Might just move Font/FontSize to ImDrawList?
@@ -4924,18 +4923,13 @@ void ImGui::AddTextRolling(ImDrawList* drawList, const ImFont* font, float font_
         font_size = GImGui->FontSize;
     
     auto str_size = ImGui::CalcTextSize(_text_begin, _text_end);
+
+    const float start = ImFmod((float)ImGui::GetTime() * speed, str_size.x);
+
+    ImVec2 text_pos = pos;
     if (str_size.x > size.x)
     {
-        if (start_offset > strlen(_text_begin) - 1) start_offset = 0;
-        _text_begin += start_offset;
-        count ++;
-        if (count >= speed_internal)
-        {
-            unsigned int c = *_text_begin;
-            if (c < 0x80) { start_offset ++; speed_internal = speed > 0 ? speed : 10; }
-            else { start_offset += ImTextCharFromUtf8(&c, _text_begin, _text_end); speed_internal = speed > 0 ? speed * 2 : 20; }
-            count = 0;
-        }
+        text_pos.x -= start;
     }
 
     if (!drawList) drawList = ImGui::GetWindowDrawList();
@@ -4946,7 +4940,7 @@ void ImGui::AddTextRolling(ImDrawList* drawList, const ImFont* font, float font_
     clip_rect.y = ImMax(clip_rect.y, bb.Min.y);
     clip_rect.z = ImMin(clip_rect.z, bb.Max.x);
     clip_rect.w = ImMin(clip_rect.w, bb.Max.y);
-    font->RenderText(drawList, font_size, pos, col, clip_rect, _text_begin, _text_end, 0.0, true);
+    font->RenderText(drawList, font_size, text_pos, col, clip_rect, _text_begin, _text_end, 0.0, true);
 }
 
 void ImGui::AddTextRolling(const char* text, const ImVec2& size, const ImVec2& pos, const int speed)
