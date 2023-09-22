@@ -732,7 +732,7 @@ static bool TabImageButton(const char *label, bool selected, ImTextureID texture
     ImGui::SetWindowFontScale(0.75);
     if (rolling_text)
     {
-        ImGui::AddTextRolling(drawListOverride, NULL, 0, textPos, ImVec2(size.x - style.FramePadding.x * 2.f, text_size.y), ImGui::ColorConvertFloat4ToU32(textcol), 4, label);
+        ImGui::AddTextRolling(drawListOverride, NULL, 0, textPos, ImVec2(size.x - style.FramePadding.x * 2.f, text_size.y), ImGui::ColorConvertFloat4ToU32(textcol), 8, label);
     }
     else
         drawListOverride->AddText(textPos,colText,label);

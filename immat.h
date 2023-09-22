@@ -587,6 +587,8 @@ public:
     void clean(ImPixel color);
     void get_pixel(int x, int y, ImPixel& color) const;
     void get_pixel(ImPoint p, ImPixel& color) const;
+    ImPixel get_pixel(int x, int y) const;
+    ImPixel get_pixel(ImPoint p) const;
     void draw_dot(int x, int y, ImPixel color);
     void draw_dot(ImPoint p, ImPixel color);
     void alphablend(int x, int y, float alpha, ImPixel color);
@@ -595,10 +597,14 @@ public:
     void draw_line(ImPoint p1, ImPoint p2, float t, ImPixel color);
     void draw_line(float x1, float y1, float x2, float y2, ImPixel color);
     void draw_line(ImPoint p1, ImPoint p2, ImPixel color);
+    void draw_rectangle(float x1, float y1, float x2, float y2, ImPixel color);
+    void draw_rectangle(ImPoint p1, ImPoint p2, ImPixel color);
     void draw_circle(float x, float y, float r, ImPixel color);
     void draw_circle(ImPoint p, float r, ImPixel color);
     void draw_circle(float x, float y, float r, float t, ImPixel color);
     void draw_circle(ImPoint p, float r, float t, ImPixel color);
+    // copy to
+    void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);
     
     // release
     void release();
@@ -4847,6 +4853,18 @@ inline void ImMat::get_pixel(ImPoint p, ImPixel& color) const
     get_pixel((int)p.x, (int)p.y, color);
 }
 
+inline ImPixel ImMat::get_pixel(int x, int y) const
+{
+    ImPixel color;
+    get_pixel(x, y, color);
+    return color;
+}
+
+inline ImPixel ImMat::get_pixel(ImPoint p) const
+{
+    return get_pixel((int)p.x, (int)p.y);
+}
+
 inline void ImMat::draw_dot(int x, int y, ImPixel color)
 {
     assert(dims == 3);
@@ -5114,6 +5132,19 @@ inline void ImMat::draw_line(ImPoint p1, ImPoint p2, ImPixel color)
     draw_line(p1.x, p1.y, p2.x, p2.y, color);
 }
 
+inline void ImMat::draw_rectangle(float x1, float y1, float x2, float y2, ImPixel color)
+{
+    draw_line(x1, y1, x1, y2, color);
+    draw_line(x1, y2, x2, y2, color);
+    draw_line(x2, y2, x2, y1, color);
+    draw_line(x2, y1, x1, y1, color);
+}
+
+inline void ImMat::draw_rectangle(ImPoint p1, ImPoint p2, ImPixel color)
+{
+    draw_rectangle(p1.x, p1.y, p2.x, p2.y, color);
+}
+
 inline void ImMat::draw_circle(float x1, float y1, float r, ImPixel color)
 {
     // Bresenham circle
@@ -5176,6 +5207,49 @@ inline void ImMat::draw_circle(float x1, float y1, float r, float t, ImPixel col
 inline void ImMat::draw_circle(ImPoint p, float r, float t, ImPixel color)
 {
     draw_circle(p.x, p.y, r, t, color);
+}
+
+inline void ImMat::copy_to(ImMat & mat, ImPoint offset, float alpha)
+{
+    // assert mat same as this
+    assert(!empty() && !mat.empty());
+    assert(offset.x + w >= 0 && offset.y + h >= 0 &&
+            offset.x < mat.w && offset.y < mat.h);
+    ImSize size;
+    ImPoint offset_src;
+    ImPoint offset_dst;
+    if (offset.x < 0)
+    {
+        offset_src.x = -offset.x;
+        offset_dst.x = 0;
+        size.w = std::min(w + (int)offset.x, mat.w);
+    }
+    else
+    {
+        offset_src.x = 0;
+        offset_dst.x = offset.x;
+        size.w = std::min(mat.w - (int)offset.x, w);
+    }
+    if (offset.y < 0)
+    {
+        offset_src.y = -offset.y;
+        offset_dst.y = 0;
+        size.h = std::min(h + (int)offset.y, mat.h);
+    }
+    else
+    {
+        offset_src.y = 0;
+        offset_dst.y = offset.y;
+        size.h = std::min(mat.h - (int)offset.y, h);
+    }
+    for (int i = 0; i < size.h; i++)
+    {
+        for (int j = 0; j < size.w; j++)
+        {
+            auto src_color = get_pixel(offset_src.x + j, offset_src.y + i);
+            mat.alphablend(offset_dst.x + j, offset_dst.y + i, alpha, src_color);
+        }
+    }
 }
 
 inline void ImMat::print(std::string name)
@@ -5250,7 +5324,6 @@ inline void ImMat::print(std::string name)
     
     std::cout << "]" << std::endl;
 }
-
 } // namespace ImGui 
 
 #endif /* __IMMAT_H__ */
