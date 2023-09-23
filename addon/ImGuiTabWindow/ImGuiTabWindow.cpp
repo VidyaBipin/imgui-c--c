@@ -2517,8 +2517,9 @@ bool TabLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImV
     style.ItemSpacing.y =       3;
 
     if (!tabLabels.empty() && (selectedIndex<0 || selectedIndex>=tabLabels.size())) {
-        if (!pOptionalItemOrdering)  selectedIndex = 0;
-        else selectedIndex = -1;
+        //if (!pOptionalItemOrdering)  selectedIndex = 0;
+        //else selectedIndex = -1;
+        selectedIndex = -1;
     }
     if (pOptionalHoveredIndex) *pOptionalHoveredIndex = -1;
     if (pOptionalClosedTabIndex) *pOptionalClosedTabIndex = -1;
@@ -2701,8 +2702,9 @@ bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex
         tabStyle.rounding = 6;
 
     if (!tabLabels.empty() && (selectedIndex<0 || selectedIndex>=tabLabels.size())) {
-        if (!pOptionalItemOrdering)  selectedIndex = 0;
-        else selectedIndex = -1;
+        //if (!pOptionalItemOrdering)  selectedIndex = 0;
+        //else selectedIndex = -1;
+        selectedIndex = -1;
     }
     if (pOptionalHoveredIndex) *pOptionalHoveredIndex = -1;
     if (pOptionalClosedTabIndex) *pOptionalClosedTabIndex = -1;
