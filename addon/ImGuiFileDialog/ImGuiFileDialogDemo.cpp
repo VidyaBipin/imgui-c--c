@@ -238,14 +238,11 @@ void show_file_dialog_demo_window(ImGuiFileDialog * dlg, bool * open)
 		{
 			dlg->OpenDialog("ChooseFileDlgKey",	ICON_IGFD_FOLDER_OPEN " Choose a File", ".*", ".", "", 1, nullptr, flags);
 		}
-		if (ImGui::Button(ICON_IGFD_SAVE " Save File Dialog with a custom pane"))
-		{
-			const char* filters = "C++ File (*.cpp){.cpp}";
-			dlg->OpenDialog("ChooseFileDlgKey",
-					ICON_IGFD_SAVE " Choose a File", filters,
-					".", "", std::bind(&InfosPane, std::placeholders::_1, std::placeholders::_2,
-						std::placeholders::_3), 350, 1, IGFDUserDatas("SaveFile"), flags);
-		}
+		//if (ImGui::Button(ICON_IGFD_SAVE " Save File Dialog with a custom pane"))
+		//{
+		//	dlg->OpenDialog("ChooseFileDlgKey", "Choose File", ".cpp,.h,.hpp",
+		//		".", "", std::bind(&InfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 350, 1, IGFDUserDatas("InfosPane"));
+		//}
 		if (ImGui::Button(ICON_IGFD_SAVE " Save File Dialog with Confirm Dialog For Overwrite File if exist"))
 		{
 			const char* filters = "C/C++ File (*.c *.cpp){.c,.cpp}, Header File (*.h){.h}";
@@ -284,24 +281,6 @@ void show_file_dialog_demo_window(ImGuiFileDialog * dlg, bool * open)
 			ImGui::RadioButton("Ext", &check_flags, IGFD_FileStyleByExtention); ImGui::SameLine();
 			ImGui::RadioButton("FullName", &check_flags, IGFD_FileStyleByFullName); ImGui::SameLine();
 			ImGui::RadioButton("Contained", &check_flags, IGFD_FileStyleByContainedInFullName);
-
-			IGFD_FileStyleFlags flags = check_flags;
-			auto filesStyle = dlg->GetFileStyles(flags);
-			for (auto style : filesStyle)
-			{
-				ImGui::Text("%s : ", style.first.c_str());
-				ImVec4 out_color;
-				std::string icon;
-				ImFont* out_font;
-				if (dlg->GetFileStyle(flags, style.first, &out_color, &icon, &out_font))
-				{
-					ImGui::SameLine();
-					ImGui::TextUnformatted(icon.c_str());
-					ImGui::SameLine();
-					ImGui::ColorEdit4("##file_sytle_color", (float*)&out_color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop);
-				}
-			}
-
 		}
 		ImGui::Unindent();
 

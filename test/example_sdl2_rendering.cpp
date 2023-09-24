@@ -202,7 +202,7 @@ int main(int, char**)
                 if (ImGui::Button("打开..."))
                 {
                     const char *filters = "Image files (*.png *.gif *.jpg *.jpeg){.png,.gif,.jpg,.jpeg},.md";
-                    filedialog.OpenDialog("ChooseFileDlgKey", ICON_IGFD_FOLDER_OPEN " Choose a File", filters, ".", "", nullptr, ImGuiFileDialogFlags_Modal);
+                    filedialog.OpenDialog("ChooseFileDlgKey", ICON_IGFD_FOLDER_OPEN " Choose a File", filters, ".", 1, nullptr, ImGuiFileDialogFlags_Modal);
                 }
                 ImGui::Separator();
                 if (ImGui::Button("退出")) 
