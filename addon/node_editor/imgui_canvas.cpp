@@ -416,8 +416,10 @@ void ImGuiEx::Canvas::EnterLocalSpace()
     //     different clip rectangle.
     //
     //     More investigation is needed. To get to the bottom of this.
-    if ((!m_DrawList->CmdBuffer.empty() && m_DrawList->CmdBuffer.back().ElemCount > 0) || m_DrawList->_Splitter._Count > 1)
-        m_DrawList->AddCallback(ImDrawCallback_ImCanvas, nullptr);
+    // disabled by Dicky
+    //if ((!m_DrawList->CmdBuffer.empty() && m_DrawList->CmdBuffer.back().ElemCount > 0) || m_DrawList->_Splitter._Count > 1)
+    //    m_DrawList->AddCallback(ImDrawCallback_ImCanvas, nullptr);
+    // disabled by Dicky end
 
 # if defined(IMGUI_HAS_VIEWPORT)
     auto window = ImGui::GetCurrentWindow();
