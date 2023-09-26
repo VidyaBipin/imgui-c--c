@@ -1269,15 +1269,15 @@ static LRESULT CALLBACK ImGui_ImplWin32_WndProcHandler_PlatformWindow(HWND hWnd,
 
 // add By Dicky for win32 vulkan multiview 
 #if IMGUI_RENDERING_VULKAN
-#include <vulkan/vulkan_win32.h>
+#include <vulkan/vulkan.h>
 static int ImGui_ImplWin32_CreateVkSurface(ImGuiViewport* viewport, ImU64 vk_instance, const void* vk_allocator, ImU64* out_vk_surface)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
-    VkWin32SurfaceCreateInfoKHR surface_create_info = {};
+    VkDisplaySurfaceCreateInfoKHR surface_create_info = {};
     surface_create_info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-    surface_create_info.hwnd = vd->Hwnd;
-    VkResult err = vkCreateWin32SurfaceKHR((VkInstance)vk_instance, &surface_create_info, (const VkAllocationCallbacks*)vk_allocator, (VkSurfaceKHR *)out_vk_surface);
+    //surface_create_info.hwnd = vd->Hwnd;
+    VkResult err = vkCreateDisplayPlaneSurfaceKHR((VkInstance)vk_instance, &surface_create_info, (const VkAllocationCallbacks*)vk_allocator, (VkSurfaceKHR *)out_vk_surface);
     return err;
 }
 #endif

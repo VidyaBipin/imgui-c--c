@@ -8,10 +8,11 @@
 #if defined __ANDROID__ || defined __linux__
 #include <sched.h> // cpu_set_t
 #endif
+#include <imgui.h>
 
 #ifndef EXPORT_API
 #ifdef _WIN32
-#define EXPORT_API __declspec( dllexport )
+#define EXPORT_API IMGUI_API
 #else
 #define EXPORT_API
 #endif
