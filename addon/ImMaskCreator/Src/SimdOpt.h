@@ -21,9 +21,9 @@ uint32_t GetSimdPtrAlignmentWidth(SysUtils::CpuFeature eFea);
 
 enum class StoreMode
 {
-    UNALIGNED = 0,
-    ALIGNED = 1,
-    ALIGNED_NOCACHE = 2
+    ADDR_UNALIGNED = 0,
+    ADDR_ALIGNED = 1,
+    ADDR_ALIGNED_NOCACHE = 2
 };
 
 union int32_suf

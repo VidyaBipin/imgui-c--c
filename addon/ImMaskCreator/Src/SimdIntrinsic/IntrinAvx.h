@@ -362,9 +362,9 @@ struct v_float64x4
     { _mm256_stream_si256((__m256i*)ptr, a.val); }                      \
     inline void v_store(_Tp* ptr, const _Tpvec& a, StoreMode mode)      \
     {                                                                   \
-        if (mode == StoreMode::UNALIGNED)                               \
+        if (mode == StoreMode::ADDR_UNALIGNED)                               \
             _mm256_storeu_si256((__m256i*)ptr, a.val);                  \
-        else if (mode == StoreMode::ALIGNED_NOCACHE)                    \
+        else if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)                    \
             _mm256_stream_si256((__m256i*)ptr, a.val);                  \
         else                                                            \
             _mm256_store_si256((__m256i*)ptr, a.val);                   \
@@ -409,9 +409,9 @@ SIMD_LOADSTORE_INT(v_int64x4,   int64_t)
     { _mm256_stream_##suffix(ptr, a.val); }                             \
     inline void v_store(_Tp* ptr, const _Tpvec& a, StoreMode mode)      \
     {                                                                   \
-        if (mode == StoreMode::UNALIGNED)                               \
+        if (mode == StoreMode::ADDR_UNALIGNED)                               \
             _mm256_storeu_##suffix(ptr, a.val);                         \
-        else if (mode == StoreMode::ALIGNED_NOCACHE)                    \
+        else if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)                    \
             _mm256_stream_##suffix(ptr, a.val);                         \
         else                                                            \
             _mm256_store_##suffix(ptr, a.val);                          \
@@ -2613,7 +2613,7 @@ inline void v_load_deinterleave( const uint64_t* ptr, v_uint64x4& a, v_uint64x4&
 ///////////////////////////// store interleave /////////////////////////////////////
 
 inline void v_store_interleave( uint8_t* ptr, const v_uint8x32& x, const v_uint8x32& y,
-                                StoreMode mode = StoreMode::UNALIGNED )
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED )
 {
     __m256i xy_l = _mm256_unpacklo_epi8(x.val, y.val);
     __m256i xy_h = _mm256_unpackhi_epi8(x.val, y.val);
@@ -2621,12 +2621,12 @@ inline void v_store_interleave( uint8_t* ptr, const v_uint8x32& x, const v_uint8
     __m256i xy0 = _mm256_permute2x128_si256(xy_l, xy_h, 0 + 2*16);
     __m256i xy1 = _mm256_permute2x128_si256(xy_l, xy_h, 1 + 3*16);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm256_stream_si256((__m256i*)ptr, xy0);
         _mm256_stream_si256((__m256i*)(ptr + 32), xy1);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm256_store_si256((__m256i*)ptr, xy0);
         _mm256_store_si256((__m256i*)(ptr + 32), xy1);
@@ -2639,7 +2639,7 @@ inline void v_store_interleave( uint8_t* ptr, const v_uint8x32& x, const v_uint8
 }
 
 inline void v_store_interleave( uint16_t* ptr, const v_uint16x16& x, const v_uint16x16& y,
-                                StoreMode mode = StoreMode::UNALIGNED )
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED )
 {
     __m256i xy_l = _mm256_unpacklo_epi16(x.val, y.val);
     __m256i xy_h = _mm256_unpackhi_epi16(x.val, y.val);
@@ -2647,12 +2647,12 @@ inline void v_store_interleave( uint16_t* ptr, const v_uint16x16& x, const v_uin
     __m256i xy0 = _mm256_permute2x128_si256(xy_l, xy_h, 0 + 2*16);
     __m256i xy1 = _mm256_permute2x128_si256(xy_l, xy_h, 1 + 3*16);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm256_stream_si256((__m256i*)ptr, xy0);
         _mm256_stream_si256((__m256i*)(ptr + 16), xy1);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm256_store_si256((__m256i*)ptr, xy0);
         _mm256_store_si256((__m256i*)(ptr + 16), xy1);
@@ -2665,7 +2665,7 @@ inline void v_store_interleave( uint16_t* ptr, const v_uint16x16& x, const v_uin
 }
 
 inline void v_store_interleave( uint32_t* ptr, const v_uint32x8& x, const v_uint32x8& y,
-                                StoreMode mode = StoreMode::UNALIGNED )
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED )
 {
     __m256i xy_l = _mm256_unpacklo_epi32(x.val, y.val);
     __m256i xy_h = _mm256_unpackhi_epi32(x.val, y.val);
@@ -2673,12 +2673,12 @@ inline void v_store_interleave( uint32_t* ptr, const v_uint32x8& x, const v_uint
     __m256i xy0 = _mm256_permute2x128_si256(xy_l, xy_h, 0 + 2*16);
     __m256i xy1 = _mm256_permute2x128_si256(xy_l, xy_h, 1 + 3*16);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm256_stream_si256((__m256i*)ptr, xy0);
         _mm256_stream_si256((__m256i*)(ptr + 8), xy1);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm256_store_si256((__m256i*)ptr, xy0);
         _mm256_store_si256((__m256i*)(ptr + 8), xy1);
@@ -2691,7 +2691,7 @@ inline void v_store_interleave( uint32_t* ptr, const v_uint32x8& x, const v_uint
 }
 
 inline void v_store_interleave( uint64_t* ptr, const v_uint64x4& x, const v_uint64x4& y,
-                                StoreMode mode = StoreMode::UNALIGNED )
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED )
 {
     __m256i xy_l = _mm256_unpacklo_epi64(x.val, y.val);
     __m256i xy_h = _mm256_unpackhi_epi64(x.val, y.val);
@@ -2699,12 +2699,12 @@ inline void v_store_interleave( uint64_t* ptr, const v_uint64x4& x, const v_uint
     __m256i xy0 = _mm256_permute2x128_si256(xy_l, xy_h, 0 + 2*16);
     __m256i xy1 = _mm256_permute2x128_si256(xy_l, xy_h, 1 + 3*16);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm256_stream_si256((__m256i*)ptr, xy0);
         _mm256_stream_si256((__m256i*)(ptr + 4), xy1);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm256_store_si256((__m256i*)ptr, xy0);
         _mm256_store_si256((__m256i*)(ptr + 4), xy1);
@@ -2717,7 +2717,7 @@ inline void v_store_interleave( uint64_t* ptr, const v_uint64x4& x, const v_uint
 }
 
 inline void v_store_interleave( uint8_t* ptr, const v_uint8x32& a, const v_uint8x32& b, const v_uint8x32& c,
-                                StoreMode mode = StoreMode::UNALIGNED )
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED )
 {
     const __m256i sh_b = _mm256_setr_epi8(
             0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5,
@@ -2746,13 +2746,13 @@ inline void v_store_interleave( uint8_t* ptr, const v_uint8x32& a, const v_uint8
     __m256i bgr1 = _mm256_permute2x128_si256(p2, p0, 0 + 3*16);
     __m256i bgr2 = _mm256_permute2x128_si256(p1, p2, 1 + 3*16);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm256_stream_si256((__m256i*)ptr, bgr0);
         _mm256_stream_si256((__m256i*)(ptr + 32), bgr1);
         _mm256_stream_si256((__m256i*)(ptr + 64), bgr2);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm256_store_si256((__m256i*)ptr, bgr0);
         _mm256_store_si256((__m256i*)(ptr + 32), bgr1);
@@ -2767,7 +2767,7 @@ inline void v_store_interleave( uint8_t* ptr, const v_uint8x32& a, const v_uint8
 }
 
 inline void v_store_interleave( uint16_t* ptr, const v_uint16x16& a, const v_uint16x16& b, const v_uint16x16& c,
-                                StoreMode mode = StoreMode::UNALIGNED )
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED )
 {
     const __m256i sh_b = _mm256_setr_epi8(
          0, 1, 6, 7, 12, 13, 2, 3, 8, 9, 14, 15, 4, 5, 10, 11,
@@ -2796,13 +2796,13 @@ inline void v_store_interleave( uint16_t* ptr, const v_uint16x16& a, const v_uin
     //__m256i bgr1 = p1;
     __m256i bgr2 = _mm256_permute2x128_si256(p0, p2, 1 + 3*16);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm256_stream_si256((__m256i*)ptr, bgr0);
         _mm256_stream_si256((__m256i*)(ptr + 16), p1);
         _mm256_stream_si256((__m256i*)(ptr + 32), bgr2);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm256_store_si256((__m256i*)ptr, bgr0);
         _mm256_store_si256((__m256i*)(ptr + 16), p1);
@@ -2817,7 +2817,7 @@ inline void v_store_interleave( uint16_t* ptr, const v_uint16x16& a, const v_uin
 }
 
 inline void v_store_interleave( uint32_t* ptr, const v_uint32x8& a, const v_uint32x8& b, const v_uint32x8& c,
-                                StoreMode mode = StoreMode::UNALIGNED )
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED )
 {
     __m256i b0 = _mm256_shuffle_epi32(a.val, 0x6c);
     __m256i g0 = _mm256_shuffle_epi32(b.val, 0xb1);
@@ -2831,13 +2831,13 @@ inline void v_store_interleave( uint32_t* ptr, const v_uint32x8& a, const v_uint
     //__m256i bgr1 = p2;
     __m256i bgr2 = _mm256_permute2x128_si256(p0, p1, 1 + 3*16);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm256_stream_si256((__m256i*)ptr, bgr0);
         _mm256_stream_si256((__m256i*)(ptr + 8), p2);
         _mm256_stream_si256((__m256i*)(ptr + 16), bgr2);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm256_store_si256((__m256i*)ptr, bgr0);
         _mm256_store_si256((__m256i*)(ptr + 8), p2);
@@ -2852,7 +2852,7 @@ inline void v_store_interleave( uint32_t* ptr, const v_uint32x8& a, const v_uint
 }
 
 inline void v_store_interleave( uint64_t* ptr, const v_uint64x4& a, const v_uint64x4& b, const v_uint64x4& c,
-                                StoreMode mode = StoreMode::UNALIGNED )
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED )
 {
     __m256i s01 = _mm256_unpacklo_epi64(a.val, b.val);
     __m256i s12 = _mm256_unpackhi_epi64(b.val, c.val);
@@ -2862,13 +2862,13 @@ inline void v_store_interleave( uint64_t* ptr, const v_uint64x4& a, const v_uint
     __m256i bgr1 = _mm256_blend_epi32(s01, s12, 0x0f);
     __m256i bgr2 = _mm256_permute2x128_si256(s20, s12, 1 + 3*16);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm256_stream_si256((__m256i*)ptr, bgr0);
         _mm256_stream_si256((__m256i*)(ptr + 4), bgr1);
         _mm256_stream_si256((__m256i*)(ptr + 8), bgr2);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm256_store_si256((__m256i*)ptr, bgr0);
         _mm256_store_si256((__m256i*)(ptr + 4), bgr1);
@@ -2884,7 +2884,7 @@ inline void v_store_interleave( uint64_t* ptr, const v_uint64x4& a, const v_uint
 
 inline void v_store_interleave( uint8_t* ptr, const v_uint8x32& a, const v_uint8x32& b,
                                 const v_uint8x32& c, const v_uint8x32& d,
-                                StoreMode mode = StoreMode::UNALIGNED )
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED )
 {
     __m256i bg0 = _mm256_unpacklo_epi8(a.val, b.val);
     __m256i bg1 = _mm256_unpackhi_epi8(a.val, b.val);
@@ -2901,14 +2901,14 @@ inline void v_store_interleave( uint8_t* ptr, const v_uint8x32& a, const v_uint8
     __m256i bgra1 = _mm256_permute2x128_si256(bgra2_, bgra3_, 0 + 2*16);
     __m256i bgra3 = _mm256_permute2x128_si256(bgra2_, bgra3_, 1 + 3*16);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm256_stream_si256((__m256i*)ptr, bgra0);
         _mm256_stream_si256((__m256i*)(ptr + 32), bgra1);
         _mm256_stream_si256((__m256i*)(ptr + 64), bgra2);
         _mm256_stream_si256((__m256i*)(ptr + 96), bgra3);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm256_store_si256((__m256i*)ptr, bgra0);
         _mm256_store_si256((__m256i*)(ptr + 32), bgra1);
@@ -2926,7 +2926,7 @@ inline void v_store_interleave( uint8_t* ptr, const v_uint8x32& a, const v_uint8
 
 inline void v_store_interleave( uint16_t* ptr, const v_uint16x16& a, const v_uint16x16& b,
                                 const v_uint16x16& c, const v_uint16x16& d,
-                                StoreMode mode = StoreMode::UNALIGNED )
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED )
 {
     __m256i bg0 = _mm256_unpacklo_epi16(a.val, b.val);
     __m256i bg1 = _mm256_unpackhi_epi16(a.val, b.val);
@@ -2943,14 +2943,14 @@ inline void v_store_interleave( uint16_t* ptr, const v_uint16x16& a, const v_uin
     __m256i bgra1 = _mm256_permute2x128_si256(bgra2_, bgra3_, 0 + 2*16);
     __m256i bgra3 = _mm256_permute2x128_si256(bgra2_, bgra3_, 1 + 3*16);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm256_stream_si256((__m256i*)ptr, bgra0);
         _mm256_stream_si256((__m256i*)(ptr + 16), bgra1);
         _mm256_stream_si256((__m256i*)(ptr + 32), bgra2);
         _mm256_stream_si256((__m256i*)(ptr + 48), bgra3);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm256_store_si256((__m256i*)ptr, bgra0);
         _mm256_store_si256((__m256i*)(ptr + 16), bgra1);
@@ -2968,7 +2968,7 @@ inline void v_store_interleave( uint16_t* ptr, const v_uint16x16& a, const v_uin
 
 inline void v_store_interleave( uint32_t* ptr, const v_uint32x8& a, const v_uint32x8& b,
                                 const v_uint32x8& c, const v_uint32x8& d,
-                                StoreMode mode = StoreMode::UNALIGNED )
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED )
 {
     __m256i bg0 = _mm256_unpacklo_epi32(a.val, b.val);
     __m256i bg1 = _mm256_unpackhi_epi32(a.val, b.val);
@@ -2985,14 +2985,14 @@ inline void v_store_interleave( uint32_t* ptr, const v_uint32x8& a, const v_uint
     __m256i bgra1 = _mm256_permute2x128_si256(bgra2_, bgra3_, 0 + 2*16);
     __m256i bgra3 = _mm256_permute2x128_si256(bgra2_, bgra3_, 1 + 3*16);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm256_stream_si256((__m256i*)ptr, bgra0);
         _mm256_stream_si256((__m256i*)(ptr + 8), bgra1);
         _mm256_stream_si256((__m256i*)(ptr + 16), bgra2);
         _mm256_stream_si256((__m256i*)(ptr + 24), bgra3);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm256_store_si256((__m256i*)ptr, bgra0);
         _mm256_store_si256((__m256i*)(ptr + 8), bgra1);
@@ -3010,7 +3010,7 @@ inline void v_store_interleave( uint32_t* ptr, const v_uint32x8& a, const v_uint
 
 inline void v_store_interleave( uint64_t* ptr, const v_uint64x4& a, const v_uint64x4& b,
                                 const v_uint64x4& c, const v_uint64x4& d,
-                                StoreMode mode = StoreMode::UNALIGNED )
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED )
 {
     __m256i bg0 = _mm256_unpacklo_epi64(a.val, b.val);
     __m256i bg1 = _mm256_unpackhi_epi64(a.val, b.val);
@@ -3022,14 +3022,14 @@ inline void v_store_interleave( uint64_t* ptr, const v_uint64x4& a, const v_uint
     __m256i bgra2 = _mm256_permute2x128_si256(bg0, ra0, 1 + 3*16);
     __m256i bgra3 = _mm256_permute2x128_si256(bg1, ra1, 1 + 3*16);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm256_stream_si256((__m256i*)ptr, bgra0);
         _mm256_stream_si256((__m256i*)(ptr + 4), bgra1);
         _mm256_stream_si256((__m256i*)(ptr + 8), bgra2);
         _mm256_stream_si256((__m256i*)(ptr + 12), bgra3);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm256_store_si256((__m256i*)ptr, bgra0);
         _mm256_store_si256((__m256i*)(ptr + 4), bgra1);
@@ -3071,14 +3071,14 @@ inline void v_load_deinterleave( const _Tp0* ptr, _Tpvec0& a0, _Tpvec0& b0, _Tpv
     d0 = v_reinterpret_as_##suffix0(d1); \
 } \
 inline void v_store_interleave( _Tp0* ptr, const _Tpvec0& a0, const _Tpvec0& b0, \
-                                StoreMode mode = StoreMode::UNALIGNED ) \
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED ) \
 { \
     _Tpvec1 a1 = v_reinterpret_as_##suffix1(a0); \
     _Tpvec1 b1 = v_reinterpret_as_##suffix1(b0); \
     v_store_interleave((_Tp1*)ptr, a1, b1, mode);      \
 } \
 inline void v_store_interleave( _Tp0* ptr, const _Tpvec0& a0, const _Tpvec0& b0, const _Tpvec0& c0, \
-                                StoreMode mode = StoreMode::UNALIGNED ) \
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED ) \
 { \
     _Tpvec1 a1 = v_reinterpret_as_##suffix1(a0); \
     _Tpvec1 b1 = v_reinterpret_as_##suffix1(b0); \
@@ -3087,7 +3087,7 @@ inline void v_store_interleave( _Tp0* ptr, const _Tpvec0& a0, const _Tpvec0& b0,
 } \
 inline void v_store_interleave( _Tp0* ptr, const _Tpvec0& a0, const _Tpvec0& b0, \
                                 const _Tpvec0& c0, const _Tpvec0& d0, \
-                                StoreMode mode = StoreMode::UNALIGNED ) \
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED ) \
 { \
     _Tpvec1 a1 = v_reinterpret_as_##suffix1(a0); \
     _Tpvec1 b1 = v_reinterpret_as_##suffix1(b0); \

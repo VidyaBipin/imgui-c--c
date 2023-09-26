@@ -1507,9 +1507,9 @@ inline void v_store_aligned_nocache(_Tp* ptr, const _Tpvec& a) \
 { _mm_stream_si128((__m128i*)ptr, a.val); } \
 inline void v_store(_Tp* ptr, const _Tpvec& a, StoreMode mode) \
 { \
-    if (mode == StoreMode::UNALIGNED) \
+    if (mode == StoreMode::ADDR_UNALIGNED) \
         _mm_storeu_si128((__m128i*)ptr, a.val); \
-    else if (mode == StoreMode::ALIGNED_NOCACHE) \
+    else if (mode == StoreMode::ADDR_ALIGNED_NOCACHE) \
         _mm_stream_si128((__m128i*)ptr, a.val); \
     else \
         _mm_store_si128((__m128i*)ptr, a.val); \
@@ -1549,9 +1549,9 @@ inline void v_store_aligned_nocache(_Tp* ptr, const _Tpvec& a) \
 { _mm_stream_##suffix(ptr, a.val); } \
 inline void v_store(_Tp* ptr, const _Tpvec& a, StoreMode mode) \
 { \
-    if (mode == StoreMode::ALIGNED) \
+    if (mode == StoreMode::ADDR_ALIGNED) \
         _mm_storeu_##suffix(ptr, a.val); \
-    else if (mode == StoreMode::ALIGNED_NOCACHE) \
+    else if (mode == StoreMode::ADDR_ALIGNED_NOCACHE) \
         _mm_stream_##suffix(ptr, a.val); \
     else \
         _mm_store_##suffix(ptr, a.val); \
@@ -2341,17 +2341,17 @@ inline void v_load_deinterleave(const uint64_t *ptr, v_uint64x2& a,
 // store interleave
 
 inline void v_store_interleave( uint8_t* ptr, const v_uint8x16& a, const v_uint8x16& b,
-                                StoreMode mode = StoreMode::UNALIGNED)
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
     __m128i v0 = _mm_unpacklo_epi8(a.val, b.val);
     __m128i v1 = _mm_unpackhi_epi8(a.val, b.val);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_si128((__m128i*)(ptr), v0);
         _mm_stream_si128((__m128i*)(ptr + 16), v1);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_si128((__m128i*)(ptr), v0);
         _mm_store_si128((__m128i*)(ptr + 16), v1);
@@ -2364,7 +2364,7 @@ inline void v_store_interleave( uint8_t* ptr, const v_uint8x16& a, const v_uint8
 }
 
 inline void v_store_interleave( uint8_t* ptr, const v_uint8x16& a, const v_uint8x16& b,
-                                const v_uint8x16& c, StoreMode mode = StoreMode::UNALIGNED)
+                                const v_uint8x16& c, StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
 #if defined(USE_SSE4_1)
     const __m128i sh_a = _mm_setr_epi8(0, 11, 6, 1, 12, 7, 2, 13, 8, 3, 14, 9, 4, 15, 10, 5);
@@ -2435,13 +2435,13 @@ inline void v_store_interleave( uint8_t* ptr, const v_uint8x16& a, const v_uint8
     __m128i v2 = _mm_or_si128(_mm_srli_si128(p42, 10), _mm_slli_si128(p43, 2));
 #endif
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_si128((__m128i*)(ptr), v0);
         _mm_stream_si128((__m128i*)(ptr + 16), v1);
         _mm_stream_si128((__m128i*)(ptr + 32), v2);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_si128((__m128i*)(ptr), v0);
         _mm_store_si128((__m128i*)(ptr + 16), v1);
@@ -2457,7 +2457,7 @@ inline void v_store_interleave( uint8_t* ptr, const v_uint8x16& a, const v_uint8
 
 inline void v_store_interleave( uint8_t* ptr, const v_uint8x16& a, const v_uint8x16& b,
                                 const v_uint8x16& c, const v_uint8x16& d,
-                                StoreMode mode = StoreMode::UNALIGNED)
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
     // a0 a1 a2 a3 ....
     // b0 b1 b2 b3 ....
@@ -2473,14 +2473,14 @@ inline void v_store_interleave( uint8_t* ptr, const v_uint8x16& a, const v_uint8
     __m128i v2 = _mm_unpacklo_epi8(u1, u3); // a8 b8 c8 d8 ...
     __m128i v3 = _mm_unpackhi_epi8(u1, u3); // a12 b12 c12 d12 ...
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_si128((__m128i*)(ptr), v0);
         _mm_stream_si128((__m128i*)(ptr + 16), v1);
         _mm_stream_si128((__m128i*)(ptr + 32), v2);
         _mm_stream_si128((__m128i*)(ptr + 48), v3);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_si128((__m128i*)(ptr), v0);
         _mm_store_si128((__m128i*)(ptr + 16), v1);
@@ -2497,17 +2497,17 @@ inline void v_store_interleave( uint8_t* ptr, const v_uint8x16& a, const v_uint8
 }
 
 inline void v_store_interleave( uint16_t* ptr, const v_uint16x8& a, const v_uint16x8& b,
-                                StoreMode mode = StoreMode::UNALIGNED)
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
     __m128i v0 = _mm_unpacklo_epi16(a.val, b.val);
     __m128i v1 = _mm_unpackhi_epi16(a.val, b.val);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_si128((__m128i*)(ptr), v0);
         _mm_stream_si128((__m128i*)(ptr + 8), v1);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_si128((__m128i*)(ptr), v0);
         _mm_store_si128((__m128i*)(ptr + 8), v1);
@@ -2521,7 +2521,7 @@ inline void v_store_interleave( uint16_t* ptr, const v_uint16x8& a, const v_uint
 
 inline void v_store_interleave( uint16_t* ptr, const v_uint16x8& a,
                                 const v_uint16x8& b, const v_uint16x8& c,
-                                StoreMode mode = StoreMode::UNALIGNED)
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
 #if defined(USE_SSE4_1)
     const __m128i sh_a = _mm_setr_epi8(0, 1, 6, 7, 12, 13, 2, 3, 8, 9, 14, 15, 4, 5, 10, 11);
@@ -2563,13 +2563,13 @@ inline void v_store_interleave( uint16_t* ptr, const v_uint16x8& a,
     __m128i v1 = _mm_or_si128(_mm_srli_si128(p31, 6), _mm_slli_si128(p32, 6));
     __m128i v2 = _mm_or_si128(_mm_srli_si128(p32, 10), _mm_slli_si128(p33, 2));
 #endif
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_si128((__m128i*)(ptr), v0);
         _mm_stream_si128((__m128i*)(ptr + 8), v1);
         _mm_stream_si128((__m128i*)(ptr + 16), v2);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_si128((__m128i*)(ptr), v0);
         _mm_store_si128((__m128i*)(ptr + 8), v1);
@@ -2585,7 +2585,7 @@ inline void v_store_interleave( uint16_t* ptr, const v_uint16x8& a,
 
 inline void v_store_interleave( uint16_t* ptr, const v_uint16x8& a, const v_uint16x8& b,
                                 const v_uint16x8& c, const v_uint16x8& d,
-                                StoreMode mode = StoreMode::UNALIGNED)
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
     // a0 a1 a2 a3 ....
     // b0 b1 b2 b3 ....
@@ -2601,14 +2601,14 @@ inline void v_store_interleave( uint16_t* ptr, const v_uint16x8& a, const v_uint
     __m128i v2 = _mm_unpacklo_epi16(u1, u3); // a4 b4 c4 d4 ...
     __m128i v3 = _mm_unpackhi_epi16(u1, u3); // a6 b6 c6 d6 ...
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_si128((__m128i*)(ptr), v0);
         _mm_stream_si128((__m128i*)(ptr + 8), v1);
         _mm_stream_si128((__m128i*)(ptr + 16), v2);
         _mm_stream_si128((__m128i*)(ptr + 24), v3);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_si128((__m128i*)(ptr), v0);
         _mm_store_si128((__m128i*)(ptr + 8), v1);
@@ -2625,17 +2625,17 @@ inline void v_store_interleave( uint16_t* ptr, const v_uint16x8& a, const v_uint
 }
 
 inline void v_store_interleave( uint32_t* ptr, const v_uint32x4& a, const v_uint32x4& b,
-                                StoreMode mode = StoreMode::UNALIGNED)
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
     __m128i v0 = _mm_unpacklo_epi32(a.val, b.val);
     __m128i v1 = _mm_unpackhi_epi32(a.val, b.val);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_si128((__m128i*)(ptr), v0);
         _mm_stream_si128((__m128i*)(ptr + 4), v1);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_si128((__m128i*)(ptr), v0);
         _mm_store_si128((__m128i*)(ptr + 4), v1);
@@ -2648,7 +2648,7 @@ inline void v_store_interleave( uint32_t* ptr, const v_uint32x4& a, const v_uint
 }
 
 inline void v_store_interleave( uint32_t* ptr, const v_uint32x4& a, const v_uint32x4& b,
-                                const v_uint32x4& c, StoreMode mode = StoreMode::UNALIGNED)
+                                const v_uint32x4& c, StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
     v_uint32x4 z = v_setzero_u32(), u0, u1, u2, u3;
     v_transpose4x4(a, b, c, z, u0, u1, u2, u3);
@@ -2657,13 +2657,13 @@ inline void v_store_interleave( uint32_t* ptr, const v_uint32x4& a, const v_uint
     __m128i v1 = _mm_or_si128(_mm_srli_si128(u1.val, 4), _mm_slli_si128(u2.val, 8));
     __m128i v2 = _mm_or_si128(_mm_srli_si128(u2.val, 8), _mm_slli_si128(u3.val, 4));
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_si128((__m128i*)(ptr), v0);
         _mm_stream_si128((__m128i*)(ptr + 4), v1);
         _mm_stream_si128((__m128i*)(ptr + 8), v2);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_si128((__m128i*)(ptr), v0);
         _mm_store_si128((__m128i*)(ptr + 4), v1);
@@ -2679,19 +2679,19 @@ inline void v_store_interleave( uint32_t* ptr, const v_uint32x4& a, const v_uint
 
 inline void v_store_interleave(uint32_t* ptr, const v_uint32x4& a, const v_uint32x4& b,
                                const v_uint32x4& c, const v_uint32x4& d,
-                               StoreMode mode = StoreMode::UNALIGNED)
+                               StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
     v_uint32x4 v0, v1, v2, v3;
     v_transpose4x4(a, b, c, d, v0, v1, v2, v3);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_si128((__m128i*)(ptr), v0.val);
         _mm_stream_si128((__m128i*)(ptr + 4), v1.val);
         _mm_stream_si128((__m128i*)(ptr + 8), v2.val);
         _mm_stream_si128((__m128i*)(ptr + 12), v3.val);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_si128((__m128i*)(ptr), v0.val);
         _mm_store_si128((__m128i*)(ptr + 4), v1.val);
@@ -2709,17 +2709,17 @@ inline void v_store_interleave(uint32_t* ptr, const v_uint32x4& a, const v_uint3
 
 // 2-channel, float only
 inline void v_store_interleave(float* ptr, const v_float32x4& a, const v_float32x4& b,
-                               StoreMode mode = StoreMode::UNALIGNED)
+                               StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
     __m128 v0 = _mm_unpacklo_ps(a.val, b.val); // a0 b0 a1 b1
     __m128 v1 = _mm_unpackhi_ps(a.val, b.val); // a2 b2 a3 b3
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_ps(ptr, v0);
         _mm_stream_ps(ptr + 4, v1);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_ps(ptr, v0);
         _mm_store_ps(ptr + 4, v1);
@@ -2732,7 +2732,7 @@ inline void v_store_interleave(float* ptr, const v_float32x4& a, const v_float32
 }
 
 inline void v_store_interleave(float* ptr, const v_float32x4& a, const v_float32x4& b,
-                               const v_float32x4& c, StoreMode mode = StoreMode::UNALIGNED)
+                               const v_float32x4& c, StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
     __m128 u0 = _mm_shuffle_ps(a.val, b.val, _MM_SHUFFLE(0, 0, 0, 0));
     __m128 u1 = _mm_shuffle_ps(c.val, a.val, _MM_SHUFFLE(1, 1, 0, 0));
@@ -2744,13 +2744,13 @@ inline void v_store_interleave(float* ptr, const v_float32x4& a, const v_float32
     __m128 u5 = _mm_shuffle_ps(b.val, c.val, _MM_SHUFFLE(3, 3, 3, 3));
     __m128 v2 = _mm_shuffle_ps(u4, u5, _MM_SHUFFLE(2, 0, 2, 0));
 
-    if(mode == StoreMode::ALIGNED_NOCACHE)
+    if(mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_ps(ptr, v0);
         _mm_stream_ps(ptr + 4, v1);
         _mm_stream_ps(ptr + 8, v2);
     }
-    else if(mode == StoreMode::ALIGNED)
+    else if(mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_ps(ptr, v0);
         _mm_store_ps(ptr + 4, v1);
@@ -2766,7 +2766,7 @@ inline void v_store_interleave(float* ptr, const v_float32x4& a, const v_float32
 
 inline void v_store_interleave(float* ptr, const v_float32x4& a, const v_float32x4& b,
                                const v_float32x4& c, const v_float32x4& d,
-                               StoreMode mode = StoreMode::UNALIGNED)
+                               StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
     __m128 u0 = _mm_unpacklo_ps(a.val, c.val);
     __m128 u1 = _mm_unpacklo_ps(b.val, d.val);
@@ -2777,14 +2777,14 @@ inline void v_store_interleave(float* ptr, const v_float32x4& a, const v_float32
     __m128 v1 = _mm_unpackhi_ps(u0, u1);
     __m128 v3 = _mm_unpackhi_ps(u2, u3);
 
-    if(mode == StoreMode::ALIGNED_NOCACHE)
+    if(mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_ps(ptr, v0);
         _mm_stream_ps(ptr + 4, v1);
         _mm_stream_ps(ptr + 8, v2);
         _mm_stream_ps(ptr + 12, v3);
     }
-    else if(mode == StoreMode::ALIGNED)
+    else if(mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_ps(ptr, v0);
         _mm_store_ps(ptr + 4, v1);
@@ -2801,17 +2801,17 @@ inline void v_store_interleave(float* ptr, const v_float32x4& a, const v_float32
 }
 
 inline void v_store_interleave(uint64_t *ptr, const v_uint64x2& a, const v_uint64x2& b,
-                               StoreMode mode = StoreMode::UNALIGNED)
+                               StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
     __m128i v0 = _mm_unpacklo_epi64(a.val, b.val);
     __m128i v1 = _mm_unpackhi_epi64(a.val, b.val);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_si128((__m128i*)(ptr), v0);
         _mm_stream_si128((__m128i*)(ptr + 2), v1);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_si128((__m128i*)(ptr), v0);
         _mm_store_si128((__m128i*)(ptr + 2), v1);
@@ -2824,19 +2824,19 @@ inline void v_store_interleave(uint64_t *ptr, const v_uint64x2& a, const v_uint6
 }
 
 inline void v_store_interleave(uint64_t *ptr, const v_uint64x2& a, const v_uint64x2& b,
-                               const v_uint64x2& c, StoreMode mode = StoreMode::UNALIGNED)
+                               const v_uint64x2& c, StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
     __m128i v0 = _mm_unpacklo_epi64(a.val, b.val);
     __m128i v1 = _mm_unpacklo_epi64(c.val, _mm_unpackhi_epi64(a.val, a.val));
     __m128i v2 = _mm_unpackhi_epi64(b.val, c.val);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_si128((__m128i*)(ptr), v0);
         _mm_stream_si128((__m128i*)(ptr + 2), v1);
         _mm_stream_si128((__m128i*)(ptr + 4), v2);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_si128((__m128i*)(ptr), v0);
         _mm_store_si128((__m128i*)(ptr + 2), v1);
@@ -2852,21 +2852,21 @@ inline void v_store_interleave(uint64_t *ptr, const v_uint64x2& a, const v_uint6
 
 inline void v_store_interleave(uint64_t *ptr, const v_uint64x2& a, const v_uint64x2& b,
                                const v_uint64x2& c, const v_uint64x2& d,
-                               StoreMode mode = StoreMode::UNALIGNED)
+                               StoreMode mode = StoreMode::ADDR_UNALIGNED)
 {
     __m128i v0 = _mm_unpacklo_epi64(a.val, b.val);
     __m128i v1 = _mm_unpacklo_epi64(c.val, d.val);
     __m128i v2 = _mm_unpackhi_epi64(a.val, b.val);
     __m128i v3 = _mm_unpackhi_epi64(c.val, d.val);
 
-    if (mode == StoreMode::ALIGNED_NOCACHE)
+    if (mode == StoreMode::ADDR_ALIGNED_NOCACHE)
     {
         _mm_stream_si128((__m128i*)(ptr), v0);
         _mm_stream_si128((__m128i*)(ptr + 2), v1);
         _mm_stream_si128((__m128i*)(ptr + 4), v2);
         _mm_stream_si128((__m128i*)(ptr + 6), v3);
     }
-    else if (mode == StoreMode::ALIGNED)
+    else if (mode == StoreMode::ADDR_ALIGNED)
     {
         _mm_store_si128((__m128i*)(ptr), v0);
         _mm_store_si128((__m128i*)(ptr + 2), v1);
@@ -2908,14 +2908,14 @@ inline void v_load_deinterleave( const _Tp0* ptr, _Tpvec0& a0, _Tpvec0& b0, _Tpv
     d0 = v_reinterpret_as_##suffix0(d1); \
 } \
 inline void v_store_interleave( _Tp0* ptr, const _Tpvec0& a0, const _Tpvec0& b0, \
-                                StoreMode mode = StoreMode::UNALIGNED ) \
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED ) \
 { \
     _Tpvec1 a1 = v_reinterpret_as_##suffix1(a0); \
     _Tpvec1 b1 = v_reinterpret_as_##suffix1(b0); \
     v_store_interleave((_Tp1*)ptr, a1, b1, mode);      \
 } \
 inline void v_store_interleave( _Tp0* ptr, const _Tpvec0& a0, const _Tpvec0& b0, \
-                                const _Tpvec0& c0, StoreMode mode = StoreMode::UNALIGNED ) \
+                                const _Tpvec0& c0, StoreMode mode = StoreMode::ADDR_UNALIGNED ) \
 { \
     _Tpvec1 a1 = v_reinterpret_as_##suffix1(a0); \
     _Tpvec1 b1 = v_reinterpret_as_##suffix1(b0); \
@@ -2924,7 +2924,7 @@ inline void v_store_interleave( _Tp0* ptr, const _Tpvec0& a0, const _Tpvec0& b0,
 } \
 inline void v_store_interleave( _Tp0* ptr, const _Tpvec0& a0, const _Tpvec0& b0, \
                                 const _Tpvec0& c0, const _Tpvec0& d0, \
-                                StoreMode mode = StoreMode::UNALIGNED ) \
+                                StoreMode mode = StoreMode::ADDR_UNALIGNED ) \
 { \
     _Tpvec1 a1 = v_reinterpret_as_##suffix1(a0); \
     _Tpvec1 b1 = v_reinterpret_as_##suffix1(b0); \
