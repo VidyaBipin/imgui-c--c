@@ -3284,10 +3284,10 @@ inline int16_t v_extract_n(const v_int16x8& v)
 }
 
 template<int32_t i>
-inline uint v_extract_n(const v_uint32x4& v)
+inline uint32_t v_extract_n(const v_uint32x4& v)
 {
 #if defined(USE_SSE4_1)
-    return (uint)_mm_extract_epi32(v.val, i);
+    return (uint32_t)_mm_extract_epi32(v.val, i);
 #else
     return v_rotate_right<i>(v).get0();
 #endif
@@ -3318,7 +3318,7 @@ inline int64_t v_extract_n(const v_int64x2& v)
 template<int32_t i>
 inline float v_extract_n(const v_float32x4& v)
 {
-    union { uint iv; float fv; } d;
+    union { uint32_t iv; float fv; } d;
     d.iv = v_extract_n<i>(v_reinterpret_as_u32(v));
     return d.fv;
 }

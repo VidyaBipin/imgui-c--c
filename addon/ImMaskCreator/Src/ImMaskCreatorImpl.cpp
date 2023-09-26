@@ -459,7 +459,7 @@ public:
         }
     }
 
-    string GetError() const
+    string GetError() const override
     {
         return m_sErrMsg;
     }
