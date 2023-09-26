@@ -478,8 +478,12 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
         //printf("IMIMPL_USE_ARB_TEXTURE_SWIZZLE_TO_SAVE_FONT_TEXTURE_MEMORY used.\n");
     }
 #   endif //IMIMPL_USE_ARB_TEXTURE_SWIZZLE_TO_SAVE_FONT_TEXTURE_MEMORY
-
-    GLenum ifmt = channels==1 ? GL_ALPHA : channels==2 ? luminanceAlphaEnum : channels==3 ? GL_RGB : GL_RGBA;  // channels == 1 could be GL_LUMINANCE, GL_ALPHA, GL_RED ...
+# ifdef __APPLE__
+    GLenum grayFormat = GL_RED;
+#else
+    GLenum grayFormat = GL_ALPHA;
+#endif
+    GLenum ifmt = channels==1 ? grayFormat : channels==2 ? luminanceAlphaEnum : channels==3 ? GL_RGB : GL_RGBA;  // channels == 1 could be GL_LUMINANCE, GL_ALPHA, GL_RED ...
     GLenum fmt = ifmt;
 #   ifdef IMIMPL_USE_ARB_TEXTURE_COMPRESSION_TO_COMPRESS_FONT_TEXTURE
     if (&imtexid==&gImImplPrivateParams.fontTex)    {

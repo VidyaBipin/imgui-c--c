@@ -1,10 +1,14 @@
 #pragma once
 
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
+#include "imgui_internal.h"
+
 #include "imgui_toggle.h"
 #include "imgui_toggle_palette.h"
 
-#include "imgui_internal.h"
 
 class ImGuiToggleRenderer
 {
@@ -27,7 +31,6 @@ private:
     float _animationPercent;
 
     // imgui specific context
-    const ImGuiContext* g;
     const ImGuiStyle* _style;
     ImDrawList* _drawList;
     ImGuiID _id;
