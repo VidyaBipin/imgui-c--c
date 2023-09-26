@@ -39,13 +39,13 @@ target_link_libraries(ImMaskCreator PUBLIC
     imgui
 )
 
-if(IMGUI_BUILD_EXAMPLE)
-get_target_property(IMGUI_SRC_DIR imgui SOURCE_DIR)
-add_executable(ImMaskCreatorTest
-    ${PROJECT_SOURCE_DIR}/test/ImMaskCreatorTest.cpp
-    ${IMGUI_SRC_DIR}/../${IMGUI_APP_ENTRY_SRC}
-)
-target_link_libraries(ImMaskCreatorTest PRIVATE
-    ImMaskCreator
-)
-endif(IMGUI_BUILD_EXAMPLE)
+# if(IMGUI_BUILD_EXAMPLE)
+# get_target_property(IMGUI_SRC_DIR imgui SOURCE_DIR)
+# add_executable(ImMaskCreatorTest
+#     ${PROJECT_SOURCE_DIR}/test/ImMaskCreatorTest.cpp
+#     ${IMGUI_SRC_DIR}/../${IMGUI_APP_ENTRY_SRC}
+# )
+# target_link_libraries(ImMaskCreatorTest PRIVATE
+#     ImMaskCreator
+# )
+# endif(IMGUI_BUILD_EXAMPLE)
