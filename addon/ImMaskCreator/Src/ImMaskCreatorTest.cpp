@@ -50,7 +50,7 @@ static bool _AppFrame(void* handle, bool closeApp)
         SameLine(0, 20);
         Checkbox("Show contain box", &g_bShowContainBox);
         SameLine(0, 20);
-        if (Button("Load"))
+        if (Button("Load json"))
         {
             const char *filters = "JSON文件(*.json){.JSON},.*";
             ImGuiFileDialog::Instance()->OpenDialog("LoadJsonFileDlgKey", ICON_IGFD_FOLDER_OPEN " 打开JSON文件", 
@@ -58,7 +58,7 @@ static bool _AppFrame(void* handle, bool closeApp)
                                                     ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_Modal);
         }
         SameLine(0, 20);
-        if (Button("Save"))
+        if (Button("Save json"))
         {
             const char *filters = "JSON文件(*.json){.JSON},.*";
             ImGuiFileDialog::Instance()->OpenDialog("SaveJsonFileDlgKey", ICON_IGFD_FOLDER_OPEN " 打开JSON文件", 
@@ -139,37 +139,11 @@ static bool _AppFrame(void* handle, bool closeApp)
         PopItemWidth();
         SameLine(0, 5);
         BeginDisabled(g_mMask.empty());
-        if (Button("Save"))
+        if (Button("Save png"))
         {
             MatUtils::SaveAsPng(g_mMask, g_acMaskSavePath);
         }
         EndDisabled();
-
-        ostringstream oss; oss << "Kernel size: (" << (g_iMorphSize*2+1) << "," << (g_iMorphSize*2+1) << ")";
-        string strKsize = oss.str();
-        TextUnformatted(strKsize.c_str());
-        SameLine(0, 10);
-        PushItemWidth(100);
-        InputInt("Morph size", &g_iMorphSize);
-        PopItemWidth();
-        SameLine(0, 10);
-        if (Button("Erode") && !g_mMask.empty())
-        {
-            MatUtils::Size2i szKsize(g_iMorphSize*2+1, g_iMorphSize*2+1);
-            MatUtils::Point2i ptAnchor(g_iMorphSize, g_iMorphSize);
-            ImMat mKernel = MatUtils::GetStructuringElement(MatUtils::MORPH_RECT, szKsize, ptAnchor);
-            g_mMask = MatUtils::Erode(g_mMask, mKernel, ptAnchor);
-            ImGenerateOrUpdateTexture(g_tidMask, g_mMask.w, g_mMask.h, g_mMask.c, (const unsigned char *)g_mMask.data);
-        }
-        SameLine(0, 10);
-        if (Button("Dilate") && !g_mMask.empty())
-        {
-            MatUtils::Size2i szKsize(g_iMorphSize*2+1, g_iMorphSize*2+1);
-            MatUtils::Point2i ptAnchor(g_iMorphSize, g_iMorphSize);
-            ImMat mKernel = MatUtils::GetStructuringElement(MatUtils::MORPH_RECT, szKsize, ptAnchor);
-            g_mMask = MatUtils::Dilate(g_mMask, mKernel, ptAnchor);
-            ImGenerateOrUpdateTexture(g_tidMask, g_mMask.w, g_mMask.h, g_mMask.c, (const unsigned char *)g_mMask.data);
-        }
 
         auto currPos = GetCursorScreenPos();
         wndAvailSize = GetContentRegionAvail();
