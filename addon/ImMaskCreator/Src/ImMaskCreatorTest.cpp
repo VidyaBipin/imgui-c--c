@@ -89,12 +89,13 @@ static bool _AppFrame(void* handle, bool closeApp)
 
         wndAvailSize = GetContentRegionAvail();
         auto cursorPos = GetCursorScreenPos();
-        if (!g_hMaskCreator->DrawContent({cursorPos, cursorPos+wndAvailSize}))
+        if (!g_hMaskCreator->DrawContent(cursorPos, cursorPos+wndAvailSize))
             cerr << "MaskCreator::DrawContent() FAILED! Error is '" << g_hMaskCreator->GetError() << "'." << endl;
         if (g_bShowContainBox)
         {
             ImDrawList* pDrawList = GetWindowDrawList();
-            auto rContBox = g_hMaskCreator->GetContourContainBox();
+            auto _rContBox = g_hMaskCreator->GetContourContainBox();
+            ImRect rContBox(_rContBox.x, _rContBox.y, _rContBox.z, _rContBox.w);
             static const ImU32 CONTBOX_COLOR = IM_COL32(250, 250, 250, 255);
             pDrawList->AddLine(rContBox.Min, {rContBox.Max.x, rContBox.Min.y}, CONTBOX_COLOR);
             pDrawList->AddLine({rContBox.Max.x, rContBox.Min.y}, rContBox.Max, CONTBOX_COLOR);

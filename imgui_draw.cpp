@@ -135,7 +135,7 @@ namespace IMGUI_STB_NAMESPACE
 #define STBTT_sqrt(x)       ImSqrt(x)
 #define STBTT_pow(x,y)      ImPow(x,y)
 #define STBTT_fabs(x)       ImFabs(x)
-#define STBTT_ifloor(x)     ((int)ImFloorSigned(x))
+#define STBTT_ifloor(x)     ((int)ImFloor(x))
 #define STBTT_iceil(x)      ((int)ImCeil(x))
 #define STBTT_STATIC
 #define STB_TRUETYPE_IMPLEMENTATION
@@ -1254,8 +1254,8 @@ void ImDrawList::PathArcTo(const ImVec2& center, float radius, float a_min, floa
         const float a_min_sample_f = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_min / (IM_PI * 2.0f);
         const float a_max_sample_f = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_max / (IM_PI * 2.0f);
 
-        const int a_min_sample = a_is_reverse ? (int)ImFloorSigned(a_min_sample_f) : (int)ImCeil(a_min_sample_f);
-        const int a_max_sample = a_is_reverse ? (int)ImCeil(a_max_sample_f) : (int)ImFloorSigned(a_max_sample_f);
+        const int a_min_sample = a_is_reverse ? (int)ImFloor(a_min_sample_f) : (int)ImCeil(a_min_sample_f);
+        const int a_max_sample = a_is_reverse ? (int)ImCeil(a_max_sample_f) : (int)ImFloor(a_max_sample_f);
         const int a_mid_samples = a_is_reverse ? ImMax(a_min_sample - a_max_sample, 0) : ImMax(a_max_sample - a_min_sample, 0);
 
         const float a_min_segment_angle = a_min_sample * IM_PI * 2.0f / IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
@@ -2305,7 +2305,7 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template, float
     if (font_cfg.SizePixels <= 0.0f)
         font_cfg.SizePixels = font_size * 1.0f;
     font_cfg.EllipsisChar = (ImWchar)'.'; //(ImWchar)0x0085;
-    //font_cfg.GlyphOffset.y = -2.0f * IM_FLOOR(font_cfg.SizePixels / font_size);  // Add -2 offset per 16 units
+    //font_cfg.GlyphOffset.y = -2.0f * IM_TRUNC(font_cfg.SizePixels / font_size);  // Add -2 offset per 16 units
 #if !IMGUI_FONT_NO_UTF8
     const ImWchar* glyph_ranges = font_cfg.GlyphRanges;
 #if IMGUI_FONT_NO_LATIN
@@ -2367,7 +2367,7 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template, float
     ascii_config.PixelSnapH     = true;
     ascii_config.SizePixels     = ascii_font_size * 1.0f;
     ascii_config.EllipsisChar   = (ImWchar)'.'; //(ImWchar)0x0085;
-    //ascii_config.GlyphOffset.y  = -1.0f * IM_FLOOR(ascii_config.SizePixels / ascii_font_size);  // Add -1 offset per 14 units
+    //ascii_config.GlyphOffset.y  = -1.0f * IM_TRUNC(ascii_config.SizePixels / ascii_font_size);  // Add -1 offset per 14 units
 #if IMGUI_FONT_NO_UTF8
     ascii_config.MergeMode      = false;
 #endif
@@ -2852,8 +2852,8 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
         int unscaled_ascent, unscaled_descent, unscaled_line_gap;
         stbtt_GetFontVMetrics(&src_tmp.FontInfo, &unscaled_ascent, &unscaled_descent, &unscaled_line_gap);
 
-        const float ascent = ImFloor(unscaled_ascent * font_scale + ((unscaled_ascent > 0.0f) ? +1 : -1));
-        const float descent = ImFloor(unscaled_descent * font_scale + ((unscaled_descent > 0.0f) ? +1 : -1));
+        const float ascent = ImTrunc(unscaled_ascent * font_scale + ((unscaled_ascent > 0.0f) ? +1 : -1));
+        const float descent = ImTrunc(unscaled_descent * font_scale + ((unscaled_descent > 0.0f) ? +1 : -1));
         ImFontAtlasBuildSetupFont(atlas, dst_font, &cfg, ascent, descent);
         const float font_off_x = cfg.GlyphOffset.x;
         const float font_off_y = cfg.GlyphOffset.y + IM_ROUND(dst_font->Ascent);
@@ -3062,7 +3062,7 @@ void ImFontAtlasBuildInit(ImFontAtlas* atlas)
     // - Note that using io.FontGlobalScale or SetWindowFontScale(), with are legacy-ish, partially supported features, can still lead to unrounded sizes.
     // - We may support it better later and remove this rounding.
     for (ImFontConfig& cfg : atlas->ConfigData)
-       cfg.SizePixels = ImFloor(cfg.SizePixels);
+       cfg.SizePixels = ImTrunc(cfg.SizePixels);
 
     // Register texture region for mouse cursors or standard white pixels
     if (atlas->PackIdMouseCursors < 0)
@@ -3623,7 +3623,7 @@ void ImFont::AddGlyph(const ImFontConfig* cfg, ImWchar codepoint, float x0, floa
         advance_x = ImClamp(advance_x, cfg->GlyphMinAdvanceX, cfg->GlyphMaxAdvanceX);
         if (advance_x != advance_x_original)
         {
-            float char_off_x = cfg->PixelSnapH ? ImFloor((advance_x - advance_x_original) * 0.5f) : (advance_x - advance_x_original) * 0.5f;
+            float char_off_x = cfg->PixelSnapH ? ImTrunc((advance_x - advance_x_original) * 0.5f) : (advance_x - advance_x_original) * 0.5f;
             x0 += char_off_x;
             x1 += char_off_x;
         }
@@ -3891,8 +3891,8 @@ void ImFont::RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, Im
     if (glyph->Colored)
         col |= ~IM_COL32_A_MASK;
     float scale = (size >= 0.0f) ? (size / FontSize) : 1.0f;
-    float x = IM_FLOOR(pos.x);
-    float y = IM_FLOOR(pos.y);
+    float x = IM_TRUNC(pos.x);
+    float y = IM_TRUNC(pos.y);
     draw_list->PrimReserve(6, 4);
     draw_list->PrimRectUV(ImVec2(x + glyph->X0 * scale, y + glyph->Y0 * scale), ImVec2(x + glyph->X1 * scale, y + glyph->Y1 * scale), ImVec2(glyph->U0, glyph->V0), ImVec2(glyph->U1, glyph->V1), col);
 }
@@ -3905,8 +3905,8 @@ void ImFont::RenderTextEx(ImDrawList* draw_list, float size, const ImVec2& pos, 
         text_end = text_begin + strlen(text_begin); // ImGui:: functions generally already provides a valid text_end, so this is merely to handle direct calls.
 
     // Align to be pixel perfect
-    float x = IM_FLOOR(pos.x);
-    float y = IM_FLOOR(pos.y);
+    float x = IM_TRUNC(pos.x);
+    float y = IM_TRUNC(pos.y);
     if (y > clip_rect.w)
         return;
 

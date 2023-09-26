@@ -854,7 +854,6 @@ if(IMGUI_VULKAN_SHADER)
 endif(IMGUI_VULKAN_SHADER)
 
 # ImMaskCreator
-set(ImMaskCreator_STATIC ON)
 add_subdirectory(addon/ImMaskCreator)
 set(IMGUI_INC_DIRS
     ${IMGUI_INC_DIRS}
@@ -1314,7 +1313,7 @@ endif(IMGUI_STATIC)
 
 set(IMGUI_VERSION_MAJOR 1)
 set(IMGUI_VERSION_MINOR 89)
-set(IMGUI_VERSION_PATCH 92)
+set(IMGUI_VERSION_PATCH 93)
 string(TIMESTAMP IMGUI_VERSION_BUILD "%y%m%d")
 set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH})
 add_definitions(-DIMGUI_VERSION_MAJOR=${IMGUI_VERSION_MAJOR})
@@ -1600,6 +1599,15 @@ if (IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
         imgui
         ${LINK_LIBS}
     )
+
+    add_executable(ImMaskCreatorTest
+        addon/ImMaskCreator/Src/ImMaskCreatorTest.cpp
+        ${IMGUI_APP_SRC}
+    )
+    target_link_libraries(ImMaskCreatorTest PRIVATE
+        ImMaskCreator
+    )
+    
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     set(IMGUI_SHELL_FILE ${PROJECT_SOURCE_DIR}/test/shell_minimal.html)
     set(IMGUI_WEB_DIR ${PROJECT_BINARY_DIR}/web/)

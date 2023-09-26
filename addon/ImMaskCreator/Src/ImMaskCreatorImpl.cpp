@@ -1441,6 +1441,14 @@ MaskCreator::Holder MaskCreator::CreateInstance()
     return MaskCreator::Holder(new MaskCreatorImpl(), MASK_CREATOR_DELETER);
 }
 
+void MaskCreator::GetVersion(int& major, int& minor, int& patch, int& build)
+{
+    major = ImMaskCreator_VERSION_MAJOR;
+    minor = ImMaskCreator_VERSION_MINOR;
+    patch = ImMaskCreator_VERSION_PATCH;
+    build = ImMaskCreator_VERSION_BUILD;
+}
+
 MaskCreator::Holder MaskCreator::LoadFromJson(const string& filePath)
 {
     json::value j;

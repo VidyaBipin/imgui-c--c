@@ -18,6 +18,7 @@ struct MaskCreator
 {
     using Holder = std::shared_ptr<MaskCreator>;
     static Holder CreateInstance();
+    static void GetVersion(int& major, int& minor, int& patch, int& build);
 
     virtual bool DrawContent(const ImVec2& v2Pos, const ImVec2& v2Size) = 0;
     virtual ImGui::ImMat GetMask(int iLineType, bool bFilled = true) = 0;

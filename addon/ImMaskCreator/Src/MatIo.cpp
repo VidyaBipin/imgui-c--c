@@ -1,3 +1,4 @@
+#if 0
 #include <memory>
 #include <filesystem>
 #include <cctype>
@@ -330,3 +331,24 @@ bool SaveAsPng(const ImGui::ImMat& m, const string& _savePath)
     return true;
 }
 }
+#endif
+
+#include <imgui.h>
+#include "MatIo.h"
+using namespace std;
+namespace MatUtils
+{
+bool SaveAsPng(const ImGui::ImMat& m, const std::string& savePath)
+{
+    const static string logTag = "[SaveAsPng]";
+    const auto eDtype = m.color_format;
+    if (eDtype != IM_CF_ABGR && eDtype != IM_CF_ARGB && eDtype != IM_CF_BGRA && eDtype != IM_CF_RGBA &&
+        eDtype != IM_CF_BGR && eDtype != IM_CF_RGB && eDtype != IM_CF_GRAY)
+    {
+        cerr << logTag << "Only support RGB(A) and GRAY format!" << endl;
+        return false;
+    }
+    stbi_write_png(savePath.c_str(), m.w, m.h, m.c, m.data, m.w * m.c);
+    return true;
+}
+} // namespace MatUtils

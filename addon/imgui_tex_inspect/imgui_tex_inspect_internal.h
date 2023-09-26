@@ -35,7 +35,7 @@ static inline void ClearFlag(TSet &set, TFlag flag)
 template <typename T>
 static inline T Modulus(T a, T b)
 {
-    return a - b * ImFloorSigned(a / b);
+    return a - b * ImFloor(a / b);
 }
 
 // Defined in recent versions of imgui_internal.h.  Included here in case user is on older
