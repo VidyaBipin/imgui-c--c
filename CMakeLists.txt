@@ -856,6 +856,10 @@ endif(IMGUI_VULKAN_SHADER)
 # ImMaskCreator
 set(ImMaskCreator_STATIC ON)
 add_subdirectory(addon/ImMaskCreator)
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImMaskCreator/Include
+)
 
 # ImGuiFileDialog
 set(IMGUI_SRC
