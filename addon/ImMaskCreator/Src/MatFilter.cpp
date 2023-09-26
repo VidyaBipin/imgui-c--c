@@ -572,7 +572,7 @@ public:
         return m_iStartY;
     }
 
-    int Proceed(const uint8_t* p8uSrc, int iSrcStep, int iSrcCount, uint8_t* p8uDst, int iDstStep)
+    int Proceed(const uint8_t* p8uSrc, int iSrcStep, int iSrcCount, uint8_t* p8uDst, int iDstStep) override
     {
         assert(m_szWholeSize.x > 0 && m_szWholeSize.y > 0);
 

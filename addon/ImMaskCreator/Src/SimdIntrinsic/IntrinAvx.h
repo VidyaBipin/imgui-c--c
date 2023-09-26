@@ -1581,7 +1581,7 @@ inline v_int16x16 v256_lut_pairs(const int16_t* tab, const int32_t* idx)
 }
 inline v_int16x16 v256_lut_quads(const int16_t* tab, const int32_t* idx)
 {
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__clang__)
     return v_int16x16(_mm256_i32gather_epi64((const long long int32_t*)tab, _mm_loadu_si128((const __m128i*)idx), 2));//Looks like intrinsic has wrong definition
 #else
     return v_int16x16(_mm256_i32gather_epi64((const int64_t*)tab, _mm_loadu_si128((const __m128i*)idx), 2));
@@ -1597,7 +1597,7 @@ inline v_int32x8 v256_lut(const int32_t* tab, const int32_t* idx)
 }
 inline v_int32x8 v256_lut_pairs(const int32_t* tab, const int32_t* idx)
 {
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__clang__)
     return v_int32x8(_mm256_i32gather_epi64((const long long int32_t*)tab, _mm_loadu_si128((const __m128i*)idx), 4));
 #else
     return v_int32x8(_mm256_i32gather_epi64((const int64_t*)tab, _mm_loadu_si128((const __m128i*)idx), 4));
@@ -1613,7 +1613,7 @@ inline v_uint32x8 v256_lut_quads(const uint32_t* tab, const int32_t* idx) { retu
 
 inline v_int64x4 v256_lut(const int64_t* tab, const int32_t* idx)
 {
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__clang__)
     return v_int64x4(_mm256_i32gather_epi64((const long long int32_t*)tab, _mm_loadu_si128((const __m128i*)idx), 8));
 #else
     return v_int64x4(_mm256_i32gather_epi64(tab, _mm_loadu_si128((const __m128i*)idx), 8));
@@ -2265,9 +2265,9 @@ inline int16_t v_extract_n(v_int16x16 a)
 }
 
 template<int32_t i>
-inline uint v_extract_n(v_uint32x8 a)
+inline uint32_t v_extract_n(v_uint32x8 a)
 {
-    return (uint)_v256_extract_epi32<i>(a.val);
+    return (uint32_t)_v256_extract_epi32<i>(a.val);
 }
 
 template<int32_t i>
@@ -2291,7 +2291,7 @@ inline int64_t v_extract_n(v_int64x4 v)
 template<int32_t i>
 inline float v_extract_n(v_float32x8 v)
 {
-    union { uint iv; float fv; } d;
+    union { uint32_t iv; float fv; } d;
     d.iv = v_extract_n<i>(v_reinterpret_as_u32(v));
     return d.fv;
 }
