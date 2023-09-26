@@ -272,6 +272,12 @@ set(IMGUI_SRC
     misc/cpp/imgui_stdlib.cpp
     misc/cpp/dir_iterate.cpp
     misc/cpp/imgui_cpu.cpp
+    misc/json/imgui_json.cpp
+)
+
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/misc/json/
 )
 
 # base headers
@@ -291,6 +297,7 @@ set(IMGUI_INCS
     misc/stb_image_write.h
     misc/stb_image_resize.h
     misc/DynObjectLoader.h
+    misc/json/imgui_json.h
 )
 
 set(IMGUI_FONT_UTF8 WeiHei CACHE STRING "ImGui internal UTF8 font")
@@ -846,6 +853,10 @@ if(IMGUI_VULKAN_SHADER)
     )
 endif(IMGUI_VULKAN_SHADER)
 
+# ImMaskCreator
+set(ImMaskCreator_STATIC ON)
+add_subdirectory(addon/ImMaskCreator)
+
 # ImGuiFileDialog
 set(IMGUI_SRC
     ${IMGUI_SRC}
@@ -1007,14 +1018,12 @@ endif(IMGUI_BUILD_EXAMPLE)
 # Node Editor
 set(IMGUI_SRC
     ${IMGUI_SRC}
-    ${CMAKE_CURRENT_SOURCE_DIR}/addon/node_editor/imgui_json.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/node_editor/imgui_canvas.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/node_editor/imgui_node_editor_api.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/node_editor/imgui_node_editor.cpp
 )
 set(IMGUI_INCS
     ${IMGUI_INCS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/addon/node_editor/imgui_json.h
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/node_editor/imgui_bezier_math.h
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/node_editor/imgui_bezier_math.inl
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/node_editor/imgui_canvas.h
