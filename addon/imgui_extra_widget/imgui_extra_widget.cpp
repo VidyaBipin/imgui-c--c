@@ -7223,32 +7223,54 @@ void ImGui::SpinnerArcFade(const char *label, float radius, float thickness, con
         if (start < PI_2)
         {
             c.Value.w = 0.f;
-            if (start > a && start < (a + arc_angle))
-            {
-                c.Value.w = 1.f - (start - a) / (float)arc_angle;
-            }
-            else if (start < a)
-            {
-                c.Value.w = 1.f;
-            }
+            if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
+            else if (start < a) { c.Value.w = 1.f; }
             c.Value.w = ImMax(0.05f, 1.f - c.Value.w);
         }
         else
         {
             const float startk = start - PI_2;
             c.Value.w = 0.f;
-            if (startk > a && startk < (a + arc_angle))
-            {
-                c.Value.w = 1.f - (startk - a) / (float)arc_angle;
-            }
-            else if (startk < a)
-            {
-                c.Value.w = 1.f;
-            }
+            if (startk > a && startk < (a + arc_angle)) { c.Value.w = 1.f - (startk - a) / (float)arc_angle; }
+            else if (startk < a) { c.Value.w = 1.f; }
             c.Value.w = ImMax(0.05f, c.Value.w);
         }
 
         window->DrawList->PathStroke(c, false, thickness);
+    }
+}
+
+void ImGui::SpinnerSimpleArcFade(const char *label, float radius, float thickness, const ImColor &color, float speed)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 4.f);
+    const float arc_angle = PI_2 / (float)4;
+    const float angle_offset = arc_angle / num_segments;
+    auto draw_segment = [&] (int arc_num, float delta, auto c, float k, float t) {
+        window->DrawList->PathClear();
+        for (size_t i = 0; i <= num_segments + 1; i++) {
+            const float a = t * start + arc_angle * arc_num + (i * angle_offset) - PI_DIV_2 - PI_DIV_4 + delta;
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius * k, centre.y + ImSin(a) * radius * k));
+        }
+        window->DrawList->PathStroke(color_alpha(c, 1.f), false, thickness);
+    };
+    for (size_t arc_num = 0; arc_num < 2; ++arc_num) {
+        const float a = arc_angle * arc_num;
+        ImColor c = color;
+        if (start < PI_2) {
+            c.Value.w = 0.f;
+            if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
+            else if (start < a) { c.Value.w = 1.f; }
+            c.Value.w = ImMax(0.05f, 1.f - c.Value.w);
+        } else {
+            const float startk = start - PI_2;
+            c.Value.w = 0.f;
+            if (startk > a && startk < (a + arc_angle)) { c.Value.w = 1.f - (startk - a) / (float)arc_angle; }
+            else if (startk < a) { c.Value.w = 1.f; }
+            c.Value.w = ImMax(0.05f, c.Value.w);
+        }
+        draw_segment(arc_num, 0.f, c, 1.f + arc_num * 0.3f, arc_num > 0 ? -1 : 1);
+        draw_segment(arc_num, IM_PI, c, 1.f + arc_num * 0.3f, arc_num > 0 ? -1 : 1);
     }
 }
 
@@ -9132,6 +9154,31 @@ void ImGui::SpinnerDnaDots(const char *label, float radius, float thickness, con
         ImVec2 p1 = draw_point(0, i);
         ImVec2 p2 = draw_point(IM_PI, i);
         window->DrawList->AddLine(p1, p2, color_alpha(color, 1.f), thickness * 0.5f);
+    }
+}
+
+void ImGui::Spinner3SmuggleDots(const char *label, float radius, float thickness, const ImColor &color, float speed, int lt, float delta, bool mode)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float nextItemKoeff = 2.5f;
+    const float dots = 2;// (size.x / (thickness * nextItemKoeff));
+    const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+    auto draw_point = [&] (float angle, int i, float k) {
+        float a = angle + k * start + k * (IM_PI - i * PI_DIV(dots));
+        float th_koeff = 1.f + ImSin(a + PI_DIV_2) * 0.3f;
+        float pp = mode ? centre.x + ImSin(a) * size.x * delta
+                        : centre.y + ImSin(a) * size.y * delta;
+        ImVec2 p = mode ? ImVec2(pp, centre.y - (size.y * 0.5f) + i * thickness * nextItemKoeff)
+                        : ImVec2(centre.x - (size.x * 0.5f) + i * thickness * nextItemKoeff, pp);
+        window->DrawList->AddCircleFilled(p, thickness * th_koeff, color_alpha(color, 1.f), lt);
+        return p;
+    };
+    {
+        ImVec2 p1 = draw_point(0, 1, -1);
+        ImVec2 p2 = draw_point(IM_PI, 2, 1);
+        //window->DrawList->AddLine(p1, p2, color_alpha(color, 1.f), thickness * 0.5f);
+        ImVec2 p3 = draw_point(PI_DIV_2, 3, -1);
+        //window->DrawList->AddLine(p2, p3, color_alpha(color, 1.f), thickness * 0.5f);
     }
 }
 
