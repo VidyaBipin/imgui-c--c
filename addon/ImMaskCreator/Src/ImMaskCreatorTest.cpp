@@ -89,7 +89,7 @@ static bool _AppFrame(void* handle, bool closeApp)
 
         wndAvailSize = GetContentRegionAvail();
         auto cursorPos = GetCursorScreenPos();
-        if (!g_hMaskCreator->DrawContent(cursorPos, cursorPos+wndAvailSize))
+        if (!g_hMaskCreator->DrawContent(cursorPos, wndAvailSize))
             cerr << "MaskCreator::DrawContent() FAILED! Error is '" << g_hMaskCreator->GetError() << "'." << endl;
         if (g_bShowContainBox)
         {

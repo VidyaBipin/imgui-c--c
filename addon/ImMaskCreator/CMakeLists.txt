@@ -5,10 +5,14 @@ set(CMAKE_CXX_STANDARD 17)
 
 option(SIMD_ARCH_X86                    "Build simd optimizations of x86_64" ON)
 
+if(NOT DEFINED ImMaskCreator_STATIC)
 option(ImMaskCreator_STATIC             "Build ImMaskCreator as static library" OFF)
+endif()
 if(ImMaskCreator_STATIC)
+    message("Build ImMaskCreator as static library")
     set(LIBRARY_TYPE STATIC)
 else(ImMaskCreator_STATIC)
+    message("Build ImMaskCreator as shared library")
     set(LIBRARY_TYPE SHARED)
 endif(ImMaskCreator_STATIC)
 

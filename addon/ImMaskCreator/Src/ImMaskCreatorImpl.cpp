@@ -9,7 +9,6 @@
 #include <chrono>
 #include <imgui_internal.h>
 #include <unordered_map>
-#include <imgui_json.h>
 #include "ImMaskCreator.h"
 #include "Contour2Mask.h"
 #include "MatMath.h"
@@ -356,9 +355,9 @@ public:
         return ImVec4(rBox.Min.x, rBox.Min.y, rBox.Max.x, rBox.Max.y);
     }
 
-    bool SaveAsJson(const std::string& filePath) const override
+    bool SaveAsJson(imgui_json::value& j) const override
     {
-        json::value j;
+        j = imgui_json::value();
         json::array subj;
         for (const auto& cp : m_atContourPoints)
             subj.push_back(cp.ToJson());
@@ -401,7 +400,14 @@ public:
         j["contour_complete"] = m_bContourCompleted;
         j["mask_filled"] = m_bLastMaskFilled;
         j["mask_line_type"] = json::number(m_iLastMaskLineType);
+        return true;
+    }
 
+    bool SaveAsJson(const std::string& filePath) const override
+    {
+        json::value j;
+        if (!SaveAsJson(j))
+            return false;
         j.save(filePath);
         return true;
     }
@@ -432,7 +438,7 @@ public:
         for (const auto& elem : subj)
         {
             ContourPointImpl cp(this, {0, 0});
-            cp.FromJson(subj);
+            cp.FromJson(elem);
             m_atContourPoints.push_back(std::move(cp));
         }
         m_tMorphCtrl.FromJson(j["morph_controller"]);
@@ -1447,6 +1453,14 @@ void MaskCreator::GetVersion(int& major, int& minor, int& patch, int& build)
     minor = ImMaskCreator_VERSION_MINOR;
     patch = ImMaskCreator_VERSION_PATCH;
     build = ImMaskCreator_VERSION_BUILD;
+}
+
+MaskCreator::Holder MaskCreator::LoadFromJson(const imgui_json::value& j)
+{
+    MaskCreator::Holder hInst = CreateInstance();
+    MaskCreatorImpl* pInst = dynamic_cast<MaskCreatorImpl*>(hInst.get());
+    pInst->LoadFromJson(j);
+    return hInst;
 }
 
 MaskCreator::Holder MaskCreator::LoadFromJson(const string& filePath)
