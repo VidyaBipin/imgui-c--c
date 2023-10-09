@@ -6515,6 +6515,26 @@ void ImGui::SpinnerScaleDots(const char *label, float radius, float thickness, c
     }
 }
 
+void ImGui::SpinnerSquareSpins(const char *label, float radius, float thickness, const ImColor &color, float speed)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float nextItemKoeff = 2.5f;
+    const float heightSpeed = 0.8f;
+    const float dots = (size.x / (thickness * nextItemKoeff));
+    const float start = (float)ImGui::GetTime() * speed;
+    for (size_t i = 0; i < dots; i++)
+    {
+        const float a = ImFmod(start + i * (PI_DIV_2 / dots), PI_DIV_2);
+        const float th = thickness * (ImCos(a * heightSpeed) * 2.f);
+        ImVec2 pmin = ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff - thickness, centre.y - thickness);
+        ImVec2 pmax = ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff + thickness, centre.y + thickness);
+        window->DrawList->AddRect(pmin, pmax, color_alpha(color, 1.f), 0.f);
+        ImVec2 lmin = ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff - thickness, centre.y - th + thickness);
+        ImVec2 lmax = ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff + thickness - 1, centre.y - th + thickness);
+        window->DrawList->AddLine(lmin, lmax, color_alpha(color, 1.f), 1.f);
+    }
+}
+
 void ImGui::SpinnerMovingDots(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t dots)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
@@ -8959,6 +8979,54 @@ void ImGui::SpinnerHboDots(const char *label, float radius, float thickness, con
                                             color_alpha(color, ImMax(minfade, ImSin(astart + PI_DIV_2))),
                                             8);
     }
+}
+
+void ImGui::SpinnerMoonDots(const char *label, float radius, float thickness, const ImColor &first, const ImColor &second, float speed)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = (float)ImGui::GetTime() * speed;
+    const float astart = ImFmod(start, IM_PI * 2.f);
+    const float bstart = astart + IM_PI;
+    const float sina = ImSin(astart);
+    const float sinb = ImSin(bstart);
+    if (astart < PI_DIV_2 || astart > IM_PI + PI_DIV_2) {
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + sina * thickness, centre.y), thickness, color_alpha(first, 1.f), 16);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + sinb * thickness, centre.y), thickness, color_alpha(second, 1.f), 16);
+        window->DrawList->AddCircle(ImVec2(centre.x + sinb * thickness, centre.y), thickness, color_alpha(first, 1.f), 16);
+    } else {
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + sinb * thickness, centre.y), thickness, color_alpha(second, 1.f), 16);
+        window->DrawList->AddCircle(ImVec2(centre.x + sinb * thickness, centre.y), thickness, color_alpha(first, 1.f), 16);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + sina * thickness, centre.y), thickness, color_alpha(first, 1.f), 16);
+    }
+}
+
+void ImGui::SpinnerTwinHboDots(const char *label, float radius, float thickness, const ImColor &color, float minfade, float ryk, float speed, size_t dots, float delta)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = (float)ImGui::GetTime() * speed;
+    for (size_t i = 0; i < dots; i++)
+    {
+        const float astart = start + PI_2_DIV(dots) * i;
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImSin(astart) * radius, centre.y + ryk * ImCos(astart) * radius + radius * delta), thickness,
+                                          color_alpha(color, ImMax(minfade, ImSin(astart + PI_DIV_2))),
+                                          8);
+    }
+    for (size_t i = 0; i < dots; i++)
+    {
+        const float astart = start + PI_2_DIV(dots) * i;
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImSin(astart) * radius, centre.y - ryk * ImCos(astart) * radius - radius * delta), thickness,
+                                          color_alpha(color, ImMax(minfade, ImSin(astart + PI_DIV_2))),
+                                          8);
+    }
+}
+
+void ImGui::SpinnerThreeDotsStar(const char *label, float radius, float thickness, const ImColor &color, float minfade, float ryk, float speed, float delta)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = (float)ImGui::GetTime() * speed;
+    window->DrawList->AddCircleFilled(ImVec2(centre.x + ImSin(-start) * radius, centre.y - ryk * ImCos(-start) * radius + radius * delta), thickness, color_alpha(color, ImMax(minfade, ImSin(-start + PI_DIV_2))), 8);
+    window->DrawList->AddCircleFilled(ImVec2(centre.x + ImSin(start) * radius, centre.y - ryk * ImCos(start) * radius - radius * delta), thickness, color_alpha(color, ImMax(minfade, ImSin(start + PI_DIV_2))), 8);
+    window->DrawList->AddCircleFilled(ImVec2(centre.x + ImSin(start + PI_DIV_4) * radius, centre.y - ryk * ImCos(start + PI_DIV_4) * radius - radius * delta), thickness, color_alpha(color, ImMax(minfade, ImSin(start + PI_DIV_4 + PI_DIV_2))), 8);
 }
 
 void ImGui::SpinnerSineArcs(const char *label, float radius, float thickness, const ImColor &color, float speed)
