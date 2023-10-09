@@ -24,7 +24,7 @@ static char g_acMaskSavePath[256];
 // Application Framework Functions
 static void _AppInitialize(void** handle)
 {
-    g_hMaskCreator = MaskCreator::CreateInstance();
+    g_hMaskCreator = MaskCreator::CreateInstance({1920, 1080});
     // g_hMaskCreator2 = MaskCreator::CreateInstance();
     strncpy(g_acMaskSavePath, "./mask.png", sizeof(g_acMaskSavePath));
 }

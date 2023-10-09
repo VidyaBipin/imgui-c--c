@@ -24,7 +24,7 @@ namespace ImGui
 class MaskCreatorImpl : public MaskCreator
 {
 public:
-    MaskCreatorImpl(const string& name) : m_name(name), m_tMorphCtrl(this)
+    MaskCreatorImpl(const MatUtils::Size2i& size, const string& name) : m_size(size), m_name(name), m_tMorphCtrl(this)
     {
         m_v2PointSizeHalf = m_v2PointSize/2;
         m_itMorphCtrlVt = m_itHoveredVertex = m_atContourPoints.end();
@@ -41,7 +41,7 @@ public:
         m_name = name;
     }
 
-    bool DrawContent(const ImVec2& v2Pos, const ImVec2& v2Size) override
+    bool DrawContent(const ImVec2& v2Pos, const ImVec2& v2Size, bool bUpdateUiScale) override
     {
         ImRect bb(v2Pos, v2Pos+v2Size);
         if (!ItemAdd(bb, 0))
@@ -52,13 +52,19 @@ public:
             return false;
         }
         m_rWorkArea = bb;
+        if (bUpdateUiScale)
+        {
+            m_v2UiScale.x = v2Size.x/(float)m_size.x;
+            m_v2UiScale.y = v2Size.y/(float)m_size.y;
+        }
 
         // reactions
         const auto mousePosAbs = GetMousePos();
         const auto& origin = m_rWorkArea.Min;
-        const auto mousePos = mousePosAbs-origin;
+        const auto temp = mousePosAbs-origin;
+        const ImVec2 mousePos(temp.x/m_v2UiScale.x, temp.y/m_v2UiScale.y);
         // check hovering state
-        if (!IsMouseDown(ImGuiMouseButton_Left) && m_rWorkArea.Contains(mousePosAbs))
+        if (!IsMouseDown(ImGuiMouseButton_Left))
         {
             auto iter = m_atContourPoints.begin();
             while (iter != m_atContourPoints.end())
@@ -301,13 +307,24 @@ public:
         // draw hovering point on contour
         if (HasHoveredVertex() && m_itHoveredVertex->m_iHoverType == 4)
         {
-            const auto pointPos = m_itHoveredVertex->m_v2HoverPointOnContour+origin;
+            const auto pointPos = origin+m_itHoveredVertex->m_v2HoverPointOnContour*m_v2UiScale;
             const auto& offsetSize1 = m_v2PointSizeHalf;
             pDrawList->AddRectFilled(pointPos-offsetSize1, pointPos+offsetSize1, m_u32PointBorderHoverColor);
             const ImVec2 offsetSize2(m_v2PointSizeHalf.x-m_fPointBorderThickness, m_v2PointSizeHalf.y-m_fPointBorderThickness);
             pDrawList->AddRectFilled(pointPos-offsetSize2, pointPos+offsetSize2, m_u32ContourHoverPointColor);
         }
         return true;
+    }
+
+    bool ChangeMaskSize(const MatUtils::Size2i& size) override
+    {
+        m_size = size;
+        return true;
+    }
+
+    MatUtils::Size2i GetMaskSize() const override
+    {
+        return m_size;
     }
 
     ImGui::ImMat GetMask(int iLineType, bool bFilled) override
@@ -332,8 +349,7 @@ public:
                     itVt2++;
                 }
             }
-            const MatUtils::Size2i maskSize((int32_t)m_rWorkArea.GetWidth(), (int32_t)m_rWorkArea.GetHeight());
-            m_mMask = MatUtils::Contour2Mask(av2TotalVertices, maskSize, {0.f, 0.f}, IM_DT_INT8, 128, 0, iLineType, bFilled);
+            m_mMask = MatUtils::Contour2Mask(av2TotalVertices, m_size, {0.f, 0.f}, IM_DT_INT8, 128, 0, iLineType, bFilled);
             const auto& iMorphIters = m_tMorphCtrl.m_iMorphIterations;
             if (bFilled && iMorphIters > 0)
             {
@@ -391,6 +407,7 @@ public:
             j["morph_ctrl_cpidx"] = json::number(-1);
         }
         j["name"] = json::string(m_name);
+        j["size"] = MatUtils::ToImVec2(m_size);
         j["point_size"] = m_v2PointSize;
         j["point_color"] = json::number(m_u32PointColor);
         j["point_border_color"] = json::number(m_u32PointBorderColor);
@@ -426,6 +443,7 @@ public:
     void LoadFromJson(const json::value& j)
     {
         if (j.contains("name")) m_name = j["name"].get<json::string>();
+        if (j.contains("size")) m_size = MatUtils::FromImVec2<int32_t>(j["size"].get<json::vec2>());
         m_v2PointSize = j["point_size"].get<json::vec2>();
         m_u32PointColor = j["point_color"].get<json::number>();
         m_u32PointBorderColor = j["point_border_color"].get<json::number>();
@@ -706,6 +724,7 @@ private:
 
         void DrawPoint(ImDrawList* pDrawList, const ImVec2& origin) const
         {
+            const auto& v2UiScale = m_owner->m_v2UiScale;
             const auto& pointSizeHalf = m_owner->m_v2PointSizeHalf;
             const auto& pointColor = m_owner->m_u32PointColor;
             const auto& pointBorderThickness = m_owner->m_fPointBorderThickness;
@@ -718,11 +737,11 @@ private:
             const auto& grabberColorHoverOutter = m_owner->m_u32GrabberBorderHoverColor;
             const auto& lineThickness = m_owner->m_fGrabberLineThickness;
             const auto& lineColor = m_owner->m_u32GrabberLineColor;
-            const auto pointPos = origin+m_pos;
+            const auto pointPos = origin+m_pos*v2UiScale;
             if (m_bEnableBezier)
             {
-                const auto grabber0Center = pointPos+m_grabber0Offset;
-                const auto grabber1Center = pointPos+m_grabber1Offset;
+                const auto grabber0Center = pointPos+m_grabber0Offset*v2UiScale;
+                const auto grabber1Center = pointPos+m_grabber1Offset*v2UiScale;
                 pDrawList->AddLine(pointPos, grabber0Center, lineColor, lineThickness);
                 pDrawList->AddLine(pointPos, grabber1Center, lineColor, lineThickness);
                 auto borderColor = m_bHovered && m_iHoverType==1 ? grabberColorHoverOutter : grabberColorOutter;
@@ -827,6 +846,7 @@ private:
 
         void DrawContour(ImDrawList* pDrawList, const ImVec2& origin, const ContourPointImpl& prevVt) const
         {
+            const auto& v2UiScale = m_owner->m_v2UiScale;
             const auto& contourColor = m_owner->m_u32ContourColor;
             const auto& contourThickness = m_owner->m_fContourThickness;
             if (!m_av2ContourVertices.empty())
@@ -834,14 +854,16 @@ private:
                 const int smoothness = m_av2ContourVertices.size()-1;
                 for (int i = 0; i < smoothness; ++i)
                 {
-                    auto v0 = m_av2ContourVertices[i  ]+origin;
-                    auto v1 = m_av2ContourVertices[i+1]+origin;
+                    const auto v0 = origin+m_av2ContourVertices[i  ]*v2UiScale;
+                    const auto v1 = origin+m_av2ContourVertices[i+1]*v2UiScale;
                     pDrawList->AddLine(v0, v1, contourColor, contourThickness);
                 }
             }
             else
             {
-                pDrawList->AddLine(origin+prevVt.m_pos, origin+m_pos, contourColor, contourThickness);
+                const auto v0 = origin+prevVt.m_pos*v2UiScale;
+                const auto v1 = origin+       m_pos*v2UiScale;
+                pDrawList->AddLine(v0, v1, contourColor, contourThickness);
             }
         }
     };
@@ -1158,8 +1180,9 @@ private:
 
         void Draw(ImDrawList* pDrawList, const ImVec2& origin) const
         {
-            const ImVec2 rootPos = m_ptRootPos+origin;
-            ImVec2 grabberPos = m_ptGrabberPos+origin;
+            const auto& v2UiScale = m_owner->m_v2UiScale;
+            const ImVec2 rootPos = origin+m_ptRootPos*v2UiScale;
+            ImVec2 grabberPos = origin+m_ptGrabberPos*v2UiScale;
             pDrawList->AddLine(rootPos, grabberPos, m_owner->m_u32ContourColor, m_owner->m_fContourThickness);
             const auto& offsetSize1 = m_owner->m_v2PointSizeHalf;
             auto borderColor = m_iHoverType == 0 ? m_owner->m_u32PointBorderHoverColor : m_owner->m_u32PointBorderColor;
@@ -1412,6 +1435,8 @@ private:
 
 private:
     string m_name;
+    MatUtils::Size2i m_size;
+    ImVec2 m_v2UiScale{1.0f, 1.0f};
     ImRect m_rWorkArea{{-1, -1}, {-1, -1}};
     list<ContourPointImpl> m_atContourPoints;
     list<ImVec2> m_av2AllContourVertices;
@@ -1455,9 +1480,9 @@ static const auto MASK_CREATOR_DELETER = [] (MaskCreator* p) {
     delete ptr;
 };
 
-MaskCreator::Holder MaskCreator::CreateInstance(const string& name)
+MaskCreator::Holder MaskCreator::CreateInstance(const MatUtils::Size2i& size, const string& name)
 {
-    return MaskCreator::Holder(new MaskCreatorImpl(name), MASK_CREATOR_DELETER);
+    return MaskCreator::Holder(new MaskCreatorImpl(size, name), MASK_CREATOR_DELETER);
 }
 
 void MaskCreator::GetVersion(int& major, int& minor, int& patch, int& build)
@@ -1470,7 +1495,7 @@ void MaskCreator::GetVersion(int& major, int& minor, int& patch, int& build)
 
 MaskCreator::Holder MaskCreator::LoadFromJson(const imgui_json::value& j)
 {
-    MaskCreator::Holder hInst = CreateInstance();
+    MaskCreator::Holder hInst = CreateInstance({0, 0});
     MaskCreatorImpl* pInst = dynamic_cast<MaskCreatorImpl*>(hInst.get());
     pInst->LoadFromJson(j);
     return hInst;
@@ -1480,7 +1505,7 @@ MaskCreator::Holder MaskCreator::LoadFromJson(const string& filePath)
 {
     json::value j;
     j.load(filePath);
-    MaskCreator::Holder hInst = CreateInstance();
+    MaskCreator::Holder hInst = CreateInstance({0, 0});
     MaskCreatorImpl* pInst = dynamic_cast<MaskCreatorImpl*>(hInst.get());
     pInst->LoadFromJson(j);
     return hInst;
