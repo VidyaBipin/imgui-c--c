@@ -18,9 +18,11 @@ struct ContourPoint
 struct MaskCreator
 {
     using Holder = std::shared_ptr<MaskCreator>;
-    IMGUI_API static Holder CreateInstance();
+    IMGUI_API static Holder CreateInstance(const std::string& name = "");
     IMGUI_API static void GetVersion(int& major, int& minor, int& patch, int& build);
 
+    virtual std::string GetName() const = 0;
+    virtual void SetName(const std::string& name) = 0;
     virtual bool DrawContent(const ImVec2& v2Pos, const ImVec2& v2Size) = 0;
     virtual ImGui::ImMat GetMask(int iLineType, bool bFilled = true) = 0;
     virtual const ContourPoint* GetHoveredPoint() const = 0;

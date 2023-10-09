@@ -24,11 +24,21 @@ namespace ImGui
 class MaskCreatorImpl : public MaskCreator
 {
 public:
-    MaskCreatorImpl() : m_tMorphCtrl(this)
+    MaskCreatorImpl(const string& name) : m_name(name), m_tMorphCtrl(this)
     {
         m_v2PointSizeHalf = m_v2PointSize/2;
         m_itMorphCtrlVt = m_itHoveredVertex = m_atContourPoints.end();
         m_mMorphKernel = MatUtils::GetStructuringElement(MatUtils::MORPH_RECT, {5, 5});
+    }
+
+    string GetName() const override
+    {
+        return m_name;
+    }
+
+    void SetName(const string& name) override
+    {
+        m_name = name;
     }
 
     bool DrawContent(const ImVec2& v2Pos, const ImVec2& v2Size) override
@@ -380,6 +390,7 @@ public:
         {
             j["morph_ctrl_cpidx"] = json::number(-1);
         }
+        j["name"] = json::string(m_name);
         j["point_size"] = m_v2PointSize;
         j["point_color"] = json::number(m_u32PointColor);
         j["point_border_color"] = json::number(m_u32PointBorderColor);
@@ -414,6 +425,7 @@ public:
 
     void LoadFromJson(const json::value& j)
     {
+        if (j.contains("name")) m_name = j["name"].get<json::string>();
         m_v2PointSize = j["point_size"].get<json::vec2>();
         m_u32PointColor = j["point_color"].get<json::number>();
         m_u32PointBorderColor = j["point_border_color"].get<json::number>();
@@ -1399,6 +1411,7 @@ private:
     }
 
 private:
+    string m_name;
     ImRect m_rWorkArea{{-1, -1}, {-1, -1}};
     list<ContourPointImpl> m_atContourPoints;
     list<ImVec2> m_av2AllContourVertices;
@@ -1442,9 +1455,9 @@ static const auto MASK_CREATOR_DELETER = [] (MaskCreator* p) {
     delete ptr;
 };
 
-MaskCreator::Holder MaskCreator::CreateInstance()
+MaskCreator::Holder MaskCreator::CreateInstance(const string& name)
 {
-    return MaskCreator::Holder(new MaskCreatorImpl(), MASK_CREATOR_DELETER);
+    return MaskCreator::Holder(new MaskCreatorImpl(name), MASK_CREATOR_DELETER);
 }
 
 void MaskCreator::GetVersion(int& major, int& minor, int& patch, int& build)
