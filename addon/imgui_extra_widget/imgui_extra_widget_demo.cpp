@@ -465,8 +465,8 @@ void ShowExtraWidgetDemoWindow()
                     case  81: ImGui::SpinnerRotateTriangles("SpinnerRotateTriangles", 16, 2, ImColor(255, 255, 255), 6.f * velocity, 3); ImGui::ShowTooltipOnHover("SpinnerRotateTriangles"); break;
                     case  82: ImGui::SpinnerArcWedges("SpinnerArcWedges", 16, ImColor::HSV(0.3f, 0.8f, 0.8f), 2.8f * velocity, 4); ImGui::ShowTooltipOnHover("SpinnerArcWedges"); break;
                     case  83: ImGui::SpinnerScaleSquares("SpinnerScaleSquares", 16, 8, ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), 5 * velocity); ImGui::ShowTooltipOnHover("SpinnerScaleSquares"); break;
-                    case  84: ImGui::SpinnerHboDots("SpinnerMovingDots", 16, 4, ImColor(255, 255, 255), 0.f, 0.f, 1.1f * velocity, 6); ImGui::ShowTooltipOnHover("SpinnerMovingDots"); break;
-                    case  85: ImGui::SpinnerHboDots("SpinnerMovingDots", 16, 4, ImColor(255, 255, 255), 0.1f, 0.5f, 1.1f * velocity, 6); ImGui::ShowTooltipOnHover("SpinnerMovingDots"); break;
+                    case  84: ImGui::SpinnerHboDots("SpinnerHboDots", 16, 4, ImColor(255, 255, 255), 0.f, 0.f, 1.1f * velocity, 6); ImGui::ShowTooltipOnHover("SpinnerHboDots"); break;
+                    case  85: ImGui::SpinnerHboDots("SpinnerHboDots2", 16, 4, ImColor(255, 255, 255), 0.1f, 0.5f, 1.1f * velocity, 6); ImGui::ShowTooltipOnHover("SpinnerHboDots2"); break;
                     case  86: ImGui::Spinner<e_st_bounce_ball>("SpinnerBounceBall3", Radius{16}, Thickness{4}, Color{ImColor(255, 255, 255)}, Speed{3.2f * velocity}, Dots{5}); ImGui::ShowTooltipOnHover("SpinnerBounceBall3"); break;
                     case  87: ImGui::SpinnerBounceBall("SpinnerBounceBallShadow", 16, 4, ImColor(255, 255, 255), 2.2f * velocity, 1, true); ImGui::ShowTooltipOnHover("SpinnerBounceBallShadow"); break;
                     case  88: ImGui::SpinnerBounceBall("SpinnerBounceBall5Shadow", 16, 4, ImColor(255, 255, 255), 3.6f * velocity, 5, true); ImGui::ShowTooltipOnHover("SpinnerBounceBall5Shadow"); break;
@@ -501,9 +501,9 @@ void ShowExtraWidgetDemoWindow()
                     case 117: ImGui::SpinnerSpiral("SpinnerSpiral", 16, 2, ImColor(255, 255, 255), 6 * velocity, 5); ImGui::ShowTooltipOnHover("SpinnerSpira"); break;
                     case 118: ImGui::SpinnerSpiralEye("SpinnerSpiralEye", 16, 1, ImColor(255, 255, 255), 3 * velocity); ImGui::ShowTooltipOnHover("SpinnerSpiralEye"); break;
                     case 119: ImGui::SpinnerWifiIndicator("SpinnerWifiIndicator", 16, 1.5f, ImColor(0, 0, 0), ImColor(255, 255, 255), 7.8f * velocity, 5.52f, 3); ImGui::ShowTooltipOnHover("SpinnerWifiIndicator"); break;
-                    case 120: ImGui::SpinnerHboDots("SpinnerMovingDots3", 16, 2, ImColor(255, 255, 255), 0.f, 0.f, 1.1f * velocity, 10); ImGui::ShowTooltipOnHover("SpinnerMovingDots3"); break;
-                    case 121: ImGui::SpinnerHboDots("SpinnerMovingDots4", 16, 4, ImColor(255, 255, 255), 0.1f, 0.5f, 1.1f * velocity, 2); ImGui::ShowTooltipOnHover("SpinnerMovingDots4"); break;
-                    case 122: ImGui::SpinnerHboDots("SpinnerMovingDots5", 16, 4, ImColor(255, 255, 255), 0.1f, 0.5f, 1.1f * velocity, 3); ImGui::ShowTooltipOnHover("SpinnerMovingDots5"); break;
+                    case 120: ImGui::SpinnerHboDots("SpinnerHboDots", 16, 2, ImColor(255, 255, 255), 0.f, 0.f, 1.1f * velocity, 10); ImGui::ShowTooltipOnHover("SpinnerHboDots"); break;
+                    case 121: ImGui::SpinnerHboDots("SpinnerHboDots2", 16, 4, ImColor(255, 255, 255), 0.1f, 0.5f, 1.1f * velocity, 2); ImGui::ShowTooltipOnHover("SpinnerHboDots2"); break;
+                    case 122: ImGui::SpinnerHboDots("SpinnerHboDots4", 16, 4, ImColor(255, 255, 255), 0.1f, 0.5f, 1.1f * velocity, 3); ImGui::ShowTooltipOnHover("SpinnerHboDots4"); break;
                     case 123: ImGui::SpinnerDnaDots("SpinnerDnaDotsH", 16, 3, ImColor(255, 255, 255), 2 * velocity, 8, 0.25f); ImGui::ShowTooltipOnHover("SpinnerDnaDotsH"); break;
                     case 124: ImGui::SpinnerDnaDots("SpinnerDnaDotsV", 16, 3, ImColor(255, 255, 255), 2 * velocity, 8, 0.25f, true); ImGui::ShowTooltipOnHover("SpinnerDnaDotsV"); break;
                     case 125: ImGui::SpinnerRotateDots("SpinnerRotateDots2", 16, 6, ImColor(255, 255, 255), 4 * velocity, ImMax<int>(int(ImSin((float)ImGui::GetTime() * 0.5f) * 8), 3)); ImGui::ShowTooltipOnHover("SpinnerRotateDots2"); break;
@@ -556,6 +556,11 @@ void ShowExtraWidgetDemoWindow()
                     case 172: ImGui::SpinnerScaleDots("SpinnerScaleDots2", 16, 2, ImColor(255, 255, 255), 4 * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerScaleDots2"); break;
                     case 173: ImGui::Spinner3SmuggleDots("Spinner3SmuggleDots", 16, 3, ImColor(255, 255, 255), 4 * velocity, 8,0.25f, true); ImGui::ShowTooltipOnHover("Spinner3SmuggleDots"); break;
                     case 174: ImGui::SpinnerSimpleArcFade("SpinnerSimpleArcFade", 13, 2, ImColor(255, 255, 255), 4 * velocity); ImGui::ShowTooltipOnHover("SpinnerSimpleArcFade"); break;
+                    case 175: ImGui::SpinnerTwinHboDots("SpinnerTwinHboDots", 16, 4, ImColor(255, 255, 255), 0.1f, 0.5f, 1.1f * velocity, 6, 0.f); ImGui::ShowTooltipOnHover("SpinnerTwinHboDots"); break;
+                    case 176: ImGui::SpinnerTwinHboDots("SpinnerTwinHboDots2", 16, 4, ImColor(255, 255, 255), 0.1f, 0.5f, 3.1f * velocity, 3, -0.5f); ImGui::ShowTooltipOnHover("SpinnerTwinHboDots2"); break;
+                    case 177: ImGui::SpinnerThreeDotsStar("SpinnerThreeDotsStar", 16, 4, ImColor(255, 255, 255), 0.1f, 0.5f, 5.1f * velocity, -0.2f); ImGui::ShowTooltipOnHover("SpinnerThreeDotsStar"); break;
+                    case 178: ImGui::SpinnerSquareSpins("SpinnerSquareSpins", 16, 6, ImColor(255, 255, 255), 2 * velocity); ImGui::ShowTooltipOnHover("SpinnerSquareSpins"); break;
+                    case 179: ImGui::SpinnerMoonDots("SpinnerMoonDots", 16, 8, ImColor(255, 255, 255), ImColor(0, 0, 0), 1.1f * velocity); ImGui::ShowTooltipOnHover("SpinnerMoonDots"); break;
 
                     // ...
                     default: break;
