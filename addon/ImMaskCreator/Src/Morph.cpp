@@ -43,11 +43,11 @@
 #include "Morph.Simd.h"
 #undef INTRIN_MODE
 
+#endif // ~SIMD_ARCH_X86
+
 #define INTRIN_MODE NONE
 #include "Morph.Simd.h"
 #undef INTRIN_MODE
-
-#endif // ~SIMD_ARCH_X86
 
 using namespace std;
 using namespace SysUtils;
@@ -186,6 +186,7 @@ RowFilter::Holder GetMorphologyRowFilter(int op, ImDataType type, int ksize, int
                     delete ptr; }); \
             }
 
+#if SIMD_ARCH_X86
         if (CpuChecker::HasFeature(CpuFeature::AVX2))
         {
             using namespace SimdOpt::AVX2;
@@ -217,6 +218,7 @@ RowFilter::Holder GetMorphologyRowFilter(int op, ImDataType type, int ksize, int
             GET_SIMD_ERODE_ROW_FILTER(type, ksize, anchor);
         }
         else
+#endif // ~SIMD_ARCH_X86
         {
             using namespace SimdOpt::NONE;
             GET_SIMD_ERODE_ROW_FILTER(type, ksize, anchor);
@@ -261,6 +263,7 @@ RowFilter::Holder GetMorphologyRowFilter(int op, ImDataType type, int ksize, int
                     delete ptr; }); \
             }
 
+#if SIMD_ARCH_X86
         if (CpuChecker::HasFeature(CpuFeature::AVX2))
         {
             using namespace SimdOpt::AVX2;
@@ -292,6 +295,7 @@ RowFilter::Holder GetMorphologyRowFilter(int op, ImDataType type, int ksize, int
             GET_SIMD_DILATE_ROW_FILTER(type, ksize, anchor);
         }
         else
+#endif // ~SIMD_ARCH_X86
         {
             using namespace SimdOpt::NONE;
             GET_SIMD_DILATE_ROW_FILTER(type, ksize, anchor);
@@ -344,6 +348,7 @@ ColumnFilter::Holder GetMorphologyColumnFilter(int op, ImDataType type, int ksiz
                     delete ptr; }); \
             }
 
+#if SIMD_ARCH_X86
         if (CpuChecker::HasFeature(CpuFeature::AVX2))
         {
             using namespace SimdOpt::AVX2;
@@ -375,6 +380,7 @@ ColumnFilter::Holder GetMorphologyColumnFilter(int op, ImDataType type, int ksiz
             GET_SIMD_ERODE_COLUMN_FILTER(type, ksize, anchor);
         }
         else
+#endif
         {
             using namespace SimdOpt::NONE;
             GET_SIMD_ERODE_COLUMN_FILTER(type, ksize, anchor);
@@ -419,6 +425,7 @@ ColumnFilter::Holder GetMorphologyColumnFilter(int op, ImDataType type, int ksiz
                     delete ptr; }); \
             }
 
+#if SIMD_ARCH_X86
         if (CpuChecker::HasFeature(CpuFeature::AVX2))
         {
             using namespace SimdOpt::AVX2;
@@ -450,6 +457,7 @@ ColumnFilter::Holder GetMorphologyColumnFilter(int op, ImDataType type, int ksiz
             GET_SIMD_DILATE_COLUMN_FILTER(type, ksize, anchor);
         }
         else
+#endif
         {
             using namespace SimdOpt::NONE;
             GET_SIMD_DILATE_COLUMN_FILTER(type, ksize, anchor);
@@ -500,6 +508,7 @@ MatFilter::Holder GetMorphologyMatFilter(int op, const ImGui::ImMat& _kernel, co
                     delete ptr; }); \
             }
 
+#if SIMD_ARCH_X86
         if (CpuChecker::HasFeature(CpuFeature::AVX2))
         {
             using namespace SimdOpt::AVX2;
@@ -531,6 +540,7 @@ MatFilter::Holder GetMorphologyMatFilter(int op, const ImGui::ImMat& _kernel, co
             GET_SIMD_ERODE_MAT_FILTER(_kernel, _anchor);
         }
         else
+#endif
         {
             using namespace SimdOpt::NONE;
             GET_SIMD_ERODE_MAT_FILTER(_kernel, _anchor);
@@ -575,6 +585,7 @@ MatFilter::Holder GetMorphologyMatFilter(int op, const ImGui::ImMat& _kernel, co
                     delete ptr; }); \
             }
 
+#if SIMD_ARCH_X86
         if (CpuChecker::HasFeature(CpuFeature::AVX2))
         {
             using namespace SimdOpt::AVX2;
@@ -606,6 +617,7 @@ MatFilter::Holder GetMorphologyMatFilter(int op, const ImGui::ImMat& _kernel, co
             GET_SIMD_DILATE_MAT_FILTER(_kernel, _anchor);
         }
         else
+#endif
         {
             using namespace SimdOpt::NONE;
             GET_SIMD_DILATE_MAT_FILTER(_kernel, _anchor);

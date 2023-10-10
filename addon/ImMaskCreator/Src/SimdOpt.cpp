@@ -68,9 +68,14 @@ float16_t::float16_t()
 {
     if (!loadf32Func || !storef32Func)
     {
+#if SIMD_ARCH_X86
         const bool bCpuHasFp16 = CpuChecker::HasFeature(CpuFeature::FP16);
         loadf32Func = bCpuHasFp16 ? float16_t::loadf32_intrin : float16_t::loadf32_c;
         storef32Func = bCpuHasFp16 ? float16_t::storef32_intrin : float16_t::storef32_c;
+#else
+        loadf32Func = float16_t::loadf32_c;
+        storef32Func = float16_t::storef32_c;
+#endif
     }
 }
 
@@ -78,18 +83,25 @@ float16_t::float16_t(float x)
 {
     if (!loadf32Func || !storef32Func)
     {
+#if SIMD_ARCH_X86
         const bool bCpuHasFp16 = CpuChecker::HasFeature(CpuFeature::FP16);
         loadf32Func = bCpuHasFp16 ? float16_t::loadf32_intrin : float16_t::loadf32_c;
         storef32Func = bCpuHasFp16 ? float16_t::storef32_intrin : float16_t::storef32_c;
+#else
+        loadf32Func = float16_t::loadf32_c;
+        storef32Func = float16_t::storef32_c;
+#endif
     }
     w = loadf32Func(x);
 }
 
+#if SIMD_ARCH_X86
 uint16_t float16_t::loadf32_intrin(float x)
 {
     __m128 v = _mm_load_ss(&x);
     return (uint16_t)_mm_cvtsi128_si32(_mm_cvtps_ph(v, 0));
 }
+#endif
 
 uint16_t float16_t::loadf32_c(float x)
 {
@@ -117,12 +129,14 @@ uint16_t float16_t::loadf32_c(float x)
     return (uint16_t)(v | (sign >> 16));
 }
 
+#if SIMD_ARCH_X86
 float float16_t::storef32_intrin(uint16_t x)
 {
     float f;
     _mm_store_ss(&f, _mm_cvtph_ps(_mm_cvtsi32_si128(x)));
     return f;
 }
+#endif
 
 float float16_t::storef32_c(uint16_t x)
 {

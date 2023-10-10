@@ -3,7 +3,10 @@ project(ImMaskCreator VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 
-option(SIMD_ARCH_X86                    "Build simd optimizations of x86_64" ON)
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|aarch64)")
+elseif(CMAKE_OSX_ARCHITECTURES MATCHES "x86" OR CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86|x86_64|AMD64)")
+    set(SIMD_ARCH_X86 ON)
+endif()
 
 if(NOT DEFINED ImMaskCreator_STATIC)
 option(ImMaskCreator_STATIC             "Build ImMaskCreator as static library" OFF)
@@ -41,10 +44,12 @@ target_include_directories(ImMaskCreator PRIVATE
     ${LIB_SRC_DIR}
     ${IMGUI_INC_DIRS}
 )
+
 if(SIMD_ARCH_X86)
 target_compile_definitions(ImMaskCreator PRIVATE SIMD_ARCH_X86)
-target_compile_options(ImMaskCreator PRIVATE -mavx2 -mavx -msse4.2 -msse4.1 -mssse3 -msse3 -msse2 -msse -mmmx -mfma -mf16c)
+target_compile_options(ImMaskCreator PRIVATE -mavx2 -mavx -msse4.2 -msse4.1 -mssse3 -msse3 -msse2 -msse -mfma -mf16c)
 endif(SIMD_ARCH_X86)
+
 target_include_directories(ImMaskCreator PUBLIC
     ${PROJECT_SOURCE_DIR}/Include
     ${IMGUI_INCLUDE_DIRS}

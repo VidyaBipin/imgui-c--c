@@ -107,6 +107,7 @@ void Max(ImGui::ImMat& dst, const ImGui::ImMat& src)
                 delete ptr; }); \
         }
 
+#if SIMD_ARCH_X86
     if (CpuChecker::HasFeature(CpuFeature::AVX2))
     {
         using namespace SimdOpt::AVX2;
@@ -138,6 +139,7 @@ void Max(ImGui::ImMat& dst, const ImGui::ImMat& src)
         GET_SIMD_MAX_OP(type);
     }
     else
+#endif // ~SIMD_ARCH_X86
     {
         using namespace SimdOpt::NONE;
         GET_SIMD_MAX_OP(type);

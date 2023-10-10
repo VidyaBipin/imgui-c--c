@@ -202,9 +202,11 @@ inline uint32_t trailingZeros32(uint32_t value)
 #include "SimdIntrinsic/IntrinVxFuncDef.h"
 #undef INTRIN_MODE
 
+#endif // ~SIMD_ARCH_X86
+
+#undef VXPREFIX
+#define VXPREFIX(func) v##func
 #define INTRIN_MODE NONE
 #include "SimdIntrinsic/IntrinCpp.h"
 #include "SimdIntrinsic/IntrinVxFuncDef.h"
 #undef INTRIN_MODE
-
-#endif // ~SIMD_ARCH_X86
