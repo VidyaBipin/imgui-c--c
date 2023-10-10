@@ -32,6 +32,7 @@ add_library(ImMaskCreator ${LIBRARY_TYPE}
     ${LIB_SRC_DIR}/Contour2Mask.cpp
     ${LIB_SRC_DIR}/MatFilter.cpp
     ${LIB_SRC_DIR}/MatIo.cpp
+    ${LIB_SRC_DIR}/MatMath.cpp
     ${LIB_SRC_DIR}/Morph.cpp
     ${LIB_SRC_DIR}/SimdOpt.cpp
     ${LIB_SRC_DIR}/SysUtils.cpp

@@ -2,6 +2,7 @@
 #include <iterator>
 #include <limits>
 #include <imgui.h>
+#include <immat.h>
 
 namespace MatUtils
 {
@@ -121,4 +122,13 @@ ImVec2 CalcNearestPointOnPloygon(const ImVec2& ptPoint, Container<ImVec2> const&
         *piLineIdx = resLineIdx;
     return result;
 }
+
+struct MatOp2
+{
+    using Holder = std::shared_ptr<MatOp2>;
+
+    virtual void operator()(const ImGui::ImMat& src1, const ImGui::ImMat& src2, ImGui::ImMat& dst) = 0;
+};
+
+void Max(ImGui::ImMat& dst, const ImGui::ImMat& src);
 }

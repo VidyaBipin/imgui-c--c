@@ -306,9 +306,7 @@ template <typename T> struct VMin
 template <typename T> struct VMax
 {
     typedef T vtype;
-    vtype operator()(const vtype& a, const vtype& b) const {
-        return v_max(a, b);
-    }
+    vtype operator()(const vtype& a, const vtype& b) const { return v_max(a, b); }
 };
 
 template<class Op, class VecOp> struct MorphRowFilter : public MatUtils::RowFilter

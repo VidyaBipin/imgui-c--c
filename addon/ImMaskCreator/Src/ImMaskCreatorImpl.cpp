@@ -328,11 +328,13 @@ public:
         return m_size;
     }
 
-    ImGui::ImMat GetMask(int iLineType, bool bFilled) override
+    ImGui::ImMat GetMask(int iLineType, bool bFilled, ImDataType eDataType, double dMaskValue, double dNonMaskValue) override
     {
         if (!m_bContourCompleted)
             return ImGui::ImMat();
-        if (m_bContourChanged || m_iLastMaskLineType != iLineType || m_bLastMaskFilled != bFilled || m_mMask.empty())
+        if (m_bContourChanged || m_mMask.empty() ||
+            m_iLastMaskLineType != iLineType || m_bLastMaskFilled != bFilled ||
+            m_eLastMaskDataType != eDataType || m_dLastMaskValue != dMaskValue || m_dLastNonMaskValue != dNonMaskValue)
         {
             int iTotalVertexCount = 0;
             for (const auto& v : m_atContourPoints)
@@ -350,7 +352,7 @@ public:
                     itVt2++;
                 }
             }
-            m_mMask = MatUtils::Contour2Mask(av2TotalVertices, m_size, {0.f, 0.f}, IM_DT_INT8, 128, 0, iLineType, bFilled);
+            m_mMask = MatUtils::Contour2Mask(av2TotalVertices, m_size, {0.f, 0.f}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled);
             const auto& iMorphIters = m_tMorphCtrl.m_iMorphIterations;
             if (bFilled && iMorphIters > 0)
             {
@@ -363,6 +365,9 @@ public:
             m_bContourChanged = false;
             m_iLastMaskLineType = iLineType;
             m_bLastMaskFilled = bFilled;
+            m_eLastMaskDataType = eDataType;
+            m_dLastMaskValue = dMaskValue;
+            m_dLastNonMaskValue = dNonMaskValue;
         }
         return m_mMask;
     }
@@ -1467,6 +1472,8 @@ private:
     bool m_bContourChanged{false};
     bool m_bLastMaskFilled{false};
     int m_iLastMaskLineType{0};
+    ImDataType m_eLastMaskDataType{IM_DT_UNDEFINED};
+    double m_dLastMaskValue{0}, m_dLastNonMaskValue{0};
     ImGui::ImMat m_mMask;
     ImGui::ImMat m_mMorphKernel;
     string m_sErrMsg;

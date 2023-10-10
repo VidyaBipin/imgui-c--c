@@ -20,15 +20,22 @@ public:
     // src2.rgb * (1 - alpha) + src1.rgb * src1.a * aplha, dst alpha is src2.a
     double blend(const ImMat& src1, const ImMat& src2, ImMat& dst, float alpha, int x = 0, int y = 0) const;
 
+    // alpha blending src1 and src2 using alpha from argument 'alpha',
+    // dst(x,y) = src2(x,y)+src1(x-offx,y-offy)*alpha
+    // argument 'alpha' must be IM_DT_FLOAT32, channel == 1
+    void blend(const ImMat& src1, const ImMat& src2, const ImMat& alpha, ImMat& dst, int offx = 0, int offy = 0) const;
+
 public:
     const VulkanDevice* vkdev {nullptr};
     Pipeline * pipe           {nullptr};
     Pipeline * pipe_alpha     {nullptr};
+    Pipeline * pipe_alpha_mat {nullptr};
     VkCompute * cmd           {nullptr};
     Option opt;
 
 private:
     void upload_param(const VkMat& src1, const VkMat& src2, VkMat& dst, int x, int y) const;
     void upload_param(const VkMat& src1, const VkMat& src2, VkMat& dst, float alpha, int x, int y) const;
+    void upload_param(const VkMat& src1, const VkMat& src2, VkMat& dst, const VkMat& alpha, int x, int y) const;
 };
 } // namespace ImGui 
