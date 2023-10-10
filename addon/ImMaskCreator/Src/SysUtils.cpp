@@ -52,7 +52,7 @@ namespace SysUtils
 #if defined _MSC_VER && (defined _M_IX86 || defined _M_X64)
 #   if _MSC_VER >= 1400
         #include <intrin.h>
-        #define SYSUTILS_CPUID __cpuidex
+        #define X86_64_CPUID __cpuidex
 #   else
         #error "Required MSVS 2005+"
 #   endif
@@ -77,7 +77,7 @@ namespace SysUtils
 #   endif
         cpuidData[0] = __eax; cpuidData[1] = __ebx; cpuidData[2] = __ecx; cpuidData[3] = __edx;
     }
-    #define SYSUTILS_CPUID _cpuid
+    #define X86_64_CPUID _cpuid
 #endif
 
 static bool _CPU_FEATURE_TABLE_INITED = false;
@@ -131,9 +131,17 @@ static void InitializeCpuFeatureTable()
     _CPU_FEATURE_TABLE.emplace(CpuFeature::AVX512_CLX,      "AVX512_CLX");
     _CPU_FEATURE_TABLE.emplace(CpuFeature::AVX512_ICL,      "AVX512_ICL");
 
+    _CPU_FEATURE_TABLE.emplace(CpuFeature::NEON,            "NEON");
+    _CPU_FEATURE_TABLE.emplace(CpuFeature::MSA,             "MSA");
+    _CPU_FEATURE_TABLE.emplace(CpuFeature::RISCVV,          "RISCVV");
+    _CPU_FEATURE_TABLE.emplace(CpuFeature::VSX,             "VSX");
+    _CPU_FEATURE_TABLE.emplace(CpuFeature::VSX3,            "VSX3");
+    _CPU_FEATURE_TABLE.emplace(CpuFeature::RVV,             "RVV");
+
+#ifdef X86_64_CPUID
     int cpuidData[4] = { 0, 0, 0, 0 };
     int cpuidDataEx[4] = { 0, 0, 0, 0 };
-    SYSUTILS_CPUID(cpuidData, 1, 0);
+    X86_64_CPUID(cpuidData, 1, 0);
     int x86Family = (cpuidData[0]>>8) & 15;
     if (x86Family >= 6)
     {
@@ -149,7 +157,7 @@ static void InitializeCpuFeatureTable()
         _CPU_FEATURE_TABLE[CpuFeature::AVX]             .enable = (cpuidData[2] & (1<<28)) != 0;
         _CPU_FEATURE_TABLE[CpuFeature::FP16]            .enable = (cpuidData[2] & (1<<29)) != 0;
 
-        SYSUTILS_CPUID(cpuidDataEx, 7, 0);
+        X86_64_CPUID(cpuidDataEx, 7, 0);
         _CPU_FEATURE_TABLE[CpuFeature::AVX2]            .enable = (cpuidDataEx[1] & (1<<5)) != 0;
         _CPU_FEATURE_TABLE[CpuFeature::AVX_512F]        .enable = (cpuidDataEx[1] & (1<<16)) != 0;
         _CPU_FEATURE_TABLE[CpuFeature::AVX_512DQ]       .enable = (cpuidDataEx[1] & (1<<17)) != 0;
@@ -236,33 +244,12 @@ static void InitializeCpuFeatureTable()
             _CPU_FEATURE_TABLE[CpuFeature::AVX512_ICL].enable = false;
         }
     }
+#endif // ~X86_64_CPUID
 
-#if defined __ANDROID__ || defined __linux__ || defined __FreeBSD__ || defined __QNX__
+#if defined __linux__ || defined __FreeBSD__ || defined __QNX__
 #  ifdef __aarch64__
-    have[CpuFeature::NEON] = true;
-    have[CpuFeature::FP16] = true;
-#  elif defined __arm__ && defined __ANDROID__
-#    if defined HAVE_CPUFEATURES
-    CV_LOG_INFO(NULL, "calling android_getCpuFeatures() ...");
-    uint64_t features = android_getCpuFeatures();
-    CV_LOG_INFO(NULL, cv::format("calling android_getCpuFeatures() ... Done (%llx)", (long long)features));
-    have[CpuFeature::NEON] = (features & ANDROID_CPU_ARM_FEATURE_NEON) != 0;
-    have[CpuFeature::FP16] = (features & ANDROID_CPU_ARM_FEATURE_VFP_FP16) != 0;
-#    else
-    CV_LOG_INFO(NULL, "cpufeatures library is not available for CPU detection");
-    #if CV_NEON
-    CV_LOG_INFO(NULL, "- NEON instructions is enabled via build flags");
-    have[CpuFeature::NEON] = true;
-    #else
-    CV_LOG_INFO(NULL, "- NEON instructions is NOT enabled via build flags");
-    #endif
-    #if CV_FP16
-    CV_LOG_INFO(NULL, "- FP16 instructions is enabled via build flags");
-    have[CpuFeature::FP16] = true;
-    #else
-    CV_LOG_INFO(NULL, "- FP16 instructions is NOT enabled via build flags");
-    #endif
-#    endif
+    _CPU_FEATURE_TABLE[CpuFeature::NEON].enable = true;
+    _CPU_FEATURE_TABLE[CpuFeature::FP16].enable = true;
 #  elif defined __arm__ && !defined __FreeBSD__
     int cpufile = open("/proc/self/auxv", O_RDONLY);
     if (cpufile >= 0)
@@ -273,8 +260,8 @@ static void InitializeCpuFeatureTable()
         {
             if (auxv.a_type == AT_HWCAP)
             {
-                have[CpuFeature::NEON] = (auxv.a_un.a_val & 4096) != 0;
-                have[CpuFeature::FP16] = (auxv.a_un.a_val & 2) != 0;
+                _CPU_FEATURE_TABLE[CpuFeature::NEON].enable = (auxv.a_un.a_val & 4096) != 0;
+                _CPU_FEATURE_TABLE[CpuFeature::FP16].enable = (auxv.a_un.a_val & 2) != 0;
                 break;
             }
         }
@@ -283,23 +270,20 @@ static void InitializeCpuFeatureTable()
 #  endif
 #elif (defined __clang__ || defined __APPLE__)
 #  if (defined __ARM_NEON__ || (defined __ARM_NEON && defined __aarch64__))
-    have[CpuFeature::NEON] = true;
+    _CPU_FEATURE_TABLE[CpuFeature::NEON].enable = true;
 #  endif
 #  if (defined __ARM_FP  && (((__ARM_FP & 0x2) != 0) && defined __ARM_NEON__))
-    have[CpuFeature::FP16] = true;
+    _CPU_FEATURE_TABLE[CpuFeature::FP16].enable = true;
 #  endif
 #endif
-#if defined _ARM_ && (defined(_WIN32_WCE) && _WIN32_WCE >= 0x800)
-    have[CpuFeature::NEON] = true;
-#endif
 #if defined _M_ARM64
-    have[CpuFeature::NEON] = true;
+    _CPU_FEATURE_TABLE[CpuFeature::NEON].enable = true;
 #endif
 #ifdef __riscv_vector
-    have[CpuFeature::RISCVV] = true;
+    _CPU_FEATURE_TABLE[CpuFeature::RISCVV].enable = true;
 #endif
 #ifdef __mips_msa
-    have[CpuFeature::MSA] = true;
+    _CPU_FEATURE_TABLE[CpuFeature::MSA].enable = true;
 #endif
 
 #if (defined __ppc64__ || defined __PPC64__) && defined __linux__
@@ -307,9 +291,9 @@ static void InitializeCpuFeatureTable()
     if (hwcap & PPC_FEATURE_HAS_VSX) {
         hwcap = getauxval(AT_HWCAP2);
         if (hwcap & PPC_FEATURE2_ARCH_3_00) {
-            have[CpuFeature::VSX] = have[CpuFeature::VSX3] = true;
+            _CPU_FEATURE_TABLE[CpuFeature::VSX].enable = _CPU_FEATURE_TABLE[CpuFeature::VSX3].enable = true;
         } else {
-            have[CpuFeature::VSX] = (hwcap & PPC_FEATURE2_ARCH_2_07) != 0;
+            _CPU_FEATURE_TABLE[CpuFeature::VSX].enable = (hwcap & PPC_FEATURE2_ARCH_2_07) != 0;
         }
     }
 #elif (defined __ppc64__ || defined __PPC64__) && defined __FreeBSD__
@@ -318,23 +302,15 @@ static void InitializeCpuFeatureTable()
     if (hwcap & PPC_FEATURE_HAS_VSX) {
         elf_aux_info(AT_HWCAP2, &hwcap, sizeof(hwcap));
         if (hwcap & PPC_FEATURE2_ARCH_3_00) {
-            have[CpuFeature::VSX] = have[CpuFeature::VSX3] = true;
+            _CPU_FEATURE_TABLE[CpuFeature::VSX].enable = _CPU_FEATURE_TABLE[CpuFeature::VSX3].enable = true;
         } else {
-            have[CpuFeature::VSX] = (hwcap & PPC_FEATURE2_ARCH_2_07) != 0;
+            _CPU_FEATURE_TABLE[CpuFeature::VSX].enable = (hwcap & PPC_FEATURE2_ARCH_2_07) != 0;
         }
     }
-#else
-// TODO: AIX, OpenBSD
-#  if CV_VSX || defined _ARCH_PWR8 || defined __POWER9_VECTOR__
-    have[CpuFeature::VSX] = true;
-#  endif
-#  if CV_VSX3 || defined __POWER9_VECTOR__
-    have[CpuFeature::VSX3] = true;
-#  endif
 #endif
 
 #if defined __riscv && defined __riscv_vector
-    have[CpuFeature::RVV] = true;
+    _CPU_FEATURE_TABLE[CpuFeature::RVV].enable = true;
 #endif
 
     cout << "Cpu feature table initialized, enabled features:" << endl;
