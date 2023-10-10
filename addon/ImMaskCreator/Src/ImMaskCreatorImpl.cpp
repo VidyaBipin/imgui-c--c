@@ -63,6 +63,7 @@ public:
         const auto& origin = m_rWorkArea.Min;
         const auto temp = mousePosAbs-origin;
         const ImVec2 mousePos(temp.x/m_v2UiScale.x, temp.y/m_v2UiScale.y);
+        const bool bMouseInWorkArea = m_rWorkArea.Contains(mousePosAbs);
         // check hovering state
         if (!IsMouseDown(ImGuiMouseButton_Left))
         {
@@ -107,7 +108,7 @@ public:
                     m_itHoveredVertex = iter;
             }
         }
-        if (IsMouseClicked(ImGuiMouseButton_Left) && m_rWorkArea.Contains(mousePosAbs))
+        if (IsMouseClicked(ImGuiMouseButton_Left) && bMouseInWorkArea)
         {
             if (!HasHoveredVertex() && !m_bContourCompleted && !IsKeyDown(m_eRemoveVertexKey))
             {
@@ -194,7 +195,7 @@ public:
                     m_itHoveredVertex->m_grabber0Offset = -coordOff;
                     m_itHoveredVertex->m_grabber1Offset = coordOff;
                 }
-                else if (m_itHoveredVertex->m_iHoverType == 0)
+                else if (m_itHoveredVertex->m_iHoverType == 0 && bMouseInWorkArea)
                 {
                     // moving the vertex
                     m_itHoveredVertex->m_pos = mousePos;
