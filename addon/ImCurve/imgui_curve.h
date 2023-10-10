@@ -147,6 +147,7 @@ struct IMGUI_API ImCurveEdit
         virtual void DeleteCurve(std::string name) = 0;
         virtual int GetCurveIndex(std::string name) = 0;
         virtual int GetCurveIndex(int64_t id) = 0;
+        virtual int GetCurveKeyCount() = 0;
         virtual const ImCurveEdit::keys* GetCurveKey(std::string name) = 0;
         virtual const ImCurveEdit::keys* GetCurveKey(size_t curveIndex) = 0;
         virtual void SetCurveColor(size_t curveIndex, ImU32 color) = 0;
@@ -208,6 +209,7 @@ struct IMGUI_API KeyPointEditor : public ImCurveEdit::Delegate
     void DeleteCurve(std::string name);
     int GetCurveIndex(std::string name);
     int GetCurveIndex(int64_t id);
+    int GetCurveKeyCount() { return mKeys.size(); }
     const ImCurveEdit::keys* GetCurveKey(std::string name);
     const ImCurveEdit::keys* GetCurveKey(size_t curveIndex);
     float GetPointValue(size_t curveIndex, float t);
