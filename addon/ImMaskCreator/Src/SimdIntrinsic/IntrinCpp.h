@@ -1,7 +1,7 @@
 #include <limits>
 #include <cstring>
 #include <algorithm>
-#include "MatUtilsMath.h"
+#include "MatMath.Internal.h"
 
 // //! @cond IGNORED
 // #define CV_SIMD128_CPP 1
@@ -1077,7 +1077,7 @@ template<int32_t n> inline v_reg<int32_t, n> v_round(const v_reg<float, n>& a)
 {
     v_reg<int32_t, n> c;
     for (int32_t i = 0; i < n; i++)
-        c.s[i] = cvRound(a.s[i]);
+        c.s[i] = std::round(a.s[i]);
     return c;
 }
 
@@ -1086,8 +1086,8 @@ template<int32_t n> inline v_reg<int32_t, n*2> v_round(const v_reg<double, n>& a
     v_reg<int32_t, n*2> c;
     for (int32_t i = 0; i < n; i++)
     {
-        c.s[i] = cvRound(a.s[i]);
-        c.s[i+n] = cvRound(b.s[i]);
+        c.s[i] = std::round(a.s[i]);
+        c.s[i+n] = std::round(b.s[i]);
     }
     return c;
 }
@@ -1096,7 +1096,7 @@ template<int32_t n> inline v_reg<int32_t, n> v_floor(const v_reg<float, n>& a)
 {
     v_reg<int32_t, n> c;
     for (int32_t i = 0; i < n; i++)
-        c.s[i] = cvFloor(a.s[i]);
+        c.s[i] = std::floor(a.s[i]);
     return c;
 }
 
@@ -1104,7 +1104,7 @@ template<int32_t n> inline v_reg<int32_t, n> v_ceil(const v_reg<float, n>& a)
 {
     v_reg<int32_t, n> c;
     for (int32_t i = 0; i < n; i++)
-        c.s[i] = cvCeil(a.s[i]);
+        c.s[i] = std::ceil(a.s[i]);
     return c;
 }
 
@@ -1121,7 +1121,7 @@ template<int32_t n> inline v_reg<int32_t, n*2> v_round(const v_reg<double, n>& a
     v_reg<int32_t, n*2> c;
     for (int32_t i = 0; i < n; i++)
     {
-        c.s[i] = cvRound(a.s[i]);
+        c.s[i] = std::round(a.s[i]);
         c.s[i+n] = 0;
     }
     return c;
@@ -1132,7 +1132,7 @@ template<int32_t n> inline v_reg<int32_t, n*2> v_floor(const v_reg<double, n>& a
     v_reg<int32_t, n*2> c;
     for (int32_t i = 0; i < n; i++)
     {
-        c.s[i] = cvFloor(a.s[i]);
+        c.s[i] = std::floor(a.s[i]);
         c.s[i+n] = 0;
     }
     return c;
@@ -1143,7 +1143,7 @@ template<int32_t n> inline v_reg<int32_t, n*2> v_ceil(const v_reg<double, n>& a)
     v_reg<int32_t, n*2> c;
     for (int32_t i = 0; i < n; i++)
     {
-        c.s[i] = cvCeil(a.s[i]);
+        c.s[i] = std::ceil(a.s[i]);
         c.s[i+n] = 0;
     }
     return c;
@@ -1336,6 +1336,20 @@ template<typename _Tp, int32_t n> inline v_reg<_Tp, n> v_interleave_quads(const 
         c.s[8*i+7] = vec.s[8*i+7];
     }
     return c;
+}
+
+template<typename _Tp, int32_t n>
+inline void v_interleave(const v_reg<_Tp, n>& a0, const v_reg<_Tp, n>& a1, v_reg<_Tp, n>& b0, v_reg<_Tp, n>& b1)
+{
+    int32_t i, i2;
+    const int32_t m = n/2;
+    for (i = i2 = 0; i < m; i++, i2 += 2)
+    {
+        b0.s[i2  ] = a0.s[i];
+        b0.s[i2+1] = a1.s[i];
+        b1.s[i2  ] = a0.s[m+i];
+        b1.s[i2+1] = a1.s[m+i];
+    }
 }
 
 template<typename _Tp, int32_t n> inline v_reg<_Tp, n> v_pack_triplets(const v_reg<_Tp, n>& vec)

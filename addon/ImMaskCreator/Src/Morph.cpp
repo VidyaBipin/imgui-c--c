@@ -1,7 +1,7 @@
 #include <cassert>
 #include <limits>
 #include "Morph.h"
-#include "MatUtilsMath.h"
+#include "MatMath.Internal.h"
 #include "MatFilter.h"
 
 #include "SimdOpt.h"

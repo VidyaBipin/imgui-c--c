@@ -3229,6 +3229,48 @@ inline v_int32x4 v_interleave_pairs(const v_int32x4& vec)
 inline v_uint32x4 v_interleave_pairs(const v_uint32x4& vec) { return v_reinterpret_as_u32(v_interleave_pairs(v_reinterpret_as_s32(vec))); }
 inline v_float32x4 v_interleave_pairs(const v_float32x4& vec) { return v_reinterpret_as_f32(v_interleave_pairs(v_reinterpret_as_s32(vec))); }
 
+inline void v_interleave(const v_int8x16& a0, const v_int8x16& a1, v_int8x16& b0, v_int8x16& b1)
+{
+    b0.val = _mm_unpacklo_epi8(a0.val, a1.val);
+    b1.val = _mm_unpackhi_epi8(a0.val, a1.val);
+}
+
+inline void v_interleave(const v_uint8x16& a0, const v_uint8x16& a1, v_uint8x16& b0, v_uint8x16& b1)
+{
+    b0.val = _mm_unpacklo_epi8(a0.val, a1.val);
+    b1.val = _mm_unpackhi_epi8(a0.val, a1.val);
+}
+
+inline void v_interleave(const v_int16x8& a0, const v_int16x8& a1, v_int16x8& b0, v_int16x8& b1)
+{
+    b0.val = _mm_unpacklo_epi16(a0.val, a1.val);
+    b1.val = _mm_unpackhi_epi16(a0.val, a1.val);
+}
+
+inline void v_interleave(const v_uint16x8& a0, const v_uint16x8& a1, v_uint16x8& b0, v_uint16x8& b1)
+{
+    b0.val = _mm_unpacklo_epi16(a0.val, a1.val);
+    b1.val = _mm_unpackhi_epi16(a0.val, a1.val);
+}
+
+inline void v_interleave(const v_int32x4& a0, const v_int32x4& a1, v_int32x4& b0, v_int32x4& b1)
+{
+    b0.val = _mm_unpacklo_epi32(a0.val, a1.val);
+    b1.val = _mm_unpackhi_epi32(a0.val, a1.val);
+}
+
+inline void v_interleave(const v_uint32x4& a0, const v_uint32x4& a1, v_uint32x4& b0, v_uint32x4& b1)
+{
+    b0.val = _mm_unpacklo_epi32(a0.val, a1.val);
+    b1.val = _mm_unpackhi_epi32(a0.val, a1.val);
+}
+
+inline void v_interleave(const v_float32x4& a0, const v_float32x4& a1, v_float32x4& b0, v_float32x4& b1)
+{
+    b0.val = (__m128)_mm_unpacklo_epi32((__m128i)a0.val, (__m128i)a1.val);
+    b1.val = (__m128)_mm_unpackhi_epi32((__m128i)a0.val, (__m128i)a1.val);
+}
+
 inline v_int8x16 v_pack_triplets(const v_int8x16& vec)
 {
 #if defined(USE_SSE4_1) || defined(USE_SSSE3)

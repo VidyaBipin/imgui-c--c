@@ -6,6 +6,7 @@
 #include <ImGuiFileDialog.h>
 #include <imgui_helper.h>
 #include "ImMaskCreator.h"
+#include "MatMath.h"
 #include "Morph.h"
 #include "MatIo.h"
 
@@ -13,6 +14,7 @@ using namespace std;
 using namespace ImGui;
 
 static MaskCreator::Holder g_hMaskCreator;
+static bool g_bMaskSizeInited = false;
 static MaskCreator::Holder g_hMaskCreator2;
 static bool g_bShowContainBox = false;
 static bool g_bFillContour = true;
@@ -89,6 +91,11 @@ static bool _AppFrame(void* handle, bool closeApp)
 
         wndAvailSize = GetContentRegionAvail();
         auto cursorPos = GetCursorScreenPos();
+        if (!g_bMaskSizeInited)
+        {
+            g_hMaskCreator->ChangeMaskSize(MatUtils::Size2i(wndAvailSize.x, wndAvailSize.y));
+            g_bMaskSizeInited = true;
+        }
         if (!g_hMaskCreator->DrawContent(cursorPos, wndAvailSize))
             cerr << "MaskCreator::DrawContent() FAILED! Error is '" << g_hMaskCreator->GetError() << "'." << endl;
         if (g_bShowContainBox)
@@ -130,9 +137,13 @@ static bool _AppFrame(void* handle, bool closeApp)
         SameLine(0, 20);
         Checkbox("Fill contour", &g_bFillContour);
 
-        g_mMask = g_hMaskCreator->GetMask(s_iLintTypeSelIdx, g_bFillContour);
+        g_mMask = g_hMaskCreator->GetMask(s_iLintTypeSelIdx, g_bFillContour, IM_DT_FLOAT32, 1, 0);
         if (!g_mMask.empty())
-            ImGenerateOrUpdateTexture(g_tidMask, g_mMask.w, g_mMask.h, g_mMask.c, (const unsigned char *)g_mMask.data);
+        {
+            ImGui::ImMat mRgba; mRgba.type = IM_DT_INT8;
+            MatUtils::GrayToRgba(mRgba, g_mMask, 255);
+            ImGenerateOrUpdateTexture(g_tidMask, mRgba.w, mRgba.h, mRgba.c, (const unsigned char *)mRgba.data);
+        }
 
         PushItemWidth(200);
         InputText("##SavePath", g_acMaskSavePath, sizeof(g_acMaskSavePath));
@@ -147,7 +158,6 @@ static bool _AppFrame(void* handle, bool closeApp)
 
         auto currPos = GetCursorScreenPos();
         wndAvailSize = GetContentRegionAvail();
-        GetWindowDrawList()->AddRectFilled(currPos, currPos+wndAvailSize, IM_COL32_WHITE);
         if (g_tidMask)
             Image(g_tidMask, wndAvailSize);
     }

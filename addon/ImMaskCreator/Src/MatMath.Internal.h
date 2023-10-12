@@ -1,7 +1,5 @@
 #pragma once
-#include <algorithm>
 #include <cmath>
-#include "MatUtilsCommDef.h"
 
 namespace MatUtils
 {
@@ -78,4 +76,107 @@ template<> inline uint64_t SaturateCast<uint64_t>(int32_t v) { return (uint64_t)
 template<> inline uint64_t SaturateCast<uint64_t>(int64_t v) { return (uint64_t)std::max(v, (int64_t)0); }
 template<> inline uint64_t SaturateCast<uint64_t>(float v) { int64_t iv = std::round(v); return SaturateCast<uint64_t>(iv); }
 template<> inline uint64_t SaturateCast<uint64_t>(double v) { int64_t iv = std::round(v); return SaturateCast<uint64_t>(iv); }
-}
+
+template<typename T> struct MinOp
+{
+    typedef T type1;
+    typedef T type2;
+    typedef T rtype;
+    T operator()(const T a, const T b) const { return std::min(a, b); }
+};
+
+template<typename T> struct MaxOp
+{
+    typedef T type1;
+    typedef T type2;
+    typedef T rtype;
+    T operator()(const T a, const T b) const { return std::max(a, b); }
+};
+
+template<typename T1, typename T2> struct ExpandOp
+{
+    typedef T1 stype1;
+    typedef T2 stype2;
+    stype2 operator()(const stype1& a) const { return (T2)a; }
+};
+
+template<typename T1, typename T2> struct SatCastOp
+{
+    typedef T1 stype1;
+    typedef T2 stype2;
+    stype2 operator()(const stype1& a) const { return SaturateCast<T2>(a); }
+};
+
+template<typename T> struct ColDepExpandF32
+{
+    typedef T stype1;
+    typedef float stype2;
+    stype2 operator()(const stype1& a) const { return (stype2)a; }
+};
+
+template<> struct ColDepExpandF32<uint8_t>
+{
+    typedef uint8_t stype1;
+    typedef float stype2;
+    static constexpr float U8toF32_SCALE = 3.921569e-3f;
+    stype2 operator()(const stype1& a) const { return (stype2)a*U8toF32_SCALE; }
+};
+
+template<> struct ColDepExpandF32<uint16_t>
+{
+    typedef uint8_t stype1;
+    typedef float stype2;
+    static constexpr float U16toF32_SCALE = 1.5259e-5f;
+    stype2 operator()(const stype1& a) const { return (stype2)a*U16toF32_SCALE; }
+};
+
+template<typename T> struct ColDepExpandU16
+{
+    typedef T stype1;
+    typedef uint16_t stype2;
+    stype2 operator()(const stype1& a) const { return (stype2)a; }
+};
+
+template<> struct ColDepExpandU16<uint8_t>
+{
+    typedef uint8_t stype1;
+    typedef uint16_t stype2;
+    stype2 operator()(const stype1& a) const { return (stype2)a<<8; }
+};
+
+template<typename T> struct ColDepPackU8
+{
+    typedef T stype1;
+    typedef uint8_t stype2;
+    stype2 operator()(const stype1& a) const { return (stype2)a; }
+};
+
+template<> struct ColDepPackU8<uint16_t>
+{
+    typedef uint16_t stype1;
+    typedef uint8_t stype2;
+    stype2 operator()(const stype1& a) const { return (stype2)((a+0x80)>>8); }
+};
+
+template<> struct ColDepPackU8<float>
+{
+    typedef float stype1;
+    typedef uint8_t stype2;
+    stype2 operator()(const stype1& a) const { return (stype2)(a>=1.f ? 255 : a<=0 ? 0 : std::round(a*255.f)); }
+};
+
+template<typename T> struct ColDepPackU16
+{
+    typedef T stype1;
+    typedef uint16_t stype2;
+    stype2 operator()(const stype1& a) const { return (stype2)a; }
+};
+
+template<> struct ColDepPackU16<float>
+{
+    typedef float stype1;
+    typedef uint16_t stype2;
+    stype2 operator()(const stype1& a) const { return (stype2)(a>=1.f ? 65535 : a<=0 ? 0 : std::round(a*65535.f)); }
+};
+
+} // ~namespace MatUtils

@@ -1751,6 +1751,62 @@ inline v_float32x8 v_pack_triplets(const v_float32x8& vec)
     return v_float32x8(_mm256_permutevar8x32_ps(vec.val, _mm256_set_epi64x(0x0000000700000007, 0x0000000600000005, 0x0000000400000002, 0x0000000100000000)));
 }
 
+inline void v_interleave(const v_int8x32& a0, const v_int8x32& a1, v_int8x32& b0, v_int8x32& b1)
+{
+    __m256i a_l = _mm256_unpacklo_epi8(a0.val, a1.val);
+    __m256i a_h = _mm256_unpackhi_epi8(a0.val, a1.val);
+    b0.val = _mm256_permute2x128_si256(a_l, a_h, 0+2*16);
+    b1.val = _mm256_permute2x128_si256(a_l, a_h, 1+3*16);
+}
+
+inline void v_interleave(const v_uint8x32& a0, const v_uint8x32& a1, v_uint8x32& b0, v_uint8x32& b1)
+{
+    __m256i a_l = _mm256_unpacklo_epi8(a0.val, a1.val);
+    __m256i a_h = _mm256_unpackhi_epi8(a0.val, a1.val);
+    b0.val = _mm256_permute2x128_si256(a_l, a_h, 0+2*16);
+    b1.val = _mm256_permute2x128_si256(a_l, a_h, 1+3*16);
+}
+
+inline void v_interleave(const v_int16x16& a0, const v_int16x16& a1, v_int16x16& b0, v_int16x16& b1)
+{
+    __m256i a_l = _mm256_unpacklo_epi16(a0.val, a1.val);
+    __m256i a_h = _mm256_unpacklo_epi16(a0.val, a1.val);
+    b0.val = _mm256_permute2x128_si256(a_l, a_h, 0+2*16);
+    b1.val = _mm256_permute2x128_si256(a_l, a_h, 1+3*16);
+}
+
+inline void v_interleave(const v_uint16x16& a0, const v_uint16x16& a1, v_uint16x16& b0, v_uint16x16& b1)
+{
+    __m256i a_l = _mm256_unpacklo_epi16(a0.val, a1.val);
+    __m256i a_h = _mm256_unpacklo_epi16(a0.val, a1.val);
+    b0.val = _mm256_permute2x128_si256(a_l, a_h, 0+2*16);
+    b1.val = _mm256_permute2x128_si256(a_l, a_h, 1+3*16);
+}
+
+inline void v_interleave(const v_int32x8& a0, const v_int32x8& a1, v_int32x8& b0, v_int32x8& b1)
+{
+    __m256i a_l = _mm256_unpacklo_epi32(a0.val, a1.val);
+    __m256i a_h = _mm256_unpacklo_epi32(a0.val, a1.val);
+    b0.val = _mm256_permute2x128_si256(a_l, a_h, 0+2*16);
+    b1.val = _mm256_permute2x128_si256(a_l, a_h, 1+3*16);
+}
+
+inline void v_interleave(const v_uint32x8& a0, const v_uint32x8& a1, v_uint32x8& b0, v_uint32x8& b1)
+{
+    __m256i a_l = _mm256_unpacklo_epi32(a0.val, a1.val);
+    __m256i a_h = _mm256_unpacklo_epi32(a0.val, a1.val);
+    b0.val = _mm256_permute2x128_si256(a_l, a_h, 0+2*16);
+    b1.val = _mm256_permute2x128_si256(a_l, a_h, 1+3*16);
+}
+
+inline void v_interleave(const v_float32x8& a0, const v_float32x8& a1, v_float32x8& b0, v_float32x8& b1)
+{
+    __m256i a_l = _mm256_unpacklo_epi32((__m256i)a0.val, (__m256i)a1.val);
+    __m256i a_h = _mm256_unpacklo_epi32((__m256i)a0.val, (__m256i)a1.val);
+    b0.val = (__m256)_mm256_permute2x128_si256(a_l, a_h, 0+2*16);
+    b1.val = (__m256)_mm256_permute2x128_si256(a_l, a_h, 1+3*16);
+}
+
 ////////// Matrix operations /////////
 
 //////// Dot Product ////////

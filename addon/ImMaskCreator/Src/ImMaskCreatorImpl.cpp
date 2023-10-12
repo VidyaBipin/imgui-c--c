@@ -319,7 +319,11 @@ public:
 
     bool ChangeMaskSize(const MatUtils::Size2i& size) override
     {
-        m_size = size;
+        if (m_size != size)
+        {
+            m_size = size;
+            m_bContourChanged = true;
+        }
         return true;
     }
 
@@ -382,6 +386,8 @@ public:
     ImVec4 GetContourContainBox() const override
     {
         ImRect rBox(m_rContianBox);
+        rBox.Min *= m_v2UiScale;
+        rBox.Max *= m_v2UiScale;
         rBox.Min += m_rWorkArea.Min;
         rBox.Max += m_rWorkArea.Min;
         return ImVec4(rBox.Min.x, rBox.Min.y, rBox.Max.x, rBox.Max.y);
@@ -820,7 +826,7 @@ private:
                 // m_v2ContourVertices[i] = v;
                 // cout << " [" << i << "](" << v.x << ", " << v.y << ")";
             }
-            cout << endl;
+            // cout << endl;
             UpdateContourContianBox();
         }
 
