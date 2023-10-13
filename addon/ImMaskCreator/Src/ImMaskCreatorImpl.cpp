@@ -187,20 +187,23 @@ public:
                     m_itHoveredVertex->m_bEnableBezier = true;
                     m_itHoveredVertex->m_iHoverType = 2;
                 }
+                bool bContourChanged = false;
                 const auto coordOff = mousePos-m_itHoveredVertex->m_pos;
                 // cout << "---> iHoverType = " << m_itHoveredVertex->m_iHoverType << endl;
-                if (m_itHoveredVertex->m_bFirstDrag && m_itHoveredVertex->m_bEnableBezier)
+                if (m_itHoveredVertex->m_bFirstDrag && m_itHoveredVertex->m_bEnableBezier && m_itHoveredVertex->m_grabber1Offset != coordOff)
                 {
                     // 1st-time dragging bezier grabber, change both the grabbers
                     m_itHoveredVertex->m_grabber0Offset = -coordOff;
                     m_itHoveredVertex->m_grabber1Offset = coordOff;
+                    bContourChanged = true;
                 }
-                else if (m_itHoveredVertex->m_iHoverType == 0 && bMouseInWorkArea)
+                else if (m_itHoveredVertex->m_iHoverType == 0 && bMouseInWorkArea && m_itHoveredVertex->m_pos != mousePos)
                 {
                     // moving the vertex
                     m_itHoveredVertex->m_pos = mousePos;
+                    bContourChanged = true;
                 }
-                else if (m_itHoveredVertex->m_iHoverType == 1)
+                else if (m_itHoveredVertex->m_iHoverType == 1 && m_itHoveredVertex->m_grabber0Offset != coordOff)
                 {
                     // moving bezier grabber0
                     m_itHoveredVertex->m_grabber0Offset = coordOff;
@@ -210,8 +213,9 @@ public:
                     auto ratio = sqrt(c1sqr/c0sqr);
                     coordOff1.x = -coordOff.x*ratio;
                     coordOff1.y = -coordOff.y*ratio;
+                    bContourChanged = true;
                 }
-                else if (m_itHoveredVertex->m_iHoverType == 2)
+                else if (m_itHoveredVertex->m_iHoverType == 2 && m_itHoveredVertex->m_grabber1Offset != coordOff)
                 {
                     // moving bezier grabber1
                     m_itHoveredVertex->m_grabber1Offset = coordOff;
@@ -221,9 +225,13 @@ public:
                     auto ratio = sqrt(c0sqr/c1sqr);
                     coordOff0.x = -coordOff.x*ratio;
                     coordOff0.y = -coordOff.y*ratio;
+                    bContourChanged = true;
                 }
-                m_itHoveredVertex->UpdateGrabberContainBox();
-                UpdateContourVertices(m_itHoveredVertex);
+                if (bContourChanged)
+                {
+                    m_itHoveredVertex->UpdateGrabberContainBox();
+                    UpdateContourVertices(m_itHoveredVertex);
+                }
             }
             else if (HasHoveredMorphCtrl())
             {
@@ -356,6 +364,10 @@ public:
                     itVt2++;
                 }
             }
+            // cout << "Contour2Mask: ";
+            // for (const auto& v : av2TotalVertices)
+            //     cout << "(" << v.x << ", " << v.y << "), ";
+            // cout << endl;
             m_mMask = MatUtils::Contour2Mask(av2TotalVertices, m_size, {0.f, 0.f}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled);
             const auto& iMorphIters = m_tMorphCtrl.m_iMorphIterations;
             if (bFilled && iMorphIters > 0)
