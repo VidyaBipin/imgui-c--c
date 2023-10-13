@@ -6524,7 +6524,7 @@ void ImGui::SpinnerSquareSpins(const char *label, float radius, float thickness,
     const float start = (float)ImGui::GetTime() * speed;
     for (size_t i = 0; i < dots; i++)
     {
-        const float a = ImFmod(start + i * (PI_DIV_2 / dots), PI_DIV_2);
+        const float a = ImFmod(start + i * ((PI_DIV_2 * 0.7f) / dots), PI_DIV_2);
         const float th = thickness * (ImCos(a * heightSpeed) * 2.f);
         ImVec2 pmin = ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff - thickness, centre.y - thickness);
         ImVec2 pmax = ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff + thickness, centre.y + thickness);
@@ -7568,7 +7568,7 @@ void ImGui::SpinnerSquareLoading(const char *label, float radius, float thicknes
     }
 }
 
-void ImGui::SpinnerFilledArcFade(const char *label, float radius, const ImColor &color, float speed, size_t arcs)
+void ImGui::SpinnerFilledArcFade(const char *label, float radius, const ImColor &color, float speed, size_t arcs, int mode)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -7582,12 +7582,16 @@ void ImGui::SpinnerFilledArcFade(const char *label, float radius, const ImColor 
         const float e = arc_angle * arc_num + arc_angle - PI_DIV_2 - PI_DIV_4;
         const float a = arc_angle * arc_num;
         ImColor c = color;
+        float vradius = radius;
         if (start < PI_2)
         {
             c.Value.w = 0.f;
             if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
             else if (start < a) { c.Value.w = 1.f; }
             c.Value.w = ImMax(0.f, 1.f - c.Value.w);
+            if (mode == 1)
+                vradius = radius * c.Value.w;
+
         }
         else
         {
@@ -7595,6 +7599,8 @@ void ImGui::SpinnerFilledArcFade(const char *label, float radius, const ImColor 
             c.Value.w = 0.f;
             if (startk > a && startk < (a + arc_angle)) { c.Value.w = 1.f - (startk - a) / (float)arc_angle; }
             else if (startk < a) { c.Value.w = 1.f; }
+            if (mode == 1)
+                vradius = radius * c.Value.w;
         }
 
         window->DrawList->PathClear();
@@ -7602,13 +7608,43 @@ void ImGui::SpinnerFilledArcFade(const char *label, float radius, const ImColor 
         for (size_t i = 0; i <= num_segments + 1; i++)
         {
             const float ar = arc_angle * arc_num + (i * angle_offset) - PI_DIV_2 - PI_DIV_4;
-            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * radius, centre.y + ImSin(ar) * radius));
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * vradius, centre.y + ImSin(ar) * vradius));
         }
 
-        //ImDrawListFlags save = window->DrawList->Flags;
-        //window->DrawList->Flags &= ~ImDrawListFlags_AntiAliasedFill;
         window->DrawList->PathFillConvex(color_alpha(c, 1.f));
-        //window->DrawList->Flags = save;
+    }
+}
+
+void ImGui::SpinnerPointsArcFade(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t points)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 4.f);
+    const float arc_angle = PI_2 / (float)points;
+    const float angle_offset = arc_angle / num_segments;
+    for (size_t arc_num = 0; arc_num < points; ++arc_num)
+    {
+        const float b = arc_angle * arc_num - PI_DIV_2 - PI_DIV_4;
+        const float e = arc_angle * arc_num + arc_angle - PI_DIV_2 - PI_DIV_4;
+        const float a = arc_angle * arc_num;
+        ImColor c = color;
+        float vradius = radius;
+        if (start < PI_2) {
+            c.Value.w = 0.f;
+            if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
+            else if (start < a) { c.Value.w = 1.f; }
+            c.Value.w = ImMax(0.f, 1.f - c.Value.w);
+             vradius = radius * c.Value.w;
+        }
+        else
+        {
+            const float startk = start - PI_2;
+            c.Value.w = 0.f;
+            if (startk > a && startk < (a + arc_angle)) { c.Value.w = 1.f - (startk - a) / (float)arc_angle; }
+            else if (startk < a) { c.Value.w = 1.f; }
+            vradius = radius * c.Value.w;
+        }
+        const float ar = start + arc_angle * arc_num - PI_DIV_2 - PI_DIV_4;
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(ar) * vradius, centre.y + ImSin(ar) * vradius), thickness, color_alpha(c, 1.f), 8);
     }
 }
 
@@ -9250,6 +9286,32 @@ void ImGui::Spinner3SmuggleDots(const char *label, float radius, float thickness
     }
 }
 
+void ImGui::SpinnerRotateSegmentsPulsar(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t arcs, size_t layers)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float arc_angle = PI_2 / (float)arcs;
+    const float angle_offset = arc_angle / num_segments;
+    float r = radius;
+    float reverse = 1.f;
+    const float bg_angle_offset = PI_2_DIV(num_segments);
+    const float koeff = PI_DIV(2 * layers);
+    float start = (float)ImGui::GetTime() * speed;
+    for (int num_ring = 0; num_ring < layers; ++num_ring) {
+        float radius_k = ImSin(ImFmod(start + (num_ring * koeff), PI_DIV_2));
+        ImColor c = color_alpha(color, (radius_k > 0.5f) ? (2.f - (radius_k * 2.f)) : color.Value.w);
+        for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
+        {
+            window->DrawList->PathClear();
+            for (size_t i = 2; i <= num_segments - 2; i++)
+            {
+                const float a = start * (1.f + 0.1f * num_ring) + arc_angle * arc_num + (i * angle_offset);
+                window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a * reverse) * (r * radius_k), centre.y + ImSin(a * reverse) * (r * radius_k)));
+            }
+            window->DrawList->PathStroke(c, false, thickness);
+        }
+    }
+}
+
 // draw leader
 static void draw_badge(ImDrawList* drawList, ImRect bb, int type, bool filled, bool arrow, ImU32 color)
 {
@@ -10029,6 +10091,7 @@ ImGuiKey ImGui::VirtualKeyboard(VirtualKeyboardFlags flags,KeyboardLogicalLayout
         "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
 
         "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
+        "F13", "F14", "F15", "F16", "F17", "F18", "F19", "F20", "F21", "F22", "F23", "F24",
         "'", ",", "-", ".", "/", ";", "=", "(",
         "\\", ")", "`", "CapsLock", "Scr\nLck", "Nm\nLck", "Print", // [...] graveaccent, capsL scrollL numL Print
 
