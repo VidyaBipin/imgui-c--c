@@ -361,7 +361,7 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SliderFloat("Speed", &velocity, 0.0f, 10.0f, "velocity = %.3f");
         
         static ImVec2 selected{0, 0};
-        constexpr int sidex = 13, sidey = 14;
+        constexpr int sidex = 13, sidey = 15;
 
         float widget_size = 50.f;
         static ImColor spinner_filling_meb_bg;
@@ -561,6 +561,11 @@ void ShowExtraWidgetDemoWindow()
                     case 177: ImGui::SpinnerThreeDotsStar("SpinnerThreeDotsStar", 16, 4, ImColor(255, 255, 255), 0.1f, 0.5f, 5.1f * velocity, -0.2f); ImGui::ShowTooltipOnHover("SpinnerThreeDotsStar"); break;
                     case 178: ImGui::SpinnerSquareSpins("SpinnerSquareSpins", 16, 6, ImColor(255, 255, 255), 2 * velocity); ImGui::ShowTooltipOnHover("SpinnerSquareSpins"); break;
                     case 179: ImGui::SpinnerMoonDots("SpinnerMoonDots", 16, 8, ImColor(255, 255, 255), ImColor(0, 0, 0), 1.1f * velocity); ImGui::ShowTooltipOnHover("SpinnerMoonDots"); break;
+                    case 180: ImGui::SpinnerFilledArcFade("SpinnerFilledArcFade7", 16, ImColor(255, 255, 255), 6 * velocity, 6, 1); ImGui::ShowTooltipOnHover("SpinnerFilledArcFade7"); break;
+                    case 181: ImGui::SpinnerRotateSegmentsPulsar("SpinnerRotateSegmentsPulsar", 16, 2, ImColor(255, 255, 255), 1.1f * velocity, 4, 2); ImGui::ShowTooltipOnHover("SpinnerRotateSegmentsPulsar"); break;
+                    case 182: ImGui::SpinnerRotateSegmentsPulsar("SpinnerRotateSegmentsPulsar2", 16, 2, ImColor(255, 255, 255), 1.1f * velocity, 1, 3); ImGui::ShowTooltipOnHover("SpinnerRotateSegmentsPulsar2"); break;
+                    case 183: ImGui::SpinnerRotateSegmentsPulsar("SpinnerRotateSegmentsPulsar3", 16, 2, ImColor(255, 255, 255), 1.1f * velocity, 3, 3); ImGui::ShowTooltipOnHover("SpinnerRotateSegmentsPulsar3"); break;
+                    case 184: ImGui::SpinnerPointsArcFade("SpinnerPointsArcFade", 16, 2, ImColor(255, 255, 255), 3 * velocity, 12); ImGui::ShowTooltipOnHover("SpinnerPointsArcFade"); break;
 
                     // ...
                     default: break;

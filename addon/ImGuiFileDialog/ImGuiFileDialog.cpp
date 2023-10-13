@@ -1144,7 +1144,8 @@ IGFD_API bool IGFD::FilterManager::prFillFileStyle(std::shared_ptr<FileInfos> vF
                 }
 
                 if (_flag.first & IGFD_FileStyleByFullName) {
-                    if (_file.first.find("((") != std::string::npos && std::regex_search(vFileInfos->fileNameExt, std::regex(_file.first))) {
+                    if (_file.first.find("((") != std::string::npos &&
+                        std::regex_search(vFileInfos->fileNameExt, std::regex(_file.first))) {
                         vFileInfos->fileStyle = _file.second;
                     } else if (_file.first == vFileInfos->fileNameExt) {
                         vFileInfos->fileStyle = _file.second;
@@ -1152,7 +1153,8 @@ IGFD_API bool IGFD::FilterManager::prFillFileStyle(std::shared_ptr<FileInfos> vF
                 }
 
                 if (_flag.first & IGFD_FileStyleByContainedInFullName) {
-                    if (_file.first.find("((") != std::string::npos && std::regex_search(vFileInfos->fileNameExt, std::regex(_file.first))) {
+                    if (_file.first.find("((") != std::string::npos &&
+                        std::regex_search(vFileInfos->fileNameExt, std::regex(_file.first))) {
                         vFileInfos->fileStyle = _file.second;
                     } else if (vFileInfos->fileNameExt.find(_file.first) != std::string::npos) {
                         vFileInfos->fileStyle = _file.second;
@@ -1858,22 +1860,8 @@ IGFD_API void IGFD::FileManager::ScanDir(const FileDialogInternal& vFileDialogIn
                 switch (ent->d_type) {
                     case DT_DIR: fileType.SetContent(FileType::ContentType::Directory); break;
                     case DT_REG: fileType.SetContent(FileType::ContentType::File); break;
-#if DT_LNK != DT_UNKNOWN
-                    case DT_LNK: {
-                        fileType.SetSymLink(true);
-                        fileType.SetContent(FileType::ContentType::LinkToUnknown);  // by default if we can't figure out
-                                                                                    // the target type.
-                        struct stat statInfos = {};
-                        int result = stat((path + PATH_SEP + ent->d_name).c_str(), &statInfos);
-                        if (result == 0) {
-                            if (statInfos.st_mode & S_IFREG) {
-                                fileType.SetContent(FileType::ContentType::File);
-                            } else if (statInfos.st_mode & S_IFDIR) {
-                                fileType.SetContent(FileType::ContentType::Directory);
-                            }
-                        }
-                        break;
-                    }
+#if defined(_IGFD_UNIX_) || (DT_LNK != DT_UNKNOWN)
+                    case DT_LNK:
 #endif
                     case DT_UNKNOWN: {
                         struct stat sb = {};
@@ -1959,7 +1947,7 @@ IGFD_API void IGFD::FileManager::ScanDirForPathSelection(
             for (i = 0; i < n; i++) {
                 struct dirent* ent = files[i];
                 struct stat sb = {};
-                int result;
+                int result = 0;
                 if (ent->d_type == DT_UNKNOWN) {
 #ifdef _IGFD_WIN_
                     auto filePath = path + ent->d_name;
@@ -3422,8 +3410,8 @@ IGFD_API void IGFD::KeyExplorerFeature::prExploreWithkeys(
     if ((flags & ImGuiSelectableFlags_NoPadWithHalfSpacing) == 0) {
         const float spacing_x = span_all_columns ? 0.0f : style.ItemSpacing.x;
         const float spacing_y = style.ItemSpacing.y;
-        const float spacing_L = IM_FLOOR(spacing_x * 0.50f);
-        const float spacing_U = IM_FLOOR(spacing_y * 0.50f);
+        const float spacing_L = IM_TRUNC(spacing_x * 0.50f);
+        const float spacing_U = IM_TRUNC(spacing_y * 0.50f);
         bb.Min.x -= spacing_L;
         bb.Min.y -= spacing_U;
         bb.Max.x += (spacing_x - spacing_L);

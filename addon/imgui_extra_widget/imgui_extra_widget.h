@@ -598,7 +598,8 @@ IMGUI_API void SpinnerSquareStrokeFill(const char *label, float radius, float th
 IMGUI_API void SpinnerSquareStrokeLoading(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f);
 IMGUI_API void SpinnerSquareStrokeFade(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f);
 IMGUI_API void SpinnerSquareLoading(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f);
-IMGUI_API void SpinnerFilledArcFade(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4);
+IMGUI_API void SpinnerFilledArcFade(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4, int mode = 0);
+IMGUI_API void SpinnerPointsArcFade(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t points = 4);
 IMGUI_API void SpinnerFilledArcColor(const char *label, float radius, const ImColor &color = 0xffff0000, const ImColor &bg = 0xffffffff, float speed = 2.8f, size_t arcs = 4);
 IMGUI_API void SpinnerFilledArcRing(const char *label, float radius, float thickness, const ImColor &color = 0xffff0000, const ImColor &bg = 0xffffffff, float speed = 2.8f, size_t arcs = 4);
 IMGUI_API void SpinnerArcWedges(const char *label, float radius, const ImColor &color = 0xffff0000, float speed = 2.8f, size_t arcs = 4);
@@ -663,6 +664,7 @@ IMGUI_API void SpinnerCurvedCircle(const char *label, float radius, float thickn
 IMGUI_API void SpinnerModCircle(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float ang_min = 1.f, float ang_max = 1.f, float speed = 2.8f);
 IMGUI_API void SpinnerDnaDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8, float delta = 0.5f, bool mode = 0);
 IMGUI_API void Spinner3SmuggleDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 4.8f, int lt = 8, float delta = 0.5f, bool mode = 0);
+IMGUI_API void SpinnerRotateSegmentsPulsar(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4, size_t layers = 1);
 
 template<SpinnerTypeT Type, typename... Args>
 void Spinner(const char *label, const Args&... args)

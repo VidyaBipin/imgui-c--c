@@ -1,7 +1,7 @@
-[<img src="https://github.com/aiekick/ImGuiFileDialog/workflows/Win/badge.svg"/>](https://github.com/aiekick/ImGuiFileDialog/actions?query=workflow%3AWin)
-[<img src="https://github.com/aiekick/ImGuiFileDialog/workflows/Linux/badge.svg"/>](https://github.com/aiekick/ImGuiFileDialog/actions?query=workflow%3ALinux)
-[<img src="https://github.com/aiekick/ImGuiFileDialog/workflows/Osx/badge.svg"/>](https://github.com/aiekick/ImGuiFileDialog/actions?query=workflow%3AOsx)
-[![Wrapped Dear ImGui Version](https://img.shields.io/badge/Dear%20ImGui%20Version-1.89.5-blue.svg)](https://github.com/ocornut/imgui)
+[![Win](https://github.com/aiekick/ImGuiFileDialog/actions/workflows/Win.yml/badge.svg?branch=DemoApp)](https://github.com/aiekick/ImGuiFileDialog/actions/workflows/Win.yml)
+[![Linux](https://github.com/aiekick/ImGuiFileDialog/actions/workflows/Linux.yml/badge.svg?branch=DemoApp)](https://github.com/aiekick/ImGuiFileDialog/actions/workflows/Linux.yml)
+[![Osx](https://github.com/aiekick/ImGuiFileDialog/actions/workflows/Osx.yml/badge.svg?branch=DemoApp)](https://github.com/aiekick/ImGuiFileDialog/actions/workflows/Osx.yml)
+[![Wrapped Dear ImGui Version](https://img.shields.io/badge/Dear%20ImGui%20Version-1.89.9-blue.svg)](https://github.com/ocornut/imgui)
 
 # ImGuiFileDialog
 
@@ -14,12 +14,12 @@ solutions.
 
 ## ImGui Supported Version
 
-ImGuiFileDialog follow the master and docking branch of ImGui . currently ImGui 1.89.5 
+ImGuiFileDialog follow the master and docking branch of ImGui . currently ImGui 1.89.9 
 
 ## Structure
 
-* The library is in [Lib_Only branch](https://github.com/aiekick/ImGuiFileDialog/tree/Lib_Only)
-* A demo app can be found the [master branch](https://github.com/aiekick/ImGuiFileDialog/tree/master)
+* The library is in [Master branch](https://github.com/aiekick/ImGuiFileDialog/tree/master)
+* A demo app can be found in the [DemoApp branch](https://github.com/aiekick/ImGuiFileDialog/tree/DemoApp)
 
 This library is designed to be dropped into your source code rather than compiled separately.
 
@@ -29,7 +29,7 @@ From your project directory:
 mkdir lib    <or 3rdparty, or externals, etc.>
 cd lib
 git clone https://github.com/aiekick/ImGuiFileDialog.git
-git checkout Lib_Only
+git checkout master
 ```
 
 These commands create a `lib` directory where you can store any third-party dependencies used in your project, downloads
@@ -83,6 +83,9 @@ Android Requirements : Api 21 mini
 - Can tune validation buttons (placements, widths, inversion)
 - Can quick select a parrallel directory of a path, in the path composer (when you clikc on a / you have a popup)
 - regex support for filters, collection of filters and filestyle (the regex is recognized when between (( and )) in a filter)
+- multi layer extentions like : .a.b.c .json.cpp .vcxproj.filters etc..
+- advanced behavior regarding asterisk based filter. like : .* .*.* .vcx.* .*.filters .vcs*.filt.* etc.. (internally regex is used)
+- result modes GetFilePathName, GetFileName and GetSelection (overwrite file ext, keep file, add ext if no user ext exist)
 
 ### WARNINGS :
 - the nav system keyboard behavior is not working as expected, so maybe full of bug for ImGuiFileDialog
@@ -150,7 +153,7 @@ void drawGui()
 }
 ```
 
-![alt text](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/dlg_simple.gif)
+![alt text](https://github.com/aiekick/ImGuiFileDialog/blob/demoApp/doc/dlg_simple.gif)
 
 </blockquote></details>
 
@@ -182,7 +185,7 @@ ImGuiFileDialog::Instance()->OpenDialog("ChooseDirDlgKey", "Choose a Directory",
 
 In this mode you can select any directory with one click and open a directory with a double-click.
 
-![directoryChooser](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/directoryChooser.gif)
+![directoryChooser](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/directoryChooser.gif)
 
 </blockquote></details>
 
@@ -246,7 +249,7 @@ void drawGui()
 }
 ```
 
-![alt text](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/dlg_with_pane.gif)
+![alt text](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/dlg_with_pane.gif)
 
 </blockquote></details>
 
@@ -358,7 +361,7 @@ ImGuiFileDialog::Instance()->SetFileStyle([](const IGFD::FileInfos& vFile, IGFD:
 });
 ```
 
-this sample code of [master/main.cpp](https://github.com/aiekick/ImGuiFileDialog/blob/master/main.cpp) produce the picture above :
+this sample code of [master/main.cpp](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/main.cpp) produce the picture above :
 
 ```cpp
 ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByExtention, ".cpp", ImVec4(1.0f, 1.0f, 0.0f, 0.9f));
@@ -374,7 +377,7 @@ ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeDir | IGFD_FileSty
 ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeFile | IGFD_FileStyleByContainedInFullName, ".git", ImVec4(0.5f, 0.8f, 0.5f, 0.9f), ICON_IGFD_SAVE);
 ```
 
-![alt text](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/color_filter.png)
+![alt text](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/color_filter.png)
 
 </blockquote></details>
 
@@ -399,7 +402,7 @@ ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", ICON_IMFDLG_FOLDER_O
 ```
 
 will produce :
-![alt text](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/collectionFilters.gif)
+![alt text](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/collectionFilters.gif)
 
 </blockquote></details>
 
@@ -422,7 +425,7 @@ ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".png
    ".", "", std::bind(&InfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 350, 1, "SaveFile"); // 1 file
 ```
 
-![alt text](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/multiSelection.gif)
+![alt text](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/multiSelection.gif)
 
 </blockquote></details>
 
@@ -436,7 +439,7 @@ ImVec2 minSize = maxSize * 0.5f;  // Half the display area
 ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, minSize, maxSize);
 ```
 
-![alt text](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/dialog_constraints.gif)
+![alt text](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/dialog_constraints.gif)
 
 </blockquote></details>
 
@@ -454,7 +457,7 @@ You can also uncomment the next lines to define navigation keys:
 
 You can also jump to a point in the file list by pressing the corresponding key of the first filename character.
 
-![alt text](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/explore_ny_keys.gif)
+![alt text](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/explore_ny_keys.gif)
 
 As you see the current item is flashed by default for 1 second. You can define the flashing lifetime with the function
 
@@ -484,7 +487,7 @@ More customization options:
 * You can select each bookmark to edit the displayed name corresponding to a path
 * Double-click on the label to apply the bookmark
 
-![bookmarks.gif](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/bookmarks.gif)
+![bookmarks.gif](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/bookmarks.gif)
 
 You can also serialize/deserialize bookmarks (for example to load/save from/to a file):
 ```cpp
@@ -515,7 +518,7 @@ Pressing the completion key (GLFW uses `enter` by default) validates the new pat
 uses`escape` by default) cancels the manual entry and restores the original path.
 
 Here's the manual entry operation in action:
-![inputPathEdition.gif](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/inputPathEdition.gif)
+![inputPathEdition.gif](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/inputPathEdition.gif)
 
 </blockquote></details>
 
@@ -563,7 +566,7 @@ Uncomment these line for customization options:
 
 See the result :
 
-![ConfirmToOverWrite.gif](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/ConfirmToOverWrite.gif)
+![ConfirmToOverWrite.gif](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/ConfirmToOverWrite.gif)
 
 </blockquote></details>
 
@@ -594,7 +597,7 @@ std::string GetCurrentFilter();                    // The file extension
 
 You can now, display thumbnails of pictures. 
 
-![thumbnails.gif](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/thumbnails.gif)
+![thumbnails.gif](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/thumbnails.gif)
 
 The file resize use stb/image so the following files extentions are supported :
  * .png (tested sucessfully)
@@ -705,7 +708,7 @@ fileDialog.Display("embedded", ImGuiWindowFlags_NoCollapse, ImVec2(0,0), ImVec2(
 ```
 the result :
 
-![Embedded.gif](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/Embedded.gif)
+![Embedded.gif](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/Embedded.gif)
 
 </blockquote></details>
 
@@ -721,7 +724,7 @@ you can also customize the spacing between path button's with and without this m
 you can do that by define the compiler flag : #define CUSTOM_PATH_SPACING 2
 if undefined the spacing is defined by the imgui theme
 
-![quick_composer_path_select.gif](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/quick_composer_path_select.gif)
+![quick_composer_path_select.gif](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/quick_composer_path_select.gif)
 
 </blockquote></details>
 
@@ -787,19 +790,19 @@ just see theses defines in the config file
 ```
 with Alignement 0.0 => left
 
-![alignement_0.0.gif](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/alignement_0.0.png)
+![alignement_0.0.gif](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/alignement_0.0.png)
 
 with Alignement 1.0 => right
 
-![alignement_1.0.gif](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/alignement_1.0.png)
+![alignement_1.0.gif](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/alignement_1.0.png)
 
 with Alignement 0.5 => middle
 
-![alignement_0.5.gif](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/alignement_0.5.png)
+![alignement_0.5.gif](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/alignement_0.5.png)
 
 ok and cancel buttons inverted (cancel on the left and ok on the right)
 
-![validation_buttons_inverted.gif](https://github.com/aiekick/ImGuiFileDialog/blob/master/doc/validation_buttons_inverted.png)
+![validation_buttons_inverted.gif](https://github.com/aiekick/ImGuiFileDialog/blob/DemoApp/doc/validation_buttons_inverted.png)
 
 </blockquote></details>
 
@@ -839,6 +842,99 @@ SetFileStyle(IGFD_FileStyleByFullName, "((Custom.+[.]h))", ImVec4(1.0f, 1.0f, 0.
 OpenDialog("toto", "Choose File", "(([.][0-9]{3}))");
 SetFileStyle(IGFD_FileStyleByFullName, "(([.][0-9]{3}))", ImVec4(1.0f, 1.0f, 0.0f, 0.9f));
 ```
+
+</blockquote></details>
+
+<details open><summary><h2>Multi Layer / asterisk based filter :</h2></summary><blockquote>
+
+you can add filter in the form : .a.b.c .json.cpp .vcxproj.filters 
+
+you can also add filter in the form : .* .*.* .vcx.* .*.filters .vcx*.filt.* etc..
+all the * based filter are internally using regex's
+
+</blockquote></details>
+
+<details open><summary><h2>Result Modes for GetFilePathName, getFileName and GetSelection :</h2></summary><blockquote>
+
+you can add have various behavior when you get the file results at dialog end
+
+you can specify a result mode to thoses function :
+
+```cpp
+GetFilePathName(IGFD_ResultMode = IGFD_ResultMode_AddIfNoFileExt)
+GetFileName(IGFD_ResultMode = IGFD_ResultMode_AddIfNoFileExt)
+GetFileSelection(IGFD_ResultMode = IGFD_ResultMode_KeepInputFile)
+```
+You can see these function who their default modes.
+but you can modify them. 
+
+There is 3 Modes :
+```cpp
+IGFD_ResultMode_AddIfNoFileExt [DEFAULT for 
+This mode add the filter ext only if there is no file ext. (compatible multi layer)
+ex : 
+   filter {.cpp,.h} with file :
+     toto.h => toto.h
+     toto.a.h => toto.a.h
+     toto.a. => toto.a.cpp
+     toto. => toto.cpp
+     toto => toto.cpp
+   filter {.z,.a.b} with file :
+     toto.a.h => toto.a.h
+     toto. => toto.z
+     toto => toto.z
+   filter {.g.z,.a} with file :
+     toto.a.h => toto.a.h
+     toto. => toto.g.z
+     toto => toto.g.z
+
+IGFD_ResultMode_OverwriteFileExt
+This mode Overwrite the file extention by the current filter
+This mode is the old behavior for imGuiFileDialog pre v0.6.6
+ex : 
+   filter {.cpp,.h} with file :
+     toto.h => toto.cpp
+     toto.a.h => toto.a.cpp
+     toto.a. => toto.a.cpp
+     toto.a.h.t => toto.a.h.cpp
+     toto. => toto.cpp
+     toto => toto.cpp
+   filter {.z,.a.b} with file :
+     toto.a.h => toto.z
+     toto.a.h.t => toto.a.z
+     toto. => toto.z
+     toto => toto.z
+   filter {.g.z,.a} with file :
+     toto.a.h => toto.g.z
+     toto.a.h.y => toto.a.g.z
+     toto.a. => toto.g.z
+     toto. => toto.g.z
+     toto => toto.g.z
+
+IGFD_ResultMode_KeepInputFile
+This mode keep the input file. no modification
+es :
+   filter {.cpp,.h} with file :
+      toto.h => toto.h
+      toto. => toto.
+      toto => toto
+   filter {.z,.a.b} with file :
+      toto.a.h => toto.a.h
+      toto. => toto.
+      toto => toto
+   filter {.g.z,.a} with file :
+      toto.a.h => toto.a.h
+      toto. => toto.
+      toto => toto
+```
+
+to note :
+  - in case of a collection of filter. the default filter will be the first.
+    so in collection {.cpp,((.vcxproj.*)), .ft.*}, the default filter used for renaming will be .cpp
+  - when you have multilayer filter in collection.
+    we consider a filter to be replaced according to the max dot of filters for a whole collection
+    a collection {.a, .b.z} is a two dots filter, so a file toto.g.z will be replaced by toto.a
+    a collection {.z; .b} is a one dot filter, so a file toto.g.z will be replaced by toto.g.a
 
 </blockquote></details>
 
