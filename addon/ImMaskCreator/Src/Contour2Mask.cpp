@@ -311,38 +311,39 @@ static const int FilterTable[] = {
     40, 36, 32, 28, 25, 22, 19, 16, 14, 12, 11, 9, 8, 7, 5, 5
 };
 
-static inline void PutPoint3C8U(uint8_t* ptr, int x, int y, size_t line_size, const int rgb[3], int a)
+static inline void PutPoint3C8U(uint8_t* ptr, int x, int y, size_t line_size, const int rgb[3], int alpha)
 {
     uint8_t* tptr = ptr+x*3+y*line_size;
     const int &r = rgb[0], &g = rgb[1], &b = rgb[2];
     int _r, _g, _b;
     _b = tptr[0];
-    _b += ((b-_b)*a+127)>> 8;
-    _b += ((b-_b)*a+127)>> 8;
+    _b += ((b-_b)*alpha+127)>> 8;
+    _b += ((b-_b)*alpha+127)>> 8;
     _g = tptr[1];
-    _g += ((g-_g)*a+127)>> 8;
-    _g += ((g-_g)*a+127)>> 8;
+    _g += ((g-_g)*alpha+127)>> 8;
+    _g += ((g-_g)*alpha+127)>> 8;
     _r = tptr[2];
-    _r += ((r-_r)*a+127)>> 8;
-    _r += ((r-_r)*a+127)>> 8;
+    _r += ((r-_r)*alpha+127)>> 8;
+    _r += ((r-_r)*alpha+127)>> 8;
     tptr[0] = (uint8_t)_b;
     tptr[1] = (uint8_t)_g;
     tptr[2] = (uint8_t)_r;
 }
 
-static inline void PutPoint1C8U(uint8_t* ptr, int x, int y, size_t line_size, int g, int a)
+static inline void PutPoint1C8U(uint8_t* ptr, int x, int y, size_t line_size, const int rgb[1], int alpha)
 {
     uint8_t* tptr = ptr+x+y*line_size;
+    const int &g = rgb[0];
     int _g;
     _g = tptr[0];
-    _g += ((g-_g)*a+127)>> 8;
-    _g += ((g-_g)*a+127)>> 8;
+    _g += ((g-_g)*alpha+127)>> 8;
+    _g += ((g-_g)*alpha+127)>> 8;
     tptr[0] = (uint8_t)_g;
 }
 
 static inline void PutPoint4C8U(uint8_t* ptr, int x, int y, size_t line_size, const int rgb[4], int alpha)
 {
-    uint8_t* tptr = ptr+x*3+y*line_size;
+    uint8_t* tptr = ptr+x*4+y*line_size;
     const int &r = rgb[0], &g = rgb[1], &b = rgb[2], &a = rgb[3];
     int _r, _g, _b, _a;
     _b = tptr[0];
@@ -363,8 +364,64 @@ static inline void PutPoint4C8U(uint8_t* ptr, int x, int y, size_t line_size, co
     tptr[3] = (uint8_t)_a;
 }
 
+static inline void PutPoint3C32F(uint8_t* ptr, int x, int y, size_t line_size, const float rgb[3], int _alpha)
+{
+    float* tptr = (float*)(ptr+x*12+y*line_size);
+    const float &r = rgb[0], &g = rgb[1], &b = rgb[2];
+    const float alpha = (float)_alpha/255.f;
+    float _r, _g, _b;
+    _b = tptr[0];
+    _b += (b-_b)*alpha;
+    _b += (b-_b)*alpha;
+    _g = tptr[1];
+    _g += (g-_g)*alpha;
+    _g += (g-_g)*alpha;
+    _r = tptr[2];
+    _r += (r-_r)*alpha;
+    _r += (r-_r)*alpha;
+    tptr[0] = _b;
+    tptr[1] = _g;
+    tptr[2] = _r;
+}
+
+static inline void PutPoint1C32F(uint8_t* ptr, int x, int y, size_t line_size, const float rgb[1], int _alpha)
+{
+    float* tptr = (float*)(ptr+x*4+y*line_size);
+    const float &g = rgb[0];
+    const float alpha = (float)_alpha/255.f;
+    float _g;
+    _g = tptr[0];
+    _g += (g-_g)*alpha;
+    _g += (g-_g)*alpha;
+    tptr[0] = _g;
+}
+
+static inline void PutPoint4C32F(uint8_t* ptr, int x, int y, size_t line_size, const float rgb[4], int _alpha)
+{
+    float* tptr = (float*)(ptr+x*16+y*line_size);
+    const float &r = rgb[0], &g = rgb[1], &b = rgb[2], &a = rgb[3];
+    const float alpha = (float)_alpha/255.f;
+    float _r, _g, _b, _a;
+    _b = tptr[0];
+    _b += (b-_b)*alpha;
+    _b += (b-_b)*alpha;
+    _g = tptr[1];
+    _g += (g-_g)*alpha;
+    _g += (g-_g)*alpha;
+    _r = tptr[2];
+    _r += (r-_r)*alpha;
+    _r += (r-_r)*alpha;
+    _a = tptr[3];
+    _a += (a-_a)*alpha;
+    _a += (a-_a)*alpha;
+    tptr[0] = _b;
+    tptr[1] = _g;
+    tptr[2] = _r;
+    tptr[3] = _a;
+}
+
 static void
-LineAA(ImGui::ImMat& img, Point2l pt1, Point2l pt2, const void* pColor)
+LineAA(ImGui::ImMat& img, Point2l pt1, Point2l pt2, const void* _pColor)
 {
     int64_t dx, dy;
     int ecount, scount = 0;
@@ -378,9 +435,9 @@ LineAA(ImGui::ImMat& img, Point2l pt1, Point2l pt2, const void* pColor)
     size_t lineSize = img.w*img.c*img.elemsize;
     Size2l size0(img.w, img.h), size = size0;
 
-    if (!((nch == 1 || nch == 3 || nch == 4) && img.type == IM_DT_INT8))
+    if (!((nch == 1 || nch == 3 || nch == 4) && (img.type == IM_DT_INT8 || img.type == IM_DT_FLOAT32)))
     {
-        Line(img, Point2i((int)(pt1.x>>XY_SHIFT), (int)(pt1.y>>XY_SHIFT)), Point2i((int)(pt2.x>>XY_SHIFT), (int)(pt2.y>>XY_SHIFT)), pColor);
+        Line(img, Point2i((int)(pt1.x>>XY_SHIFT), (int)(pt1.y>>XY_SHIFT)), Point2i((int)(pt2.x>>XY_SHIFT), (int)(pt2.y>>XY_SHIFT)), _pColor);
         return;
     }
 
@@ -397,7 +454,7 @@ LineAA(ImGui::ImMat& img, Point2l pt1, Point2l pt2, const void* pColor)
     i = dy < 0 ? -1 : 0;
     ay = (dy ^ i) - i;
 
-    if( ax > ay )
+    if (ax > ay)
     {
         dy = (dy ^ j) - j;
         pt1.x ^= pt2.x & j;
@@ -462,167 +519,91 @@ LineAA(ImGui::ImMat& img, Point2l pt1, Point2l pt2, const void* pColor)
         epTable[7] = ((t2 + t0) >> 8) & 0x1ff;
     }
 
-    if (nch == 3)
+    #define LINEAA_CALC_POINTS(PutPointFunc) \
+        if (ax > ay) { \
+            int x = (int)(pt1.x >> XY_SHIFT); \
+            for (; ecount >= 0; x++, pt1.y += yStep, scount++, ecount--) { \
+                if( (unsigned)x >= (unsigned)size0.x ) \
+                    continue; \
+                int y = (int)((pt1.y >> XY_SHIFT) - 1); \
+                int ep_corr = epTable[(((scount >= 2) + 1) & (scount | 2)) * 3 + \
+                                    (((ecount >= 2) + 1) & (ecount | 2))]; \
+                int a, dist = (pt1.y >> (XY_SHIFT - 5)) & 31; \
+                a = (ep_corr * FilterTable[dist + 32] >> 8) & 0xff; \
+                if ((unsigned)y < (unsigned)size0.y) \
+                    PutPointFunc(ptr, x, y, lineSize, pColor, a); \
+                a = (ep_corr * FilterTable[dist] >> 8) & 0xff; \
+                if ((unsigned)(y+1) < (unsigned)size0.y) \
+                    PutPointFunc(ptr, x, y+1, lineSize, pColor, a); \
+                a = (ep_corr * FilterTable[63 - dist] >> 8) & 0xff; \
+                if ((unsigned)(y+2) < (unsigned)size0.y) \
+                    PutPointFunc(ptr, x, y+2, lineSize, pColor, a); \
+            } \
+        } \
+        else { \
+            int y = (int)(pt1.y >> XY_SHIFT); \
+            for (; ecount >= 0; y++, pt1.x += xStep, scount++, ecount--) { \
+                if ((unsigned)y >= (unsigned)size0.y) \
+                    continue; \
+                int x = (int)((pt1.x >> XY_SHIFT) - 1); \
+                int ep_corr = epTable[(((scount >= 2) + 1) & (scount | 2)) * 3 + \
+                                    (((ecount >= 2) + 1) & (ecount | 2))]; \
+                int a, dist = (pt1.x >> (XY_SHIFT - 5)) & 31; \
+                a = (ep_corr * FilterTable[dist + 32] >> 8) & 0xff; \
+                if ((unsigned)x < (unsigned)size0.x) \
+                    PutPointFunc(ptr, x, y, lineSize, pColor, a); \
+                a = (ep_corr * FilterTable[dist] >> 8) & 0xff; \
+                if ((unsigned)(x+1) < (unsigned)size0.x) \
+                    PutPointFunc(ptr, x+1, y, lineSize, pColor, a); \
+                a = (ep_corr * FilterTable[63 - dist] >> 8) & 0xff; \
+                if ((unsigned)(x+2) < (unsigned)size0.x) \
+                    PutPointFunc(ptr, x+2, y, lineSize, pColor, a); \
+            } \
+        }
+
+    if (img.type == IM_DT_INT8)
     {
-        if (ax > ay)
+        const int* pColor = (const int*)_pColor;
+        if (nch == 3)
         {
-            int x = (int)(pt1.x >> XY_SHIFT);
-            for (; ecount >= 0; x++, pt1.y += yStep, scount++, ecount--)
-            {
-                if( (unsigned)x >= (unsigned)size0.x )
-                    continue;
-                int y = (int)((pt1.y >> XY_SHIFT) - 1);
-
-                int ep_corr = epTable[(((scount >= 2) + 1) & (scount | 2)) * 3 +
-                                       (((ecount >= 2) + 1) & (ecount | 2))];
-                int a, dist = (pt1.y >> (XY_SHIFT - 5)) & 31;
-
-                a = (ep_corr * FilterTable[dist + 32] >> 8) & 0xff;
-                if ((unsigned)y < (unsigned)size0.y)
-                    PutPoint3C8U(ptr, x, y, lineSize, (const int*)pColor, a);
-
-                a = (ep_corr * FilterTable[dist] >> 8) & 0xff;
-                if ((unsigned)(y+1) < (unsigned)size0.y)
-                    PutPoint3C8U(ptr, x, y+1, lineSize, (const int*)pColor, a);
-
-                a = (ep_corr * FilterTable[63 - dist] >> 8) & 0xff;
-                if ((unsigned)(y+2) < (unsigned)size0.y)
-                    PutPoint3C8U(ptr, x, y+2, lineSize, (const int*)pColor, a);
-            }
+            LINEAA_CALC_POINTS(PutPoint3C8U);
+        }
+        else if (nch == 1)
+        {
+            LINEAA_CALC_POINTS(PutPoint1C8U);
+        }
+        else if (nch == 4)
+        {
+            LINEAA_CALC_POINTS(PutPoint4C8U);
         }
         else
         {
-            int y = (int)(pt1.y >> XY_SHIFT);
-            for (; ecount >= 0; y++, pt1.x += xStep, scount++, ecount--)
-            {
-                if ((unsigned)y >= (unsigned)size0.y)
-                    continue;
-                int x = (int)((pt1.x >> XY_SHIFT) - 1);
-                int ep_corr = epTable[(((scount >= 2) + 1) & (scount | 2)) * 3 +
-                                       (((ecount >= 2) + 1) & (ecount | 2))];
-                int a, dist = (pt1.x >> (XY_SHIFT - 5)) & 31;
-
-                a = (ep_corr * FilterTable[dist + 32] >> 8) & 0xff;
-                if ((unsigned)x < (unsigned)size0.x)
-                    PutPoint3C8U(ptr, x, y, lineSize, (const int*)pColor, a);
-
-                a = (ep_corr * FilterTable[dist] >> 8) & 0xff;
-                if ((unsigned)(x+1) < (unsigned)size0.x)
-                    PutPoint3C8U(ptr, x+1, y, lineSize, (const int*)pColor, a);
-
-                a = (ep_corr * FilterTable[63 - dist] >> 8) & 0xff;
-                if ((unsigned)(x+2) < (unsigned)size0.x)
-                    PutPoint3C8U(ptr, x+2, y, lineSize, (const int*)pColor, a);
-            }
+            throw runtime_error("INVALID code branch.");
         }
     }
-    else if (nch == 1)
+    else if (img.type == IM_DT_FLOAT32)
     {
-        if (ax > ay)
+        const float* pColor = (const float*)_pColor;
+        if (nch == 3)
         {
-            int x = (int)(pt1.x >> XY_SHIFT);
-            for (; ecount >= 0; x++, pt1.y += yStep, scount++, ecount--)
-            {
-                if ((unsigned)x >= (unsigned)size0.x)
-                    continue;
-                int y = (int)((pt1.y >> XY_SHIFT) - 1);
-
-                int ep_corr = epTable[(((scount >= 2) + 1) & (scount | 2)) * 3 +
-                                       (((ecount >= 2) + 1) & (ecount | 2))];
-                int a, dist = (pt1.y >> (XY_SHIFT - 5)) & 31;
-
-                a = (ep_corr * FilterTable[dist + 32] >> 8) & 0xff;
-                if ((unsigned)y < (unsigned)size0.y)
-                    PutPoint1C8U(ptr, x, y, lineSize, *((const int*)pColor), a);
-
-                a = (ep_corr * FilterTable[dist] >> 8) & 0xff;
-                if ((unsigned)(y+1) < (unsigned)size0.y)
-                    PutPoint1C8U(ptr, x, y+1, lineSize, *((const int*)pColor), a);
-
-                a = (ep_corr * FilterTable[63 - dist] >> 8) & 0xff;
-                if ((unsigned)(y+2) < (unsigned)size0.y)
-                    PutPoint1C8U(ptr, x, y+2, lineSize, *((const int*)pColor), a);
-            }
+            LINEAA_CALC_POINTS(PutPoint3C32F);
+        }
+        else if (nch == 1)
+        {
+            LINEAA_CALC_POINTS(PutPoint1C32F);
+        }
+        else if (nch == 4)
+        {
+            LINEAA_CALC_POINTS(PutPoint4C32F);
         }
         else
         {
-            int y = (int)(pt1.y >> XY_SHIFT);
-            for (; ecount >= 0; y++, pt1.x += xStep, scount++, ecount--)
-            {
-                if ((unsigned)y >= (unsigned)size0.y)
-                    continue;
-                int x = (int)((pt1.x >> XY_SHIFT) - 1);
-                int ep_corr = epTable[(((scount >= 2) + 1) & (scount | 2)) * 3 +
-                                       (((ecount >= 2) + 1) & (ecount | 2))];
-                int a, dist = (pt1.x >> (XY_SHIFT - 5)) & 31;
-
-                a = (ep_corr * FilterTable[dist + 32] >> 8) & 0xff;
-                if ((unsigned)x < (unsigned)size0.x)
-                    PutPoint1C8U(ptr, x, y, lineSize, *((const int*)pColor), a);
-
-                a = (ep_corr * FilterTable[dist] >> 8) & 0xff;
-                if ((unsigned)(x+1) < (unsigned)size0.x)
-                    PutPoint1C8U(ptr, x+1, y, lineSize, *((const int*)pColor), a);
-
-                a = (ep_corr * FilterTable[63 - dist] >> 8) & 0xff;
-                if ((unsigned)(x+2) < (unsigned)size0.x)
-                    PutPoint1C8U(ptr, x+2, y, lineSize, *((const int*)pColor), a);
-            }
+            throw runtime_error("INVALID code branch.");
         }
     }
-    else if (nch == 4)
+    else
     {
-        if (ax > ay)
-        {
-            int x = (int)(pt1.x >> XY_SHIFT);
-            for (; ecount >= 0; x++, pt1.y += yStep, scount++, ecount--)
-            {
-                if ((unsigned)x >= (unsigned)size0.x)
-                    continue;
-                int y = (int)((pt1.y >> XY_SHIFT) - 1);
-
-                int ep_corr = epTable[(((scount >= 2) + 1) & (scount | 2)) * 3 +
-                                       (((ecount >= 2) + 1) & (ecount | 2))];
-                int a, dist = (pt1.y >> (XY_SHIFT - 5)) & 31;
-
-                a = (ep_corr * FilterTable[dist + 32] >> 8) & 0xff;
-                if ((unsigned)y < (unsigned)size0.y)
-                    PutPoint4C8U(ptr, x, y, lineSize, (const int*)pColor, a);
-
-                a = (ep_corr * FilterTable[dist] >> 8) & 0xff;
-                if ((unsigned)(y+1) < (unsigned)size0.y)
-                    PutPoint4C8U(ptr, x, y+1, lineSize, (const int*)pColor, a);
-
-                a = (ep_corr * FilterTable[63 - dist] >> 8) & 0xff;
-                if ((unsigned)(y+2) < (unsigned)size0.y)
-                    PutPoint4C8U(ptr, x, y+2, lineSize, (const int*)pColor, a);
-            }
-        }
-        else
-        {
-            int y = (int)(pt1.y >> XY_SHIFT);
-            for (; ecount >= 0; y++, pt1.x += xStep, scount++, ecount--)
-            {
-                if ((unsigned)y >= (unsigned)size0.y)
-                    continue;
-                int x = (int)((pt1.x >> XY_SHIFT) - 1);
-                int ep_corr = epTable[(((scount >= 2) + 1) & (scount | 2)) * 3 +
-                                       (((ecount >= 2) + 1) & (ecount | 2))];
-                int a, dist = (pt1.x >> (XY_SHIFT - 5)) & 31;
-
-                a = (ep_corr * FilterTable[dist + 32] >> 8) & 0xff;
-                if ((unsigned)x < (unsigned)size0.x)
-                    PutPoint4C8U(ptr, x, y, lineSize, (const int*)pColor, a);
-
-                a = (ep_corr * FilterTable[dist] >> 8) & 0xff;
-                if ((unsigned)(x+1) < (unsigned)size0.x)
-                    PutPoint4C8U(ptr, x+1, y, lineSize, (const int*)pColor, a);
-
-                a = (ep_corr * FilterTable[63 - dist] >> 8) & 0xff;
-                if ((unsigned)(x+2) < (unsigned)size0.x)
-                    PutPoint4C8U(ptr, x+2, y, lineSize, (const int*)pColor, a);
-            }
-        }
+        throw runtime_error("INVALID code branch.");
     }
 }
 

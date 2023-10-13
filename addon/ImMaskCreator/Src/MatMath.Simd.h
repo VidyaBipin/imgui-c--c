@@ -972,6 +972,109 @@ template<typename GrayVtype, typename RgbaVtype> struct RowVecGrayToRgbaPack
     VecDstType vecAlpha;
 };
 
+template<typename GrayVtype> struct RowVecGrayToRgbaCopy
+{
+    typedef GrayVtype VecSrcType;
+    typedef GrayVtype VecDstType;
+    typedef typename VecSrcType::lane_type SrcType;
+    typedef typename VecDstType::lane_type DstType;
+
+    RowVecGrayToRgbaCopy(VecDstType _vecAlpha)
+    { vecAlpha = _vecAlpha; }
+
+    int operator()(const uint8_t* _src, uint8_t* _dst, int width) const
+    {
+        const SrcType* sptr = (const SrcType*)_src;
+        DstType* dptr = (DstType*)_dst;
+        VecSrcType s0;
+        VecDstType d0, d1, d2, d3, d4, d5;
+        int i;
+        for (i = 0; i <= width-4*VecSrcType::nlanes; i += 4*VecSrcType::nlanes)
+        {
+            s0 = vx_load(sptr); sptr += VecSrcType::nlanes;
+            v_interleave(s0, s0, d1, d2);
+            v_interleave(s0, vecAlpha, d3, d4);
+            v_interleave(d1, d3, d0, d5);
+            v_store(dptr, d0); dptr += VecDstType::nlanes;
+            v_store(dptr, d5); dptr += VecDstType::nlanes;
+            v_interleave(d2, d4, d0, d5);
+            v_store(dptr, d0); dptr += VecDstType::nlanes;
+            v_store(dptr, d5); dptr += VecDstType::nlanes;
+
+            s0 = vx_load(sptr); sptr += VecSrcType::nlanes;
+            v_interleave(s0, s0, d1, d2);
+            v_interleave(s0, vecAlpha, d3, d4);
+            v_interleave(d1, d3, d0, d5);
+            v_store(dptr, d0); dptr += VecDstType::nlanes;
+            v_store(dptr, d5); dptr += VecDstType::nlanes;
+            v_interleave(d2, d4, d0, d5);
+            v_store(dptr, d0); dptr += VecDstType::nlanes;
+            v_store(dptr, d5); dptr += VecDstType::nlanes;
+
+            s0 = vx_load(sptr); sptr += VecSrcType::nlanes;
+            v_interleave(s0, s0, d1, d2);
+            v_interleave(s0, vecAlpha, d3, d4);
+            v_interleave(d1, d3, d0, d5);
+            v_store(dptr, d0); dptr += VecDstType::nlanes;
+            v_store(dptr, d5); dptr += VecDstType::nlanes;
+            v_interleave(d2, d4, d0, d5);
+            v_store(dptr, d0); dptr += VecDstType::nlanes;
+            v_store(dptr, d5); dptr += VecDstType::nlanes;
+
+            s0 = vx_load(sptr); sptr += VecSrcType::nlanes;
+            v_interleave(s0, s0, d1, d2);
+            v_interleave(s0, vecAlpha, d3, d4);
+            v_interleave(d1, d3, d0, d5);
+            v_store(dptr, d0); dptr += VecDstType::nlanes;
+            v_store(dptr, d5); dptr += VecDstType::nlanes;
+            v_interleave(d2, d4, d0, d5);
+            v_store(dptr, d0); dptr += VecDstType::nlanes;
+            v_store(dptr, d5); dptr += VecDstType::nlanes;
+        }
+        if (i <= width-2*VecSrcType::nlanes)
+        {
+            s0 = vx_load(sptr); sptr += VecSrcType::nlanes;
+            v_interleave(s0, s0, d1, d2);
+            v_interleave(s0, vecAlpha, d3, d4);
+            v_interleave(d1, d3, d0, d5);
+            v_store(dptr, d0); dptr += VecDstType::nlanes;
+            v_store(dptr, d5); dptr += VecDstType::nlanes;
+            v_interleave(d2, d4, d0, d5);
+            v_store(dptr, d0); dptr += VecDstType::nlanes;
+            v_store(dptr, d5); dptr += VecDstType::nlanes;
+
+            s0 = vx_load(sptr); sptr += VecSrcType::nlanes;
+            v_interleave(s0, s0, d1, d2);
+            v_interleave(s0, vecAlpha, d3, d4);
+            v_interleave(d1, d3, d0, d5);
+            v_store(dptr, d0); dptr += VecDstType::nlanes;
+            v_store(dptr, d5); dptr += VecDstType::nlanes;
+            v_interleave(d2, d4, d0, d5);
+            v_store(dptr, d0); dptr += VecDstType::nlanes;
+            v_store(dptr, d5); dptr += VecDstType::nlanes;
+
+            i += 2*VecSrcType::nlanes;
+        }
+        if (i <= width-VecSrcType::nlanes)
+        {
+            s0 = vx_load(sptr);
+            v_interleave(s0, s0, d1, d2);
+            v_interleave(s0, vecAlpha, d3, d4);
+            v_interleave(d1, d3, d0, d5);
+            v_store(dptr, d0); dptr += VecDstType::nlanes;
+            v_store(dptr, d5); dptr += VecDstType::nlanes;
+            v_interleave(d2, d4, d0, d5);
+            v_store(dptr, d0); dptr += VecDstType::nlanes;
+            v_store(dptr, d5);
+
+            i += VecSrcType::nlanes;
+        }
+        return i;
+    }
+
+    VecDstType vecAlpha;
+};
+
 template<class Op, class VecOp> struct MatGrayToRgba : public MatUtils::MatOp1
 {
     typedef typename Op::stype1 stype1;

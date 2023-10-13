@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 #include <string.h>
 #include <application.h>
 #include <imgui_extra_widget.h>
@@ -15,26 +16,24 @@ using namespace ImGui;
 
 static MaskCreator::Holder g_hMaskCreator;
 static bool g_bMaskSizeInited = false;
-static MaskCreator::Holder g_hMaskCreator2;
 static bool g_bShowContainBox = false;
 static bool g_bFillContour = true;
 static ImMat g_mMask;
 static ImTextureID g_tidMask = 0;
 static int g_iMorphSize = 1;
 static char g_acMaskSavePath[256];
+static ImVec2 g_v2MousePos(0, 0);
 
 // Application Framework Functions
 static void _AppInitialize(void** handle)
 {
     g_hMaskCreator = MaskCreator::CreateInstance({1920, 1080});
-    // g_hMaskCreator2 = MaskCreator::CreateInstance();
     strncpy(g_acMaskSavePath, "./mask.png", sizeof(g_acMaskSavePath));
 }
 
 static void _AppFinalize(void** handle)
 {
     g_hMaskCreator = nullptr;
-    g_hMaskCreator2 = nullptr;
 }
 
 static bool _AppFrame(void* handle, bool closeApp)
@@ -46,6 +45,7 @@ static bool _AppFrame(void* handle, bool closeApp)
     ImGui:Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
     auto wndAvailSize = GetContentRegionAvail();
+    ImVec2 mousePos(0, 0);
     if (BeginChild("left", {wndAvailSize.x/2, 0}, true))
     {
         TextUnformatted("Draw Mask Area");
@@ -96,6 +96,7 @@ static bool _AppFrame(void* handle, bool closeApp)
             g_hMaskCreator->ChangeMaskSize(MatUtils::Size2i(wndAvailSize.x, wndAvailSize.y));
             g_bMaskSizeInited = true;
         }
+        mousePos = GetMousePos()-cursorPos;
         if (!g_hMaskCreator->DrawContent(cursorPos, wndAvailSize))
             cerr << "MaskCreator::DrawContent() FAILED! Error is '" << g_hMaskCreator->GetError() << "'." << endl;
         if (g_bShowContainBox)
@@ -143,6 +144,41 @@ static bool _AppFrame(void* handle, bool closeApp)
             ImGui::ImMat mRgba; mRgba.type = IM_DT_INT8;
             MatUtils::GrayToRgba(mRgba, g_mMask, 255);
             ImGenerateOrUpdateTexture(g_tidMask, mRgba.w, mRgba.h, mRgba.c, (const unsigned char *)mRgba.data);
+
+            // log mask value around mouse position
+            if (mousePos != g_v2MousePos)
+            {
+                g_v2MousePos = mousePos;
+                auto v2MouseCoord = mousePos/g_hMaskCreator->GetUiScale();
+                int coordCenterX = round(v2MouseCoord.x);
+                int coordCenterY = round(v2MouseCoord.y);
+                cout << "Mouse pos: (" << mousePos.x << ", " << mousePos.y << ") -> (" << coordCenterX << ", " << coordCenterY << ")" << endl;
+                int offX = 3, offY = 3;
+                const auto maskDtype = g_mMask.type;
+                const bool isMaskDataInteger = maskDtype==IM_DT_INT8 || maskDtype==IM_DT_INT16 || maskDtype==IM_DT_INT16_BE || maskDtype==IM_DT_INT32 || maskDtype==IM_DT_INT64;
+                for (int j = coordCenterY-offY; j <= coordCenterY+offY; j++)
+                {
+                    if (j < 0 || j >= g_mMask.h)
+                        continue;
+                    cout << "\t\t";
+                    for (int i = coordCenterX-offX; i <= coordCenterX+offX; i++)
+                    {
+                        if (i < 0 || i >= g_mMask.w)
+                            continue;
+                        if (maskDtype == IM_DT_INT8)
+                            cout << setw(6) << (uint32_t)g_mMask.at<uint8_t>(i, j, 0);
+                        else if (maskDtype == IM_DT_INT16)
+                            cout << setw(6) << g_mMask.at<uint16_t>(i, j, 0);
+                        else if (maskDtype == IM_DT_FLOAT32)
+                            cout << setw(6) << fixed << g_mMask.at<float>(i, j, 0);
+                        else
+                            throw runtime_error("INVALID code branch.");
+                        cout << " ";
+                    }
+                    cout << endl;
+                }
+                cout << endl;
+            }
         }
 
         PushItemWidth(200);

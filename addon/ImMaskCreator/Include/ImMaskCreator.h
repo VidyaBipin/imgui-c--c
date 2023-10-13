@@ -37,6 +37,7 @@ struct MaskCreator
     virtual ImGui::ImMat GetMask(int iLineType, bool bFilled = true, ImDataType eDataType = IM_DT_INT8, double dMaskValue = 255, double dNonMaskValue = 0) = 0;
     virtual const ContourPoint* GetHoveredPoint() const = 0;
     virtual ImVec4 GetContourContainBox() const = 0;
+    virtual ImVec2 GetUiScale() const = 0;
 
     virtual bool SaveAsJson(imgui_json::value& j) const = 0;
     virtual bool SaveAsJson(const std::string& filePath) const = 0;

@@ -393,6 +393,11 @@ public:
         return ImVec4(rBox.Min.x, rBox.Min.y, rBox.Max.x, rBox.Max.y);
     }
 
+    ImVec2 GetUiScale() const override
+    {
+        return m_v2UiScale;
+    }
+
     bool SaveAsJson(imgui_json::value& j) const override
     {
         j = imgui_json::value();

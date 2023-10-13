@@ -93,6 +93,13 @@ template<typename T> struct MaxOp
     T operator()(const T a, const T b) const { return std::max(a, b); }
 };
 
+template<typename T> struct CopyOp
+{
+    typedef T stype1;
+    typedef T stype2;
+    stype2 operator()(const stype1& a) const { return a; }
+};
+
 template<typename T1, typename T2> struct ExpandOp
 {
     typedef T1 stype1;

@@ -684,7 +684,77 @@ void GrayToRgba(ImGui::ImMat& dst, const ImGui::ImMat& src, double alphaVal)
     const auto srcElemSize = src.elemsize;
     const auto dstElemSize = dst.elemsize;
 
-    if (dstElemSize < srcElemSize)
+    if (srcType == dstType)
+    {
+        #define GET_MAT_GRAY_TO_RGBA_COPY_OP(type) \
+            if (type == IM_DT_INT8) { \
+                const auto vecAlpha = vx_setall_u8((uint8_t)alphaVal); \
+                using MatGray2RgbaOp = MatGrayToRgba<CopyOp<uint8_t>, RowVecGrayToRgbaCopy<v_uint8>>; \
+                hOp1 = MatOp1::Holder(new MatGray2RgbaOp(vecAlpha), [] (MatOp1* p) { \
+                    MatGray2RgbaOp* ptr = dynamic_cast<MatGray2RgbaOp*>(p); \
+                    delete ptr; }); \
+            } \
+            else if (type == IM_DT_INT16) { \
+                const auto vecAlpha = vx_setall_u16((uint16_t)alphaVal); \
+                using MatGray2RgbaOp = MatGrayToRgba<CopyOp<uint16_t>, RowVecGrayToRgbaCopy<v_uint16>>; \
+                hOp1 = MatOp1::Holder(new MatGray2RgbaOp(vecAlpha), [] (MatOp1* p) { \
+                    MatGray2RgbaOp* ptr = dynamic_cast<MatGray2RgbaOp*>(p); \
+                    delete ptr; }); \
+            } \
+            else if (type == IM_DT_INT32) { \
+                const auto vecAlpha = vx_setall_s32((int32_t)alphaVal); \
+                using MatGray2RgbaOp = MatGrayToRgba<CopyOp<int32_t>, RowVecGrayToRgbaCopy<v_int32>>; \
+                hOp1 = MatOp1::Holder(new MatGray2RgbaOp(vecAlpha), [] (MatOp1* p) { \
+                    MatGray2RgbaOp* ptr = dynamic_cast<MatGray2RgbaOp*>(p); \
+                    delete ptr; }); \
+            } \
+            else if (type == IM_DT_FLOAT32) { \
+                const auto vecAlpha = vx_setall_f32((float)alphaVal); \
+                using MatGray2RgbaOp = MatGrayToRgba<CopyOp<float>, RowVecGrayToRgbaCopy<v_float32>>; \
+                hOp1 = MatOp1::Holder(new MatGray2RgbaOp(vecAlpha), [] (MatOp1* p) { \
+                    MatGray2RgbaOp* ptr = dynamic_cast<MatGray2RgbaOp*>(p); \
+                    delete ptr; }); \
+            } \
+            else throw std::runtime_error("UNSUPPORTED data type!");
+#if SIMD_ARCH_X86
+        if (CpuChecker::HasFeature(CpuFeature::AVX2))
+        {
+            using namespace SimdOpt::AVX2;
+            GET_MAT_GRAY_TO_RGBA_COPY_OP(srcType);
+        }
+        else if (CpuChecker::HasFeature(CpuFeature::AVX))
+        {
+            using namespace SimdOpt::AVX;
+            GET_MAT_GRAY_TO_RGBA_COPY_OP(srcType);
+        }
+        else if (CpuChecker::HasFeature(CpuFeature::SSE4_1))
+        {
+            using namespace SimdOpt::SSE4_1;
+            GET_MAT_GRAY_TO_RGBA_COPY_OP(srcType);
+        }
+        else if (CpuChecker::HasFeature(CpuFeature::SSSE3))
+        {
+            using namespace SimdOpt::SSSE3;
+            GET_MAT_GRAY_TO_RGBA_COPY_OP(srcType);
+        }
+        else if (CpuChecker::HasFeature(CpuFeature::SSE3))
+        {
+            using namespace SimdOpt::SSE3;
+            GET_MAT_GRAY_TO_RGBA_COPY_OP(srcType);
+        }
+        else if (CpuChecker::HasFeature(CpuFeature::SSE))
+        {
+            using namespace SimdOpt::SSE;
+            GET_MAT_GRAY_TO_RGBA_COPY_OP(srcType);
+        }
+        else
+#endif // ~SIMD_ARCH_X86
+        {
+            using namespace SimdOpt::NONE;
+            GET_MAT_GRAY_TO_RGBA_COPY_OP(srcType);
+        }
+    }
+    else if (dstElemSize < srcElemSize)
     {
         #define GET_MAT_GRAY_TO_RGBA_PACK_OP(type1, type2) \
             if (type2 == IM_DT_INT8) { \
