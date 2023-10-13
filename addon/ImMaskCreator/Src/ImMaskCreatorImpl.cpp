@@ -314,7 +314,7 @@ public:
             const ImVec2 offsetSize2(m_v2PointSizeHalf.x-m_fPointBorderThickness, m_v2PointSizeHalf.y-m_fPointBorderThickness);
             pDrawList->AddRectFilled(pointPos-offsetSize2, pointPos+offsetSize2, m_u32ContourHoverPointColor);
         }
-        return true;
+        return m_bContourCompleted && m_bContourChanged;
     }
 
     bool ChangeMaskSize(const MatUtils::Size2i& size) override

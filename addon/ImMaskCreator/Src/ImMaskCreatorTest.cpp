@@ -97,8 +97,7 @@ static bool _AppFrame(void* handle, bool closeApp)
             g_bMaskSizeInited = true;
         }
         mousePos = GetMousePos()-cursorPos;
-        if (!g_hMaskCreator->DrawContent(cursorPos, wndAvailSize))
-            cerr << "MaskCreator::DrawContent() FAILED! Error is '" << g_hMaskCreator->GetError() << "'." << endl;
+        g_hMaskCreator->DrawContent(cursorPos, wndAvailSize);
         if (g_bShowContainBox)
         {
             ImDrawList* pDrawList = GetWindowDrawList();
@@ -166,11 +165,11 @@ static bool _AppFrame(void* handle, bool closeApp)
                         if (i < 0 || i >= g_mMask.w)
                             continue;
                         if (maskDtype == IM_DT_INT8)
-                            cout << setw(6) << (uint32_t)g_mMask.at<uint8_t>(i, j, 0);
+                            cout << setw(6) << (uint32_t)g_mMask.at<uint8_t>(i, j);
                         else if (maskDtype == IM_DT_INT16)
-                            cout << setw(6) << g_mMask.at<uint16_t>(i, j, 0);
+                            cout << setw(6) << g_mMask.at<uint16_t>(i, j);
                         else if (maskDtype == IM_DT_FLOAT32)
-                            cout << setw(6) << fixed << g_mMask.at<float>(i, j, 0);
+                            cout << setw(6) << fixed << g_mMask.at<float>(i, j);
                         else
                             throw runtime_error("INVALID code branch.");
                         cout << " ";

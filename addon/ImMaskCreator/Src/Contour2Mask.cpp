@@ -964,7 +964,6 @@ ImGui::ImMat Contour2Mask(
     default:
         throw runtime_error("UNSUPPORTED mask image data type!");
     }
-    mask.dims = 3; // wyvern: to pass the assertion in ImMat::draw_line()
 
     ImGui::ImMat color;
     color.create_type(1, mask.type);
@@ -1010,7 +1009,9 @@ ImGui::ImMat Contour2Mask(
     }
     Point2l ptContourOffset((int64_t)((double)v2ContourOffset.x*dFixPointScalar), (int64_t)((double)v2ContourOffset.y*dFixPointScalar));
     vector<_PolyEdge> edges;
+    mask.dims = 3; // wyvern: to pass the assertion in ImMat::draw_line()
     CollectPolyEdges(mask, aptPolyVertices, edges, color.data, iLineType, ptContourOffset, iFixPointShit);
+    mask.dims = 2;
     if (bFilled)
         FillEdgeCollection(mask, edges, color.data);
     return mask;
