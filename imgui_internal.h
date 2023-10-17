@@ -2012,6 +2012,7 @@ enum ImGuiLocKey : int
     ImGuiLocKey_WindowingUntitled,
     ImGuiLocKey_DockingHideTabBar,
     ImGuiLocKey_DockingHoldShiftToDock,
+    ImGuiLocKey_DockingDragToUndockOrMoveNode,
     ImGuiLocKey_COUNT
 };
 
@@ -3269,7 +3270,7 @@ namespace ImGui
     IMGUI_API void          UpdateInputEvents(bool trickle_fast_inputs);
     IMGUI_API void          UpdateHoveredWindowAndCaptureFlags();
     IMGUI_API void          StartMouseMovingWindow(ImGuiWindow* window);
-    IMGUI_API void          StartMouseMovingWindowOrNode(ImGuiWindow* window, ImGuiDockNode* node, bool undock_floating_node);
+    IMGUI_API void          StartMouseMovingWindowOrNode(ImGuiWindow* window, ImGuiDockNode* node, bool undock);
     IMGUI_API void          UpdateMouseMovingWindowNewFrame();
     IMGUI_API void          UpdateMouseMovingWindowEndFrame();
 
