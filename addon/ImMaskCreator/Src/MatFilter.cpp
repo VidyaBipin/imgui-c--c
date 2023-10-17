@@ -490,10 +490,10 @@ public:
         const uint8_t* constVal = !m_mConstBorderValue.empty() ? (const uint8_t*)m_mConstBorderValue.data : nullptr;
 
         int _maxBufRows = std::max(
-                m_szKsize.y+3,
+                szWholeSize.y+(m_szKsize.y-1)*2,
                 std::max(m_ptAnchor.y, m_szKsize.y-m_ptAnchor.y-1)*2+1);
 
-        if (m_iMaxWidth < m_rRoi.size.x || _maxBufRows != (int)m_apu8Rows.size() )
+        if (m_iMaxWidth < m_rRoi.size.x || _maxBufRows != (int)m_apu8Rows.size())
         {
             m_apu8Rows.resize(_maxBufRows);
             m_iMaxWidth = std::max(m_iMaxWidth, m_rRoi.size.x);
@@ -575,7 +575,7 @@ public:
     int Proceed(const uint8_t* p8uSrc, int iSrcStep, int iSrcCount, uint8_t* p8uDst, int iDstStep) override
     {
         assert(m_szWholeSize.x > 0 && m_szWholeSize.y > 0);
-
+        
         const int *btab = &m_aiBorderTab[0];
         int esz = (int)GetElementSize(m_eSrcDtype), btab_esz = m_iBorderElemSize;
         uint8_t** brows = &m_apu8Rows[0];
@@ -654,7 +654,7 @@ public:
                     brows[i] = AlignPtr(&m_au8RingBuf[0], VEC_ALIGN) + bi*m_iBufStep;
                 }
             }
-            if( i < kheight )
+            if (i < kheight)
                 break;
             i -= kheight - 1;
             if (isSep)
@@ -668,23 +668,23 @@ public:
         return dy;
     }
 
-ImGui::ImMat Apply(const ImGui::ImMat& mSrc, const Size2i& szSize, const Point2i& ptOfs) override
-{
-    ImGui::ImMat mDst;
-    mDst.create_like(mSrc);
+    ImGui::ImMat Apply(const ImGui::ImMat& mSrc, const Size2i& szSize, const Point2i& ptOfs) override
+    {
+        ImGui::ImMat mDst;
+        mDst.create_like(mSrc);
 
-    Start(szSize, Size2i(mSrc.w, mSrc.h), ptOfs);
-    int y = m_iStartY-ptOfs.y;
-    int srcLineSize = mSrc.w*mSrc.elemsize;
-    if (mSrc.elempack > 1)
-        srcLineSize *= mSrc.c;
-    int dstLineSize = mDst.w*mDst.elemsize;
-    if (mDst.elempack > 1)
-        dstLineSize *= mDst.c;
-    Proceed((const uint8_t*)mSrc.data+y*srcLineSize, srcLineSize, m_iEndY-m_iStartY,
-            (uint8_t*)mDst.data, dstLineSize);
-    return mDst;
-}
+        Start(szSize, Size2i(mSrc.w, mSrc.h), ptOfs);
+        int y = m_iStartY-ptOfs.y;
+        int srcLineSize = mSrc.w*mSrc.elemsize;
+        if (mSrc.elempack > 1)
+            srcLineSize *= mSrc.c;
+        int dstLineSize = mDst.w*mDst.elemsize;
+        if (mDst.elempack > 1)
+            dstLineSize *= mDst.c;
+        Proceed((const uint8_t*)mSrc.data+y*srcLineSize, srcLineSize, m_iEndY-m_iStartY,
+                (uint8_t*)mDst.data, dstLineSize);
+        return mDst;
+    }
 
 private:
     bool IsSeparable() const

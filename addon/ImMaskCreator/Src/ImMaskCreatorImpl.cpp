@@ -28,7 +28,7 @@ public:
     {
         m_v2PointSizeHalf = m_v2PointSize/2;
         m_itMorphCtrlVt = m_itHoveredVertex = m_atContourPoints.end();
-        m_mMorphKernel = MatUtils::GetStructuringElement(MatUtils::MORPH_RECT, {5, 5});
+        m_mMorphKernel = MatUtils::GetStructuringElement(MatUtils::MORPH_ELLIPSE, {5, 5});
     }
 
     string GetName() const override
@@ -262,7 +262,6 @@ public:
                         if (bGrabberSide != bMousePosSide)
                             m_tMorphCtrl.m_bInsidePoly = !m_tMorphCtrl.m_bInsidePoly;
                         m_tMorphCtrl.m_ptGrabberPos = m_tMorphCtrl.CalcGrabberPos();
-                        m_bContourChanged = true;
                     }
                 }
             }
@@ -342,8 +341,11 @@ public:
 
     ImGui::ImMat GetMask(int iLineType, bool bFilled, ImDataType eDataType, double dMaskValue, double dNonMaskValue) override
     {
+        ImGui::ImMat res;
         if (!m_bContourCompleted)
-            return ImGui::ImMat();
+            return res;
+
+        res = m_mMask;
         if (m_bContourChanged || m_mMask.empty() ||
             m_iLastMaskLineType != iLineType || m_bLastMaskFilled != bFilled ||
             m_eLastMaskDataType != eDataType || m_dLastMaskValue != dMaskValue || m_dLastNonMaskValue != dNonMaskValue)
@@ -369,23 +371,52 @@ public:
             //     cout << "(" << v.x << ", " << v.y << "), ";
             // cout << endl;
             m_mMask = MatUtils::Contour2Mask(av2TotalVertices, m_size, {0.f, 0.f}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled);
-            const auto& iMorphIters = m_tMorphCtrl.m_iMorphIterations;
-            if (bFilled && iMorphIters > 0)
-            {
-                if (m_tMorphCtrl.m_bInsidePoly)
-                    m_mMask = MatUtils::Erode(m_mMask, m_mMorphKernel, {-1, -1}, iMorphIters);
-                else
-                    m_mMask = MatUtils::Dilate(m_mMask, m_mMorphKernel, {-1, -1}, iMorphIters);
-            }
-
             m_bContourChanged = false;
             m_iLastMaskLineType = iLineType;
             m_bLastMaskFilled = bFilled;
             m_eLastMaskDataType = eDataType;
             m_dLastMaskValue = dMaskValue;
             m_dLastNonMaskValue = dNonMaskValue;
+            m_iLastMorphIters = 0;
+            m_aMorphCache.clear();
+            res = m_mMask;
         }
-        return m_mMask;
+
+        auto iMorphIters = m_tMorphCtrl.m_iMorphIterations;
+        iMorphIters = (int)std::ceil(iMorphIters*2/(m_mMorphKernel.w-1));
+        auto itMorphCache = m_aMorphCache.end();
+        int iCurrMorphType = m_tMorphCtrl.m_bInsidePoly ? -1 : 1;
+        if (m_iLastMorphIters != iMorphIters || m_iMorphCacheType != iCurrMorphType)
+        {
+            if (m_iMorphCacheType != iCurrMorphType) m_aMorphCache.clear();
+            if (iMorphIters > m_aMorphCache.size() )
+            {
+                int iLoopCnt = iMorphIters-m_aMorphCache.size();
+                ImGui::ImMat mMorphMat = m_aMorphCache.empty() ? m_mMask : m_aMorphCache.back();
+                for (int i = 0; i < iLoopCnt; i++)
+                {
+                    if (m_tMorphCtrl.m_bInsidePoly)
+                        mMorphMat = MatUtils::Erode(mMorphMat, m_mMorphKernel, {-1, -1}, 1);
+                    else
+                        mMorphMat = MatUtils::Dilate(mMorphMat, m_mMorphKernel, {-1, -1}, 1);
+                    m_aMorphCache.push_back(mMorphMat);
+                }
+                m_iMorphCacheType = iCurrMorphType;
+                itMorphCache = m_aMorphCache.end();
+                itMorphCache--;
+            }
+            else
+            {
+                itMorphCache = m_aMorphCache.begin();
+                int idx = 0;
+                while (idx++ < iMorphIters)
+                    itMorphCache++;
+            }
+            m_iLastMorphIters = iMorphIters;
+        }
+        if (bFilled && iMorphIters > 0)
+            res = *itMorphCache;
+        return res;
     }
 
     const ContourPoint* GetHoveredPoint() const override
@@ -1499,6 +1530,9 @@ private:
     double m_dLastMaskValue{0}, m_dLastNonMaskValue{0};
     ImGui::ImMat m_mMask;
     ImGui::ImMat m_mMorphKernel;
+    list<ImGui::ImMat> m_aMorphCache;
+    int m_iLastMorphIters{0};
+    int m_iMorphCacheType{1};
     string m_sErrMsg;
 };
 

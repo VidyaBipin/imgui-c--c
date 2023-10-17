@@ -145,39 +145,39 @@ static bool _AppFrame(void* handle, bool closeApp)
             ImGenerateOrUpdateTexture(g_tidMask, mRgba.w, mRgba.h, mRgba.c, (const unsigned char *)mRgba.data);
 
             // log mask value around mouse position
-            if (mousePos != g_v2MousePos)
-            {
-                g_v2MousePos = mousePos;
-                auto v2MouseCoord = mousePos/g_hMaskCreator->GetUiScale();
-                int coordCenterX = round(v2MouseCoord.x);
-                int coordCenterY = round(v2MouseCoord.y);
-                cout << "Mouse pos: (" << mousePos.x << ", " << mousePos.y << ") -> (" << coordCenterX << ", " << coordCenterY << ")" << endl;
-                int offX = 3, offY = 3;
-                const auto maskDtype = g_mMask.type;
-                const bool isMaskDataInteger = maskDtype==IM_DT_INT8 || maskDtype==IM_DT_INT16 || maskDtype==IM_DT_INT16_BE || maskDtype==IM_DT_INT32 || maskDtype==IM_DT_INT64;
-                for (int j = coordCenterY-offY; j <= coordCenterY+offY; j++)
-                {
-                    if (j < 0 || j >= g_mMask.h)
-                        continue;
-                    cout << "\t\t";
-                    for (int i = coordCenterX-offX; i <= coordCenterX+offX; i++)
-                    {
-                        if (i < 0 || i >= g_mMask.w)
-                            continue;
-                        if (maskDtype == IM_DT_INT8)
-                            cout << setw(6) << (uint32_t)g_mMask.at<uint8_t>(i, j);
-                        else if (maskDtype == IM_DT_INT16)
-                            cout << setw(6) << g_mMask.at<uint16_t>(i, j);
-                        else if (maskDtype == IM_DT_FLOAT32)
-                            cout << setw(6) << fixed << g_mMask.at<float>(i, j);
-                        else
-                            throw runtime_error("INVALID code branch.");
-                        cout << " ";
-                    }
-                    cout << endl;
-                }
-                cout << endl;
-            }
+            // if (mousePos != g_v2MousePos)
+            // {
+            //     g_v2MousePos = mousePos;
+            //     auto v2MouseCoord = mousePos/g_hMaskCreator->GetUiScale();
+            //     int coordCenterX = round(v2MouseCoord.x);
+            //     int coordCenterY = round(v2MouseCoord.y);
+            //     cout << "Mouse pos: (" << mousePos.x << ", " << mousePos.y << ") -> (" << coordCenterX << ", " << coordCenterY << ")" << endl;
+            //     int offX = 3, offY = 3;
+            //     const auto maskDtype = g_mMask.type;
+            //     const bool isMaskDataInteger = maskDtype==IM_DT_INT8 || maskDtype==IM_DT_INT16 || maskDtype==IM_DT_INT16_BE || maskDtype==IM_DT_INT32 || maskDtype==IM_DT_INT64;
+            //     for (int j = coordCenterY-offY; j <= coordCenterY+offY; j++)
+            //     {
+            //         if (j < 0 || j >= g_mMask.h)
+            //             continue;
+            //         cout << "\t\t";
+            //         for (int i = coordCenterX-offX; i <= coordCenterX+offX; i++)
+            //         {
+            //             if (i < 0 || i >= g_mMask.w)
+            //                 continue;
+            //             if (maskDtype == IM_DT_INT8)
+            //                 cout << setw(6) << (uint32_t)g_mMask.at<uint8_t>(i, j);
+            //             else if (maskDtype == IM_DT_INT16)
+            //                 cout << setw(6) << g_mMask.at<uint16_t>(i, j);
+            //             else if (maskDtype == IM_DT_FLOAT32)
+            //                 cout << setw(6) << fixed << g_mMask.at<float>(i, j);
+            //             else
+            //                 throw runtime_error("INVALID code branch.");
+            //             cout << " ";
+            //         }
+            //         cout << endl;
+            //     }
+            //     cout << endl;
+            // }
         }
 
         PushItemWidth(200);

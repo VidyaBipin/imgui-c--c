@@ -1,8 +1,17 @@
 #include <cassert>
 #include <limits>
+#include <list>
+#include <vector>
+#include <future>
+#include <chrono>
+#include <thread>
+#include <memory>
+#include <functional>
+#include <cmath>
 #include "Morph.h"
 #include "MatMath.Internal.h"
 #include "MatFilter.h"
+#include "SysUtils.h"
 
 #include "SimdOpt.h"
 #if SIMD_ARCH_X86
@@ -466,9 +475,8 @@ ColumnFilter::Holder GetMorphologyColumnFilter(int op, ImDataType type, int ksiz
     return nullptr;
 }
 
-MatFilter::Holder GetMorphologyMatFilter(int op, const ImGui::ImMat& _kernel, const Point2i& _anchor)
+MatFilter::Holder GetMorphologyMatFilter(int op, ImDataType type, const ImGui::ImMat& _kernel, const Point2i& _anchor)
 {
-    const auto type = _kernel.type;
     if (op == 0 /*MORPH_ERODE*/)
     {
         #define GET_SIMD_ERODE_MAT_FILTER(kernel, anchor) \
@@ -646,7 +654,7 @@ FilterEngine::Holder CreateMorphologyFilter(
     }
     else
     {
-        hMatFilter = GetMorphologyMatFilter(op, mKernel, ptAnchor);
+        hMatFilter = GetMorphologyMatFilter(op, dtype, mKernel, ptAnchor);
     }
 
     ImGui::ImMat mBorderValue;

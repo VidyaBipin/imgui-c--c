@@ -452,9 +452,77 @@ template<class Op, class VecOp> struct MorphColumnFilter : public MatUtils::Colu
     VecOp vecOp;
 };
 
+template<class Op, class VecOp> class MorphProcessOneRowTask : public SysUtils::BaseAsyncTask
+{
+public:
+    typedef typename Op::rtype T;
+
+    MorphProcessOneRowTask(const std::vector<MatUtils::Point2i>* pCoords, const uint8_t** src, uint8_t* dst, int dststep, int nz, int width, int height, int cn)
+        : m_pCoords(pCoords), m_src(src), m_dst(dst), m_dststep(dststep), m_nz(nz), m_width(width), m_height(height), m_cn(cn)
+    {}
+
+    void operator() () override
+    {
+        const std::vector<MatUtils::Point2i>& coords = *m_pCoords;
+        std::vector<uint8_t*> sptrs(coords.size());
+        const T** kp = (const T**)&sptrs[0];
+        const uint8_t** src = m_src;
+        uint8_t* dst = m_dst;
+        int k;
+        for (int j = 0; j < m_height; j++)
+        {
+            for (k = 0; k < m_nz; k++)
+                kp[k] = (const T*)src[coords[k].y]+coords[k].x*m_cn;
+
+            VecOp vecOp;
+            int i = vecOp(&sptrs[0], m_nz, dst, m_width);
+
+            Op op;
+            for (; i <= m_width-4; i += 4)
+            {
+                const T* sptr = kp[0]+i;
+                T s0 = sptr[0], s1 = sptr[1], s2 = sptr[2], s3 = sptr[3];
+                for (k = 1; k < m_nz; k++)
+                {
+                    sptr = kp[k]+i;
+                    s0 = op(s0, sptr[0]); s1 = op(s1, sptr[1]);
+                    s2 = op(s2, sptr[2]); s3 = op(s3, sptr[3]);
+                }
+                dst[i  ] = s0; dst[i+1] = s1;
+                dst[i+2] = s2; dst[i+3] = s3;
+            }
+            for (; i < m_width; i++)
+            {
+                T s0 = kp[0][i];
+                for (k = 1; k < m_nz; k++)
+                    s0 = op(s0, kp[k][i]);
+                dst[i] = s0;
+            }
+
+            src++; dst += m_dststep;
+        }
+    }
+
+    static const std::function<void(SysUtils::AsyncTask*)> TASK_HOLDER_DELETER;
+
+private:
+    const std::vector<MatUtils::Point2i>* m_pCoords;
+    const uint8_t** m_src;
+    uint8_t* m_dst;
+    const int m_nz, m_width, m_height, m_cn, m_dststep;
+};
+
+template<class Op, class VecOp>
+const std::function<void(SysUtils::AsyncTask*)> MorphProcessOneRowTask<Op, VecOp>::TASK_HOLDER_DELETER = [] (SysUtils::AsyncTask* p) {
+    MorphProcessOneRowTask<Op, VecOp>* ptr = dynamic_cast<MorphProcessOneRowTask<Op, VecOp>*>(p);
+    delete p;
+};
+
+
 template<class Op, class VecOp> struct MorphFilter : public MatUtils::MatFilter
 {
     typedef typename Op::rtype T;
+    typedef MorphProcessOneRowTask<Op, VecOp> RowTask;
 
     MorphFilter(const ImGui::ImMat& _kernel, const MatUtils::Point2i& _anchor)
     {
@@ -464,53 +532,45 @@ template<class Op, class VecOp> struct MorphFilter : public MatUtils::MatFilter
         std::vector<uint8_t> coeffs;
         // kernel elements, just their locations
         Preprocess2DKernel(_kernel, coords, coeffs);
-        ptrs.resize(coords.size());
     }
 
     void operator()(const uint8_t** src, uint8_t* dst, int dststep, int count, int width, int cn) override
     {
-        const MatUtils::Point2i* pt = &coords[0];
-        const T** kp = (const T**)&ptrs[0];
-        int i, k, nz = (int)coords.size();
-        Op op;
-
+        const int nz = (int)coords.size();
         width *= cn;
-        for (; count > 0; count--, dst += dststep, src++)
+        std::list<SysUtils::AsyncTask::Holder> aRowTasks;
+        SysUtils::ThreadPoolExecutor::Holder hTpExecutor = SysUtils::ThreadPoolExecutor::GetDefaultInstance();
+        const int sliceCnt = 16;
+        int sliceHeight = (int)std::ceil((float)count/sliceCnt);
+        if (sliceHeight <= 0) sliceHeight = 1;
+        int sliceStart = 0;
+        while (sliceStart < count)
         {
-            T* D = (T*)dst;
-
-            for (k = 0; k < nz; k++)
-                kp[k] = (const T*)src[pt[k].y] + pt[k].x*cn;
-
-            i = vecOp(&ptrs[0], nz, dst, width);
-            for (; i <= width - 4; i += 4)
+            if (sliceStart+sliceHeight > count) sliceHeight = count-sliceStart;
+            SysUtils::AsyncTask::Holder hTask = SysUtils::AsyncTask::Holder(
+                new RowTask(&coords, src+sliceStart, dst+sliceStart*dststep, dststep, nz, width, sliceHeight, cn), RowTask::TASK_HOLDER_DELETER);
+            sliceStart += sliceHeight;
+            // std::cout << "Created RowTask: " << hTask.get() << std::endl;
+            if (hTpExecutor->EnqueueTask(hTask))
             {
-                const T* sptr = kp[0] + i;
-                T s0 = sptr[0], s1 = sptr[1], s2 = sptr[2], s3 = sptr[3];
-
-                for (k = 1; k < nz; k++)
-                {
-                    sptr = kp[k] + i;
-                    s0 = op(s0, sptr[0]); s1 = op(s1, sptr[1]);
-                    s2 = op(s2, sptr[2]); s3 = op(s3, sptr[3]);
-                }
-
-                D[i] = s0; D[i+1] = s1;
-                D[i+2] = s2; D[i+3] = s3;
+                // hTask->WaitDone();
+                aRowTasks.push_back(hTask);
             }
-            for (; i < width; i++)
+            else
             {
-                T s0 = kp[0][i];
-                for (k = 1; k < nz; k++)
-                    s0 = op(s0, kp[k][i]);
-                D[i] = s0;
+                std::cout << "ERROR! FAILED to enqueue MorphFilter::RowTask!" << std::endl;
+                hTask->Cancel();
             }
+        }
+        for (auto& hTask : aRowTasks)
+        {
+            // std::cout << "Wait RowTask: " << hTask.get() << std::endl;
+            hTask->WaitDone();
+            // std::cout << "WaitDone RowTask: " << hTask.get() << std::endl;
         }
     }
 
     std::vector<MatUtils::Point2i> coords;
-    std::vector<uint8_t*> ptrs;
-    VecOp vecOp;
 };
 
 SIMD_SCOPE_END
