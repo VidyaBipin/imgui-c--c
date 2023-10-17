@@ -176,6 +176,7 @@ public:
                 }
             }
         }
+        bool bMorphChanged = false;
         if (IsMouseDragging(ImGuiMouseButton_Left))
         {
             if (HasHoveredVertex())
@@ -253,14 +254,23 @@ public:
                     if (m_tMorphCtrl.m_fMorphCtrlLength != l)
                     {
                         m_tMorphCtrl.m_fMorphCtrlLength = l;
-                        m_tMorphCtrl.m_iMorphIterations = (int)floor(l-MorphController::MIN_CTRL_LENGTH);
+                        auto tmp = (int)floor(l-MorphController::MIN_CTRL_LENGTH);
+                        auto iMorphIters = (int)std::ceil(tmp*2/(m_mMorphKernel.w-1));
+                        if (iMorphIters != m_tMorphCtrl.m_iMorphIterations)
+                        {
+                            m_tMorphCtrl.m_iMorphIterations = iMorphIters;
+                            bMorphChanged = true;
+                        }
                         const auto& ptOrgRootPos = m_tMorphCtrl.m_ptRootPos;
                         const auto& ptOrgGrabberPos = m_tMorphCtrl.m_ptGrabberPos;
                         const auto& fVertSlope = isinf(m_tMorphCtrl.m_fCtrlSlope) ? 0 : m_tMorphCtrl.m_fCtrlSlope == 0 ? numeric_limits<float>::infinity() : -1/m_tMorphCtrl.m_fCtrlSlope;
                         bool bGrabberSide = isinf(fVertSlope) ? ptOrgGrabberPos.x > ptOrgRootPos.x : ptOrgGrabberPos.y > fVertSlope*(ptOrgGrabberPos.x-ptOrgRootPos.x)+ptOrgRootPos.y;
                         bool bMousePosSide = isinf(fVertSlope) ? mousePos.x > ptOrgRootPos.x : mousePos.y > fVertSlope*(mousePos.x-ptOrgRootPos.x)+ptOrgRootPos.y;
                         if (bGrabberSide != bMousePosSide)
+                        {
                             m_tMorphCtrl.m_bInsidePoly = !m_tMorphCtrl.m_bInsidePoly;
+                            bMorphChanged = true;
+                        }
                         m_tMorphCtrl.m_ptGrabberPos = m_tMorphCtrl.CalcGrabberPos();
                     }
                 }
@@ -321,7 +331,7 @@ public:
             const ImVec2 offsetSize2(m_v2PointSizeHalf.x-m_fPointBorderThickness, m_v2PointSizeHalf.y-m_fPointBorderThickness);
             pDrawList->AddRectFilled(pointPos-offsetSize2, pointPos+offsetSize2, m_u32ContourHoverPointColor);
         }
-        return m_bContourCompleted && m_bContourChanged;
+        return m_bContourCompleted && (m_bContourChanged || bMorphChanged);
     }
 
     bool ChangeMaskSize(const MatUtils::Size2i& size) override
@@ -382,8 +392,7 @@ public:
             res = m_mMask;
         }
 
-        auto iMorphIters = m_tMorphCtrl.m_iMorphIterations;
-        iMorphIters = (int)std::ceil(iMorphIters*2/(m_mMorphKernel.w-1));
+        const auto& iMorphIters = m_tMorphCtrl.m_iMorphIterations;
         auto itMorphCache = m_aMorphCache.end();
         int iCurrMorphType = m_tMorphCtrl.m_bInsidePoly ? -1 : 1;
         if (m_iLastMorphIters != iMorphIters || m_iMorphCacheType != iCurrMorphType)
