@@ -65,7 +65,7 @@ struct AsyncTask
         PROCESSING = 1,
         DONE = 2,
     };
-
+    virtual ~AsyncTask() = 0;
     virtual void operator() () = 0;
     virtual bool SetState(State eState) = 0;
     virtual State GetState() const = 0;
