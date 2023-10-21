@@ -55,7 +55,7 @@ static bool OldBeginChild(const char* str_id, const ImVec2& size_arg = ImVec2(0,
 
     ImGuiWindow* child_window = ImGui::GetCurrentWindow();
     child_window->ChildId = id;
-    child_window->AutoFitChildAxises = auto_fit_axises;
+    //child_window->AutoFitChildAxises = auto_fit_axises;
     //if (!(parent_window->Flags & ImGuiWindowFlags_ShowBorders)) child_window->Flags &= ~ImGuiWindowFlags_ShowBorders;
 
     // Process navigation-in immediately so NavInit can run on first frame
