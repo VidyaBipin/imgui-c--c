@@ -1,6 +1,7 @@
 #pragma once
 #include <iterator>
 #include <limits>
+#include <cmath>
 #include <imgui.h>
 #include <immat.h>
 
@@ -42,7 +43,7 @@ bool CheckPointInsidePolygon(const ImVec2& ptPoint, Container<ImVec2> const& aPl
 }
 
 template<template<class T, class Alloc = std::allocator<T>> class Container>
-ImVec2 CalcNearestPointOnPloygon(const ImVec2& ptPoint, Container<ImVec2> const& aPloyVertices, ImVec2* pv2VerticalSlope = nullptr, int* piLineIdx = nullptr)
+ImVec2 CalcNearestPointOnPloygon(const ImVec2& ptPoint, Container<ImVec2> const& aPloyVertices, ImVec2* pv2VerticalSlope = nullptr, int* piLineIdx = nullptr, float* pfMinDist = nullptr)
 {
     if (aPloyVertices.size() < 3)
         return ptPoint;
@@ -120,6 +121,8 @@ ImVec2 CalcNearestPointOnPloygon(const ImVec2& ptPoint, Container<ImVec2> const&
         *pv2VerticalSlope = resSlope;
     if (piLineIdx)
         *piLineIdx = resLineIdx;
+    if (pfMinDist)
+        *pfMinDist = std::sqrt(minDistSqr);
     return result;
 }
 

@@ -254,8 +254,8 @@ public:
                     if (m_tMorphCtrl.m_fMorphCtrlLength != l)
                     {
                         m_tMorphCtrl.m_fMorphCtrlLength = l;
-                        auto tmp = (int)floor(l-MorphController::MIN_CTRL_LENGTH);
-                        auto iMorphIters = (int)std::ceil(tmp*2/(m_mMorphKernel.w-1));
+                        auto iMorphIters = (int)floor(l-MorphController::MIN_CTRL_LENGTH);
+                        // auto iMorphIters = (int)std::ceil(tmp*2/(m_mMorphKernel.w-1));
                         if (iMorphIters != m_tMorphCtrl.m_iMorphIterations)
                         {
                             m_tMorphCtrl.m_iMorphIterations = iMorphIters;
@@ -356,75 +356,56 @@ public:
             return res;
 
         res = m_mMask;
+        const auto iMorphIters = m_tMorphCtrl.m_iMorphIterations;
         if (m_bContourChanged || m_mMask.empty() ||
             m_iLastMaskLineType != iLineType || m_bLastMaskFilled != bFilled ||
             m_eLastMaskDataType != eDataType || m_dLastMaskValue != dMaskValue || m_dLastNonMaskValue != dNonMaskValue)
         {
-            int iTotalVertexCount = 0;
-            for (const auto& v : m_atContourPoints)
-                iTotalVertexCount += v.m_av2ContourVertices.size()-1;
-            vector<MatUtils::Point2f> av2TotalVertices(iTotalVertexCount);
-            auto itVt1 = m_atContourPoints.begin();
-            auto itVt2 = itVt1->m_av2ContourVertices.begin();
-            for (int i = 0; i < iTotalVertexCount; i++)
+            if (iMorphIters <= 0 || !bFilled)
             {
-                av2TotalVertices[i] = MatUtils::FromImVec2<float>(*itVt2++);
-                if (itVt2 == itVt1->m_av2ContourVertices.end())
-                {
-                    itVt1++;
-                    itVt2 = itVt1->m_av2ContourVertices.begin();
-                    itVt2++;
-                }
-            }
-            // cout << "Contour2Mask: ";
-            // for (const auto& v : av2TotalVertices)
-            //     cout << "(" << v.x << ", " << v.y << "), ";
-            // cout << endl;
-            m_mMask = MatUtils::Contour2Mask(av2TotalVertices, m_size, {0.f, 0.f}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled);
-            m_bContourChanged = false;
-            m_iLastMaskLineType = iLineType;
-            m_bLastMaskFilled = bFilled;
-            m_eLastMaskDataType = eDataType;
-            m_dLastMaskValue = dMaskValue;
-            m_dLastNonMaskValue = dNonMaskValue;
-            m_iLastMorphIters = 0;
-            m_aMorphCache.clear();
-            res = m_mMask;
-        }
-
-        const auto& iMorphIters = m_tMorphCtrl.m_iMorphIterations;
-        auto itMorphCache = m_aMorphCache.end();
-        int iCurrMorphType = m_tMorphCtrl.m_bInsidePoly ? -1 : 1;
-        if (m_iLastMorphIters != iMorphIters || m_iMorphCacheType != iCurrMorphType)
-        {
-            if (m_iMorphCacheType != iCurrMorphType) m_aMorphCache.clear();
-            if (iMorphIters > m_aMorphCache.size() )
-            {
-                int iLoopCnt = iMorphIters-m_aMorphCache.size();
-                ImGui::ImMat mMorphMat = m_aMorphCache.empty() ? m_mMask : m_aMorphCache.back();
-                for (int i = 0; i < iLoopCnt; i++)
-                {
-                    if (m_tMorphCtrl.m_bInsidePoly)
-                        mMorphMat = MatUtils::Erode(mMorphMat, m_mMorphKernel, {-1, -1}, 1);
-                    else
-                        mMorphMat = MatUtils::Dilate(mMorphMat, m_mMorphKernel, {-1, -1}, 1);
-                    m_aMorphCache.push_back(mMorphMat);
-                }
-                m_iMorphCacheType = iCurrMorphType;
-                itMorphCache = m_aMorphCache.end();
-                itMorphCache--;
+                int iTotalVertexCount = m_av2AllContourVertices.size();
+                vector<MatUtils::Point2f> av2TotalVertices(iTotalVertexCount);
+                auto itVtSrc = m_av2AllContourVertices.begin();
+                auto itVtDst = av2TotalVertices.begin();
+                while (itVtSrc != m_av2AllContourVertices.end())
+                    *itVtDst++ = MatUtils::FromImVec2<float>(*itVtSrc++);
+                m_mMask = MatUtils::Contour2Mask(av2TotalVertices, m_size, {0.f, 0.f}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled);
+                res = m_mMask;
             }
             else
             {
-                itMorphCache = m_aMorphCache.begin();
-                int idx = 0;
-                while (idx++ < iMorphIters)
-                    itMorphCache++;
+                m_mMask.release();
             }
-            m_iLastMorphIters = iMorphIters;
         }
-        if (bFilled && iMorphIters > 0)
-            res = *itMorphCache;
+
+        if (iMorphIters > 0)
+        {
+            if (m_bContourChanged || m_iLastMorphIters != iMorphIters ||
+                m_iLastMaskLineType != iLineType || m_bLastMaskFilled != bFilled ||
+                m_eLastMaskDataType != eDataType || m_dLastMaskValue != dMaskValue || m_dLastNonMaskValue != dNonMaskValue)
+            {
+                auto aDilateContourVertices = DilateContour(iMorphIters);
+                if (!bFilled)
+                {
+                    ImGui::ImMat mLineColor = MatUtils::MakeColor(res.type, dMaskValue);
+                    m_mMorphMask = m_mMask.clone();
+                    MatUtils::DrawPolygon(m_mMorphMask, aDilateContourVertices, mLineColor, iLineType);
+                }
+                else
+                {
+                    m_mMorphMask = MatUtils::Contour2Mask(aDilateContourVertices, m_size, {0.f, 0.f}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled);
+                }
+                m_iLastMorphIters = iMorphIters;
+            }
+            res = m_mMorphMask;
+        }
+
+        m_bContourChanged = false;
+        m_iLastMaskLineType = iLineType;
+        m_bLastMaskFilled = bFilled;
+        m_eLastMaskDataType = eDataType;
+        m_dLastMaskValue = dMaskValue;
+        m_dLastNonMaskValue = dNonMaskValue;
         return res;
     }
 
@@ -588,7 +569,7 @@ private:
         int m_iHoverType{0};  // 0: on contour point, 1: on 1st bezier grabber, 2: on 2nd bezier grabber, 4: on contour
         ImVec2 m_grabber0Offset{0.f, 0.f};
         ImVec2 m_grabber1Offset{0.f, 0.f};
-        vector<ImVec2> m_av2ContourVertices;
+        list<ImVec2> m_aContourVertices;
         ImVec2 m_v2HoverPointOnContour;
         int m_iHoverPointOnContourIdx;
         ImRect m_rGrabberContBox;
@@ -732,13 +713,15 @@ private:
         {
             const auto& contourThickness = m_owner->m_fContourThickness;
             const auto& hoverDetectExtension = m_owner->m_fContourHoverDetectExRadius;
-            if (!m_av2ContourVertices.empty() && m_rContourContBox.Contains(mousePos))
+            if (!m_aContourVertices.empty() && m_rContourContBox.Contains(mousePos))
             {
-                int iEdgeCount = m_av2ContourVertices.size()-1;
-                for (int i = 0; i < iEdgeCount; i++)
+                auto itVt0 = m_aContourVertices.begin();
+                auto itVt1 = itVt0; itVt1++;
+                int idx = 0;
+                while (itVt1 != m_aContourVertices.end())
                 {
-                    const auto& v0 = m_av2ContourVertices[i];
-                    const auto& v1 = m_av2ContourVertices[i+1];
+                    const auto& v0 = *itVt0++;
+                    const auto& v1 = *itVt1++;
                     float minX, minY, maxX, maxY;
                     if (v0.x < v1.x) { minX = v0.x; maxX = v1.x; }
                     else { minX = v1.x; maxX = v0.x; }
@@ -753,7 +736,7 @@ private:
                             m_iHoverType = 4;
                             m_v2HoverPointOnContour = {mousePos.x, crossY};
                             // cout << "--> mousePos(" << mousePos.x << ", " << mousePos.y << "), crossY-hoverPoint(" << mousePos.x << ", " << crossY << ")" << endl;
-                            m_iHoverPointOnContourIdx = i;
+                            m_iHoverPointOnContourIdx = idx;
                             return true;
                         }
                         // else
@@ -771,7 +754,7 @@ private:
                             m_iHoverType = 4;
                             m_v2HoverPointOnContour = {crossX, mousePos.y};
                             // cout << "--> mousePos(" << mousePos.x << ", " << mousePos.y << "), crossX-hoverPoint(" << crossX << ", " << mousePos.y << ")" << endl;
-                            m_iHoverPointOnContourIdx = i;
+                            m_iHoverPointOnContourIdx = idx;
                             return true;
                         }
                         // else
@@ -780,6 +763,7 @@ private:
                         //             << ", abs(crossX-mousePos.x)=" << abs(crossX-mousePos.x) << endl;
                         // }
                     }
+                    idx++;
                 }
             }
             return false;
@@ -831,74 +815,30 @@ private:
         {
             if (!prevVt.m_bEnableBezier && !m_bEnableBezier)
             {
-                m_av2ContourVertices.clear();
-                m_av2ContourVertices.push_back(prevVt.m_pos);
-                m_av2ContourVertices.push_back(m_pos);
-                UpdateContourContianBox();
-                return;
-            }
-            const ImVec2 offsetVt = m_pos-prevVt.m_pos;
-            const float distance = sqrt(offsetVt.x*offsetVt.x+offsetVt.y*offsetVt.y);
-            int log2value = (int)floor(log2(distance));
-            if (log2value <= 0)
-            {
-                m_av2ContourVertices.clear();
-                m_av2ContourVertices.push_back(prevVt.m_pos);
-                m_av2ContourVertices.push_back(m_pos);
+                m_aContourVertices.clear();
+                m_aContourVertices.push_back(prevVt.m_pos);
+                m_aContourVertices.push_back(m_pos);
                 UpdateContourContianBox();
                 return;
             }
 
-            int steps = 1 << (log2value-1);
-            auto hBt = GetBezierTable(steps);
-            auto C = hBt->GetBezierConstant();
-            ImVec2 P[] = {
-                { 0.f, 0.f },
-                { prevVt.m_grabber1Offset.x/offsetVt.x, prevVt.m_grabber1Offset.y/offsetVt.y },
-                { 1+m_grabber0Offset.x/offsetVt.x, 1+m_grabber0Offset.y/offsetVt.y },
-                { 1.f, 1.f } };
-            vector<ImVec2> v2BezierTable;
-            v2BezierTable.resize(steps+1);
-            for (int step = 0; step <= steps; ++step)
-            {
-                ImVec2 point = {
-                    C[step*4+0]*P[0].x+C[step*4+1]*P[1].x+C[step*4+2]*P[2].x+C[step*4+3]*P[3].x,
-                    C[step*4+0]*P[0].y+C[step*4+1]*P[1].y+C[step*4+2]*P[2].y+C[step*4+3]*P[3].y
-                };
-                v2BezierTable[step] = point;
-            }
-
-            ImRect bb(prevVt.m_pos, m_pos);
-            const auto bbSize = m_pos-prevVt.m_pos;
-            const int smoothness = v2BezierTable.size();
-            m_av2ContourVertices.resize(smoothness);
-            // cout << "--> Contour vertices:";
-            for (int i = 0; i < smoothness; i++)
-            {
-                const auto& p = v2BezierTable[i];
-                m_av2ContourVertices[i] = ImVec2(p.x*bbSize.x+bb.Min.x, p.y*bbSize.y+bb.Min.y);
-                // ImVec2 v(p.x*bbSize.x+bb.Min.x, p.y*bbSize.y+bb.Min.y);
-                // v.x = round(v.x);
-                // v.y = round(v.y);
-                // m_v2ContourVertices[i] = v;
-                // cout << " [" << i << "](" << v.x << ", " << v.y << ")";
-            }
-            // cout << endl;
+            const ImVec2 bzVts[] = {prevVt.m_pos, prevVt.m_grabber1Offset, m_grabber0Offset, m_pos};
+            m_aContourVertices = CalcBezierCurve(bzVts);
             UpdateContourContianBox();
         }
 
         void UpdateContourContianBox()
         {
             const auto contourHoverRadius = m_owner->m_fContourThickness+m_owner->m_fContourHoverDetectExRadius;
-            if (m_av2ContourVertices.empty())
+            if (m_aContourVertices.empty())
             {
                 m_rContourContBox = {-1, -1, -1, -1};
                 return;
             }
-            auto iter = m_av2ContourVertices.begin();
+            auto iter = m_aContourVertices.begin();
             auto& firstVertex = *iter++;
             ImRect rContourContBox = { firstVertex.x-contourHoverRadius, firstVertex.y-contourHoverRadius, firstVertex.x+contourHoverRadius, firstVertex.y+contourHoverRadius };
-            while (iter != m_av2ContourVertices.end())
+            while (iter != m_aContourVertices.end())
             {
                 auto& v = *iter++;
                 if (v.x-contourHoverRadius < rContourContBox.Min.x)
@@ -918,13 +858,15 @@ private:
             const auto& v2UiScale = m_owner->m_v2UiScale;
             const auto& contourColor = m_owner->m_u32ContourColor;
             const auto& contourThickness = m_owner->m_fContourThickness;
-            if (!m_av2ContourVertices.empty())
+            if (!m_aContourVertices.empty())
             {
-                const int smoothness = m_av2ContourVertices.size()-1;
-                for (int i = 0; i < smoothness; ++i)
+                // const int smoothness = m_aContourVertices.size()-1;
+                auto itVt0 = m_aContourVertices.begin();
+                auto itVt1 = itVt0; itVt1++;
+                while (itVt1 != m_aContourVertices.end())
                 {
-                    const auto v0 = origin+m_av2ContourVertices[i  ]*v2UiScale;
-                    const auto v1 = origin+m_av2ContourVertices[i+1]*v2UiScale;
+                    const auto v0 = origin+(*itVt0++)*v2UiScale;
+                    const auto v1 = origin+(*itVt1++)*v2UiScale;
                     pDrawList->AddLine(v0, v1, contourColor, contourThickness);
                 }
             }
@@ -986,17 +928,17 @@ private:
         {
             auto itCv = m_owner->m_av2AllContourVertices.begin();
             auto itCp = m_owner->m_atContourPoints.begin(); itCp++;
-            auto itCpSub1 = itCp->m_av2ContourVertices.begin();
+            auto itCpSub1 = itCp->m_aContourVertices.begin();
             auto itCpSub2 = itCpSub1; itCpSub2++;
             int idx = 0;
             while (itCv != m_owner->m_av2AllContourVertices.end() && idx < iLineIdx)
             {
                 idx++; itCv++;
                 itCpSub1++; itCpSub2++;
-                if (itCpSub2 == itCp->m_av2ContourVertices.end())
+                if (itCpSub2 == itCp->m_aContourVertices.end())
                 {
                     itCp++; if (itCp == m_owner->m_atContourPoints.end()) itCp = m_owner->m_atContourPoints.begin();
-                    itCpSub1 = itCp->m_av2ContourVertices.begin();
+                    itCpSub1 = itCp->m_aContourVertices.begin();
                     itCpSub2 = itCpSub1; itCpSub2++;
                 }
             }
@@ -1100,14 +1042,14 @@ private:
             return itCp;
         }
 
-        ImVec2 CalcRootPosDist(const ContourPointImpl& cp, vector<ImVec2>::iterator itCpSubTarget, const ImVec2& ptRootPos) const 
+        ImVec2 CalcRootPosDist(const ContourPointImpl& cp, list<ImVec2>::iterator itCpSubTarget, const ImVec2& ptRootPos) const 
         {
             float fDist1 = 0, fDist2 = 0;
-            auto itCpSub2 = cp.m_av2ContourVertices.begin();
-            auto itCpSub1 = cp.m_av2ContourVertices.end();
+            auto itCpSub2 = cp.m_aContourVertices.begin();
+            auto itCpSub1 = cp.m_aContourVertices.end();
             while (itCpSub2 != itCpSubTarget)
             {
-                if (itCpSub1 != cp.m_av2ContourVertices.end())
+                if (itCpSub1 != cp.m_aContourVertices.end())
                 {
                     const auto dx = itCpSub2->x-itCpSub1->x;
                     const auto dy = itCpSub2->y-itCpSub1->y;
@@ -1127,7 +1069,7 @@ private:
                 fDist2 = sqrt(dx*dx+dy*dy);
                 itCpSub1 = itCpSub2++;
             }
-            while (itCpSub2 != cp.m_av2ContourVertices.end())
+            while (itCpSub2 != cp.m_aContourVertices.end())
             {
                 const auto dx = itCpSub2->x-itCpSub1->x;
                 const auto dy = itCpSub2->y-itCpSub1->y;
@@ -1140,11 +1082,11 @@ private:
         ImVec2 CalcRootPosDist(const ContourPointImpl& cp, float fTargetDist1, ImVec2& ptRootPos, float& fVertSlope) const
         {
             float fDist1 = 0, fDist2 = 0;
-            auto itCpSub2 = cp.m_av2ContourVertices.begin();
-            auto itCpSub1 = cp.m_av2ContourVertices.end();
-            while (itCpSub2 != cp.m_av2ContourVertices.end())
+            auto itCpSub2 = cp.m_aContourVertices.begin();
+            auto itCpSub1 = cp.m_aContourVertices.end();
+            while (itCpSub2 != cp.m_aContourVertices.end())
             {
-                if (itCpSub1 != cp.m_av2ContourVertices.end())
+                if (itCpSub1 != cp.m_aContourVertices.end())
                 {
                     const auto dx = itCpSub2->x-itCpSub1->x;
                     const auto dy = itCpSub2->y-itCpSub1->y;
@@ -1175,9 +1117,9 @@ private:
                 }
                 itCpSub1 = itCpSub2++;
             }
-            if (itCpSub2 != cp.m_av2ContourVertices.end())
+            if (itCpSub2 != cp.m_aContourVertices.end())
                 itCpSub1 = itCpSub2++;
-            while (itCpSub2 != cp.m_av2ContourVertices.end())
+            while (itCpSub2 != cp.m_aContourVertices.end())
             {
                 const auto dx = itCpSub2->x-itCpSub1->x;
                 const auto dy = itCpSub2->y-itCpSub1->y;
@@ -1343,6 +1285,77 @@ private:
         return hRes;
     }
 
+    static list<ImVec2> CalcBezierCurve(const ImVec2 v[4])
+    {
+        const auto offsetVt = v[3]-v[0];
+        const float distance = sqrt((double)offsetVt.x*offsetVt.x+(double)offsetVt.y*offsetVt.y);
+        int log2value = (int)floor(log2(distance));
+        if (log2value <= 0)
+            return {v[0], v[3]};
+
+        int steps = 1 << (log2value-1);
+        auto hBt = GetBezierTable(steps);
+        auto C = hBt->GetBezierConstant();
+        ImVec2 P[] = {
+            { 0.f, 0.f },
+            { v[1].x/offsetVt.x, v[1].y/offsetVt.y },
+            { 1+v[2].x/offsetVt.x, 1+v[2].y/offsetVt.y },
+            { 1.f, 1.f } };
+        vector<ImVec2> v2BezierTable;
+        v2BezierTable.resize(steps+1);
+        for (int step = 0; step <= steps; ++step)
+        {
+            ImVec2 point = {
+                C[step*4+0]*P[0].x+C[step*4+1]*P[1].x+C[step*4+2]*P[2].x+C[step*4+3]*P[3].x,
+                C[step*4+0]*P[0].y+C[step*4+1]*P[1].y+C[step*4+2]*P[2].y+C[step*4+3]*P[3].y
+            };
+            v2BezierTable[step] = point;
+        }
+
+        const int smoothness = v2BezierTable.size();
+        list<ImVec2> res;
+        for (int i = 0; i < smoothness; i++)
+        {
+            const auto& p = v2BezierTable[i];
+            res.push_back(ImVec2(p.x*offsetVt.x+v[0].x, p.y*offsetVt.y+v[0].y));
+        }
+        return res;
+    }
+
+    static list<ImVec2> CalcBezierConnection(const ImVec2 v[4])
+    {
+        const auto vOffset = v[2]-v[1];
+        const double fMorphLen = sqrt((double)vOffset.x*vOffset.x+(double)vOffset.y*vOffset.y)*0.4;
+        const double fSlope1 = v[1].x != v[0].x ? ((double)v[1].y-v[0].y)/((double)v[1].x-v[0].x) : numeric_limits<double>::infinity();
+        float dx1, dy1;
+        if (isinf(fSlope1))
+        {
+            dx1 = 0;
+            dy1 = v[1].y > v[0].y ? fMorphLen : -fMorphLen;
+        }
+        else
+        {
+            const double ratio = 1/sqrt(1+fSlope1*fSlope1);
+            dx1 = v[1].x > v[0].x ? fMorphLen*ratio : -fMorphLen*ratio;
+            dy1 = dx1*fSlope1;
+        }
+        const double fSlope2 = v[2].x != v[3].x ? ((double)v[2].y-v[3].y)/((double)v[2].x-v[3].x) : numeric_limits<double>::infinity();
+        float dx2, dy2;
+        if (isinf(fSlope2))
+        {
+            dx2 = 0;
+            dy2 = v[2].y > v[3].y ? fMorphLen : -fMorphLen;
+        }
+        else
+        {
+            const double ratio = 1/sqrt(1+fSlope2*fSlope2);
+            dx2 = v[2].x > v[3].x ? fMorphLen*ratio : -fMorphLen*ratio;
+            dy2 = dx2*fSlope2;
+        }
+        const ImVec2 v2[] = {v[1], {dx1, dy1}, {dx2, dy2}, v[2]};
+        return CalcBezierCurve(v2);
+    }
+
 private:
     void DrawPoint(ImDrawList* pDrawList, const ContourPointImpl& v) const
     {
@@ -1438,11 +1451,11 @@ private:
                 {
                     it1++; if (it1 == m_atContourPoints.end()) it1 = m_atContourPoints.begin();
                     const auto& v = *it1;
-                    if (!v.m_av2ContourVertices.empty())
+                    if (!v.m_aContourVertices.empty())
                     {
-                        auto it2 = v.m_av2ContourVertices.begin();
+                        auto it2 = v.m_aContourVertices.begin();
                         auto it3 = it2; it3++;
-                        while (it3 != v.m_av2ContourVertices.end())
+                        while (it3 != v.m_aContourVertices.end())
                         {
                             m_av2AllContourVertices.push_back(*it2++);
                             it3++;
@@ -1461,16 +1474,16 @@ private:
     void CalcMorphCtrlPos()
     {
         auto iterVt = m_itMorphCtrlVt;
-        if (iterVt == m_atContourPoints.end() || iterVt->m_av2ContourVertices.size() < 2)
+        if (iterVt == m_atContourPoints.end() || iterVt->m_aContourVertices.size() < 2)
         {
             m_tMorphCtrl.Reset();
             m_itMorphCtrlVt = m_atContourPoints.end();
             return;
         }
-        // int idx1 = iterVt->m_av2ContourVertices.size()/2;
+        // int idx1 = iterVt->m_aContourVertices.size()/2;
         // int idx0 = idx1-1;
-        // const auto& pt0 = iterVt->m_av2ContourVertices[idx0];
-        // const auto& pt1 = iterVt->m_av2ContourVertices[idx1];
+        // const auto& pt0 = iterVt->m_aContourVertices[idx0];
+        // const auto& pt1 = iterVt->m_aContourVertices[idx1];
         // const ImVec2 ptRootPos((pt0.x+pt1.x)/2, (pt0.y+pt1.y)/2);
         // const float slope = pt0.y == pt1.y ? numeric_limits<float>::infinity() : -(pt1.x-pt0.x)/(pt1.y-pt0.y);
         m_itMorphCtrlVt = m_tMorphCtrl.SetPosAndSlope(iterVt, m_tMorphCtrl.m_fDistant);
@@ -1500,6 +1513,343 @@ private:
     bool IsMorphCtrlShown() const
     {
         return m_itMorphCtrlVt != m_atContourPoints.end();
+    }
+
+    MatUtils::Point2f CalcEdgeVerticalPoint(const ImVec2& v2Root, double fVertSlope, float fLen, bool bInside)
+    {
+        double dx, dy;
+        const double ratio = 1/sqrt(1+fVertSlope*fVertSlope);
+        const double fTestUnit = fLen > 0 ? 1e-1 : -1e-1;
+        if (isinf(fVertSlope))
+        {
+            dx = 0;
+            dy = fTestUnit;
+        }
+        else
+        {
+            dx = fTestUnit*ratio;
+            dy = dx*fVertSlope;
+        }
+        const bool bIsTestUnitInside = MatUtils::CheckPointInsidePolygon(ImVec2(v2Root.x+dx, v2Root.y+dy), m_av2AllContourVertices);
+        if (bIsTestUnitInside^bInside)
+            fLen = -fLen;
+        if (isinf(fVertSlope))
+        {
+            dx = 0;
+            dy = fLen;
+        }
+        else
+        {
+            dx = fLen*ratio;
+            dy = dx*fVertSlope;
+        }
+        return MatUtils::Point2f(v2Root.x+dx, v2Root.y+dy);
+    }
+
+    ImVec2 CalcEdgeVerticalPoint(const ImVec2& v2Start, const ImVec2& v2End, float fLen, bool bLeft)
+    {
+        const double fVertSlope = v2Start.y != v2End.y ? ((double)v2Start.x-(double)v2End.x)/((double)v2End.y-(double)v2Start.y) : numeric_limits<double>::infinity();
+        const double ratio = 1/sqrt(1+fVertSlope*fVertSlope);
+        float dx, dy;
+        if (isinf(fVertSlope))
+        {
+            dx = 0;
+            dy = bLeft ^ (v2End.x > v2Start.x) ? fLen : -fLen;
+        }
+        else if (fVertSlope == 0)
+        {
+            dx = bLeft ^ (v2End.y < v2Start.y) ? fLen : -fLen;
+            dy = 0;
+        }
+        else
+        {
+            if (v2End.x > v2Start.x ^ (bLeft ^ fVertSlope > 0))
+                fLen = -fLen;
+            dx = fLen*ratio;
+            dy = dx*fVertSlope;
+        }
+        return ImVec2(v2End.x+dx, v2End.y+dy);
+    }
+
+    void CalcTwoCrossPoints(const ImVec2& v0, const ImVec2& v1, const ImVec2& v2, float fParaDist, ImVec2& cp1, ImVec2& cp2)
+    {
+        // for l1 (v0->v1), calculate two parallel lines that has distance 'iDilateSize', as l1p1 (on the left side) and l1p2 (on the right side)
+        const double A1 = (double)v1.y-v0.y;
+        const double B1 = (double)v0.x-v1.x;
+        const double C1 = (double)v1.x*v0.y-(double)v0.x*v1.y;
+        const double D1 = fParaDist*sqrt(A1*A1+B1*B1);
+        double C1p1, C1p2;  // l1p1: A1*x+B1*y+C1p1=0, l1p2: A1*x+B1*y+C1p2=0
+        if (v1.x == v0.x)
+        {
+            C1p1 = C1-D1;
+            C1p2 = C1+D1;
+        }
+        else
+        {
+            C1p1 = C1-D1;
+            C1p2 = C1+D1;
+        }
+        // for l2 (v1->v2), calculate two parallel lines that has distance 'iDilateSize', as l2p1 (on the left side) and l2p2 (on the right side)
+        const double A2 = v2.y-v1.y;
+        const double B2 = v1.x-v2.x;
+        const double C2 = v2.x*v1.y-v1.x*v2.y;
+        const double D2 = fParaDist*sqrt(A2*A2+B2*B2);
+        double C2p1, C2p2;  // l2p1: A2*x+B2*y+C2p1=0, l2p2: A2*x+B2*y+C2p2=0
+        if (v2.x == v1.x)
+        {
+            C2p1 = C2-D2;
+            C2p2 = C2+D2;
+        }
+        else
+        {
+            C2p1 = C2-D2;
+            C2p2 = C2+D2;
+        }
+        // calculate two cross points: l1p1 X l2p1, and l1p2 X l2p2. One of these two points is outside of contour
+        const double den = A1*B2-A2*B1;
+        cp1.x = (B1*C2p1-B2*C1p1)/den;
+        cp1.y = (A2*C1p1-A1*C2p1)/den;
+        cp2.x = (B1*C2p2-B2*C1p2)/den;
+        cp2.y = (A2*C1p2-A1*C2p2)/den;
+    }
+
+    bool CheckPointValidOnDilateContour(const ImVec2& v, float fDilateSize)
+    {
+        float fDistToOrgContour;
+        MatUtils::CalcNearestPointOnPloygon(v, m_av2AllContourVertices, nullptr, nullptr, &fDistToOrgContour);
+        bool bIsInside = MatUtils::CheckPointInsidePolygon(v, m_av2AllContourVertices);
+        return fDistToOrgContour >= fDilateSize-1e-2 && !bIsInside;
+    }
+
+    vector<MatUtils::Point2f> DilateContour(int iDilateSize)
+    {
+        list<ImVec2> aVts;
+        auto itCv = m_av2AllContourVertices.begin();
+        auto itCvNext = itCv; itCvNext++;
+        const float fTestLen = 1e-1;
+        bool bIs1stVt = true, bPreV2Inside;
+        while (itCv != m_av2AllContourVertices.end())
+        {
+            const auto& v1 = *itCv;
+            const auto& v2 = *itCvNext;
+
+            bool bV1VertLeftInside = bPreV2Inside;
+            if (bIs1stVt)
+            {
+                const auto v1VertLeft = CalcEdgeVerticalPoint(v2, v1, fTestLen, false);
+                bV1VertLeftInside = MatUtils::CheckPointInsidePolygon(v1VertLeft, m_av2AllContourVertices);
+                bIs1stVt = false;
+            }
+#if 0
+            const auto v2VertLeft = CalcEdgeVerticalPoint(v1, v2, fTestLen, true);
+            const bool bV2VertLeftInside = MatUtils::CheckPointInsidePolygon(v2VertLeft, m_av2AllContourVertices);
+            if (bV1VertLeftInside^bV2VertLeftInside)
+                cout << "Edge two ends have different inside-bility! v1(" << v1.x << "," << v1.y << ") inside(" << bV1VertLeftInside
+                    << "), v2(" << v2.x << "," << v2.y << ") inside(" << bV2VertLeftInside << ")." << endl;
+            bPreV2Inside = bV2VertLeftInside;
+#else
+            bPreV2Inside = bV1VertLeftInside;
+#endif
+
+            const auto v1Morph = CalcEdgeVerticalPoint(v2, v1, iDilateSize, bV1VertLeftInside);
+#if 0
+            const auto v2Morph = CalcEdgeVerticalPoint(v1, v2, iDilateSize, !bV2VertLeftInside);
+#else
+            const auto v2Morph = CalcEdgeVerticalPoint(v1, v2, iDilateSize, !bV1VertLeftInside);
+#endif
+            if (aVts.empty())
+            {
+                aVts.push_back(v1Morph);
+                aVts.push_back(v2Morph);
+            }
+            else
+            {
+                auto itBack = aVts.end(); itBack--;
+                const auto& vTail0 = *itBack--;
+                const auto& vTail1 = *itBack;
+                if (vTail0 != v1Morph)
+                {
+                    const ImVec2 v[] = {vTail1, vTail0, v1Morph, v2Morph};
+                    auto aBzVts = CalcBezierConnection(v);
+                    auto itIns = aBzVts.begin(); itIns++;
+                    aVts.insert(aVts.end(), itIns, aBzVts.end());
+                }
+                aVts.push_back(v2Morph);
+            }
+
+            itCv++;
+            itCvNext++;
+            if (itCvNext == m_av2AllContourVertices.end()) itCvNext = m_av2AllContourVertices.begin();
+        }
+        if (!aVts.empty())
+        {
+            const auto& vTail0 = aVts.back();
+            const auto& vHead0 = aVts.front();
+            if (vTail0 != vHead0)
+            {
+                auto itVt = aVts.end(); itVt--; itVt--;
+                const auto& vTail1 = *itVt;
+                itVt = aVts.begin(); itVt++;
+                const auto& vHead1 = *itVt;
+                const ImVec2 v[] = {vTail1, vTail0, vHead0, vHead1};
+                auto aBzVts = CalcBezierConnection(v);
+                auto itIns0 = aBzVts.begin(); itIns0++;
+                auto itIns1 = aBzVts.end(); itIns1--;
+                aVts.insert(aVts.end(), itIns0, itIns1);
+            }
+            else
+            {
+                aVts.pop_back();
+            }
+
+            // remove invalid points caused by contour cross
+            list<ImVec2> aValidVts;
+            auto itChk0 = aVts.begin();
+            auto itChk1 = itChk0; itChk1++;
+            bool bPrevChk1Valid = CheckPointValidOnDilateContour(*itChk0, iDilateSize);
+            while (itChk0 != aVts.end())
+            {
+                auto vChk0 = *itChk0;
+                const auto& vChk1 = *itChk1;
+                const double dSlopeChk = vChk0.x != vChk1.x ? ((double)vChk1.y-vChk0.y)/((double)vChk1.x-vChk0.x) : numeric_limits<double>::infinity();
+
+                bool bChk0Valid, bChk1Valid;
+                bChk0Valid = bChk1Valid = bPrevChk1Valid;
+
+                ImVec2 v2CrossPoint;
+                auto itSch0 = aVts.begin();
+                auto itSch1 = itSch0; itSch1++;
+                while (itSch0 != aVts.end())
+                {
+                    if (itSch0 != itChk0)
+                    {
+                        bool bFoundCross = false;
+                        const auto& vSch0 = *itSch0;
+                        const auto& vSch1 = *itSch1;
+                        const double dSlopeSch = vSch0.x != vSch1.x ? ((double)vSch1.y-vSch0.y)/((double)vSch1.x-vSch0.x) : numeric_limits<double>::infinity();
+                        if (itSch1 == itChk0)
+                        {
+                            if (isinf(dSlopeChk) && isinf(dSlopeSch))
+                            {
+                                if ((vSch0.y>vSch1.y) ^ (vChk0.y>vChk1.y))
+                                {
+                                    v2CrossPoint.x = vChk0.x;
+                                    v2CrossPoint.y = (vSch0.y>vSch1.y) ^ (vChk1.y>vSch0.y) ? vChk1.y : vSch0.y;
+                                    bFoundCross = true;
+                                }
+                            }
+                            else if (dSlopeChk == dSlopeSch)
+                            {
+                                if ((vSch0.x>vSch1.x) ^ (vChk0.x>vChk1.x))
+                                {
+                                    if ((vSch0.x>vSch1.x) ^ (vChk1.x>vSch0.x))
+                                    {
+                                        v2CrossPoint.x = vChk1.x;
+                                        v2CrossPoint.y = vChk1.y;
+                                    }
+                                    else
+                                    {
+                                        v2CrossPoint.x = vSch0.x;
+                                        v2CrossPoint.y = vSch0.y;
+                                    }
+                                    bFoundCross = true;
+                                }
+                            }
+                            if (bFoundCross)
+                            {
+                                aVts.erase(itSch1);  // remove 'vSch1' (also is 'vChk0')
+                                itChk0 = itSch0;
+                                itSch1 = itChk1;
+                            }
+                        }
+                        else if (itSch0 == itChk1)
+                        {
+                            const double dSlopeSch = vSch0.x != vSch1.x ? ((double)vSch1.y-vSch0.y)/((double)vSch1.x-vSch0.x) : numeric_limits<double>::infinity();
+                            if (isinf(dSlopeChk) && isinf(dSlopeSch))
+                            {
+                                if ((vSch0.y>vSch1.y) ^ (vChk0.y>vChk1.y))
+                                {
+                                    v2CrossPoint.x = vChk0.x;
+                                    v2CrossPoint.y = (vSch0.y>vSch1.y) ^ (vChk0.y>vSch1.y) ? vSch1.y : vChk0.y;
+                                    bFoundCross = true;
+                                }
+                            }
+                            else if (dSlopeChk == dSlopeSch)
+                            {
+                                if ((vSch0.x>vSch1.x) ^ (vChk0.x>vChk1.x))
+                                {
+                                    if ((vSch0.x>vSch1.x) ^ (vChk0.x>vSch1.x))
+                                    {
+                                        v2CrossPoint.x = vSch1.x;
+                                        v2CrossPoint.y = vSch1.y;
+                                    }
+                                    else
+                                    {
+                                        v2CrossPoint.x = vChk0.x;
+                                        v2CrossPoint.y = vChk0.y;
+                                    }
+                                    bFoundCross = true;
+                                }
+                            }
+                            if (bFoundCross)
+                            {
+                                aVts.erase(itSch0);  // remove 'vSch0' (also is 'vChk1')
+                                itSch0 = itChk0;
+                                itChk1 = itSch1;
+                            }
+                        }
+                        else
+                        {
+                            if (isinf(dSlopeChk) && isinf(dSlopeSch))
+                            {
+                                // TODO: check two lines have overlapped part
+                            }
+                            else if (dSlopeChk == dSlopeSch)
+                            {
+                                // TODO: check two lines have overlapped part
+                            }
+                            else
+                            {
+                                // check if two lines have cross point
+                                const ImVec2 aPoints[] = { vChk0, vChk1, vSch0, vSch1 };
+                                if (MatUtils::CheckTwoLinesCross(aPoints, &v2CrossPoint))
+                                {
+                                    if (v2CrossPoint != vChk1)
+                                    {
+                                        if (v2CrossPoint != vChk0)
+                                        {
+                                            if (bChk0Valid)
+                                                aValidVts.push_back(vChk0);
+                                            vChk0 = v2CrossPoint;
+                                        }
+                                        bChk0Valid = CheckPointValidOnDilateContour(vChk0, iDilateSize);
+                                        bChk1Valid = CheckPointValidOnDilateContour(vChk1, iDilateSize);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    itSch0++; itSch1++;
+                    if (itSch1 == aVts.end()) itSch1 = aVts.begin();
+                }
+
+                if (bChk0Valid)
+                    aValidVts.push_back(vChk0);
+                bPrevChk1Valid = bChk1Valid;
+                itChk0++; itChk1++;
+                if (itChk1 == aVts.end()) itChk1 = aVts.begin();
+            }
+            aVts.swap(aValidVts);
+        }
+
+
+        const int iLoopCnt = aVts.size();
+        vector<MatUtils::Point2f> res(iLoopCnt);
+        auto itVt = aVts.begin();
+        for (int i = 0; i < iLoopCnt; i++)
+            res[i] = MatUtils::FromImVec2<float>(*itVt++);
+        return res;
     }
 
 private:
@@ -1537,7 +1887,7 @@ private:
     int m_iLastMaskLineType{0};
     ImDataType m_eLastMaskDataType{IM_DT_UNDEFINED};
     double m_dLastMaskValue{0}, m_dLastNonMaskValue{0};
-    ImGui::ImMat m_mMask;
+    ImGui::ImMat m_mMask, m_mMorphMask;
     ImGui::ImMat m_mMorphKernel;
     list<ImGui::ImMat> m_aMorphCache;
     int m_iLastMorphIters{0};
@@ -1577,11 +1927,12 @@ MaskCreator::Holder MaskCreator::LoadFromJson(const imgui_json::value& j)
 
 MaskCreator::Holder MaskCreator::LoadFromJson(const string& filePath)
 {
-    json::value j;
-    j.load(filePath);
+    auto res = json::value::load(filePath);
+    if (!res.second)
+        return nullptr;
     MaskCreator::Holder hInst = CreateInstance({0, 0});
     MaskCreatorImpl* pInst = dynamic_cast<MaskCreatorImpl*>(hInst.get());
-    pInst->LoadFromJson(j);
+    pInst->LoadFromJson(res.first);
     return hInst;
 }
 }

@@ -3,6 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include "Contour2Mask.h"
+#include "MatUtilsImguiHelper.h"
 
 using namespace std;
 
@@ -917,6 +918,61 @@ FillEdgeCollection(ImGui::ImMat& img, vector<_PolyEdge>& edges, const void* pCol
     }
 }
 
+ImGui::ImMat MakeColor(ImDataType eDtype, double dColorVal)
+{
+    ImGui::ImMat color;
+    color.create_type(1, eDtype);
+    switch (eDtype)
+    {
+    case IM_DT_INT8:
+        color.at<uint8_t>(0) = static_cast<uint8_t>(dColorVal);
+        break;
+    case IM_DT_INT16:
+        color.at<uint16_t>(0) = static_cast<uint16_t>(dColorVal);
+        break;
+    case IM_DT_INT16_BE:
+    {
+        uint16_t be16value = static_cast<uint16_t>(dColorVal);
+        color.at<uint16_t>(0) = ((be16value>>8)|((be16value&0xff)<<8));
+        break;
+    }
+    case IM_DT_INT32:
+        color.at<int32_t>(0) = static_cast<int32_t>(dColorVal);
+        break;
+    case IM_DT_INT64:
+        color.at<int64_t>(0) = static_cast<int64_t>(dColorVal);
+        break;
+    case IM_DT_FLOAT32:
+        color.at<float>(0) = static_cast<float>(dColorVal);
+        break;
+    case IM_DT_FLOAT64:
+        color.at<double>(0) = dColorVal;
+        break;
+    default:
+        throw runtime_error("UNSUPPORTED image data type!");
+    }
+    return color;
+}
+
+void DrawPolygon(ImGui::ImMat& img, const vector<Point2f>& aContourVertices, const ImGui::ImMat& color, int iLineType)
+{
+    int iFixPointShit = 8;
+    double dFixPointScalar = (double)(1LL << iFixPointShit);
+    int iVertexCount = aContourVertices.size();
+    vector<Point2l> aptPolyVertices;
+    aptPolyVertices.reserve(aContourVertices.size());
+    for (int i = 0; i < iVertexCount; i++)
+    {
+        const auto& v = aContourVertices[i];
+        aptPolyVertices.push_back({(int64_t)((double)v.x*dFixPointScalar), (int64_t)((double)v.y*dFixPointScalar)});
+    }
+    vector<_PolyEdge> edges;
+    auto orgDims = img.dims;
+    img.dims = 3; // wyvern: to pass the assertion in ImMat::draw_line()
+    CollectPolyEdges(img, aptPolyVertices, edges, color.data, iLineType, {0, 0}, iFixPointShit);
+    img.dims = orgDims;
+}
+
 ImGui::ImMat Contour2Mask(
         const vector<Point2f>& av2ContourVertices, const Size2i& szMaskSize, const Point2f& v2ContourOffset,
         ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled)
@@ -965,38 +1021,7 @@ ImGui::ImMat Contour2Mask(
         throw runtime_error("UNSUPPORTED mask image data type!");
     }
 
-    ImGui::ImMat color;
-    color.create_type(1, mask.type);
-    switch (mask.type)
-    {
-    case IM_DT_INT8:
-        color.at<uint8_t>(0) = static_cast<uint8_t>(dMaskValue);
-        break;
-    case IM_DT_INT16:
-        color.at<uint16_t>(0) = static_cast<uint16_t>(dMaskValue);
-        break;
-    case IM_DT_INT16_BE:
-    {
-        uint16_t be16value = static_cast<uint16_t>(dMaskValue);
-        color.at<uint16_t>(0) = ((be16value>>8)|((be16value&0xff)<<8));
-        break;
-    }
-    case IM_DT_INT32:
-        color.at<int32_t>(0) = static_cast<int32_t>(dMaskValue);
-        break;
-    case IM_DT_INT64:
-        color.at<int64_t>(0) = static_cast<int64_t>(dMaskValue);
-        break;
-    case IM_DT_FLOAT32:
-        color.at<float>(0) = static_cast<float>(dMaskValue);
-        break;
-    case IM_DT_FLOAT64:
-        color.at<double>(0) = dMaskValue;
-        break;
-    default:
-        throw runtime_error("UNSUPPORTED image data type!");
-    }
-
+    ImGui::ImMat color = MakeColor(mask.type, dMaskValue);
     int iFixPointShit = 8;
     double dFixPointScalar = (double)(1LL << iFixPointShit);
     int iVertexCount = av2ContourVertices.size();
@@ -1015,5 +1040,110 @@ ImGui::ImMat Contour2Mask(
     if (bFilled)
         FillEdgeCollection(mask, edges, color.data);
     return mask;
+}
+
+bool CheckTwoLinesCross(const Point2f v[4], Point2f* pCross)
+{
+    Point2f r1lt, r1rb;
+    if (v[0].x < v[1].x)
+    {
+        r1lt.x = v[0].x;
+        r1rb.x = v[1].x;
+    }
+    else
+    {
+        r1lt.x = v[1].x;
+        r1rb.x = v[0].x;
+    }
+    if (v[0].y < v[1].y)
+    {
+        r1lt.y = v[0].y;
+        r1rb.y = v[1].y;
+    }
+    else
+    {
+        r1lt.y = v[1].y;
+        r1rb.y = v[0].y;
+    }
+    Point2f r2lt, r2rb;
+    if (v[2].x < v[3].x)
+    {
+        r2lt.x = v[2].x;
+        r2rb.x = v[3].x;
+    }
+    else
+    {
+        r2lt.x = v[3].x;
+        r2rb.x = v[2].x;
+    }
+    if (v[2].y < v[3].y)
+    {
+        r2lt.y = v[2].y;
+        r2rb.y = v[3].y;
+    }
+    else
+    {
+        r2lt.y = v[3].y;
+        r2rb.y = v[2].y;
+    }
+    if (r1lt.x > r2rb.x || r1rb.x < r2lt.x || r1lt.y > r2rb.y || r1rb.y < r2lt.y)
+        return false;
+
+    const double A1 = (double)v[1].y-v[0].y;
+    const double B1 = (double)v[0].x-v[1].x;
+    const double C1 = (double)v[1].x*v[0].y-(double)v[0].x*v[1].y;
+    const double A2 = (double)v[3].y-v[2].y;
+    const double B2 = (double)v[2].x-v[3].x;
+    const double C2 = (double)v[3].x*v[2].y-(double)v[2].x*v[3].y;
+    const double den = A1*B2-A2*B1;
+    const float cpX = (B1*C2-B2*C1)/den;
+    const float cpY = (A2*C1-A1*C2)/den;
+    if (cpX < r1lt.x || cpX > r1rb.x)
+        return false;
+    if (pCross)
+    {
+        pCross->x = cpX; pCross->y = cpY;
+    }
+    return true;
+}
+
+bool CheckTwoLinesCross(const ImVec2 v[4], ImVec2* pCross)
+{
+    const Point2f v_[] = { FromImVec2<float>(v[0]), FromImVec2<float>(v[1]), FromImVec2<float>(v[2]), FromImVec2<float>(v[3]) };
+    Point2f poCross;
+    bool res = CheckTwoLinesCross(v_, &poCross);
+    if (pCross)
+    {
+        pCross->x = poCross.x; pCross->y = poCross.y;
+    }
+    return res;
+}
+
+bool CheckPointOnLine(const ImVec2& po, const ImVec2 v[2])
+{
+    Point2f r1lt, r1rb;
+    if (v[0].x < v[1].x)
+    {
+        r1lt.x = v[0].x;
+        r1rb.x = v[1].x;
+    }
+    else
+    {
+        r1lt.x = v[1].x;
+        r1rb.x = v[0].x;
+    }
+    if (v[0].y < v[1].y)
+    {
+        r1lt.y = v[0].y;
+        r1rb.y = v[1].y;
+    }
+    else
+    {
+        r1lt.y = v[1].y;
+        r1rb.y = v[0].y;
+    }
+    if (po.x < r1lt.x || po.x > r1rb.x || po.y < r1lt.y || po.y > r1rb.y)
+        return false;
+    return (po.x-v[0].x)*(v[1].y-v[0].y) == (po.y-v[0].y)*(v[1].x-v[0].x);
 }
 }
