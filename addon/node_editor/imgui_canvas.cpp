@@ -421,6 +421,8 @@ void ImGuiEx::Canvas::EnterLocalSpace()
     //    m_DrawList->AddCallback(ImDrawCallback_ImCanvas, nullptr);
     // disabled by Dicky end
 
+    m_DrawListFirstCommandIndex = ImMax(m_DrawList->CmdBuffer.Size - 1, 0);
+
 # if defined(IMGUI_HAS_VIEWPORT)
     auto window = ImGui::GetCurrentWindow();
     window->Pos = ImVec2(0.0f, 0.0f);
@@ -499,7 +501,7 @@ void ImGuiEx::Canvas::LeaveLocalSpace()
         }
 
         // Move clip rectangles to screen space.
-        for (int i = m_DrawListCommadBufferSize; i < m_DrawList->CmdBuffer.size(); ++i)
+        for (int i = m_DrawListFirstCommandIndex; i < m_DrawList->CmdBuffer.size(); ++i)
         {
             auto& command = m_DrawList->CmdBuffer[i];
             command.ClipRect.x = command.ClipRect.x * m_View.Scale + m_ViewTransformPosition.x;
@@ -518,7 +520,7 @@ void ImGuiEx::Canvas::LeaveLocalSpace()
         }
 
         // Move clip rectangles to screen space.
-        for (int i = m_DrawListCommadBufferSize; i < m_DrawList->CmdBuffer.size(); ++i)
+        for (int i = m_DrawListFirstCommandIndex; i < m_DrawList->CmdBuffer.size(); ++i)
         {
             auto& command = m_DrawList->CmdBuffer[i];
             command.ClipRect.x = command.ClipRect.x + m_ViewTransformPosition.x;

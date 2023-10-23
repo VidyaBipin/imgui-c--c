@@ -234,6 +234,7 @@ private:
     Range* m_CurrentRange = nullptr;
 # endif
 
+    int m_DrawListFirstCommandIndex = 0;
     int m_DrawListCommadBufferSize = 0;
     int m_DrawListStartVertexIndex = 0;
 
