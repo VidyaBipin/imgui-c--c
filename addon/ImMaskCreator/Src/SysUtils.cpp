@@ -527,7 +527,7 @@ public:
         return m_uMinExecutorCnt;
     }
 
-    void Terminate(bool bWaitAllTaskDone)
+    void Terminate(bool bWaitAllTaskDone) override
     {
         if (m_bTerminating)
             return;

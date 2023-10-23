@@ -515,7 +515,7 @@ private:
 template<class Op, class VecOp>
 const std::function<void(SysUtils::AsyncTask*)> MorphProcessOneRowTask<Op, VecOp>::TASK_HOLDER_DELETER = [] (SysUtils::AsyncTask* p) {
     MorphProcessOneRowTask<Op, VecOp>* ptr = dynamic_cast<MorphProcessOneRowTask<Op, VecOp>*>(p);
-    delete p;
+    delete ptr;
 };
 
 
