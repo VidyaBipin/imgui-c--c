@@ -1020,6 +1020,8 @@ ImGui::ImMat Contour2Mask(
     default:
         throw runtime_error("UNSUPPORTED mask image data type!");
     }
+    if (av2ContourVertices.empty())
+        return mask;
 
     ImGui::ImMat color = MakeColor(mask.type, dMaskValue);
     int iFixPointShit = 8;

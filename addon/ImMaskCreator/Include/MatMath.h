@@ -77,10 +77,8 @@ ImVec2 CalcNearestPointOnPloygon(const ImVec2& ptPoint, Container<ImVec2> const&
         ImVec2 candidate, candSlope(x1-x2, y2-y1);
         if (isVcIn)
         {
-            const auto dx12 = x2-x1;
-            const auto dy12 = y2-y1;
-            const auto l3num = dy12*xp-dx12*yp+c;
-            distSqr = l3num*l3num/(dx12*dx12+dy12*dy12);
+            const auto l3num = a*xp+b*yp+c;
+            distSqr = l3num*l3num/(a*a+b*b);
             candidate.x = xc;
             candidate.y = yc;
         }

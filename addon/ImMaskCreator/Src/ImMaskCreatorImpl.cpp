@@ -1325,7 +1325,7 @@ private:
     static list<ImVec2> CalcBezierConnection(const ImVec2 v[4])
     {
         const auto vOffset = v[2]-v[1];
-        const double fMorphLen = sqrt((double)vOffset.x*vOffset.x+(double)vOffset.y*vOffset.y)*0.4;
+        const double fMorphLen = sqrt((double)vOffset.x*vOffset.x+(double)vOffset.y*vOffset.y)*0.5;
         const double fSlope1 = v[1].x != v[0].x ? ((double)v[1].y-v[0].y)/((double)v[1].x-v[0].x) : numeric_limits<double>::infinity();
         float dx1, dy1;
         if (isinf(fSlope1))
@@ -1714,7 +1714,8 @@ private:
                 const double dSlopeChk = vChk0.x != vChk1.x ? ((double)vChk1.y-vChk0.y)/((double)vChk1.x-vChk0.x) : numeric_limits<double>::infinity();
 
                 bool bChk0Valid, bChk1Valid;
-                bChk0Valid = bChk1Valid = bPrevChk1Valid;
+                bChk0Valid = bPrevChk1Valid;
+                bChk1Valid = CheckPointValidOnDilateContour(vChk1, iDilateSize);
 
                 ImVec2 v2CrossPoint;
                 auto itSch0 = aVts.begin();
@@ -1823,7 +1824,6 @@ private:
                                             vChk0 = v2CrossPoint;
                                         }
                                         bChk0Valid = CheckPointValidOnDilateContour(vChk0, iDilateSize);
-                                        bChk1Valid = CheckPointValidOnDilateContour(vChk1, iDilateSize);
                                     }
                                 }
                             }
