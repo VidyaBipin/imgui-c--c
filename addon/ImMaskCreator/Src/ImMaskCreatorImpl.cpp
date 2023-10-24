@@ -384,7 +384,7 @@ public:
                 m_iLastMaskLineType != iLineType || m_bLastMaskFilled != bFilled ||
                 m_eLastMaskDataType != eDataType || m_dLastMaskValue != dMaskValue || m_dLastNonMaskValue != dNonMaskValue)
             {
-                auto aDilateContourVertices = DilateContour(iMorphIters);
+                auto aDilateContourVertices = m_tMorphCtrl.m_bInsidePoly ? ErodeContour(iMorphIters) : DilateContour(iMorphIters);
                 if (!bFilled)
                 {
                     ImGui::ImMat mLineColor = MatUtils::MakeColor(res.type, dMaskValue);
@@ -1728,6 +1728,7 @@ private:
                         const auto& vSch0 = *itSch0;
                         const auto& vSch1 = *itSch1;
                         const double dSlopeSch = vSch0.x != vSch1.x ? ((double)vSch1.y-vSch0.y)/((double)vSch1.x-vSch0.x) : numeric_limits<double>::infinity();
+#if 0
                         if (itSch1 == itChk0)
                         {
                             if (isinf(dSlopeChk) && isinf(dSlopeSch))
@@ -1800,6 +1801,7 @@ private:
                             }
                         }
                         else
+#endif
                         {
                             if (isinf(dSlopeChk) && isinf(dSlopeSch))
                             {
@@ -1843,6 +1845,157 @@ private:
             aVts.swap(aValidVts);
         }
 
+        const int iLoopCnt = aVts.size();
+        vector<MatUtils::Point2f> res(iLoopCnt);
+        auto itVt = aVts.begin();
+        for (int i = 0; i < iLoopCnt; i++)
+            res[i] = MatUtils::FromImVec2<float>(*itVt++);
+        return res;
+    }
+
+    bool CheckPointValidOnErodeContour(const ImVec2& v, float fDilateSize)
+    {
+        float fDistToOrgContour;
+        MatUtils::CalcNearestPointOnPloygon(v, m_av2AllContourVertices, nullptr, nullptr, &fDistToOrgContour);
+        bool bIsInside = MatUtils::CheckPointInsidePolygon(v, m_av2AllContourVertices);
+        return fDistToOrgContour >= fDilateSize-1e-2 && bIsInside;
+    }
+
+    vector<MatUtils::Point2f> ErodeContour(int iDilateSize)
+    {
+        list<ImVec2> aVts;
+        auto itCv = m_av2AllContourVertices.begin();
+        auto itCvNext = itCv; itCvNext++;
+        const float fTestLen = 1e-1;
+        bool bIs1stVt = true, bPreV2Inside;
+        while (itCv != m_av2AllContourVertices.end())
+        {
+            const auto& v1 = *itCv;
+            const auto& v2 = *itCvNext;
+
+            bool bV1VertLeftInside = bPreV2Inside;
+            if (bIs1stVt)
+            {
+                const auto v1VertLeft = CalcEdgeVerticalPoint(v2, v1, fTestLen, false);
+                bV1VertLeftInside = MatUtils::CheckPointInsidePolygon(v1VertLeft, m_av2AllContourVertices);
+                bIs1stVt = false;
+            }
+            bPreV2Inside = bV1VertLeftInside;
+
+            const auto v1Morph = CalcEdgeVerticalPoint(v2, v1, iDilateSize, !bV1VertLeftInside);
+            const auto v2Morph = CalcEdgeVerticalPoint(v1, v2, iDilateSize, bV1VertLeftInside);
+
+            if (aVts.empty())
+            {
+                aVts.push_back(v1Morph);
+                aVts.push_back(v2Morph);
+            }
+            else
+            {
+                auto itBack = aVts.end(); itBack--;
+                const auto& vTail0 = *itBack--;
+                const auto& vTail1 = *itBack;
+                if (vTail0 != v1Morph)
+                {
+                    const ImVec2 v[] = {vTail1, vTail0, v1Morph, v2Morph};
+                    auto aBzVts = CalcBezierConnection(v);
+                    auto itIns = aBzVts.begin(); itIns++;
+                    aVts.insert(aVts.end(), itIns, aBzVts.end());
+                }
+                aVts.push_back(v2Morph);
+            }
+
+            itCv++;
+            itCvNext++;
+            if (itCvNext == m_av2AllContourVertices.end()) itCvNext = m_av2AllContourVertices.begin();
+        }
+        if (!aVts.empty())
+        {
+            const auto& vTail0 = aVts.back();
+            const auto& vHead0 = aVts.front();
+            if (vTail0 != vHead0)
+            {
+                auto itVt = aVts.end(); itVt--; itVt--;
+                const auto& vTail1 = *itVt;
+                itVt = aVts.begin(); itVt++;
+                const auto& vHead1 = *itVt;
+                const ImVec2 v[] = {vTail1, vTail0, vHead0, vHead1};
+                auto aBzVts = CalcBezierConnection(v);
+                auto itIns0 = aBzVts.begin(); itIns0++;
+                auto itIns1 = aBzVts.end(); itIns1--;
+                aVts.insert(aVts.end(), itIns0, itIns1);
+            }
+            else
+            {
+                aVts.pop_back();
+            }
+
+            // remove invalid points caused by contour cross
+            list<ImVec2> aValidVts;
+            auto itChk0 = aVts.begin();
+            auto itChk1 = itChk0; itChk1++;
+            bool bPrevChk1Valid = CheckPointValidOnErodeContour(*itChk0, iDilateSize);
+            while (itChk0 != aVts.end())
+            {
+                auto vChk0 = *itChk0;
+                const auto& vChk1 = *itChk1;
+                const double dSlopeChk = vChk0.x != vChk1.x ? ((double)vChk1.y-vChk0.y)/((double)vChk1.x-vChk0.x) : numeric_limits<double>::infinity();
+
+                bool bChk0Valid, bChk1Valid;
+                bChk0Valid = bPrevChk1Valid;
+                bChk1Valid = CheckPointValidOnErodeContour(vChk1, iDilateSize);
+
+                ImVec2 v2CrossPoint;
+                auto itSch0 = aVts.begin();
+                auto itSch1 = itSch0; itSch1++;
+                while (itSch0 != aVts.end())
+                {
+                    if (itSch0 != itChk0)
+                    {
+                        bool bFoundCross = false;
+                        const auto& vSch0 = *itSch0;
+                        const auto& vSch1 = *itSch1;
+                        const double dSlopeSch = vSch0.x != vSch1.x ? ((double)vSch1.y-vSch0.y)/((double)vSch1.x-vSch0.x) : numeric_limits<double>::infinity();
+                        if (isinf(dSlopeChk) && isinf(dSlopeSch))
+                        {
+                            // TODO: check two lines have overlapped part
+                        }
+                        else if (dSlopeChk == dSlopeSch)
+                        {
+                            // TODO: check two lines have overlapped part
+                        }
+                        else
+                        {
+                            // check if two lines have cross point
+                            const ImVec2 aPoints[] = { vChk0, vChk1, vSch0, vSch1 };
+                            if (MatUtils::CheckTwoLinesCross(aPoints, &v2CrossPoint))
+                            {
+                                if (v2CrossPoint != vChk1)
+                                {
+                                    if (v2CrossPoint != vChk0)
+                                    {
+                                        if (bChk0Valid)
+                                            aValidVts.push_back(vChk0);
+                                        vChk0 = v2CrossPoint;
+                                    }
+                                    bChk0Valid = CheckPointValidOnErodeContour(vChk0, iDilateSize);
+                                }
+                            }
+                        }
+                    }
+
+                    itSch0++; itSch1++;
+                    if (itSch1 == aVts.end()) itSch1 = aVts.begin();
+                }
+
+                if (bChk0Valid)
+                    aValidVts.push_back(vChk0);
+                bPrevChk1Valid = bChk1Valid;
+                itChk0++; itChk1++;
+                if (itChk1 == aVts.end()) itChk1 = aVts.begin();
+            }
+            aVts.swap(aValidVts);
+        }
 
         const int iLoopCnt = aVts.size();
         vector<MatUtils::Point2f> res(iLoopCnt);

@@ -956,6 +956,8 @@ ImGui::ImMat MakeColor(ImDataType eDtype, double dColorVal)
 
 void DrawPolygon(ImGui::ImMat& img, const vector<Point2f>& aContourVertices, const ImGui::ImMat& color, int iLineType)
 {
+    if (aContourVertices.empty())
+        return;
     int iFixPointShit = 8;
     double dFixPointScalar = (double)(1LL << iFixPointShit);
     int iVertexCount = aContourVertices.size();
