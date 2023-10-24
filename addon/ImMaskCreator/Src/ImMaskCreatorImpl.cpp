@@ -1563,7 +1563,7 @@ private:
         }
         else
         {
-            if (v2End.x > v2Start.x ^ (bLeft ^ fVertSlope > 0))
+            if ((v2End.x > v2Start.x) ^ (bLeft ^ (fVertSlope > 0)))
                 fLen = -fLen;
             dx = fLen*ratio;
             dy = dx*fVertSlope;
