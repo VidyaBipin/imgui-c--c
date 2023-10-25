@@ -822,7 +822,7 @@ private:
                 return;
             }
 
-            const ImVec2 bzVts[] = {prevVt.m_pos, prevVt.m_grabber1Offset, m_grabber0Offset, m_pos};
+            ImVec2 bzVts[] = {prevVt.m_pos, prevVt.m_grabber1Offset, m_grabber0Offset, m_pos};
             m_aContourVertices = CalcBezierCurve(bzVts);
             UpdateContourContianBox();
         }
@@ -1285,9 +1285,9 @@ private:
         return hRes;
     }
 
-    static list<ImVec2> CalcBezierCurve(const ImVec2 v[4])
+    static list<ImVec2> CalcBezierCurve(ImVec2 v[4])
     {
-        const auto offsetVt = v[3]-v[0];
+        auto offsetVt = v[3]-v[0];
         const float distance = sqrt((double)offsetVt.x*offsetVt.x+(double)offsetVt.y*offsetVt.y);
         int log2value = (int)floor(log2(distance));
         if (log2value <= 0)
@@ -1296,13 +1296,31 @@ private:
         int steps = 1 << (log2value-1);
         auto hBt = GetBezierTable(steps);
         auto C = hBt->GetBezierConstant();
+        static const float TRANS_FACTOR = 1e2/sqrt(2);
+        static const float INV_TRANS_FACTOR = 1e-2/sqrt(2);
+        bool bNeedInvTrans = false;
+        if (abs(offsetVt.x) < 1e-2 || abs(offsetVt.y) < 1e-2)
+        {
+            ImVec2 tmp;
+            tmp.x = v[1].x*TRANS_FACTOR-v[1].y*TRANS_FACTOR;
+            tmp.y = v[1].x*TRANS_FACTOR+v[1].y*TRANS_FACTOR;
+            v[1] = tmp;
+            tmp.x = (offsetVt.x+v[2].x)*TRANS_FACTOR-(offsetVt.y+v[2].y)*TRANS_FACTOR;
+            tmp.y = (offsetVt.x+v[2].x)*TRANS_FACTOR+(offsetVt.y+v[2].y)*TRANS_FACTOR;
+            v[2] = tmp;
+            tmp.x = offsetVt.x*TRANS_FACTOR-offsetVt.y*TRANS_FACTOR;
+            tmp.y = offsetVt.x*TRANS_FACTOR+offsetVt.y*TRANS_FACTOR;
+            offsetVt = tmp;
+            v[2].x -= tmp.x;
+            v[2].y -= tmp.y;
+            bNeedInvTrans = true;
+        }
         ImVec2 P[] = {
             { 0.f, 0.f },
             { v[1].x/offsetVt.x, v[1].y/offsetVt.y },
             { 1+v[2].x/offsetVt.x, 1+v[2].y/offsetVt.y },
             { 1.f, 1.f } };
-        vector<ImVec2> v2BezierTable;
-        v2BezierTable.resize(steps+1);
+        vector<ImVec2> v2BezierTable(steps+1);
         for (int step = 0; step <= steps; ++step)
         {
             ImVec2 point = {
@@ -1314,19 +1332,41 @@ private:
 
         const int smoothness = v2BezierTable.size();
         list<ImVec2> res;
-        for (int i = 0; i < smoothness; i++)
+        if (bNeedInvTrans)
         {
-            const auto& p = v2BezierTable[i];
-            res.push_back(ImVec2(p.x*offsetVt.x+v[0].x, p.y*offsetVt.y+v[0].y));
+            for (int i = 0; i < smoothness; i++)
+            {
+                const auto& p = v2BezierTable[i];
+                const ImVec2 tmp(p.x*offsetVt.x, p.y*offsetVt.y);
+                const float dx = tmp.x*INV_TRANS_FACTOR+tmp.y*INV_TRANS_FACTOR;
+                const float dy = -tmp.x*INV_TRANS_FACTOR+tmp.y*INV_TRANS_FACTOR;
+                res.push_back(ImVec2(dx+v[0].x, dy+v[0].y));
+            }
+        }
+        else
+        {
+            for (int i = 0; i < smoothness; i++)
+            {
+                const auto& p = v2BezierTable[i];
+                res.push_back(ImVec2(p.x*offsetVt.x+v[0].x, p.y*offsetVt.y+v[0].y));
+            }
         }
         return res;
     }
 
     static list<ImVec2> CalcBezierConnection(const ImVec2 v[4])
     {
-        const auto vOffset = v[2]-v[1];
-        const double fMorphLen = sqrt((double)vOffset.x*vOffset.x+(double)vOffset.y*vOffset.y)*0.5;
         const double fSlope1 = v[1].x != v[0].x ? ((double)v[1].y-v[0].y)/((double)v[1].x-v[0].x) : numeric_limits<double>::infinity();
+        const double fSlope2 = v[2].x != v[3].x ? ((double)v[2].y-v[3].y)/((double)v[2].x-v[3].x) : numeric_limits<double>::infinity();
+        const auto vec1 = v[0]-v[1];
+        const auto vec2 = v[3]-v[2];
+        const auto dotVec12 = vec1.x*vec2.x+vec1.y*vec2.y;
+        const auto dotNum = dotVec12*dotVec12;
+        const auto dotDen = (vec1.x*vec1.x+vec1.y*vec1.y)*(vec2.x*vec2.x+vec2.y*vec2.y);
+
+        const auto vOffset = v[2]-v[1];
+        const double scale = dotVec12 > 0 ? 0.5*(1+dotNum/(dotDen*2)) : 0.5;
+        const double fMorphLen = sqrt((double)vOffset.x*vOffset.x+(double)vOffset.y*vOffset.y)*scale;
         float dx1, dy1;
         if (isinf(fSlope1))
         {
@@ -1339,7 +1379,6 @@ private:
             dx1 = v[1].x > v[0].x ? fMorphLen*ratio : -fMorphLen*ratio;
             dy1 = dx1*fSlope1;
         }
-        const double fSlope2 = v[2].x != v[3].x ? ((double)v[2].y-v[3].y)/((double)v[2].x-v[3].x) : numeric_limits<double>::infinity();
         float dx2, dy2;
         if (isinf(fSlope2))
         {
@@ -1352,7 +1391,7 @@ private:
             dx2 = v[2].x > v[3].x ? fMorphLen*ratio : -fMorphLen*ratio;
             dy2 = dx2*fSlope2;
         }
-        const ImVec2 v2[] = {v[1], {dx1, dy1}, {dx2, dy2}, v[2]};
+        ImVec2 v2[] = {v[1], {dx1, dy1}, {dx2, dy2}, v[2]};
         return CalcBezierCurve(v2);
     }
 
