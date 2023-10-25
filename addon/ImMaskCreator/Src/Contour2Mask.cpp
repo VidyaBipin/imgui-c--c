@@ -1046,6 +1046,32 @@ ImGui::ImMat Contour2Mask(
     return mask;
 }
 
+void DrawMask(
+        ImGui::ImMat& mMask, const std::vector<Point2f>& av2ContourVertices, const Point2f& v2ContourOffset,
+        double dMaskValue, int iLineType)
+{
+    if (av2ContourVertices.empty())
+        return;
+
+    ImGui::ImMat color = MakeColor(mMask.type, dMaskValue);
+    int iFixPointShit = 8;
+    double dFixPointScalar = (double)(1LL << iFixPointShit);
+    int iVertexCount = av2ContourVertices.size();
+    vector<Point2l> aptPolyVertices;
+    aptPolyVertices.reserve(av2ContourVertices.size());
+    for (int i = 0; i < iVertexCount; i++)
+    {
+        const auto& v = av2ContourVertices[i];
+        aptPolyVertices.push_back({(int64_t)((double)v.x*dFixPointScalar), (int64_t)((double)v.y*dFixPointScalar)});
+    }
+    Point2l ptContourOffset((int64_t)((double)v2ContourOffset.x*dFixPointScalar), (int64_t)((double)v2ContourOffset.y*dFixPointScalar));
+    vector<_PolyEdge> edges;
+    mMask.dims = 3; // wyvern: to pass the assertion in ImMat::draw_line()
+    CollectPolyEdges(mMask, aptPolyVertices, edges, color.data, iLineType, ptContourOffset, iFixPointShit);
+    mMask.dims = 2;
+    FillEdgeCollection(mMask, edges, color.data);
+}
+
 bool CheckTwoLinesCross(const Point2f v[4], Point2f* pCross)
 {
     Point2f r1lt, r1rb;

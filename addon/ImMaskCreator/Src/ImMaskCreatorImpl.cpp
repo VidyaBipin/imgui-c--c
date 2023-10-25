@@ -271,7 +271,23 @@ public:
                             m_tMorphCtrl.m_bInsidePoly = !m_tMorphCtrl.m_bInsidePoly;
                             bMorphChanged = true;
                         }
-                        m_tMorphCtrl.m_ptGrabberPos = m_tMorphCtrl.CalcGrabberPos();
+                        m_tMorphCtrl.CalcGrabberPos();
+                    }
+                }
+                else if (m_tMorphCtrl.m_iHoverType == 2)
+                {
+                    const auto dx = mousePos.x-m_tMorphCtrl.m_ptRootPos.x;
+                    const auto dy = mousePos.y-m_tMorphCtrl.m_ptRootPos.y;
+                    float l = sqrt(dx*dx+dy*dy);
+                    const auto fMinFeatherGrabberLength = m_tMorphCtrl.m_fMorphCtrlLength+m_fGrabberRadius*2+m_fHoverDetectExRadius;
+                    float fFeatherGrabberLength = l-fMinFeatherGrabberLength;
+                    if (fFeatherGrabberLength < 0) fFeatherGrabberLength = 0;
+                    if (m_tMorphCtrl.m_fFeatherCtrlLength != fFeatherGrabberLength)
+                    {
+                        m_tMorphCtrl.m_fFeatherCtrlLength = fFeatherGrabberLength;
+                        m_tMorphCtrl.m_iFeatherIterations = (int)floor(fFeatherGrabberLength);
+                        bMorphChanged = true;
+                        m_tMorphCtrl.CalcGrabberPos();
                     }
                 }
             }
@@ -356,12 +372,13 @@ public:
             return res;
 
         res = m_mMask;
-        const auto iMorphIters = m_tMorphCtrl.m_iMorphIterations;
+        const auto iMorphIters = m_tMorphCtrl.m_bInsidePoly ? -m_tMorphCtrl.m_iMorphIterations : m_tMorphCtrl.m_iMorphIterations;
+        const auto iFeatherIters = m_tMorphCtrl.m_iFeatherIterations;
         if (m_bContourChanged || m_mMask.empty() ||
             m_iLastMaskLineType != iLineType || m_bLastMaskFilled != bFilled ||
             m_eLastMaskDataType != eDataType || m_dLastMaskValue != dMaskValue || m_dLastNonMaskValue != dNonMaskValue)
         {
-            if (iMorphIters <= 0 || !bFilled)
+            if ((iMorphIters == 0 && iFeatherIters == 0) || !bFilled)
             {
                 int iTotalVertexCount = m_av2AllContourVertices.size();
                 vector<MatUtils::Point2f> av2TotalVertices(iTotalVertexCount);
@@ -369,7 +386,7 @@ public:
                 auto itVtDst = av2TotalVertices.begin();
                 while (itVtSrc != m_av2AllContourVertices.end())
                     *itVtDst++ = MatUtils::FromImVec2<float>(*itVtSrc++);
-                m_mMask = MatUtils::Contour2Mask(av2TotalVertices, m_size, {0.f, 0.f}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled);
+                m_mMask = MatUtils::Contour2Mask(av2TotalVertices, m_size, {0, 0}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled);
                 res = m_mMask;
             }
             else
@@ -378,24 +395,65 @@ public:
             }
         }
 
-        if (iMorphIters > 0)
+        if (iMorphIters != 0 || iFeatherIters != 0)
         {
-            if (m_bContourChanged || m_iLastMorphIters != iMorphIters ||
+            if (m_bContourChanged || m_iLastMorphIters != iMorphIters || m_iLastFeatherIters != iFeatherIters ||
                 m_iLastMaskLineType != iLineType || m_bLastMaskFilled != bFilled ||
                 m_eLastMaskDataType != eDataType || m_dLastMaskValue != dMaskValue || m_dLastNonMaskValue != dNonMaskValue)
             {
-                auto aDilateContourVertices = m_tMorphCtrl.m_bInsidePoly ? ErodeContour(iMorphIters) : DilateContour(iMorphIters);
+                vector<MatUtils::Point2f> aMorphContourVertices;
+                ImGui::ImMat mColor;
                 if (!bFilled)
                 {
-                    ImGui::ImMat mLineColor = MatUtils::MakeColor(res.type, dMaskValue);
                     m_mMorphMask = m_mMask.clone();
-                    MatUtils::DrawPolygon(m_mMorphMask, aDilateContourVertices, mLineColor, iLineType);
+                    if (iMorphIters != 0)
+                    {
+                        aMorphContourVertices = iMorphIters < 0 ? ErodeContour(-iMorphIters) : DilateContour(iMorphIters);
+                        mColor = MatUtils::MakeColor(res.type, dMaskValue);
+                        MatUtils::DrawPolygon(m_mMorphMask, aMorphContourVertices, mColor, iLineType);
+                    }
+                    if (iFeatherIters > 0)
+                    {
+                        mColor = MatUtils::MakeColor(res.type, dMaskValue/2);
+                        const auto iFeatherIter1 = iMorphIters-iFeatherIters;
+                        if (iFeatherIter1 != 0)
+                        {
+                            aMorphContourVertices = iFeatherIter1 < 0 ? ErodeContour(-iFeatherIter1) : DilateContour(iFeatherIter1);
+                            MatUtils::DrawPolygon(m_mMorphMask, aMorphContourVertices, mColor, iLineType);
+                        }
+                        const auto iFeatherIter2 = iMorphIters+iFeatherIters;
+                        if (iFeatherIter2 != 0)
+                        {
+                            aMorphContourVertices = iFeatherIter2 < 0 ? ErodeContour(-iFeatherIter2) : DilateContour(iFeatherIter2);
+                            MatUtils::DrawPolygon(m_mMorphMask, aMorphContourVertices, mColor, iLineType);
+                        }
+                    }
                 }
                 else
                 {
-                    m_mMorphMask = MatUtils::Contour2Mask(aDilateContourVertices, m_size, {0.f, 0.f}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled);
+                    if (iFeatherIters > 0)
+                    {
+                        // create an empty mask mat at first
+                        m_mMorphMask = MatUtils::Contour2Mask({}, m_size, {0, 0}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled);
+                        int iFeatherLoops = 2*iFeatherIters+2;
+                        int iFeatherIterCnt = iMorphIters+iFeatherIters;
+                        for (int i = 1; i < iFeatherLoops; i++, iFeatherIterCnt--)
+                        {
+                            mColor = MatUtils::MakeColor(eDataType, dMaskValue*i/iFeatherLoops);
+                            aMorphContourVertices = iFeatherIterCnt < 0 ? ErodeContour(-iFeatherIterCnt) : DilateContour(iFeatherIterCnt);
+                            MatUtils::DrawPolygon(m_mMorphMask, aMorphContourVertices, mColor, iLineType);
+                        }
+                        aMorphContourVertices = iFeatherIterCnt < 0 ? ErodeContour(-iFeatherIterCnt) : DilateContour(iFeatherIterCnt);
+                        MatUtils::DrawMask(m_mMorphMask, aMorphContourVertices, {0, 0}, dMaskValue, iLineType);
+                    }
+                    else
+                    {
+                        aMorphContourVertices = iMorphIters < 0 ? ErodeContour(-iMorphIters) : DilateContour(iMorphIters);
+                        m_mMorphMask = MatUtils::Contour2Mask(aMorphContourVertices, m_size, {0, 0}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled);
+                    }
                 }
                 m_iLastMorphIters = iMorphIters;
+                m_iLastFeatherIters = iFeatherIters;
             }
             res = m_mMorphMask;
         }
@@ -889,6 +947,9 @@ private:
         float m_fMorphCtrlLength;
         float m_fDistant{0.f};
         int m_iMorphIterations{0};
+        ImVec2 m_ptFeatherGrabberPos;
+        float m_fFeatherCtrlLength{0};
+        int m_iFeatherIterations{0};
         bool m_bIsHovered{false};
         int m_iHoverType{-1};
 
@@ -984,7 +1045,7 @@ private:
             m_ptRootPos = ptRootPos;
             m_fCtrlSlope = fCtrlSlope;
             m_fDistant =  v2Dist.x;
-            m_ptGrabberPos = CalcGrabberPos();
+            CalcGrabberPos();
             return itCp;
         }
 
@@ -1038,7 +1099,7 @@ private:
             m_ptRootPos = ptRootPos;
             m_fCtrlSlope = fCtrlSlope;
             m_fDistant = v2Dist.x;
-            m_ptGrabberPos = CalcGrabberPos();
+            CalcGrabberPos();
             return itCp;
         }
 
@@ -1129,7 +1190,7 @@ private:
             return ImVec2(fDist1, fDist2);
         }
 
-        ImVec2 CalcGrabberPos()
+        void CalcGrabberPos()
         {
             float x, y;
             const auto ratio = 1/sqrt(m_fCtrlSlope*m_fCtrlSlope+1);
@@ -1144,19 +1205,35 @@ private:
                 y = m_ptRootPos.y+ratio*m_fCtrlSlope;
             }
             bool bIsInside = MatUtils::CheckPointInsidePolygon({x, y}, m_owner->m_av2AllContourVertices);
-            const float fMorphCtrlLength = m_bInsidePoly^bIsInside ? -m_fMorphCtrlLength : m_fMorphCtrlLength;
+            float fLength = m_fMorphCtrlLength;
+            if (m_bInsidePoly^bIsInside)
+                fLength = -fLength;
             if (isinf(m_fCtrlSlope))
             {
                 x = m_ptRootPos.x;
-                y = m_ptRootPos.y+fMorphCtrlLength;
+                y = m_ptRootPos.y+fLength;
             }
             else
             {
-                const auto u = fMorphCtrlLength*ratio;
+                const auto u = fLength*ratio;
                 x = m_ptRootPos.x+u;
                 y = m_ptRootPos.y+u*m_fCtrlSlope;
             }
-            return {x, y};
+            m_ptGrabberPos = {x, y};
+            const auto fFeatherGrabberDistance = m_fFeatherCtrlLength+m_owner->m_fGrabberRadius*2+m_owner->m_fHoverDetectExRadius;
+            fLength = m_bInsidePoly^bIsInside ? fLength-fFeatherGrabberDistance : fLength+fFeatherGrabberDistance;
+            if (isinf(m_fCtrlSlope))
+            {
+                x = m_ptRootPos.x;
+                y = m_ptRootPos.y+fLength;
+            }
+            else
+            {
+                const auto u = fLength*ratio;
+                x = m_ptRootPos.x+u;
+                y = m_ptRootPos.y+u*m_fCtrlSlope;
+            }
+            m_ptFeatherGrabberPos = {x, y};
         }
 
         bool CheckHovering(const ImVec2& mousePos)
@@ -1172,11 +1249,18 @@ private:
                 return true;
             }
             const ImVec2 radiusSize(grabberRadius, grabberRadius);
-            const ImRect grabberRect(m_ptGrabberPos-radiusSize-szDetectExRadius, m_ptGrabberPos+radiusSize+szDetectExRadius);
+            ImRect grabberRect(m_ptGrabberPos-radiusSize-szDetectExRadius, m_ptGrabberPos+radiusSize+szDetectExRadius);
             if (grabberRect.Contains(mousePos))
             {
                 m_bIsHovered = true;
                 m_iHoverType = 1;
+                return true;
+            }
+            grabberRect = {m_ptFeatherGrabberPos-radiusSize-szDetectExRadius, m_ptFeatherGrabberPos+radiusSize+szDetectExRadius};
+            if (grabberRect.Contains(mousePos))
+            {
+                m_bIsHovered = true;
+                m_iHoverType = 2;
                 return true;
             }
             m_bIsHovered = false;
@@ -1193,7 +1277,9 @@ private:
         {
             const auto& v2UiScale = m_owner->m_v2UiScale;
             const ImVec2 rootPos = origin+m_ptRootPos*v2UiScale;
-            ImVec2 grabberPos = origin+m_ptGrabberPos*v2UiScale;
+            ImVec2 grabberPos = origin+m_ptFeatherGrabberPos*v2UiScale;
+            pDrawList->AddLine(rootPos, grabberPos, m_owner->m_u32FeatherGrabberColor, m_owner->m_fContourThickness);
+            grabberPos = origin+m_ptGrabberPos*v2UiScale;
             pDrawList->AddLine(rootPos, grabberPos, m_owner->m_u32ContourColor, m_owner->m_fContourThickness);
             const auto& offsetSize1 = m_owner->m_v2PointSizeHalf;
             auto borderColor = m_iHoverType == 0 ? m_owner->m_u32PointBorderHoverColor : m_owner->m_u32PointBorderColor;
@@ -1203,6 +1289,10 @@ private:
             borderColor = m_iHoverType == 1 ? m_owner->m_u32GrabberBorderHoverColor : m_owner->m_u32GrabberBorderColor;
             pDrawList->AddCircleFilled(grabberPos, m_owner->m_fGrabberRadius, borderColor);
             pDrawList->AddCircleFilled(grabberPos, m_owner->m_fGrabberRadius-m_owner->m_fGrabberBorderThickness, m_owner->m_u32GrabberColor);
+            grabberPos = origin+m_ptFeatherGrabberPos*v2UiScale;
+            borderColor = m_iHoverType == 2 ? m_owner->m_u32GrabberBorderHoverColor : m_owner->m_u32GrabberBorderColor;
+            pDrawList->AddCircleFilled(grabberPos, m_owner->m_fGrabberRadius, borderColor);
+            pDrawList->AddCircleFilled(grabberPos, m_owner->m_fGrabberRadius-m_owner->m_fGrabberBorderThickness, m_owner->m_u32FeatherGrabberColor);
         }
     };
 
@@ -1662,6 +1752,9 @@ private:
 
     vector<MatUtils::Point2f> DilateContour(int iDilateSize)
     {
+        if (iDilateSize <= 0)
+            return ConvertPointsType(m_av2AllContourVertices);
+
         list<ImVec2> aVts;
         auto itCv = m_av2AllContourVertices.begin();
         auto itCvNext = itCv; itCvNext++;
@@ -1892,16 +1985,11 @@ private:
         return res;
     }
 
-    bool CheckPointValidOnErodeContour(const ImVec2& v, float fDilateSize)
-    {
-        float fDistToOrgContour;
-        MatUtils::CalcNearestPointOnPloygon(v, m_av2AllContourVertices, nullptr, nullptr, &fDistToOrgContour);
-        bool bIsInside = MatUtils::CheckPointInsidePolygon(v, m_av2AllContourVertices);
-        return fDistToOrgContour >= fDilateSize-1e-2 && bIsInside;
-    }
-
     vector<MatUtils::Point2f> ErodeContour(int iDilateSize)
     {
+        if (iDilateSize <= 0)
+            return ConvertPointsType(m_av2AllContourVertices);
+
         list<ImVec2> aVts;
         auto itCv = m_av2AllContourVertices.begin();
         auto itCvNext = itCv; itCvNext++;
@@ -2044,6 +2132,24 @@ private:
         return res;
     }
 
+    bool CheckPointValidOnErodeContour(const ImVec2& v, float fDilateSize)
+    {
+        float fDistToOrgContour;
+        MatUtils::CalcNearestPointOnPloygon(v, m_av2AllContourVertices, nullptr, nullptr, &fDistToOrgContour);
+        bool bIsInside = MatUtils::CheckPointInsidePolygon(v, m_av2AllContourVertices);
+        return fDistToOrgContour >= fDilateSize-1e-2 && bIsInside;
+    }
+
+    vector<MatUtils::Point2f> ConvertPointsType(const list<ImVec2>& vts)
+    {
+        const int iLoopCnt = vts.size();
+        vector<MatUtils::Point2f> res(iLoopCnt);
+        auto itVt = vts.begin();
+        for (int i = 0; i < iLoopCnt; i++)
+            res[i] = MatUtils::FromImVec2<float>(*itVt++);
+        return res;
+    }
+
 private:
     string m_name;
     MatUtils::Size2i m_size;
@@ -2065,6 +2171,7 @@ private:
     ImU32 m_u32GrabberLineColor{IM_COL32(80, 80, 150, 255)};
     float m_fContourThickness{3.f};
     ImU32 m_u32ContourColor{IM_COL32(40, 40, 170, 255)};
+    ImU32 m_u32FeatherGrabberColor{IM_COL32(200, 150, 80, 255)};
     ImRect m_rContianBox{{-1, -1}, {-1, -1}};
     ImVec2 m_ptCenter;
     float m_fContourHoverDetectExRadius{4.f}, m_fHoverDetectExRadius{5.f};
@@ -2081,9 +2188,7 @@ private:
     double m_dLastMaskValue{0}, m_dLastNonMaskValue{0};
     ImGui::ImMat m_mMask, m_mMorphMask;
     ImGui::ImMat m_mMorphKernel;
-    list<ImGui::ImMat> m_aMorphCache;
-    int m_iLastMorphIters{0};
-    int m_iMorphCacheType{1};
+    int m_iLastMorphIters{0}, m_iLastFeatherIters{0};
     string m_sErrMsg;
 };
 

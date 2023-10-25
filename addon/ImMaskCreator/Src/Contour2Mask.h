@@ -12,6 +12,10 @@ ImGui::ImMat Contour2Mask(
         const std::vector<Point2f>& av2ContourVertices, const Size2i& v2MaskSize, const Point2f& v2ContourOffset,
         ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled = true);
 
+void DrawMask(
+        ImGui::ImMat& mMask, const std::vector<Point2f>& av2ContourVertices, const Point2f& v2ContourOffset,
+        double dMaskValue, int iLineType);
+
 void DrawPolygon(ImGui::ImMat& img, const std::vector<Point2f>& aContourVertices, const ImGui::ImMat& color, int iLineType);
 
 bool CheckTwoLinesCross(const Point2f v[4], Point2f* pCross);
