@@ -1144,7 +1144,6 @@ set(IMGUI_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/imgui_tex_inspect
 )
 
-
 if(IMGUI_BUILD_EXAMPLE)
     set(IMGUI_SRC
         ${IMGUI_SRC}
@@ -1164,6 +1163,46 @@ set(IMGUI_INCS
 set(IMGUI_INC_DIRS
     ${IMGUI_INC_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImCoolbar
+)
+
+#Potrace
+set(IMGUI_SRC
+    ${IMGUI_SRC}
+    addon/Potrace/src/backend_dxf.cpp
+    addon/Potrace/src/backend_geojson.cpp
+    addon/Potrace/src/backend_pgm.cpp
+    addon/Potrace/src/backend_svg.cpp
+    addon/Potrace/src/bbox.cpp
+    addon/Potrace/src/curve.cpp
+    addon/Potrace/src/decompose.cpp
+    addon/Potrace/src/greymap.cpp
+    addon/Potrace/src/potracelib.cpp
+    addon/Potrace/src/render.cpp
+    addon/Potrace/src/trace.cpp
+    addon/Potrace/src/trans.cpp
+)
+
+set(IMGUI_INCS
+    ${IMGUI_INCS}
+    addon/Potrace/inc/potracelib.h
+    addon/Potrace/inc/auxiliary.h
+    addon/Potrace/inc/backend.h
+    addon/Potrace/inc/trans.h
+    addon/Potrace/inc/bitmap.h
+    addon/Potrace/inc/greymap.h
+    addon/Potrace/src/bbox.h
+    addon/Potrace/src/bitops.h
+    addon/Potrace/src/curve.h
+    addon/Potrace/src/decompose.h
+    addon/Potrace/src/lists.h
+    addon/Potrace/src/progress.h
+    addon/Potrace/src/render.h
+    addon/Potrace/src/trace.h
+)
+
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/Potrace/inc
 )
 
 # ZLib
@@ -1666,6 +1705,28 @@ add_executable(
 )
 target_link_libraries(
     immat_test
+    imgui
+)
+
+add_executable(
+    potrace_test
+    addon/Potrace/test/main.cpp
+    addon/Potrace/test/bitmap_io.cpp
+    addon/Potrace/test/bitmap_io.h
+)
+target_link_libraries(
+    potrace_test
+    imgui
+)
+
+add_executable(
+    mkbitmap
+    addon/Potrace/test/mkbitmap.cpp
+    addon/Potrace/test/bitmap_io.cpp
+    addon/Potrace/test/bitmap_io.h
+)
+target_link_libraries(
+    mkbitmap
     imgui
 )
 endif()
