@@ -199,11 +199,10 @@ static void write_polygons(FILE *fout, potrace_path_t *tree, trans_t tr, int fir
 /* Backend. */
 
 /* public interface for GeoJSON */
-int page_geojson(FILE *fout, potrace_path_t *plist, imginfo_t *imginfo)
+int page_geojson(void *out, potrace_path_t *plist, imginfo_t *imginfo)
 {
-
   trans_t tr;
-
+  FILE *fout = (FILE *)out;
   /* set up the coordinate transform (rotation) */
   tr.bb[0] = imginfo->trans.bb[0] + imginfo->lmar + imginfo->rmar;
   tr.bb[1] = imginfo->trans.bb[1] + imginfo->tmar + imginfo->bmar;

@@ -103,6 +103,7 @@ struct imginfo_s
   int pixheight;                 /* height of input pixmap */
   double width;                  /* desired width of image (in pt or pixels) */
   double height;                 /* desired height of image (in pt or pixels) */
+  int channels;                  /* desired channels of image(1 = gray, 3 = rgb, 4 = rgba) */
   double lmar, rmar, tmar, bmar; /* requested margins (in pt) */
   trans_t trans;                 /* specify relative position of a tilted rectangle */
 };
@@ -116,20 +117,24 @@ struct backend_s
   int fixed;                 /* fixed page size backend? */
   int pixel;                 /* pixel-based backend? */
   int multi;                 /* multi-page backend? */
-  int (*init_f)(FILE *fout); /* initialization function */
-  int (*page_f)(FILE *fout, potrace_path_t *plist, imginfo_t *imginfo);
+  int (*init_f)(void *fout); /* initialization function */
+  int (*page_f)(void *fout, potrace_path_t *plist, imginfo_t *imginfo);
   /* per-bitmap function */
-  int (*term_f)(FILE *fout); /* finalization function */
+  int (*term_f)(void *fout); /* finalization function */
   int opticurve;             /* opticurve capable (true Bezier curves?) */
 };
 typedef struct backend_s backend_t;
 
-int page_svg(FILE *fout, potrace_path_t *plist, imginfo_t *imginfo);
-int page_gimp(FILE *fout, potrace_path_t *plist, imginfo_t *imginfo);
-int page_pgm(FILE *fout, potrace_path_t *plist, imginfo_t *imginfo);
-int page_geojson(FILE *fout, potrace_path_t *plist, imginfo_t *imginfo);
-int page_dxf(FILE *fout, potrace_path_t *plist, imginfo_t *imginfo);
+int page_svg(void *out, potrace_path_t *plist, imginfo_t *imginfo);
+int page_gimp(void *out, potrace_path_t *plist, imginfo_t *imginfo);
+int page_pgm(void *out, potrace_path_t *plist, imginfo_t *imginfo);
+int page_geojson(void *out, potrace_path_t *plist, imginfo_t *imginfo);
+int page_dxf(void *out, potrace_path_t *plist, imginfo_t *imginfo);
+int page_mem(void *out, potrace_path_t *plist, imginfo_t *imginfo);
 
-void calc_dimensions(imginfo_t *imginfo, potrace_path_t *plist);
+void init_info();
+int backend_lookup(const char *name, backend_t **bp);
+int backend_list(FILE *fout, int j, int linelen);
+void calc_dimensions(imginfo_t *imginfo, potrace_path_t *plist, int* width = nullptr, int* height = nullptr);
 
 #endif /* BACKEND_H */

@@ -238,11 +238,12 @@ static int dxf_path(FILE *fout, const char *layer, potrace_curve_t *curve, trans
 /* Backend. */
 
 /* public interface for DXF */
-int page_dxf(FILE *fout, potrace_path_t *plist, imginfo_t *imginfo)
+int page_dxf(void *out, potrace_path_t *plist, imginfo_t *imginfo)
 {
   potrace_path_t *p;
   trans_t t;
   const char *layer = "0";
+  FILE *fout = (FILE *)out;
 
   /* set up the coordinate transform (rotation) */
   t.bb[0] = imginfo->trans.bb[0] + imginfo->lmar + imginfo->rmar;

@@ -43,7 +43,7 @@ static void pgm_path(potrace_curve_t *curve, trans_t t, render_t *rm)
   }
 }
 
-int page_pgm(FILE *fout, potrace_path_t *plist, imginfo_t *imginfo)
+int page_pgm(void *out, potrace_path_t *plist, imginfo_t *imginfo)
 {
   potrace_path_t *p;
   greymap_t *gm;
@@ -52,6 +52,7 @@ int page_pgm(FILE *fout, potrace_path_t *plist, imginfo_t *imginfo)
   trans_t t;
   int mode;
   const char *comment = "created by " POTRACE " " VERSION ", written by Peter Selinger 2001-2019";
+  FILE *fout = (FILE *)out;
 
   t.bb[0] = imginfo->trans.bb[0] + imginfo->lmar + imginfo->rmar;
   t.bb[1] = imginfo->trans.bb[1] + imginfo->tmar + imginfo->bmar;

@@ -331,15 +331,15 @@ static void write_paths_transparent(FILE *fout, potrace_path_t *tree)
 /* Backend. */
 
 /* public interface for SVG */
-int page_svg(FILE *fout, potrace_path_t *plist, imginfo_t *imginfo)
+int page_svg(void *out, potrace_path_t *plist, imginfo_t *imginfo)
 {
-
   double bboxx = imginfo->trans.bb[0] + imginfo->lmar + imginfo->rmar;
   double bboxy = imginfo->trans.bb[1] + imginfo->tmar + imginfo->bmar;
   double origx = imginfo->trans.orig[0] + imginfo->lmar;
   double origy = bboxy - imginfo->trans.orig[1] - imginfo->bmar;
   double scalex = imginfo->trans.scalex / info.unit;
   double scaley = -imginfo->trans.scaley / info.unit;
+  FILE *fout = (FILE *)out;
 
   /* header */
   fprintf(fout, "<?xml version=\"1.0\" standalone=\"no\"?>\n");
@@ -390,9 +390,9 @@ int page_svg(FILE *fout, potrace_path_t *plist, imginfo_t *imginfo)
 
 /* the Gimppath backend is identical, except that it disables
    --opaque, enables --flat, and the dimensions are pixel-based */
-int page_gimp(FILE *fout, potrace_path_t *plist, imginfo_t *imginfo)
+int page_gimp(void *out, potrace_path_t *plist, imginfo_t *imginfo)
 {
   info.opaque = 0;
   info.grouping = 0;
-  return page_svg(fout, plist, imginfo);
+  return page_svg(out, plist, imginfo);
 }

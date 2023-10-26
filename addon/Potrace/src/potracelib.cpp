@@ -121,7 +121,7 @@ const char *potrace_version(void)
 
 /* determine the dimensions of the output based on command line and
    image dimensions, and optionally, based on the actual image outline. */
-void calc_dimensions(imginfo_t *imginfo, potrace_path_t *plist)
+void calc_dimensions(imginfo_t *imginfo, potrace_path_t *plist, int* width, int* height)
 {
   double dim_def;
   double maxwidth, maxheight, sc;
@@ -321,6 +321,12 @@ void calc_dimensions(imginfo_t *imginfo, potrace_path_t *plist)
       imginfo->tmar = 0;
     }
   }
+
+  trans_t t;
+  t.bb[0] = imginfo->trans.bb[0] + imginfo->lmar + imginfo->rmar;
+  t.bb[1] = imginfo->trans.bb[1] + imginfo->tmar + imginfo->bmar;
+  if (width) *width = (int)ceil(t.bb[0]);
+  if (height) *height = (int)ceil(t.bb[1]);
 }
 
 /* apply lowpass filter (an approximate Gaussian blur) to greymap.
@@ -723,4 +729,106 @@ calloc_error:
   free(poly);
   free(window);
   return NULL;
+}
+
+void init_info()
+{
+  info.debug = 0;
+  info.width_d.x = UNDEF;
+  info.height_d.x = UNDEF;
+  info.rx = UNDEF;
+  info.ry = UNDEF;
+  info.sx = UNDEF;
+  info.sy = UNDEF;
+  info.stretch = 1;
+  info.lmar_d.x = UNDEF;
+  info.rmar_d.x = UNDEF;
+  info.tmar_d.x = UNDEF;
+  info.bmar_d.x = UNDEF;
+  info.angle = 0;
+  info.paperwidth = DEFAULT_PAPERWIDTH;
+  info.paperheight = DEFAULT_PAPERHEIGHT;
+  info.tight = 0;
+  info.unit = 10;
+  info.color = 0x000000;
+  info.gamma = 2.2;
+  info.param = potrace_param_default();
+  info.outfile = NULL;
+  info.blacklevel = 0.5;
+  info.invert = 0;
+  info.opaque = 0;
+  info.grouping = 1;
+  info.fillcolor = 0xffffff;
+}
+
+static backend_t backend[] = {
+    {"svg", ".svg", 0, 0, 0, NULL, page_svg, NULL, 1},
+    {"dxf", ".dxf", 0, 1, 0, NULL, page_dxf, NULL, 1},
+    {"geojson", ".json", 0, 1, 0, NULL, page_geojson, NULL, 1},
+    {"pgm", ".pgm", 0, 1, 1, NULL, page_pgm, NULL, 1},
+    {"gimppath", ".svg", 0, 1, 0, NULL, page_gimp, NULL, 1},
+    {"mem", ".mem", 0, 1, 1, NULL, page_mem, NULL, 1},
+    {NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0},
+};
+
+/* look up a backend by name. If found, return 0 and set *bp. If not
+   found leave *bp unchanged and return 1, or 2 on ambiguous
+   prefix. */
+int backend_lookup(const char *name, backend_t **bp)
+{
+  int i;
+  int m = 0; /* prefix matches */
+  backend_t *b = NULL;
+
+  for (i = 0; backend[i].name; i++)
+  {
+    if (strcasecmp(backend[i].name, name) == 0)
+    {
+      *bp = &backend[i];
+      return 0;
+    }
+    else if (strncasecmp(backend[i].name, name, strlen(name)) == 0)
+    {
+      m++;
+      b = &backend[i];
+    }
+  }
+  /* if there was no exact match, and exactly one prefix match, use that */
+  if (m == 1)
+  {
+    *bp = b;
+    return 0;
+  }
+  else if (m)
+  {
+    return 2;
+  }
+  else
+  {
+    return 1;
+  }
+}
+
+/* list all available backends by name, in a comma separated list.
+   Assume the cursor starts in column j, and break lines at length
+   linelen. Do not output any trailing punctuation. Return the column
+   the cursor is in. */
+int backend_list(FILE *fout, int j, int linelen)
+{
+  int i;
+
+  for (i = 0; backend[i].name; i++)
+  {
+    if (j + (int)strlen(backend[i].name) > linelen)
+    {
+      fprintf(fout, "\n");
+      j = 0;
+    }
+    j += fprintf(fout, "%s", backend[i].name);
+    if (backend[i + 1].name)
+    {
+      j += fprintf(fout, ", ");
+    }
+  }
+  return j;
 }

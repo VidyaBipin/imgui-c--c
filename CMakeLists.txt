@@ -1172,6 +1172,7 @@ set(IMGUI_SRC
     addon/Potrace/src/backend_geojson.cpp
     addon/Potrace/src/backend_pgm.cpp
     addon/Potrace/src/backend_svg.cpp
+    addon/Potrace/src/backend_mem.cpp
     addon/Potrace/src/bbox.cpp
     addon/Potrace/src/curve.cpp
     addon/Potrace/src/decompose.cpp
