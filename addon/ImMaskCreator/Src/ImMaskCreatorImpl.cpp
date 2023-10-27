@@ -433,18 +433,11 @@ public:
                 {
                     if (iFeatherIters > 0)
                     {
-                        // create an empty mask mat at first
-                        m_mMorphMask = MatUtils::Contour2Mask({}, m_size, {0, 0}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled);
-                        int iFeatherLoops = 2*iFeatherIters+2;
-                        int iFeatherIterCnt = iMorphIters+iFeatherIters;
-                        for (int i = 1; i < iFeatherLoops; i++, iFeatherIterCnt--)
-                        {
-                            mColor = MatUtils::MakeColor(eDataType, dMaskValue*i/iFeatherLoops);
-                            aMorphContourVertices = iFeatherIterCnt < 0 ? ErodeContour(-iFeatherIterCnt) : DilateContour(iFeatherIterCnt);
-                            MatUtils::DrawPolygon(m_mMorphMask, aMorphContourVertices, mColor, iLineType);
-                        }
-                        aMorphContourVertices = iFeatherIterCnt < 0 ? ErodeContour(-iFeatherIterCnt) : DilateContour(iFeatherIterCnt);
-                        MatUtils::DrawMask(m_mMorphMask, aMorphContourVertices, {0, 0}, dMaskValue, iLineType);
+                        const auto iOutterMorphIters = iMorphIters+iFeatherIters;
+                        aMorphContourVertices = iOutterMorphIters < 0 ? ErodeContour(-iOutterMorphIters) : DilateContour(iOutterMorphIters);
+                        const auto iFeatherSize = 2*iFeatherIters+1;
+                        // aMorphContourVertices = ConvertPointsType(m_av2AllContourVertices);
+                        m_mMorphMask = MatUtils::Contour2Mask(aMorphContourVertices, m_size, {0, 0}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled, iFeatherSize);
                     }
                     else
                     {

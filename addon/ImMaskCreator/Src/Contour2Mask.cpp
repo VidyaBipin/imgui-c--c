@@ -2,7 +2,9 @@
 #include <cassert>
 #include <cmath>
 #include <algorithm>
+#include <functional>
 #include "Contour2Mask.h"
+#include "MatMath.h"
 #include "MatUtilsImguiHelper.h"
 
 using namespace std;
@@ -918,6 +920,207 @@ FillEdgeCollection(ImGui::ImMat& img, vector<_PolyEdge>& edges, const void* pCol
     }
 }
 
+static void FeatherFillHLineU8(const vector<Point2f>& av2ContourVertices, float fFeatherSize, int y, uint8_t* pLine, int x1, int x2, const void* pColor)
+{
+    int iLoopCnt = x2-x1;
+    uint8_t* pWrite = pLine;
+    const float color = *(uint8_t*)pColor;
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = x1; i < x2; i++)
+    {
+        float fMinDist;
+        CalcNearestPointOnPloygon(Point2f(i, y), av2ContourVertices, nullptr, nullptr, &fMinDist);
+        const float factor = fMinDist < fFeatherSize ? fMinDist/fFeatherSize : 1.0f;
+        pWrite[i] = (uint8_t)(color*factor);
+    }
+}
+
+static void FeatherFillHLineU16(const vector<Point2f>& av2ContourVertices, float fFeatherSize, int y, uint8_t* pLine, int x1, int x2, const void* pColor)
+{
+    int iLoopCnt = x2-x1;
+    uint16_t* pWrite = ((uint16_t*)pLine);
+    const float color = *(uint16_t*)pColor;
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = x1; i < x2; i++)
+    {
+        float fMinDist;
+        CalcNearestPointOnPloygon(Point2f(i, y), av2ContourVertices, nullptr, nullptr, &fMinDist);
+        const float factor = fMinDist < fFeatherSize ? fMinDist/fFeatherSize : 1.0f;
+        pWrite[i] = (uint16_t)(color*factor);
+    }
+}
+
+static void FeatherFillHLineF32(const vector<Point2f>& av2ContourVertices, float fFeatherSize, int y, uint8_t* pLine, int x1, int x2, const void* pColor)
+{
+    int iLoopCnt = x2-x1;
+    float* pWrite = ((float*)pLine);
+    const float color = *(float*)pColor;
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = x1; i < x2; i++)
+    {
+        float fMinDist;
+        CalcNearestPointOnPloygon(Point2f(i, y), av2ContourVertices, nullptr, nullptr, &fMinDist);
+        const float factor = fMinDist < fFeatherSize ? fMinDist/fFeatherSize : 1.0f;
+        pWrite[i] = color*factor;
+    }
+}
+
+static void
+FillEdgeCollectionWithFeatherEffect(ImGui::ImMat& img, vector<_PolyEdge>& edges, const void* pColor, const vector<Point2f>& av2ContourVertices, float fFeatherSize)
+{
+    const ImDataType eDtype = img.type;
+    if (eDtype != IM_DT_INT8 && eDtype != IM_DT_INT16 && eDtype != IM_DT_FLOAT32)
+        throw runtime_error("INVALID data type!");
+    function<void(const vector<Point2f>&,float,int,uint8_t*,int,int,const void*)> fnHLine;
+    if (eDtype == IM_DT_INT8)
+        fnHLine = FeatherFillHLineU8;
+    else if (eDtype == IM_DT_INT16)
+        fnHLine = FeatherFillHLineU16;
+    else if (eDtype == IM_DT_FLOAT32)
+        fnHLine = FeatherFillHLineF32;
+
+    _PolyEdge tmp;
+    int i, y, total = (int)edges.size();
+    Size2i size(img.w, img.h);
+    _PolyEdge* e;
+    int y_max = INT_MIN, y_min = INT_MAX;
+    int64_t x_max = 0xFFFFFFFFFFFFFFFF, x_min = 0x7FFFFFFFFFFFFFFF;
+    if( total < 2 )
+        return;
+
+    for (i = 0; i < total; i++)
+    {
+        const auto& e1 = edges[i];
+        assert(e1.y0 < e1.y1);
+        // Determine x-coordinate of the end of the edge.
+        // (This is not necessary x-coordinate of any vertex in the array.)
+        int64_t x1 = e1.x + (e1.y1 - e1.y0) * e1.dx;
+        y_min = std::min(y_min, e1.y0);
+        y_max = std::max(y_max, e1.y1);
+        x_min = std::min(x_min, e1.x);
+        x_max = std::max(x_max, e1.x);
+        x_min = std::min(x_min, x1);
+        x_max = std::max(x_max, x1);
+    }
+
+    if (y_max < 0 || y_min >= size.y || x_max < 0 || x_min >= ((int64_t)size.x<<XY_SHIFT))
+        return;
+
+    std::sort(edges.begin(), edges.end(), _CmpEdges());
+
+    // start drawing
+    tmp.y0 = INT_MAX;
+    edges.push_back(tmp); // after this point we do not add
+                          // any elements to edges, thus we can use pointers
+    i = 0;
+    tmp.next = 0;
+    e = &edges[i];
+    y_max = std::min(y_max, size.y);
+
+    for (y = e->y0; y < y_max; y++)
+    {
+        _PolyEdge *last, *prelast, *keep_prelast;
+        int draw = 0;
+        int clipline = y < 0;
+
+        prelast = &tmp;
+        last = tmp.next;
+        while (last || e->y0 == y)
+        {
+            if (last && last->y1 == y)
+            {
+                // exclude edge if y reaches its lower point
+                prelast->next = last->next;
+                last = last->next;
+                continue;
+            }
+            keep_prelast = prelast;
+            if (last && (e->y0 > y || last->x < e->x))
+            {
+                // go to the next edge in active list
+                prelast = last;
+                last = last->next;
+            }
+            else if (i < total)
+            {
+                // insert new edge into active list if y reaches its upper point
+                prelast->next = e;
+                e->next = last;
+                prelast = e;
+                e = &edges[++i];
+            }
+            else
+                break;
+
+            if (draw)
+            {
+                if (!clipline)
+                {
+                    // convert x's from fixed-point to image coordinates
+                    int x1, x2;
+                    if (keep_prelast->x > prelast->x)
+                    {
+                        x1 = (int)((prelast->x+XY_ONE-1) >> XY_SHIFT);
+                        x2 = (int)((keep_prelast->x+(XY_ONE-1)) >> XY_SHIFT);
+                    }
+                    else
+                    {
+                        x1 = (int)((keep_prelast->x+XY_ONE-1) >> XY_SHIFT);
+                        x2 = (int)((prelast->x+XY_ONE-1) >> XY_SHIFT);
+                    }
+
+                    // clip and draw the line
+                    if (x1 < size.x && x2 >= 0)
+                    {
+                        if (x1 < 0)
+                            x1 = 0;
+                        if (x2 >= size.x)
+                            x2 = size.x-1;
+                        uint8_t* pLine = (uint8_t*)img.data+y*img.w*img.elemsize;
+                        fnHLine(av2ContourVertices, fFeatherSize, y, pLine, x1, x2, pColor);
+                    }
+                }
+                keep_prelast->x += keep_prelast->dx;
+                prelast->x += prelast->dx;
+            }
+            draw ^= 1;
+        }
+
+        // sort edges (using bubble sort)
+        keep_prelast = 0;
+
+        do
+        {
+            prelast = &tmp;
+            last = tmp.next;
+            _PolyEdge *last_exchange = 0;
+
+            while (last != keep_prelast && last->next != 0)
+            {
+                _PolyEdge *te = last->next;
+
+                // swap edges
+                if (last->x > te->x)
+                {
+                    prelast->next = te;
+                    last->next = te->next;
+                    te->next = last;
+                    prelast = te;
+                    last_exchange = prelast;
+                }
+                else
+                {
+                    prelast = last;
+                    last = te;
+                }
+            }
+            if (last_exchange == NULL)
+                break;
+            keep_prelast = last_exchange;
+        } while (keep_prelast != tmp.next && keep_prelast != &tmp);
+    }
+}
+
 ImGui::ImMat MakeColor(ImDataType eDtype, double dColorVal)
 {
     ImGui::ImMat color;
@@ -977,7 +1180,7 @@ void DrawPolygon(ImGui::ImMat& img, const vector<Point2f>& aContourVertices, con
 
 ImGui::ImMat Contour2Mask(
         const vector<Point2f>& av2ContourVertices, const Size2i& szMaskSize, const Point2f& v2ContourOffset,
-        ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled)
+        ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled, float fFeatherSize)
 {
     ImGui::ImMat mask;
     mask.create_type((int)szMaskSize.x, (int)szMaskSize.y, dtMaskDataType);
@@ -1039,10 +1242,21 @@ ImGui::ImMat Contour2Mask(
     Point2l ptContourOffset((int64_t)((double)v2ContourOffset.x*dFixPointScalar), (int64_t)((double)v2ContourOffset.y*dFixPointScalar));
     vector<_PolyEdge> edges;
     mask.dims = 3; // wyvern: to pass the assertion in ImMat::draw_line()
-    CollectPolyEdges(mask, aptPolyVertices, edges, color.data, iLineType, ptContourOffset, iFixPointShit);
+    if (fFeatherSize <= 0)
+        CollectPolyEdges(mask, aptPolyVertices, edges, color.data, iLineType, ptContourOffset, iFixPointShit);
+    else
+    {
+        ImGui::ImMat nonMaskColor = MakeColor(mask.type, dNonMaskValue);
+        CollectPolyEdges(mask, aptPolyVertices, edges, nonMaskColor.data, iLineType, ptContourOffset, iFixPointShit);
+    }
     mask.dims = 2;
     if (bFilled)
-        FillEdgeCollection(mask, edges, color.data);
+    {
+        if (fFeatherSize <= 0)
+            FillEdgeCollection(mask, edges, color.data);
+        else
+            FillEdgeCollectionWithFeatherEffect(mask, edges, color.data, av2ContourVertices, fFeatherSize);
+    }
     return mask;
 }
 
