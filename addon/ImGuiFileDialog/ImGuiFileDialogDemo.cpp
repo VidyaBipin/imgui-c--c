@@ -238,11 +238,11 @@ void show_file_dialog_demo_window(ImGuiFileDialog * dlg, bool * open)
 		{
 			dlg->OpenDialog("ChooseFileDlgKey",	ICON_IGFD_FOLDER_OPEN " Choose a File", ".*", ".", "", 1, nullptr, flags);
 		}
-		//if (ImGui::Button(ICON_IGFD_SAVE " Save File Dialog with a custom pane"))
-		//{
-		//	dlg->OpenDialog("ChooseFileDlgKey", "Choose File", ".cpp,.h,.hpp",
-		//		".", "", std::bind(&InfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 350, 1, IGFDUserDatas("InfosPane"));
-		//}
+		if (ImGui::Button(ICON_IGFD_SAVE " Save File Dialog with a custom pane"))
+		{
+			dlg->OpenDialogWithPane("ChooseFileDlgKey", "Choose File", ".cpp,.h,.hpp",
+				".", "", std::bind(&InfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 350, 1, IGFDUserDatas("InfosPane"));
+		}
 		if (ImGui::Button(ICON_IGFD_SAVE " Save File Dialog with Confirm Dialog For Overwrite File if exist"))
 		{
 			const char* filters = "C/C++ File (*.c *.cpp){.c,.cpp}, Header File (*.h){.h}";

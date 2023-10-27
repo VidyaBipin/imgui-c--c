@@ -83,14 +83,14 @@ struct info_s
   int opaque;                           /* paint white shapes opaquely? */
   int grouping;                         /* 0=flat; 1=connected components; 2=hierarchical */
   // mkimg
-  int highpass;   /* use highpass filter? */
-  double lambda;  /* highpass filter radius */
-  int lowpass;    /* use lowpass filter? */
-  double lambda1; /* lowpass filter radius */
+  double lambda_high;                   /* highpass filter radius */
+  double lambda_low;                    /* lowpass filter radius */
   int scale;      /* scaling factor */
   int linear;     /* linear scaling? */
   int bilevel;    /* convert to bilevel? */
   double level;   /* cutoff grey level */
+  // debug
+  int draw_dot;   /* draw dot for debug*/
 };
 typedef struct info_s info_t;
 

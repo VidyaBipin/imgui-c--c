@@ -42,6 +42,39 @@ static void mem_path(potrace_curve_t *curve, trans_t t, render_t *rm)
     }
 }
 
+static void mem_point(potrace_curve_t *curve, trans_t t, render_t *rm)
+{
+    dpoint_t *c, c1[3];
+    int i;
+    int m = curve->n;
+
+    c = curve->c[m - 1];
+    c1[2] = trans(c[2], t);
+    render_dot(rm, c1[2].x, c1[2].y);
+
+    for (i = 0; i < m; i++)
+    {
+        c = curve->c[i];
+        switch (curve->tag[i])
+        {
+        case POTRACE_CORNER:
+            c1[1] = trans(c[1], t);
+            c1[2] = trans(c[2], t);
+            render_dot(rm, c1[1].x, c1[1].y);
+            render_dot(rm, c1[2].x, c1[2].y);
+            break;
+        case POTRACE_CURVETO:
+            c1[0] = trans(c[0], t);
+            c1[1] = trans(c[1], t);
+            c1[2] = trans(c[2], t);
+            render_dot(rm, c1[0].x, c1[0].y);
+            render_dot(rm, c1[1].x, c1[1].y);
+            render_dot(rm, c1[2].x, c1[2].y);
+            break;
+        }
+    }
+}
+
 int page_mem(void *out, potrace_path_t *plist, imginfo_t *imginfo)
 {
     potrace_path_t *p;
@@ -80,7 +113,10 @@ int page_mem(void *out, potrace_path_t *plist, imginfo_t *imginfo)
     gm_clear(gm, 255); /* white */
     list_forall(p, plist)
     {
-        mem_path(&p->curve, t, rm);
+        if (info.draw_dot)
+            mem_point(&p->curve, t, rm);
+        else
+            mem_path(&p->curve, t, rm);
     }
 
     render_close(rm);

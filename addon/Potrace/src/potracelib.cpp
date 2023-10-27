@@ -329,165 +329,6 @@ void calc_dimensions(imginfo_t *imginfo, potrace_path_t *plist, int* width, int*
   if (height) *height = (int)ceil(t.bb[1]);
 }
 
-/* apply lowpass filter (an approximate Gaussian blur) to greymap.
-   Lambda is the standard deviation of the kernel of the filter (i.e.,
-   the approximate filter radius). */
-void lowpass(greymap_t *gm, double lambda)
-{
-  double f, g;
-  double c, d;
-  double B;
-  int x, y;
-
-  if (gm->h == 0 || gm->w == 0)
-  {
-    return;
-  }
-
-  /* calculate filter coefficients from given lambda */
-  B = 1 + 2 / (lambda * lambda);
-  c = B - sqrt(B * B - 1);
-  d = 1 - c;
-
-  for (y = 0; y < gm->h; y++)
-  {
-    /* apply low-pass filter to row y */
-    /* left-to-right */
-    f = g = 0;
-    for (x = 0; x < gm->w; x++)
-    {
-      f = f * c + GM_UGET(gm, x, y) * d;
-      g = g * c + f * d;
-      GM_UPUT(gm, x, y, g);
-    }
-
-    /* right-to-left */
-    for (x = gm->w - 1; x >= 0; x--)
-    {
-      f = f * c + GM_UGET(gm, x, y) * d;
-      g = g * c + f * d;
-      GM_UPUT(gm, x, y, g);
-    }
-
-    /* left-to-right mop-up */
-    for (x = 0; x < gm->w; x++)
-    {
-      f = f * c;
-      g = g * c + f * d;
-      if (f + g < 1 / 255.0)
-      {
-        break;
-      }
-      GM_UPUT(gm, x, y, GM_UGET(gm, x, y) + g);
-    }
-  }
-
-  for (x = 0; x < gm->w; x++)
-  {
-    /* apply low-pass filter to column x */
-    /* bottom-to-top */
-    f = g = 0;
-    for (y = 0; y < gm->h; y++)
-    {
-      f = f * c + GM_UGET(gm, x, y) * d;
-      g = g * c + f * d;
-      GM_UPUT(gm, x, y, g);
-    }
-
-    /* top-to-bottom */
-    for (y = gm->h - 1; y >= 0; y--)
-    {
-      f = f * c + GM_UGET(gm, x, y) * d;
-      g = g * c + f * d;
-      GM_UPUT(gm, x, y, g);
-    }
-
-    /* bottom-to-top mop-up */
-    for (y = 0; y < gm->h; y++)
-    {
-      f = f * c;
-      g = g * c + f * d;
-      if (f + g < 1 / 255.0)
-      {
-        break;
-      }
-      GM_UPUT(gm, x, y, GM_UGET(gm, x, y) + g);
-    }
-  }
-}
-
-/* apply highpass filter to greymap. Return 0 on success, 1 on error
-   with errno set. */
-int highpass(greymap_t *gm, double lambda)
-{
-  greymap_t *gm1;
-  double f;
-  int x, y;
-
-  if (gm->h == 0 || gm->w == 0)
-  {
-    return 0;
-  }
-
-  /* create a copy */
-  gm1 = gm_dup(gm);
-  if (!gm1)
-  {
-    return 1;
-  }
-
-  /* apply lowpass filter to the copy */
-  lowpass(gm1, lambda);
-
-  /* subtract copy from original */
-  for (y = 0; y < gm->h; y++)
-  {
-    for (x = 0; x < gm->w; x++)
-    {
-      f = GM_UGET(gm, x, y);
-      f -= GM_UGET(gm1, x, y);
-      f += 128; /* normalize! */
-      GM_UPUT(gm, x, y, f);
-    }
-  }
-  gm_free(gm1);
-  return 0;
-}
-
-/* Convert greymap to bitmap by using cutoff threshold c (0=black,
-   1=white). On error, return NULL with errno set. */
-void *threshold(greymap_t *gm, double c)
-{
-  int w, h;
-  potrace_bitmap_t *bm_out = NULL;
-  double c1;
-  int x, y;
-  double p;
-
-  w = gm->w;
-  h = gm->h;
-
-  /* allocate output bitmap */
-  bm_out = bm_new(w, h);
-  if (!bm_out)
-  {
-    return NULL;
-  }
-
-  /* thresholding */
-  c1 = c * 255;
-
-  for (y = 0; y < h; y++)
-  {
-    for (x = 0; x < w; x++)
-    {
-      p = GM_UGET(gm, x, y);
-      BM_UPUT(bm_out, x, y, p < c1);
-    }
-  }
-  return (void *)bm_out;
-}
-
 /* scale greymap by factor s, using linear interpolation. If
    bilevel=0, return a pointer to a greymap_t. If bilevel=1, return a
    pointer to a potrace_bitmap_t and use cutoff threshold c (0=black,
@@ -759,6 +600,13 @@ void init_info()
   info.opaque = 0;
   info.grouping = 1;
   info.fillcolor = 0xffffff;
+  info.lambda_high = 0;                     /* highpass filter radius */
+  info.lambda_low = 0;                      /* lowpass filter radius */
+  info.scale = 2;                           /* scaling factor */
+  info.linear = 0;                          /* linear scaling? */
+  info.bilevel = 1;                         /* convert to bilevel? */
+  info.level = 0.45;                        /* cutoff grey level */
+  info.draw_dot = 0;
 }
 
 static backend_t backend[] = {

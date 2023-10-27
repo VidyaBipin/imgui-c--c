@@ -1719,17 +1719,6 @@ target_link_libraries(
     potrace_test
     imgui
 )
-
-add_executable(
-    mkbitmap
-    addon/Potrace/test/mkbitmap.cpp
-    addon/Potrace/test/bitmap_io.cpp
-    addon/Potrace/test/bitmap_io.h
-)
-target_link_libraries(
-    mkbitmap
-    imgui
-)
 endif()
 
 get_directory_property(hasParent PARENT_DIRECTORY)
