@@ -1,8 +1,5 @@
 #include <stdio.h>
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
-
+#include <stdint.h>
 #include "bitmap_io.h"
 
 #define STB_IMAGE_IMPLEMENTATION

@@ -3,10 +3,7 @@
 #include <math.h>
 #include <errno.h>
 #include <stddef.h>
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
-
+#include <stdint.h>
 #include "greymap.h"
 #include "bitops.h"
 
