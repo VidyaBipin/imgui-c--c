@@ -861,6 +861,17 @@ set(IMGUI_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImMaskCreator/Include
 )
 
+# Dither
+add_subdirectory(addon/Dither)
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/Dither/inc
+)
+set(LINK_LIBS
+    ${LINK_LIBS}
+    ${DITHER_LIBRARYS}
+)
+
 # ImGuiFileDialog
 set(IMGUI_SRC
     ${IMGUI_SRC}
