@@ -52,6 +52,8 @@ set(DITHER_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/inc
 )
 
+include_directories(${DITHER_INC_DIRS})
+
 if (BUILD_DITHER_STATIC)
 set(LIBRARY STATIC)
 else(BUILD_DITHER_STATIC)
@@ -71,7 +73,6 @@ set_target_properties(dither PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
 if (BUILD_DITHER_TEST)
-include_directories(${DITHER_INC_DIRS})
 add_executable(
     dither_test
     test/test.c
