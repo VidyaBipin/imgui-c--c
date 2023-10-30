@@ -137,6 +137,14 @@ static void incrow(render_t *rm, int x, int y, int b)
   }
 }
 
+/* render a dot point */
+void render_dot(render_t *rm, double x, double y)
+{
+  int xi = (int)floor(x);
+  int yi = (int)floor(y);
+  GM_UPUT(rm->gm, xi, yi, 1);
+}
+
 /* render a straight line */
 void render_lineto(render_t *rm, double x2, double y2)
 {

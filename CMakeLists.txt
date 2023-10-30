@@ -861,6 +861,17 @@ set(IMGUI_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImMaskCreator/Include
 )
 
+# Dither
+add_subdirectory(addon/Dither)
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/Dither/inc
+)
+set(LINK_LIBS
+    ${LINK_LIBS}
+    ${DITHER_LIBRARYS}
+)
+
 # ImGuiFileDialog
 set(IMGUI_SRC
     ${IMGUI_SRC}
@@ -1717,17 +1728,6 @@ add_executable(
 )
 target_link_libraries(
     potrace_test
-    imgui
-)
-
-add_executable(
-    mkbitmap
-    addon/Potrace/test/mkbitmap.cpp
-    addon/Potrace/test/bitmap_io.cpp
-    addon/Potrace/test/bitmap_io.h
-)
-target_link_libraries(
-    mkbitmap
     imgui
 )
 endif()

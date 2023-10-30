@@ -61,9 +61,6 @@ int gm_read(FILE *f, greymap_t **gmp);
 int gm_writepgm(FILE *f, greymap_t *gm, const char *comment, int raw, int mode, double gamma);
 int gm_print(FILE *f, greymap_t *gm);
 
-void lowpass(greymap_t *gm, double lambda);
-int highpass(greymap_t *gm, double lambda);
-void *threshold(greymap_t *gm, double c);
 void *interpolate_linear(greymap_t *gm, int s, int bilevel, double c);
 void *interpolate_cubic(greymap_t *gm, int s, int bilevel, double c);
 

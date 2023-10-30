@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include <float.h>
 #include <assert.h>
 #include <iostream>
 #include <memory>
@@ -603,6 +604,12 @@ public:
     void draw_circle(ImPoint p, float r, ImPixel color);
     void draw_circle(float x, float y, float r, float t, ImPixel color);
     void draw_circle(ImPoint p, float r, float t, ImPixel color);
+
+    // simple filters for gray
+    ImMat lowpass(float lambda);
+    ImMat highpass(float lambda);
+    ImMat threshold(float thres);
+
     // copy to
     void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);
     
@@ -5207,6 +5214,114 @@ inline void ImMat::draw_circle(float x1, float y1, float r, float t, ImPixel col
 inline void ImMat::draw_circle(ImPoint p, float r, float t, ImPixel color)
 {
     draw_circle(p.x, p.y, r, t, color);
+}
+
+
+inline ImMat ImMat::lowpass(float lambda)
+{
+    assert(dims == 2);
+    assert(w > 0 && h > 0);
+    ImMat m = clone();
+    if (lambda < FLT_EPSILON)
+        return m;
+    float B = 1 + 2 / (lambda * lambda);
+    float c = B - sqrt(B * B - 1);
+    float d = 1 - c;
+    for (int y = 0; y < h; y++)
+    {
+        /* apply low-pass filter to row y */
+        /* left-to-right */
+        float f = 0, g = 0;
+        for (int x = 0; x < w; x++)
+        {
+            f = f * c + (float)m.at<uint8_t>(x, y) * d;
+            g = g * c + f * d;
+            m.at<uint8_t>(x, y) = (uint8_t)g;
+        }
+        /* right-to-left */
+        for (int x = w - 1; x >= 0; x--)
+        {
+            f = f * c + (float)m.at<uint8_t>(x, y) * d;
+            g = g * c + f * d;
+            m.at<uint8_t>(x, y) = (uint8_t)g;
+        }
+
+        /* left-to-right mop-up */
+        for (int x = 0; x < w; x++)
+        {
+            f = f * c;
+            g = g * c + f * d;
+            if (f + g < 1 / 255.0) break;
+            m.at<uint8_t>(x, y) = (uint8_t)((float)m.at<uint8_t>(x, y) + g);
+        }
+    }
+    for (int x = 0; x < w; x++)
+    {
+        /* apply low-pass filter to column x */
+        /* bottom-to-top */
+        float f = 0, g = 0;
+        for (int y = 0; y < h; y++)
+        {
+            f = f * c + (float)m.at<uint8_t>(x, y) * d;
+            g = g * c + f * d;
+            m.at<uint8_t>(x, y) = (uint8_t)g;
+        }
+
+        /* top-to-bottom */
+        for (int y = h - 1; y >= 0; y--)
+        {
+            f = f * c + (float)m.at<uint8_t>(x, y) * d;
+            g = g * c + f * d;
+            m.at<uint8_t>(x, y) = (uint8_t)g;
+        }
+
+        /* bottom-to-top mop-up */
+        for (int y = 0; y < h; y++)
+        {
+            f = f * c;
+            g = g * c + f * d;
+            if (f + g < 1 / 255.0) break;
+            m.at<uint8_t>(x, y) = (uint8_t)((float)m.at<uint8_t>(x, y) + g);
+        }
+    }
+    return m;
+}
+
+inline ImMat ImMat::highpass(float lambda)
+{
+    assert(dims == 2);
+    /* apply lowpass filter to the copy */
+    ImMat m = lowpass(lambda);
+    if (lambda < FLT_EPSILON)
+        return m;
+    /* subtract copy from original */
+    for (int y = 0; y < h; y++)
+    {
+        for (int x = 0; x < w; x++)
+        {
+            float f = (float)at<uint8_t>(x, y);
+            f -= (float)m.at<uint8_t>(x, y);
+            f += 128; /* normalize! */
+            m.at<uint8_t>(x, y) = (uint8_t)f;
+        }
+    }
+    return m;
+}
+
+inline ImMat ImMat::threshold(float thres)
+{
+    assert(dims == 2);
+    ImMat m = clone();
+    float _thres = thres * 255;
+    for (int y = 0; y < h; y++)
+    {
+        for (int x = 0; x < w; x++)
+        {
+            float p = (float)at<uint8_t>(x, y);
+            m.at<uint8_t>(x, y) = p < _thres ? 0 : 255;
+        }
+    }
+    return ImMat();
 }
 
 inline void ImMat::copy_to(ImMat & mat, ImPoint offset, float alpha)

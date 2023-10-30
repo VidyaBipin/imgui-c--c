@@ -18,6 +18,7 @@ void render_free(render_t *rm);
 void render_close(render_t *rm);
 void render_moveto(render_t *rm, double x, double y);
 void render_lineto(render_t *rm, double x, double y);
+void render_dot(render_t *rm, double x, double y);
 void render_curveto(render_t *rm, double x2, double y2, double x3, double y3, double x4, double y4);
 
 #endif /* RENDER_H */
