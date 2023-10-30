@@ -609,6 +609,7 @@ public:
     ImMat lowpass(float lambda);
     ImMat highpass(float lambda);
     ImMat threshold(float thres);
+    ImMat resize(float factor);     // interpolate_linear
 
     // copy to
     void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);
@@ -5322,6 +5323,43 @@ inline ImMat ImMat::threshold(float thres)
         }
     }
     return ImMat();
+}
+
+inline ImMat ImMat::resize(float factor)
+{
+    assert(dims == 2);
+    assert(w > 0 && h > 0);
+    assert(factor > 0);
+    ImMat m((int)(w * factor), (int)(h * factor), (size_t)1);
+    /* interpolate */
+    int p00, p01, p10, p11;
+    double xx, yy, av;
+    double p0, p1;
+    for (int i = 0; i < w; i++)
+    {
+        for (int j = 0; j < h; j++)
+        {
+            p00 = at<int8_t>(i, j);
+            p01 = at<int8_t>(i, j + 1);
+            p10 = at<int8_t>(i + 1, j);
+            p11 = at<int8_t>(i + 1, j + 1);
+
+            /* the general case */
+            for (int x = 0; x < factor; x++)
+            {
+                xx = x / (double)factor;
+                p0 = p00 * (1 - xx) + p10 * xx;
+                p1 = p01 * (1 - xx) + p11 * xx;
+                for (int y = 0; y < factor; y++)
+                {
+                    yy = y / (double)factor;
+                    av = p0 * (1 - yy) + p1 * yy;
+                    m.at<int8_t>(i * factor + x, j * factor + y) = av;
+                }
+            }
+        }
+    }
+    return m;
 }
 
 inline void ImMat::copy_to(ImMat & mat, ImPoint offset, float alpha)

@@ -44,6 +44,12 @@ MODULE_API void DitherImage_set_pixel(DitherImage* self, int x, int y, int r, in
     }
 }
 
+MODULE_API void DitherImage_set_pixel_gray(DitherImage* self, int x, int y, int v) {
+    if(x < self -> width && y < self -> height) {
+        self->buffer[y * self->width + x] = v / 255.0;
+    }
+}
+
 MODULE_API double DitherImage_get_pixel(DitherImage* self, int x, int y) {
     /* returns greyscale pixel value in linear color space in the range 0.0 - 1.0 */
     if(x < self -> width && y < self -> height)

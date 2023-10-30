@@ -90,6 +90,8 @@ MODULE_API DitherImage* DitherImage_new(int width, int height);
 MODULE_API void DitherImage_free(DitherImage* self);
 /* Sets a pixel; r, g and b are sRGB color values in the range 0 - 255 */
 MODULE_API void DitherImage_set_pixel(DitherImage* self, int x, int y, int r, int g, int b, bool correct_gamma);
+/* Sets a pixel; gray color values in the range 0 - 255 */
+MODULE_API void DitherImage_set_pixel_gray(DitherImage* self, int x, int y, int v);
 /* Returns a pixel. Returned pixels are in linear color space in the value range 0.0 - 1.0 */
 MODULE_API double DitherImage_get_pixel(DitherImage* self, int x, int y);
 
