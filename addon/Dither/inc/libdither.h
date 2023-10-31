@@ -99,7 +99,7 @@ typedef enum ordered_type : int
 /* Uses the ordered dither algorithm to dither an image.
  * type: an OrderedDitherMatrix which determines how the image will be dithered
  * sigma: introduces jitter to the dither output to make it appear less regular. Recommended range 0.0 - 0.2 */
-IMGUI_API void ordered_dither(const ImGui::ImMat& img, const OD_TYPE type, float sigma, ImGui::ImMat& out, int step = 0, ImVec4 param = {});
+IMGUI_API void ordered_dither(const ImGui::ImMat& img, const OD_TYPE type, float sigma, ImGui::ImMat& out, const ImGui::ImMat& noise = {}, int step = 0, ImVec4 param = {});
 
 /* ******************************** */
 /* **** DOT DIFFUSION DITHERER **** */

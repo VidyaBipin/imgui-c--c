@@ -71,20 +71,19 @@ if (NOT BUILD_DITHER_STATIC)
 set_target_properties(dither PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
-#if (BUILD_DITHER_TEST)
-#add_executable(
-#    dither_test
-#    test/test.c
-#    test/bmp.c
-#    test/bmp.h
-#)
-#
-#target_link_libraries(
-#    dither_test
-#    dither
-#)
-#
-#endif(BUILD_DITHER_TEST)
+if (BUILD_DITHER_TEST)
+add_executable(
+    dither_test
+    test/test.cpp
+    test/bmp.cpp
+    test/bmp.h
+)
+
+target_link_libraries(
+    dither_test
+    dither
+)
+endif(BUILD_DITHER_TEST)
 
 get_directory_property(hasParent PARENT_DIRECTORY)
 if(hasParent)

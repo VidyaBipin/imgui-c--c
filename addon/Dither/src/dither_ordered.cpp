@@ -72,21 +72,19 @@ static OrderedDitherMatrix* get_magic4x4_matrix() { return OrderedDitherMatrix_n
 static OrderedDitherMatrix* get_magic6x6_matrix() { return OrderedDitherMatrix_new(6, 6, 37.0, magic6x6_matrix); }
 static OrderedDitherMatrix* get_magic8x8_matrix() { return OrderedDitherMatrix_new(8, 8, 65.0, magic8x8_matrix); }
 
-/*
-static OrderedDitherMatrix* get_matrix_from_image(const DitherImage* img) {
+static OrderedDitherMatrix* get_matrix_from_image(const ImGui::ImMat& img) {
     // convert an image into a dither matrix. E.g. for using noise textures
-    int* matrix = (int*)calloc(img->width * img->height, sizeof(int));
-    for(int y = 0; y < img->height; y++) {
-        for (int x = 0; x < img->width; x++) {
-            size_t addr = y * img->width + x;
-            matrix[addr] = (int)round(img->buffer[addr] * INT_MAX);
+    int* matrix = (int*)calloc(img.w * img.h, sizeof(int));
+    for(int y = 0; y < img.h; y++) {
+        for (int x = 0; x < img.w; x++) {
+            size_t addr = y * img.w + x;
+            matrix[addr] = (int)round(img.at<uint8_t>(x, y) / 255.0 * INT_MAX);
         }
     }
-    OrderedDitherMatrix* m = OrderedDitherMatrix_new(img->width, img->height, INT_MAX, matrix);
+    OrderedDitherMatrix* m = OrderedDitherMatrix_new(img.w, img.h, INT_MAX, matrix);
     free(matrix);
     return m;
 }
-*/
 
 static OrderedDitherMatrix* get_interleaved_gradient_noise(int size, double a, double b, double c) {
     int* matrix = (int*)calloc(size * size, sizeof(int));
@@ -170,7 +168,7 @@ static void ordered_dither(const ImGui::ImMat& img, const OrderedDitherMatrix* m
     free(dmatrix);
 }
 
-void ordered_dither(const ImGui::ImMat& img, const OD_TYPE type, float sigma, ImGui::ImMat& out, int step, ImVec4 param)
+void ordered_dither(const ImGui::ImMat& img, const OD_TYPE type, float sigma, ImGui::ImMat& out, const ImGui::ImMat& noise, int step, ImVec4 param)
 {
     OrderedDitherMatrix* om = nullptr;
     switch (type)
@@ -218,7 +216,7 @@ void ordered_dither(const ImGui::ImMat& img, const OD_TYPE type, float sigma, Im
         case OD_VARIABLE_2X2 : om = get_variable_2x2_matrix(step); break;
         case OD_VARIABLE_4X4 : om = get_variable_4x4_matrix(step); break;
         case OD_INTERLEAVED_GRADIENT_NOISE : om = get_interleaved_gradient_noise(step, param.x, param.y, param.z); break;
-        //case OD_MATRIX_FROM_IMAGE : om = get_matrix_from_image(); break; // TODO::Dicky
+        case OD_MATRIX_FROM_IMAGE : om = get_matrix_from_image(noise); break; // TODO::Dicky
         default: break;
     }
     ordered_dither(img, om, sigma, out);
