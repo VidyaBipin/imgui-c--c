@@ -48,6 +48,8 @@ IMGUI_API void ImUpdateTextures(); // update internal textures, check need destr
 IMGUI_API void ImDestroyTextures(); // clean internal textures
 IMGUI_API size_t ImGetTextureCount();
 
+void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, ImVec2 size, float* offset_x = nullptr, float* offset_y = nullptr, float* tf_x = nullptr, float* tf_y = nullptr, bool bLandscape = true, bool out_border = false, const ImVec2& uvMin = ImVec2(0, 0), const ImVec2& uvMax = ImVec2(1, 1));
+
 // Experimental: tested on Ubuntu only. Should work with urls, folders and files.
 IMGUI_API bool OpenWithDefaultApplication(const char* url,bool exploreModeForWindowsOS=false);
 
