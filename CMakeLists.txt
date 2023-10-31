@@ -839,6 +839,8 @@ set(IMGUI_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/misc/freetype
 )
 
+include_directories(${IMGUI_INC_DIRS})
+
 # ImVulkanShader
 if(IMGUI_VULKAN_SHADER)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})

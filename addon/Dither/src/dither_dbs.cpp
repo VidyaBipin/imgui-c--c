@@ -8,17 +8,21 @@
 #define M_PI (3.14159265358979323846)
 #endif
 
-typedef struct Private_DoubleMatrix Matrix;
+struct Matrix {
+    double* buffer;  // buffer for flat matrix array
+    int width;
+    int height;
+};
 
-Matrix* Matrix_new(int width, int height) {
-    Matrix* self = calloc(1, sizeof(Matrix));
+static Matrix* Matrix_new(int width, int height) {
+    Matrix* self = (Matrix*)calloc(1, sizeof(Matrix));
     self->buffer = (double*)calloc(width * height, sizeof(double));
     self->width = width;
     self->height = height;
     return self;
 }
 
-void Matrix_free(Matrix* self) {
+static void Matrix_free(Matrix* self) {
     if(self) {
         free(self->buffer);
         free(self);
@@ -26,7 +30,7 @@ void Matrix_free(Matrix* self) {
     }
 }
 
-void conv2d(const Matrix* matrix, const Matrix* kernel, Matrix** out) {
+static void conv2d(const Matrix* matrix, const Matrix* kernel, Matrix** out) {
     /* Same function as scipy.correlate2d(matrix, kernel, mode='full') or xcorr2 in Matlab */
     int kw = kernel->width;      // kernel width
     int kh = kernel->height;     // kernel height
@@ -49,7 +53,7 @@ void conv2d(const Matrix* matrix, const Matrix* kernel, Matrix** out) {
     }
 }
 
-void get_cep(const DitherImage* img, int width, int height, int v, Matrix** cpp, Matrix** cep) {
+static void get_cep(const ImGui::ImMat& img, int width, int height, int v, Matrix** cpp, Matrix** cep) {
     const int fs = 7;
     double c = 0.0;
     double d = (fs - 1.0) / 6.0;
@@ -92,7 +96,7 @@ void get_cep(const DitherImage* img, int width, int height, int v, Matrix** cpp,
     Matrix* err = Matrix_new(width, height);
     for(int y = 0, i = 0; y < height; y++) {
         for(int x = 0; x < width; x++, i++) {
-            err->buffer[i] = 0.0 - img->buffer[i];
+            err->buffer[i] = 0.0 - img.at<uint8_t>(x, y) / 255.0; //img->buffer[i];
         }
     }
     conv2d(err, *cpp, cep);
@@ -100,7 +104,7 @@ void get_cep(const DitherImage* img, int width, int height, int v, Matrix** cpp,
     Matrix_free(err);
 }
 
-MODULE_API void dbs_dither(const DitherImage* img, int v, uint8_t* out) {
+void dbs_dither(const ImGui::ImMat& img, int v, ImGui::ImMat& out) {
     /*
      * DBS dithering. Ported and adapted from Sankar Srinivasan's DBS ditherer (https://github.com/SankarSrin)
      * parameter v: 0 - 6. choose between 7 functions for matrix generation. The higher the number the coarser the output dither.
@@ -108,28 +112,28 @@ MODULE_API void dbs_dither(const DitherImage* img, int v, uint8_t* out) {
     Matrix* cep = NULL;
     Matrix* cpp = NULL;
     const int half_cpp_size = 6;
-    get_cep(img,img->width, img->height, v, &cpp, &cep);
-    int8_t* dst = (int8_t*)calloc(img->width * img->height, sizeof(int8_t));
+    get_cep(img, img.w, img.h, v, &cpp, &cep);
+    int8_t* dst = (int8_t*)calloc(img.w * img.h, sizeof(int8_t));
     while(1) {
         int count_b = 0;
-        for(int i = 0; i < img->height; i++) {
-            for(int j = 0; j < img->width; j++) {
+        for(int i = 0; i < img.h; i++) {
+            for(int j = 0; j < img.w; j++) {
                 int8_t a0c = 0, a1c = 0, cpx = 0, cpy = 0;
                 double eps_min = 0.0;
                 for(int8_t y = -1; y <= 1; y++) {
-                    if(i + y < 0 || i + y >= img->height)
+                    if(i + y < 0 || i + y >= img.h)
                         continue;
                     for(int8_t x = -1; x <= 1; x++) {
                         int8_t a1 = 0, a0 = 0;
                         double eps = 0.0;
-                        if(j + x < 0 || j + x >= img->width)
+                        if(j + x < 0 || j + x >= img.w)
                             continue;
-                        size_t addr = i * img->width + j;
+                        size_t addr = i * img.w + j;
                         if(y == 0 && x == 0) {
                             a1 = 0;
                             a0 = dst[addr] == 1? -1 : 1;
                         } else {
-                            if(dst[(i + y) * img->width + (j + x)] != dst[addr]) {
+                            if(dst[(i + y) * img.w + (j + x)] != dst[addr]) {
                                 a0 = dst[addr] == 1? -1 : 1;
                                 a1 = (int8_t)-a0;
                             } else {
@@ -160,8 +164,8 @@ MODULE_API void dbs_dither(const DitherImage* img, int v, uint8_t* out) {
                         for(int x = -half_cpp_size; x <= half_cpp_size; x++)
                             cep->buffer[(half_cpp_size + i + y + cpy) * cep->width + (half_cpp_size + j + x + cpx)] +=
                                     (cpp->buffer[(half_cpp_size + y) * cpp->width + (half_cpp_size + x)] * a1c);
-                    dst[i * img->width + j] = (int8_t)(dst[i * img->width + j] + a0c);
-                    dst[(i + cpy) * img->width + (j + cpx)] = (int8_t)(dst[(i + cpy) * img->width + (j + cpx)] + a1c);
+                    dst[i * img.w + j] = (int8_t)(dst[i * img.w + j] + a0c);
+                    dst[(i + cpy) * img.w + (j + cpx)] = (int8_t)(dst[(i + cpy) * img.w + (j + cpx)] + a1c);
                     count_b++;
                 }
             }
@@ -169,9 +173,14 @@ MODULE_API void dbs_dither(const DitherImage* img, int v, uint8_t* out) {
         if(count_b == 0)
             break;
     }
-    for(size_t i = 0; i < (size_t)(img->width * img->height); i++)
-        if(dst[i] == 1)
-            out[i] = 0xff;
+    for (int y = 0; y < img.h; y++)
+    {
+        for (int x = 0; x < img.w; x++)
+        {
+            size_t addr = y * img.w + x;
+            if(dst[addr] == 1) out.at<uint8_t>(x, y) = 0xFF;
+        }
+    }
     free(dst);
     Matrix_free(cpp);
     Matrix_free(cep);

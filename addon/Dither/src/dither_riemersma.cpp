@@ -8,10 +8,24 @@
 
 const int MAX_ITER = 20; // maximum iterations for curve generation
 
-MODULE_API RiemersmaCurve* RiemersmaCurve_new(int base, int add_adjust, int exp_adjust, const char* axiom, int rule_count, const char* rules[], const char* keys, const int orientation[2], enum AdjustCurve adjust) {
+struct RiemersmaCurve {
+    char* axiom;
+    char** rules;
+    char* keys;
+    int orientation[2];
+    int base;
+    int add_adjust;
+    int exp_adjust;
+    int rule_count;
+    int adjust;
+};
+
+enum AdjustCurve{center_none, center_x, center_y, center_xy};
+
+static RiemersmaCurve* RiemersmaCurve_new(int base, int add_adjust, int exp_adjust, const char* axiom, int rule_count, const char* rules[], const char* keys, const int orientation[2], enum AdjustCurve adjust) {
     /* Initializes a new space filling curve but does not generate it yet.
      * Use the create_curve function to actually generate the curve. */
-    RiemersmaCurve* self = calloc(1, sizeof(RiemersmaCurve));
+    RiemersmaCurve* self = (RiemersmaCurve*)calloc(1, sizeof(RiemersmaCurve));
     self->axiom = (char*)calloc(strlen(axiom) + 1, sizeof(char));
     strcpy(self->axiom, axiom);
     self->rules = (char**)calloc(rule_count, sizeof(char*));
@@ -37,7 +51,7 @@ MODULE_API RiemersmaCurve* RiemersmaCurve_new(int base, int add_adjust, int exp_
     return self;
 }
 
-MODULE_API void RiemersmaCurve_free(RiemersmaCurve* self) {
+static void RiemersmaCurve_free(RiemersmaCurve* self) {
     if(self) {
         for(int i = 0; i < self->rule_count; i++)
             free(self->rules[i]);
@@ -49,16 +63,16 @@ MODULE_API void RiemersmaCurve_free(RiemersmaCurve* self) {
     }
 }
 
-MODULE_API RiemersmaCurve* get_hilbert_curve() { return RiemersmaCurve_new(2, 0, 0, hilbert_axiom, 2, hilbert_rules, hilbert_keys, hilbert_orientation, center_none); }
-MODULE_API RiemersmaCurve* get_hilbert_mod_curve() { return RiemersmaCurve_new(2, 0, 1, hilbert_mod_axiom, 2, hilbert_mod_rules, hilbert_mod_keys, hilbert_mod_orientation, center_x); }
-MODULE_API RiemersmaCurve* get_peano_curve() { return RiemersmaCurve_new(3, 0, 0, peano_axiom, 2, peano_rules, peano_keys, peano_orientation, center_none); }
-MODULE_API RiemersmaCurve* get_fass0_curve() { return RiemersmaCurve_new(4, 0, 0, fass0_axiom, 2, fass0_rules, fass0_keys, fass0_orientation, center_none); }
-MODULE_API RiemersmaCurve* get_fass1_curve() { return RiemersmaCurve_new(3, 0, 0, fass1_axiom, 2, fass1_rules, fass1_keys, fass1_orientation, center_none); }
-MODULE_API RiemersmaCurve* get_fass2_curve() { return RiemersmaCurve_new(4, 0, 0, fass2_axiom, 2, fass2_rules, fass2_keys, fass2_orientation, center_none); }
-MODULE_API RiemersmaCurve* get_gosper_curve() { return RiemersmaCurve_new(5, -1, 0, gosper_axiom, 2, gosper_rules, gosper_keys, gosper_orientation, center_none); }
-MODULE_API RiemersmaCurve* get_fass_spiral_curve() { return RiemersmaCurve_new(3, 0, 0, fass_spiral_axiom, 3, fass_spiral_rules, fass_spiral_keys, fass_spiral_orientation, center_xy); }
+static RiemersmaCurve* get_hilbert_curve() { return RiemersmaCurve_new(2, 0, 0, hilbert_axiom, 2, hilbert_rules, hilbert_keys, hilbert_orientation, center_none); }
+static RiemersmaCurve* get_hilbert_mod_curve() { return RiemersmaCurve_new(2, 0, 1, hilbert_mod_axiom, 2, hilbert_mod_rules, hilbert_mod_keys, hilbert_mod_orientation, center_x); }
+static RiemersmaCurve* get_peano_curve() { return RiemersmaCurve_new(3, 0, 0, peano_axiom, 2, peano_rules, peano_keys, peano_orientation, center_none); }
+static RiemersmaCurve* get_fass0_curve() { return RiemersmaCurve_new(4, 0, 0, fass0_axiom, 2, fass0_rules, fass0_keys, fass0_orientation, center_none); }
+static RiemersmaCurve* get_fass1_curve() { return RiemersmaCurve_new(3, 0, 0, fass1_axiom, 2, fass1_rules, fass1_keys, fass1_orientation, center_none); }
+static RiemersmaCurve* get_fass2_curve() { return RiemersmaCurve_new(4, 0, 0, fass2_axiom, 2, fass2_rules, fass2_keys, fass2_orientation, center_none); }
+static RiemersmaCurve* get_gosper_curve() { return RiemersmaCurve_new(5, -1, 0, gosper_axiom, 2, gosper_rules, gosper_keys, gosper_orientation, center_none); }
+static RiemersmaCurve* get_fass_spiral_curve() { return RiemersmaCurve_new(3, 0, 0, fass_spiral_axiom, 3, fass_spiral_rules, fass_spiral_keys, fass_spiral_orientation, center_xy); }
 
-int get_rule_size(char *rule, char rule_key[], int rule_count) {
+static int get_rule_size(char *rule, char rule_key[], int rule_count) {
     /* A helper function for allocating memory for the generated curve */
     int rule_size = 0;
     size_t rule_len = strlen(rule);
@@ -73,7 +87,7 @@ int get_rule_size(char *rule, char rule_key[], int rule_count) {
     return rule_size;
 }
 
-MODULE_API char* create_curve(RiemersmaCurve* curve, int width, int height, int* curve_dim) {
+static char* create_curve(RiemersmaCurve* curve, int width, int height, int* curve_dim) {
     /* creates a space filling curve */
     // determine iterations required
     int iterations = -1;
@@ -128,7 +142,7 @@ MODULE_API char* create_curve(RiemersmaCurve* curve, int width, int height, int*
     return axiom;
 }
 
-void riemersma_dither(const DitherImage* img, RiemersmaCurve* rcurve, bool use_riemersma, uint8_t* out) {
+static void riemersma_dither(const ImGui::ImMat& img, RiemersmaCurve* rcurve, bool use_riemersma, ImGui::ImMat& out) {
     /* Riemersma dither. Uses a space filling curve to distribute the dithering error.
      * parameter use_riemersma: when true, uses a slightly modified version of the Riemersma calculations which may
      *                          improve dithering results
@@ -137,7 +151,7 @@ void riemersma_dither(const DitherImage* img, RiemersmaCurve* rcurve, bool use_r
     int err_len = use_riemersma? 16 : 8;
     Queue* q_err = Queue_new(err_len);
     // set up weights
-    double* weights = calloc(err_len, sizeof(double));
+    double* weights = (double*)calloc(err_len, sizeof(double));
     if(use_riemersma) {  // original riemersma algorithm
         double m = exp(log((float)max) / (float)(err_len - 1));
         double v = 1.0;
@@ -157,7 +171,7 @@ void riemersma_dither(const DitherImage* img, RiemersmaCurve* rcurve, bool use_r
     }
     // generate curve
     int curve_dim;
-    char* curve = create_curve(rcurve, img->width, img->height, &curve_dim);
+    char* curve = create_curve(rcurve, img.w, img.h, &curve_dim);
     char* c = curve;
     // position - some curves must be centered in relation to the image
     float xc = (rcurve->adjust == 1 || rcurve->adjust == 2)? 0.5 : 0;
@@ -173,23 +187,23 @@ void riemersma_dither(const DitherImage* img, RiemersmaCurve* rcurve, bool use_r
         if (*c == 'F') {
             x += rx;
             y += ry;
-            if (x >= 0 && y >= 0 && x < img->width && y < img->height) {
-                size_t addr = y * img->width + x;
+            if (x >= 0 && y >= 0 && x < img.w && y < img.h) {
+                size_t addr = y * img.w + x;
                 double err = 0.0;
                 for(int i = 0; i < err_len; i++) {
                     err += q_err->queue[i] * (double)weights[i];
                 }
                 Queue_rotate(q_err);
-                double p = img->buffer[addr];
+                double p = img.at<uint8_t>(x, y) / 255.0;
                 if(use_riemersma) {  // original riemersma algorithm
                     if(p + err / max > 0.5) {
-                        out[addr] = 0xff;
+                        out.at<uint8_t>(x, y) = 0xFF;
                         q_err->queue[err_len - 1] = p - 1.0;
                     } else
                         q_err->queue[err_len - 1] = p;
                 } else {  // modified riemersma algorithm
                     if(err + p > 0.5) {
-                        out[addr] = 0xff;
+                        out.at<uint8_t>(x, y) = 0xFF;
                         q_err->queue[err_len - 1] = err + p - 1.0;
                     } else
                         q_err->queue[err_len - 1] = err + p;
@@ -205,4 +219,23 @@ void riemersma_dither(const DitherImage* img, RiemersmaCurve* rcurve, bool use_r
     free(weights);
     free(curve);
     Queue_delete(q_err);
+}
+
+void riemersma_dither(const ImGui::ImMat& img, const RD_TYPE type, bool use_riemersma, ImGui::ImMat& out)
+{
+    RiemersmaCurve* rc = nullptr;
+    switch (type)
+    {
+        case RD_HILBERT_CURVE: rc = get_hilbert_curve(); break;
+        case RD_HILBERTMOD_CURVE: rc = get_hilbert_mod_curve(); break;
+        case RD_PEANO_CURVE: rc = get_peano_curve(); break;
+        case RD_FASS0_CURVE: rc = get_fass0_curve(); break;
+        case RD_FASS1_CURVE: rc = get_fass1_curve(); break;
+        case RD_FASS2_CURVE: rc = get_fass2_curve(); break;
+        case RD_GOSPER_CURVE: rc = get_gosper_curve(); break;
+        case RD_FASS_SPIRAL: rc = get_fass_spiral_curve(); break;
+        default: break;
+    }
+    riemersma_dither(img, rc, use_riemersma, out);
+    RiemersmaCurve_free(rc);
 }

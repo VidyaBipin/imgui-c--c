@@ -5220,6 +5220,7 @@ inline void ImMat::draw_circle(ImPoint p, float r, float t, ImPixel color)
 
 inline ImMat ImMat::lowpass(float lambda)
 {
+    assert(device == IM_DD_CPU);
     assert(dims == 2);
     assert(w > 0 && h > 0);
     ImMat m = clone();
@@ -5290,6 +5291,7 @@ inline ImMat ImMat::lowpass(float lambda)
 
 inline ImMat ImMat::highpass(float lambda)
 {
+    assert(device == IM_DD_CPU);
     assert(dims == 2);
     /* apply lowpass filter to the copy */
     ImMat m = lowpass(lambda);
@@ -5311,6 +5313,7 @@ inline ImMat ImMat::highpass(float lambda)
 
 inline ImMat ImMat::threshold(float thres)
 {
+    assert(device == IM_DD_CPU);
     assert(dims == 2);
     ImMat m = clone();
     float _thres = thres * 255;
