@@ -21,10 +21,12 @@ void grid_dither(const ImGui::ImMat& img, int w, int h, int min_pixels, bool alt
         for(int x = 0; x < img.w; x += grid_width) {
             float sum_intensity = 0.0;
             int samplecount = 0;
-            for (int yy = 0; yy < grid_height; yy++)
-                for (int xx = 0; xx < grid_width; xx++, samplecount++)
+            for (int yy = 0; yy < grid_height; yy++) {
+                for (int xx = 0; xx < grid_width; xx++, samplecount++) {
                     if (y + yy < img.h && x + xx < img.w)
-                        sum_intensity += img.at<uint8_t>(x + xx, y + yy) / 255.0;//img->buffer[(y + yy) * img->width + x + xx];
+                        sum_intensity += img.at<uint8_t>(x + xx, y + yy) / 255.0;
+                }
+            }
 
             float avg_intensity = sum_intensity / (float)samplecount;
             float n = pow((1.0 - avg_intensity) * max_pixels, 2.0) / ((float)samplecount / 4.0);
@@ -40,7 +42,7 @@ void grid_dither(const ImGui::ImMat& img, int w, int h, int min_pixels, bool alt
                         int yr = rand() % (grid_height);
                         if(o[yr * grid_width + xr] == 0) {
                             if(x + xr < img.w && y + yr < img.h)
-                                out.at<uint8_t>(x + xr, y + yr) = 0;// out[(y + yr) * img->width + x + xr] = 0;
+                                out.at<uint8_t>(x + xr, y + yr) = 0;
                             o[yr * grid_width + xr] = 1;
                             c++;
                             break;
@@ -55,7 +57,7 @@ void grid_dither(const ImGui::ImMat& img, int w, int h, int min_pixels, bool alt
                     int xx = x + (rand() % (MIN(x + grid_width, img.w) - x));
                     int yy = y + (rand() % (MIN(y + grid_height, img.h) - y));
                     if (xx < img.w && yy < img.h)
-                        out.at<uint8_t>(xx, yy) = 0;// out[yy * img.w + xx] = 0;
+                        out.at<uint8_t>(xx, yy) = 0;
                 }
             }
         }

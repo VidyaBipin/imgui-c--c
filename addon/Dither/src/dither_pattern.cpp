@@ -49,12 +49,14 @@ static void pattern_dither(const ImGui::ImMat& img, const TilePattern *pattern, 
     double* cur = (double*)calloc(tile_size, sizeof(double));
     double* diffusion = (double*)calloc(tile_size, sizeof(double));
     double init_diffusion = 1.0 / (float)(tile_size);
+    #pragma omp parallel for num_threads(OMP_THREADS)
     for(int i = 0; i < tile_size; i++)
         diffusion[i] = init_diffusion;
     // dither
     for(int y = 0; y < height; y++) {
         for(int x = 0; x < width; x++) {
             // get block
+            #pragma omp parallel for num_threads(OMP_THREADS)
             for(int ty = 0; ty < th; ty++)
                 for(int tx = 0; tx < tw; tx++)
                     cur[ty * tw + tx] = img.at<uint8_t>(x * tw + tx, y * th + ty) / 255.0;
@@ -78,6 +80,7 @@ static void pattern_dither(const ImGui::ImMat& img, const TilePattern *pattern, 
                     best_tile = n;
                 }
             }
+            #pragma omp parallel for num_threads(OMP_THREADS)
             for(int ty = 0; ty < th; ty++)
                 for(int tx = 0; tx < tw; tx++)
                     if(pattern->buffer[best_tile * tile_size + (ty * tw + tx)] == 1)

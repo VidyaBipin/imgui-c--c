@@ -94,6 +94,7 @@ static void dot_diffusion_dither(const ImGui::ImMat& img, const DotDiffusionMatr
             PHash_insert(lut, cmatrix->buffer[y * blocksize + x], Point_new(x, y));
 
     double* orig_img = (double*)calloc(img.w * img.h, sizeof(double));
+    #pragma omp parallel for num_threads(OMP_THREADS)
     for (int y = 0; y < img.h; y++)
     {
         for (int x = 0; x < img.w; x++)
@@ -106,6 +107,7 @@ static void dot_diffusion_dither(const ImGui::ImMat& img, const DotDiffusionMatr
     int pixel_no[9];
     double pixel_weight[9];
     int yyend = (int)ceil((double)img.h / (double)blocksize);
+    #pragma omp parallel for num_threads(OMP_THREADS)
     for(int yy = 0; yy < yyend; yy++) {
         int ofs_y = yy * blocksize;
         int xxend = (int)ceil((double)img.w / (double)blocksize);

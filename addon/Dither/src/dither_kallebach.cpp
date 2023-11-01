@@ -30,6 +30,7 @@ void kallebach_dither(const ImGui::ImMat& img, bool random, ImGui::ImMat& out) {
                         current_index = 0;
                 }
                 if(current_index != left_index && current_index != upper_index) {
+                    #pragma omp parallel for num_threads(OMP_THREADS)
                     for(int m = 0; m < dither_array_size; m++) {
                         for(int n = 0; n < dither_array_size; n++) {
                             int im = i + m;

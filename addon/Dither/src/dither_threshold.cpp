@@ -49,6 +49,7 @@ void threshold_dither(const ImGui::ImMat&  img, double threshold, double noise, 
      * noise: amount of noise / randomness in pixel placement
      * */
     threshold = (0.5 * noise + threshold * (1.0 - noise));
+    #pragma omp parallel for num_threads(OMP_THREADS)
     for(int y = 0; y < img.h; y++) {
         for(int x = 0; x < img.w; x++) {
             double px = img.at<uint8_t>(x, y) / 255.0;

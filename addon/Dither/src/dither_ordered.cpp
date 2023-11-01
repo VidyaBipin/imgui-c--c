@@ -151,18 +151,19 @@ static void ordered_dither(const ImGui::ImMat& img, const OrderedDitherMatrix* m
     int matrix_size = matrix->width * matrix->height;
     float* dmatrix = (float*)calloc((size_t)matrix_size, sizeof(float));
     float divisor = 1.0 / matrix->divisor;
+    #pragma omp parallel for num_threads(OMP_THREADS)
     for(int i = 0; i < matrix_size; i++) {
         dmatrix[i] = (double)matrix->buffer[i] * divisor - 0.5;
     }
-
+    #pragma omp parallel for num_threads(OMP_THREADS)
     for(int y = 0; y < img.h; y++) {
         for(int x = 0; x < img.w; x++) {
-            float px = img.at<uint8_t>(x, y) / 255.f;// img->buffer[addr];
+            float px = img.at<uint8_t>(x, y) / 255.f;
             px += dmatrix[(y % matrix->height) * matrix->width + (x % matrix->width)];
             if(sigma > 0.0)
                 px += box_muller(sigma, 0.5) - 0.5;
             if(px > 0.5)
-                out.at<uint8_t>(x, y) = 0xFF; //out[addr] = 0xff;
+                out.at<uint8_t>(x, y) = 0xFF;
         }
     }
     free(dmatrix);

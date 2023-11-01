@@ -98,6 +98,7 @@ static void error_diffusion_dither(const ImGui::ImMat& img,
     }
     // do the error diffusion...
     float* buffer = (float* )calloc((size_t)(img.w * img.h), sizeof(float));
+    #pragma omp parallel for num_threads(OMP_THREADS)
     for(int y = 0; y < img.h; y++) {
         for (int x = 0; x < img.w; x++)
         {
@@ -132,6 +133,7 @@ static void error_diffusion_dither(const ImGui::ImMat& img,
                 err -= 1.0;
             }
             err /= m->divisor;
+            #pragma omp parallel for num_threads(OMP_THREADS)
             for(int g = 0; g < matrix_length; g++) {
                 int xx = x + m_offset_x[g + matrix_length * direction];
                 if(-1 < xx && xx < img.w) {

@@ -39,6 +39,7 @@ static void conv2d(const Matrix* matrix, const Matrix* kernel, Matrix** out) {
     int ow = mw + kw - 1;        // out width
     int oh = mh + kh - 1;        // out height
     *out = Matrix_new(ow, oh);
+    #pragma omp parallel for num_threads(OMP_THREADS)
     for(int oy = 0; oy < oh; oy++) {
         for(int ox = 0; ox < ow; ox++) {
             for(int ky = 0; ky < kh; ky++) {
@@ -116,6 +117,7 @@ void dbs_dither(const ImGui::ImMat& img, int v, ImGui::ImMat& out) {
     int8_t* dst = (int8_t*)calloc(img.w * img.h, sizeof(int8_t));
     while(1) {
         int count_b = 0;
+        #pragma omp parallel for num_threads(OMP_THREADS)
         for(int i = 0; i < img.h; i++) {
             for(int j = 0; j < img.w; j++) {
                 int8_t a0c = 0, a1c = 0, cpx = 0, cpy = 0;
@@ -173,6 +175,7 @@ void dbs_dither(const ImGui::ImMat& img, int v, ImGui::ImMat& out) {
         if(count_b == 0)
             break;
     }
+    #pragma omp parallel for num_threads(OMP_THREADS)
     for (int y = 0; y < img.h; y++)
     {
         for (int x = 0; x < img.w; x++)

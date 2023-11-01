@@ -941,7 +941,13 @@ void ShowImKalmanDemoWindow()
     static int measurement_noise_covariance_pow = 1;
     static ImKalman kalman(state_size, measurement_size);
     static ImMat measurement;
+    static bool first_step = true;
     measurement.create_type(1, measurement_size, IM_DT_FLOAT32);
+    if (first_step)
+    {
+        kalman.covariance(1.f / (pow(10, noise_covariance_pow)), 1.f / (pow(10, measurement_noise_covariance_pow)));
+        first_step = false;
+    }
 
     //1.kalman previous state
     ImVec2 statePt = ImVec2(kalman.statePre.at<float>(0, 0), kalman.statePre.at<float>(0, 1));

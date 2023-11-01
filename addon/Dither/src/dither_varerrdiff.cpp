@@ -23,6 +23,7 @@ void variable_error_diffusion_dither(const ImGui::ImMat& img, const VD_TYPE type
     } else {  // zhoufang
         coefs = zhoufang_coef;
         divs = zhoufang_divs;
+        #pragma omp parallel for num_threads(OMP_THREADS)
         for(int y = 0; y < img.h; y++) {
             for (int x = 0; x < img.w; x++)
             {
@@ -73,6 +74,7 @@ void variable_error_diffusion_dither(const ImGui::ImMat& img, const VD_TYPE type
             coef_offs = (int) (px * 255.0 + 0.5);
             // distribute the error
             err /= (double)divs[coef_offs];
+            #pragma omp parallel for num_threads(OMP_THREADS)
             for(int i = 0; i < 3; i++) {
                 int xx = x + m_offset_x[direction][i];
                 if(-1 < xx && xx < img.w) {

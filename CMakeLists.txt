@@ -134,7 +134,6 @@ endif()
 
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 find_package(OpenGL)
-
 if (OPENGL_FOUND)
     message("imgui found opengl")
 endif(OPENGL_FOUND)
@@ -236,6 +235,45 @@ set(IMGUI_INC_DIRS
 # base library
 set(LINK_LIBS)
 
+# Apple try to find openmp if we using clang
+if (APPLE)
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp")
+        set(OpenMP_C_INCLUDE_DIR "/usr/local/opt/libomp/include")
+        set(OpenMP_C_LIB_NAMES "omp")
+        set(OpenMP_omp_LIBRARY -L/usr/local/opt/libomp/lib ${OpenMP_C_LIB_NAMES})
+    endif()
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
+        set(OpenMP_CXX_INCLUDE_DIR "/usr/local/opt/libomp/include")
+        set(OpenMP_CXX_LIB_NAMES "omp")
+        set(OpenMP_omp_LIBRARY -L/usr/local/opt/libomp/lib ${OpenMP_CXX_LIB_NAMES})
+    endif()
+endif()
+
+find_package(OpenMP)
+if (APPLE AND OPENMP_FOUND)
+    message(STATUS "imgui(Apple) Use OpenMP")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    include_directories(${OpenMP_CXX_INCLUDE_DIR})
+    set(LINK_LIBS ${LINK_LIBS} ${OpenMP_omp_LIBRARY})
+elseif(OPENMP_FOUND)
+    if(WIN32 OR MINGW)
+        if (NOT IMGUI_STATIC)
+            message(STATUS "imgui(Windows) Use OpenMP")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+            set(LINK_LIBS ${LINK_LIBS} gmp pthread)
+        endif()
+    else()
+        message(STATUS "imgui Use OpenMP")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+        set(LINK_LIBS ${LINK_LIBS} gmp pthread)
+    endif()
+endif()
+
 if(OPENGL_FOUND)
     set(IMGUI_OPENGL ON)
     message(STATUS "    [ImGui with OpenGL support]")
@@ -268,6 +306,7 @@ set(IMGUI_SRC
     imgui_widgets.cpp
     imgui_tables.cpp
     imgui_helper.cpp
+    immat.cpp
     misc/cpp/codewin.cpp
     misc/cpp/imgui_stdlib.cpp
     misc/cpp/dir_iterate.cpp

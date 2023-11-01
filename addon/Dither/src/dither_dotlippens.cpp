@@ -79,6 +79,7 @@ static void dotlippens_dither(const ImGui::ImMat& img, const DotClassMatrix* cla
     int half_size = (int)(((float)coefficients->width - 1.0) / 2.0);
     int n = 0;
     while(n != 256) {
+        #pragma omp parallel for num_threads(OMP_THREADS)
         for(int y = 0; y < img.h; y++) {
             for (int x = 0; x < img.w; x++) {
                 size_t addr = y * img.w + x;
