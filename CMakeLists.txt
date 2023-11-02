@@ -239,15 +239,25 @@ set(LINK_LIBS)
 if (APPLE)
     if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
         set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp")
-        set(OpenMP_C_INCLUDE_DIR "/usr/local/opt/libomp/include")
         set(OpenMP_C_LIB_NAMES "omp")
-        set(OpenMP_omp_LIBRARY -L/usr/local/opt/libomp/lib ${OpenMP_C_LIB_NAMES})
+        if (CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+            set(OpenMP_C_INCLUDE_DIR "/opt/homebrew/opt/libomp/include")
+            set(OpenMP_omp_LIBRARY -L/opt/homebrew/opt/libomp/lib ${OpenMP_C_LIB_NAMES})
+        else()
+            set(OpenMP_C_INCLUDE_DIR "/usr/local/opt/libomp/include")
+            set(OpenMP_omp_LIBRARY -L/usr/local/opt/libomp/lib ${OpenMP_C_LIB_NAMES})
+        endif()
     endif()
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
         set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
-        set(OpenMP_CXX_INCLUDE_DIR "/usr/local/opt/libomp/include")
         set(OpenMP_CXX_LIB_NAMES "omp")
-        set(OpenMP_omp_LIBRARY -L/usr/local/opt/libomp/lib ${OpenMP_CXX_LIB_NAMES})
+        if (CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+            set(OpenMP_CXX_INCLUDE_DIR "/opt/homebrew/opt/libomp/include")
+            set(OpenMP_omp_LIBRARY -L/opt/homebrew/opt/libomp/lib ${OpenMP_CXX_LIB_NAMES})
+        else()
+            set(OpenMP_CXX_INCLUDE_DIR "/usr/local/opt/libomp/include")
+            set(OpenMP_omp_LIBRARY -L/usr/local/opt/libomp/lib ${OpenMP_CXX_LIB_NAMES})
+        endif()
     endif()
 endif()
 
@@ -1728,6 +1738,14 @@ add_executable(
 )
 target_link_libraries(
     immat_test
+    imgui
+)
+add_executable(
+    img2cc
+    misc/tools/img2cc.cpp
+)
+target_link_libraries(
+    img2cc
     imgui
 )
 endif()

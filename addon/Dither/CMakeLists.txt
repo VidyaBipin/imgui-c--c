@@ -27,6 +27,7 @@ SET(DITHER_SOURCE_FILES
     src/dither_riemersma.cpp
     src/dither_pattern.cpp
     src/dither_dotlippens.cpp
+    src/libdither.cpp
     src/hash.cpp
     src/random.cpp
     src/queue.cpp

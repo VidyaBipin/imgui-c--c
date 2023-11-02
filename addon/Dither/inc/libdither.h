@@ -2,6 +2,10 @@
 #include "imgui.h"
 #include "immat.h"
 
+/* returns the version number of this library */
+IMGUI_API const char* libdither_version();
+/* returns internal image data */
+IMGUI_API ImGui::ImMat dither_test_image();
 /* ********************************************* */
 /* **** BOSCH HERMAN INSPIRED GRID DITHERER **** */
 /* ********************************************* */
