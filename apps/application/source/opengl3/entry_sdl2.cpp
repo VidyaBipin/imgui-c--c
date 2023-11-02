@@ -269,7 +269,8 @@ int main(int argc, char** argv)
     io.ApplicationName = property.name.c_str();
     io.Fonts->AddFontDefault(property.font_scale);
     io.FontGlobalScale = 1.0f / property.font_scale;
-    if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
+    if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnablePowerSavingMode;
+    if (property.low_reflash) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
     if (property.navigator)
     {
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;

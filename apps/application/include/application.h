@@ -39,7 +39,8 @@ typedef struct ApplicationWindowProperty
     bool navigator  {true};
     bool auto_merge {true};
     bool center     {true};
-    bool power_save {true};
+    bool power_save {false};
+    bool low_reflash {true};
     bool full_screen{false};
     bool full_size  {false};
     bool using_setting_path {true};
