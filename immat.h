@@ -71,6 +71,13 @@ static inline int IM_XADD(int* addr, int delta)
 }
 #endif
 
+#ifndef IMGUI_API
+#ifdef _WIN32
+#define IMGUI_API __declspec( dllexport )
+#else
+#define IMGUI_API
+#endif
+#endif
 //////////////////////////////////////////////////
 //  memory functions
 /////////////////////////////////////////////////
@@ -585,34 +592,34 @@ public:
     // some draw function only support 3 dims
     // mat default ordination is ncwh
     // if need using nwhc then we need set elempack as elemsize * c
-    void clean(ImPixel color);
-    void get_pixel(int x, int y, ImPixel& color) const;
-    void get_pixel(ImPoint p, ImPixel& color) const;
-    ImPixel get_pixel(int x, int y) const;
-    ImPixel get_pixel(ImPoint p) const;
-    void draw_dot(int x, int y, ImPixel color);
-    void draw_dot(ImPoint p, ImPixel color);
-    void alphablend(int x, int y, float alpha, ImPixel color);
-    void alphablend(int x, int y, ImPixel color);
-    void draw_line(float x1, float y1, float x2, float y2, float t, ImPixel color);
-    void draw_line(ImPoint p1, ImPoint p2, float t, ImPixel color);
-    void draw_line(float x1, float y1, float x2, float y2, ImPixel color);
-    void draw_line(ImPoint p1, ImPoint p2, ImPixel color);
-    void draw_rectangle(float x1, float y1, float x2, float y2, ImPixel color);
-    void draw_rectangle(ImPoint p1, ImPoint p2, ImPixel color);
-    void draw_circle(float x, float y, float r, ImPixel color);
-    void draw_circle(ImPoint p, float r, ImPixel color);
-    void draw_circle(float x, float y, float r, float t, ImPixel color);
-    void draw_circle(ImPoint p, float r, float t, ImPixel color);
+    IMGUI_API void clean(ImPixel color);
+    IMGUI_API void get_pixel(int x, int y, ImPixel& color) const;
+    IMGUI_API void get_pixel(ImPoint p, ImPixel& color) const;
+    IMGUI_API ImPixel get_pixel(int x, int y) const;
+    IMGUI_API ImPixel get_pixel(ImPoint p) const;
+    IMGUI_API void draw_dot(int x, int y, ImPixel color);
+    IMGUI_API void draw_dot(ImPoint p, ImPixel color);
+    IMGUI_API void alphablend(int x, int y, float alpha, ImPixel color);
+    IMGUI_API void alphablend(int x, int y, ImPixel color);
+    IMGUI_API void draw_line(float x1, float y1, float x2, float y2, float t, ImPixel color);
+    IMGUI_API void draw_line(ImPoint p1, ImPoint p2, float t, ImPixel color);
+    IMGUI_API void draw_line(float x1, float y1, float x2, float y2, ImPixel color);
+    IMGUI_API void draw_line(ImPoint p1, ImPoint p2, ImPixel color);
+    IMGUI_API void draw_rectangle(float x1, float y1, float x2, float y2, ImPixel color);
+    IMGUI_API void draw_rectangle(ImPoint p1, ImPoint p2, ImPixel color);
+    IMGUI_API void draw_circle(float x, float y, float r, ImPixel color);
+    IMGUI_API void draw_circle(ImPoint p, float r, ImPixel color);
+    IMGUI_API void draw_circle(float x, float y, float r, float t, ImPixel color);
+    IMGUI_API void draw_circle(ImPoint p, float r, float t, ImPixel color);
 
     // simple filters for gray
-    ImMat lowpass(float lambda);
-    ImMat highpass(float lambda);
-    ImMat threshold(float thres);
-    ImMat resize(float factor);     // interpolate_linear
+    IMGUI_API ImMat lowpass(float lambda);
+    IMGUI_API ImMat highpass(float lambda);
+    IMGUI_API ImMat threshold(float thres);
+    IMGUI_API ImMat resize(float factor);     // interpolate_linear
 
     // copy to
-    void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);
+    IMGUI_API void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);
     
     // release
     void release();
@@ -691,7 +698,7 @@ public:
     };
 
     // debug
-    void print(std::string name = {});
+    IMGUI_API void print(std::string name = {});
 
     // convenient access float vec element
     float& operator[](size_t i);
