@@ -17,29 +17,29 @@ void ImGui::ShowCurveDemo()
     if (rampEdit.GetCurveCount() <= 0)
     {
         auto index_1 = rampEdit.AddCurveByDim("key1", ImGui::ImCurveEdit::Smooth, IM_COL32(255, 0, 0, 255), true, ImGui::ImCurveEdit::DIM_X, -1, 1, 0);
-        rampEdit.AddPointByDim(index_1, ImVec2(size_x * 0.f, 0), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
-        rampEdit.AddPointByDim(index_1, ImVec2(size_x * 0.25f, 0.610f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
-        rampEdit.AddPointByDim(index_1, ImVec2(size_x * 0.5f, 1.0f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
-        rampEdit.AddPointByDim(index_1, ImVec2(size_x * 0.75f, 0.610f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
-        rampEdit.AddPointByDim(index_1, ImVec2(size_x * 1.f, 0.f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
+        rampEdit.AddPointByDim(index_1, ImVec2(size_x * 0.f, 0), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
+        rampEdit.AddPointByDim(index_1, ImVec2(size_x * 0.25f, 0.610f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
+        rampEdit.AddPointByDim(index_1, ImVec2(size_x * 0.5f, 1.0f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
+        rampEdit.AddPointByDim(index_1, ImVec2(size_x * 0.75f, 0.610f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
+        rampEdit.AddPointByDim(index_1, ImVec2(size_x * 1.f, 0.f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
         auto index_2 = rampEdit.AddCurveByDim("key2", ImGui::ImCurveEdit::Smooth, IM_COL32(0, 255, 0, 255), true, ImGui::ImCurveEdit::DIM_X, 0, 1, 0);
-        rampEdit.AddPointByDim(index_2, ImVec2(size_x * 0.f, 1.f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
-        rampEdit.AddPointByDim(index_2, ImVec2(size_x * 0.25f, 0.75f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
-        rampEdit.AddPointByDim(index_2, ImVec2(size_x * 0.5f, 0.5f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
-        rampEdit.AddPointByDim(index_2, ImVec2(size_x * 0.75f, 0.75f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
-        rampEdit.AddPointByDim(index_2, ImVec2(size_x * 1.f, 1.f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
+        rampEdit.AddPointByDim(index_2, ImVec2(size_x * 0.f, 1.f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
+        rampEdit.AddPointByDim(index_2, ImVec2(size_x * 0.25f, 0.75f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
+        rampEdit.AddPointByDim(index_2, ImVec2(size_x * 0.5f, 0.5f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
+        rampEdit.AddPointByDim(index_2, ImVec2(size_x * 0.75f, 0.75f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
+        rampEdit.AddPointByDim(index_2, ImVec2(size_x * 1.f, 1.f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
         auto index_3 = rampEdit.AddCurveByDim("key3", ImGui::ImCurveEdit::Smooth, IM_COL32(0, 0, 255, 255), true, ImGui::ImCurveEdit::DIM_X, 0, 100, 50);
-        rampEdit.AddPointByDim(index_3, ImVec2(size_x * 0.f, 0.f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
-        rampEdit.AddPointByDim(index_3, ImVec2(size_x * 0.25f, 0.05f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
-        rampEdit.AddPointByDim(index_3, ImVec2(size_x * 0.5f, 0.25f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
-        rampEdit.AddPointByDim(index_3, ImVec2(size_x * 0.75f, 0.75f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
-        rampEdit.AddPointByDim(index_3, ImVec2(size_x * 1.f, 1.f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X);
+        rampEdit.AddPointByDim(index_3, ImVec2(size_x * 0.f, 0.f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
+        rampEdit.AddPointByDim(index_3, ImVec2(size_x * 0.25f, 0.05f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
+        rampEdit.AddPointByDim(index_3, ImVec2(size_x * 0.5f, 0.25f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
+        rampEdit.AddPointByDim(index_3, ImVec2(size_x * 0.75f, 0.75f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
+        rampEdit.AddPointByDim(index_3, ImVec2(size_x * 1.f, 1.f), ImGui::ImCurveEdit::Smooth, ImGui::ImCurveEdit::DIM_X, false);
     }
     if (ImGui::Button("Reset##curve_reset"))
         reset = true;
     if (rampEdit.GetMax().x <= 0 || reset)
     {
-        rampEdit.SetMax(ImVec4(1.f, 0.f, 0.f, size_x));
+        rampEdit.SetMax(ImVec4(1.f, 1.f, 1.f, size_x));
         rampEdit.SetMin(ImVec4(0.f, 0.f, 0.f, 0.f));
     }
     ImGui::Checkbox("Value limited", &value_limited); ImGui::SameLine();

@@ -5,26 +5,20 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-const char *bm_read_error = NULL;
-const char *gm_read_error = NULL;
-
 int bm_read(FILE *f, double threshold, potrace_bitmap_t **bmp)
 {
   potrace_bitmap_t *bm;
-  bm_read_error = NULL;
   bm = NULL;
   int width = 0, height = 0, component = 0;
   stbi_uc *data = stbi_load_from_file(f, &width, &height, &component, 3);
   if (!data)
   {
-    bm_read_error = "invalid image file";
     return -1;
   }
   /* allocate bitmap */
   bm = bm_new(width, height);
   if (!bm)
   {
-    bm_read_error = "allocate bitmap failed";
     bm_free(bm);
     stbi_image_free(data);
     return -1;
@@ -49,13 +43,11 @@ int bm_read(FILE *f, double threshold, potrace_bitmap_t **bmp)
 int gray_read(FILE *f, greymap_t **gmp)
 {
   greymap_t *gm;
-  gm_read_error = NULL;
   gm = NULL;
   int width = 0, height = 0, component = 0;
   stbi_uc *data = stbi_load_from_file(f, &width, &height, &component, 3);
   if (!data)
   {
-    gm_read_error = "invalid image file";
     return -1;
   }
 
@@ -63,7 +55,6 @@ int gray_read(FILE *f, greymap_t **gmp)
   gm = gm_new(width, height);
   if (!gm)
   {
-    gm_read_error = "allocate bitmap failed";
     gm_free(gm);
     stbi_image_free(data);
   }

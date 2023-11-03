@@ -803,7 +803,6 @@ static void process_file(backend_t *b, const char *infile, const char *outfile, 
       fprintf(stderr, "" POTRACE ": %s: %s\n", infile, strerror(errno));
       exit(2);
     case -2: /* corrupt file format */
-      fprintf(stderr, "" POTRACE ": %s: file format error: %s\n", infile, bm_read_error);
       exit(2);
     case -3: /* empty file */
       if (count > 0)
@@ -863,7 +862,7 @@ static void process_file(backend_t *b, const char *infile, const char *outfile, 
 
     potrace_state_free(st);
 
-    fprintf(stderr, "" POTRACE ": tracetime:%lldms: save time:%lldms\n", (t1 - t0) / 1000, (t3 - t2) / 1000);
+    fprintf(stderr, "" POTRACE ": tracetime:%fms: save time:%fms\n", (t1 - t0) / 1000.0, (t3 - t2) / 1000.0);
 
     if (eof_flag || !b->multi)
     {
