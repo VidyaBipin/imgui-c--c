@@ -108,9 +108,6 @@ int main(int, char**)
         ImGui_ImplSDLRenderer2_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
-
-        if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
-            ImGui::SetMaxWaitBeforeNextFrame(1.0 / 30.0f);
     
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)

@@ -99,9 +99,6 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
-            ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
-
         auto _splash_done = property.application.Application_SplashScreen(property.handle, done);
         // work around with context assert frame_count
         frame_count ++;
@@ -208,6 +205,7 @@ int main(int argc, char** argv)
     io.FontGlobalScale = 1.0f / property.font_scale;
     if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnablePowerSavingMode;
     if (property.low_reflash) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
+    ImGui::SetMaxFrameRate(property.fps);
     if (property.navigator)
     {
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -345,9 +343,6 @@ int main(int argc, char** argv)
         ImGui_ImplOpenGL2_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
-
-        if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
-            ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
 
         if (property.application.Application_Frame)
             app_done = property.application.Application_Frame(property.handle, done);

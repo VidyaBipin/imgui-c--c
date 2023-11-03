@@ -310,6 +310,11 @@ namespace ImGui
     IMGUI_API void          Render();                                   // ends the Dear ImGui frame, finalize the draw data. You can then get call GetDrawData().
     IMGUI_API ImDrawData*   GetDrawData();                              // valid after Render() and until the next call to NewFrame(). this is what you have to render.
 
+    // Add by Dicky
+    IMGUI_API void          UpdateData();                               // call it if we need force reflash rendering in power saving mode
+    IMGUI_API void          SetMaxFrameRate(double fps);                // set max frame rate in power saving/low flash rate mode
+    // add by Dicky end
+
     // Demo, Debug, Information
     IMGUI_API void          ShowDemoWindow(bool* p_open = NULL);        // create Demo window. demonstrate most ImGui features. call this to learn about the library! try to make it always available in your application!
     IMGUI_API void          ShowMetricsWindow(bool* p_open = NULL);     // create Metrics/Debugger window. display Dear ImGui internals: windows, draw commands, various internal state, etc.
@@ -2351,7 +2356,7 @@ struct ImGuiIO
     int         MouseType;                          // type of current mouse status, 0 = normal, 1 = straw ...
     bool        MouseStrawed;                       // mouse is straw something
     ImVec4      MouseStrawValue;                    // value of mouse straw, usually straw color 
-    int         FrameCountSinceLastInput;           // How many frames since the last input event; a value of 0 indicates that the current frame was triggered by an input.
+    int         FrameCountSinceLastUpdate;          // How many frames since the last update event; a value of 0 indicates that the current frame was triggered by an update.
     ImVector<char> PreEditCharacters;               // IME PreEdit input characters, for MacOS it need show preEdit characters by user
     // Add By Dicky end
     IMGUI_API   ImGuiIO();

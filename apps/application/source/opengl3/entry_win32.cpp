@@ -188,6 +188,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     io.FontGlobalScale = 1.0f / property.font_scale;
     if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnablePowerSavingMode;
     if (property.low_reflash) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
+    ImGui::SetMaxFrameRate(property.fps);
     if (property.navigator)
     {
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -272,9 +273,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
-
-        if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
-            ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
         
         if (property.application.Application_Frame)
             app_done = property.application.Application_Frame(property.handle, done);

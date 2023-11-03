@@ -351,7 +351,7 @@ void ImGui_ImplGlfw_MouseButtonCallback(GLFWwindow* window, int button, int acti
     if (button >= 0 && button < ImGuiMouseButton_COUNT)
         io.AddMouseButtonEvent(button, action == GLFW_PRESS);
     // Add By Dicky
-    io.FrameCountSinceLastInput = 0;
+    io.FrameCountSinceLastUpdate = 0;
     // Add By Dicky end
 }
 
@@ -370,7 +370,7 @@ void ImGui_ImplGlfw_ScrollCallback(GLFWwindow* window, double xoffset, double yo
     // Ignore GLFW events: will be processed in ImGui_ImplEmscripten_WheelCallback().
     return;
 #endif
-    io.FrameCountSinceLastInput = 0;
+    io.FrameCountSinceLastUpdate = 0;
     io.AddMouseWheelEvent(wheel_x, wheel_y);
 }
 // Modify by Dicky end
@@ -425,7 +425,7 @@ void ImGui_ImplGlfw_KeyCallback(GLFWwindow* window, int keycode, int scancode, i
     keycode = ImGui_ImplGlfw_TranslateUntranslatedKey(keycode, scancode);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.FrameCountSinceLastInput = 0; // Add By Dicky
+    io.FrameCountSinceLastUpdate = 0; // Add By Dicky
     ImGuiKey imgui_key = ImGui_ImplGlfw_KeyToImGuiKey(keycode);
     io.AddKeyEvent(imgui_key, (action == GLFW_PRESS));
     io.SetKeyEventNativeData(imgui_key, keycode, scancode); // To support legacy indexing (<1.87 user code)
@@ -488,7 +488,7 @@ void ImGui_ImplGlfw_CharCallback(GLFWwindow* window, unsigned int c)
         bd->PrevUserCallbackChar(window, c);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.FrameCountSinceLastInput = 0; // Add By Dicky
+    io.FrameCountSinceLastUpdate = 0; // Add By Dicky
     io.AddInputCharacter(c);
 }
 

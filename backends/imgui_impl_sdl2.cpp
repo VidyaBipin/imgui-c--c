@@ -336,7 +336,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
 {
     ImGuiIO& io = ImGui::GetIO();
     ImGui_ImplSDL2_Data* bd = ImGui_ImplSDL2_GetBackendData();
-    io.FrameCountSinceLastInput = 0; // Add By Dicky
+    io.FrameCountSinceLastUpdate = 0; // Add By Dicky
 
     switch (event->type)
     {
@@ -352,7 +352,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             }
             io.AddMouseSourceEvent(event->motion.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
             io.AddMousePosEvent(mouse_pos.x, mouse_pos.y);
-            io.FrameCountSinceLastInput = 0; // add By Dicky
+            io.FrameCountSinceLastUpdate = 0; // add By Dicky
             return true;
         }
         case SDL_MOUSEWHEEL:
@@ -371,7 +371,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
 #endif
             io.AddMouseSourceEvent(event->wheel.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
             io.AddMouseWheelEvent(wheel_x, wheel_y);
-            io.FrameCountSinceLastInput = 0; // add By Dicky
+            io.FrameCountSinceLastUpdate = 0; // add By Dicky
             return true;
         }
         case SDL_MOUSEBUTTONDOWN:
@@ -387,7 +387,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
                 break;
             io.AddMouseSourceEvent(event->button.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
             io.AddMouseButtonEvent(mouse_button, (event->type == SDL_MOUSEBUTTONDOWN));
-            io.FrameCountSinceLastInput = 0; // add By Dicky
+            io.FrameCountSinceLastUpdate = 0; // add By Dicky
             bd->MouseButtonsDown = (event->type == SDL_MOUSEBUTTONDOWN) ? (bd->MouseButtonsDown | (1 << mouse_button)) : (bd->MouseButtonsDown & ~(1 << mouse_button));
             return true;
         }
@@ -411,7 +411,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
         {
             io.AddInputCharactersUTF8(event->text.text);
             io.PreEditCharacters.clear(); // clean preedit characters
-            io.FrameCountSinceLastInput = 0; // add By Dicky
+            io.FrameCountSinceLastUpdate = 0; // add By Dicky
             return true;
         }
         case SDL_KEYDOWN:
@@ -426,7 +426,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
                 io.SetKeyEventNativeData(key, event->key.keysym.sym, event->key.keysym.scancode, event->key.keysym.scancode); // To support legacy indexing (<1.87 user code). Legacy backend uses SDLK_*** as indices to IsKeyXXX() functions.
             }
             // modify by Dicky end
-            io.FrameCountSinceLastInput = 0; // add By Dicky
+            io.FrameCountSinceLastUpdate = 0; // add By Dicky
             return true;
         }
 #if SDL_HAS_DISPLAY_EVENT

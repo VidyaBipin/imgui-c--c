@@ -30,9 +30,7 @@ void glut_display_func()
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL2_NewFrame();
     ImGui_ImplGLUT_NewFrame();
-
-    if (io.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
-        ImGui::SetMaxWaitBeforeNextFrame(1.0 / property.fps);
+    ImGui::NewFrame();
     
     if (property.application.Application_Frame)
         app_done = property.application.Application_Frame(property.handle, done);
@@ -102,6 +100,7 @@ int main(int argc, char** argv)
     io.FontGlobalScale = 1.0f / property.font_scale;
     if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnablePowerSavingMode;
     if (property.low_reflash) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
+    ImGui::SetMaxFrameRate(property.fps);
     if (property.navigator)
     {
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;

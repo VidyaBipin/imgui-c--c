@@ -842,7 +842,7 @@ bool Example_Frame(void* handle, bool app_will_quit)
         }
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", ImGui::GetIO().DeltaTime * 1000.f, ImGui::GetIO().Framerate);
-        ImGui::Text("Frames since last input: %d", ImGui::GetIO().FrameCountSinceLastInput);
+        ImGui::Text("Frames since last input: %d", ImGui::GetIO().FrameCountSinceLastUpdate);
         ImGui::Text("Time Date: %s", ImGuiHelper::date_time_string().c_str());
         ImGui::Separator();
         ImGui::Text("User Name: %s", ImGuiHelper::username().c_str());

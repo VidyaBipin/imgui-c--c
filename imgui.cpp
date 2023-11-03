@@ -1397,7 +1397,7 @@ ImGuiIO::ImGuiIO()
     MouseType = 0;
     MouseStrawed = false;
     MouseStrawValue = {};
-    FrameCountSinceLastInput = 0;
+    FrameCountSinceLastUpdate = 0;
     // Add By Dicky end
 }
 
@@ -4855,6 +4855,8 @@ void ImGui::NewFrame()
     // Add By Dicky for Power Saving
     g.MaxWaitBeforeNextFrame = INFINITY;
     g.WallClock = get_current_time();
+    if (g.IO.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
+        ImGui::SetMaxWaitBeforeNextFrame(1.0 / g.FrameFPS);
     // Add By Dicky end
 
     // Calculate frame-rate for the user, as a purely luxurious feature
@@ -5434,7 +5436,7 @@ void ImGui::EndFrame()
     g.FrameCountEnded = g.FrameCount;
 
     // Add By Dicky For Power Save
-    g.IO.FrameCountSinceLastInput++;
+    g.IO.FrameCountSinceLastUpdate++;
     // Add By Dicky end
 
     // Initiate moving window + handle left-click and right-click focus
@@ -5539,6 +5541,22 @@ void ImGui::Render()
 
     CallContextHooks(&g, ImGuiContextHookType_RenderPost);
 }
+
+// Add by Dicky for force reflash screen in power saving mode
+void ImGui::UpdateData()
+{
+    ImGuiContext& g = *GImGui;
+    IM_ASSERT(g.Initialized);
+    //g.IO.FrameCountSinceLastUpdate = 0; // TODO::Dicky disable for now
+}
+
+void ImGui::SetMaxFrameRate(double fps)
+{
+    ImGuiContext& g = *GImGui;
+    IM_ASSERT(g.Initialized);
+    g.FrameFPS = fps;
+}
+// Add by Dicky end
 
 // Calculate text size. Text can be multi-line. Optionally ignore text after a ## marker.
 // CalcTextSize("") should return ImVec2(0.0f, g.FontSize)
@@ -20354,7 +20372,7 @@ double ImGui::GetEventWaitingTime()
         return ImMax(0.0, delta);
     }
 
-    if ((g.IO.ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode) && g.IO.FrameCountSinceLastInput > 2)
+    if ((g.IO.ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode) && g.IO.FrameCountSinceLastUpdate > 2)
         return ImMax(0.0, g.MaxWaitBeforeNextFrame);
 
     return 0.0;
