@@ -2584,34 +2584,33 @@ bool ImGui::DragTimeMS(const char* label, float* p_data, float v_speed, float p_
         MarkItemEdited(id);
 
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
-    char value_buf[64] = {0};
     // print time format string
-    float data = fabs(*p_data);
     bool negative = (*p_data) < 0;
-    uint64_t t = (uint64_t)data;
+    uint64_t t = fabs(*p_data);
     uint32_t milli = (uint32_t)(t%1000); t /= 1000;
     uint32_t sec = (uint32_t)(t%60); t /= 60;
     uint32_t min = (uint32_t)(t%60); t /= 60;
     uint32_t hour = (uint32_t)t;
-    if (hour > 0)
-    {
-        snprintf(value_buf, 64, "%02d:", hour);
-    }
-    snprintf(value_buf, 64, "%s%02u:%02u", value_buf, min, sec);
-    if (decimals == 3)
-        snprintf(value_buf, 64, "%s.%03u", value_buf, milli);
-    else if (decimals == 2)
-        snprintf(value_buf, 64, "%s.%02u", value_buf, milli / 10);
-    else if (decimals == 1)
-        snprintf(value_buf, 64, "%s.%01u", value_buf, milli / 100);
-
+    std::ostringstream ossTime;
     if (negative)
-        snprintf(value_buf, 64, "-%s:", value_buf);
-
-    const char* value_buf_end = value_buf + strlen(value_buf);
+        ossTime << "-";
+    if (hour > 0)
+        ossTime << std::setw(2) << std::setfill('0') << hour << ':';
+    ossTime << std::setw(2) << std::setfill('0') << min << ':' << std::setw(2) << std::setfill('0') << sec;
+    if (decimals > 0 && decimals < 4)
+    {
+        if (decimals == 1)
+            milli /= 100;
+        else if (decimals == 2)
+            milli /= 10;
+        ossTime << "." << std::setw(decimals) << std::setfill('0') << milli;
+    }
+    std::string strTime = ossTime.str();
+    const char* time_str_buf = strTime.c_str();
+    const char* time_str_buf_end = time_str_buf + strTime.length();
     if (g.LogEnabled)
         LogSetNextTextDecoration("{", "}");
-    RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.5f, 0.5f));
+    RenderTextClipped(frame_bb.Min, frame_bb.Max, time_str_buf, time_str_buf_end, NULL, ImVec2(0.5f, 0.5f));
 
     if (label_size.x > 0.0f)
         RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
