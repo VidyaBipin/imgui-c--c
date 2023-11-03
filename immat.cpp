@@ -549,7 +549,7 @@ ImMat ImMat::resize(float factor)
 
             /* the general case */
             #pragma omp parallel for num_threads(OMP_THREADS)
-            for (int x = 0; x < factor; x++)
+            for (int x = 0; x < (int)factor; x++)
             {
                 xx = x / (double)factor;
                 p0 = p00 * (1 - xx) + p10 * xx;
