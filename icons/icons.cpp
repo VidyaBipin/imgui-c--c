@@ -54,6 +54,11 @@ bool ImGui::LoadInternalIcons(ImFontAtlas* atlas, float scale)
     // Code icon
     static const ImWchar code_icons_ranges[] = { ICON_MIN_CI, ICON_MAX_CI, 0 };
 	atlas->AddFontFromMemoryCompressedBase85TTF(Code_compressed_data_base85, icons_size, &icons_config, code_icons_ranges);
-
+#if 0
+    // Lucide icon
+    icons_config.GlyphOffset.y  = scale * 4.0f * IM_FLOOR(icons_config.SizePixels / icons_size);  // Add +4 offset per 16 units
+    static const ImWchar lucide_icons_ranges[] = { ICON_MIN_LC, ICON_MAX_LC, 0 };
+	atlas->AddFontFromMemoryCompressedBase85TTF(lucide_compressed_data_base85, icons_size, &icons_config, lucide_icons_ranges);
+#endif
     return true;
 }

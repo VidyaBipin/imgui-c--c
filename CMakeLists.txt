@@ -873,6 +873,7 @@ if (IMGUI_ICONS)
         icons/kenney.cpp
         icons/StepMath.cpp
         icons/Code.cpp
+        icons/lucide.cpp
     )
     set(IMGUI_INC_DIRS
         ${IMGUI_INC_DIRS}
@@ -1386,7 +1387,7 @@ endif(IMGUI_STATIC)
 
 set(IMGUI_VERSION_MAJOR 1)
 set(IMGUI_VERSION_MINOR 89)
-set(IMGUI_VERSION_PATCH 95)
+set(IMGUI_VERSION_PATCH 97)
 string(TIMESTAMP IMGUI_VERSION_BUILD "%y%m%d")
 set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH})
 add_definitions(-DIMGUI_VERSION_MAJOR=${IMGUI_VERSION_MAJOR})
