@@ -13,7 +13,7 @@ void set_scanline_padding(Bmp* self) {
 }
 
 Bmp* bmp_rgb24(int width, int height) {
-    Bmp* self = calloc(1, sizeof(Bmp));
+    Bmp* self = (Bmp*)calloc(1, sizeof(Bmp));
     self->width = width;
     self->height = height;
     self->bpp = 3; // 3 bytes per pixel for r, g, b (no alpha)
@@ -24,7 +24,7 @@ Bmp* bmp_rgb24(int width, int height) {
 }
 
 Bmp* bmp_load(char* filename) {
-    Bmp* self = calloc(1, sizeof(Bmp));
+    Bmp* self = (Bmp*)calloc(1, sizeof(Bmp));
     struct stat sb;
     if (stat(filename, &sb) == -1) {
         fprintf(stderr, "ERROR: cannot open file %s\n", filename);

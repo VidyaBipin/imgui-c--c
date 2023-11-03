@@ -91,7 +91,7 @@ int main( int _numargs, char** _apszArgh )
 	if( _numargs != 4 )
 	{
 		printf("Usage error: Program need 3 arguments:\n");
-		printf("  png2c <in_file.png> <out_file_base> <symbol_name>\n");
+		printf("  img2c <in_file.png> <out_file_base> <symbol_name>\n");
 		return -1;
 	}
 

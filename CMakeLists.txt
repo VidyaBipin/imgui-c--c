@@ -134,7 +134,6 @@ endif()
 
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 find_package(OpenGL)
-
 if (OPENGL_FOUND)
     message("imgui found opengl")
 endif(OPENGL_FOUND)
@@ -236,6 +235,55 @@ set(IMGUI_INC_DIRS
 # base library
 set(LINK_LIBS)
 
+# Apple try to find openmp if we using clang
+if (APPLE)
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp")
+        set(OpenMP_C_LIB_NAMES "omp")
+        if (CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+            set(OpenMP_C_INCLUDE_DIR "/opt/homebrew/opt/libomp/include")
+            set(OpenMP_omp_LIBRARY -L/opt/homebrew/opt/libomp/lib ${OpenMP_C_LIB_NAMES})
+        else()
+            set(OpenMP_C_INCLUDE_DIR "/usr/local/opt/libomp/include")
+            set(OpenMP_omp_LIBRARY -L/usr/local/opt/libomp/lib ${OpenMP_C_LIB_NAMES})
+        endif()
+    endif()
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
+        set(OpenMP_CXX_LIB_NAMES "omp")
+        if (CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+            set(OpenMP_CXX_INCLUDE_DIR "/opt/homebrew/opt/libomp/include")
+            set(OpenMP_omp_LIBRARY -L/opt/homebrew/opt/libomp/lib ${OpenMP_CXX_LIB_NAMES})
+        else()
+            set(OpenMP_CXX_INCLUDE_DIR "/usr/local/opt/libomp/include")
+            set(OpenMP_omp_LIBRARY -L/usr/local/opt/libomp/lib ${OpenMP_CXX_LIB_NAMES})
+        endif()
+    endif()
+endif()
+
+find_package(OpenMP)
+if (APPLE AND OPENMP_FOUND)
+    message(STATUS "imgui(Apple) Use OpenMP")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    include_directories(${OpenMP_CXX_INCLUDE_DIR})
+    set(LINK_LIBS ${LINK_LIBS} ${OpenMP_omp_LIBRARY})
+elseif(OPENMP_FOUND)
+    if(WIN32 OR MINGW)
+        if (NOT IMGUI_STATIC)
+            message(STATUS "imgui(Windows) Use OpenMP")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+            set(LINK_LIBS ${LINK_LIBS} gmp pthread)
+        endif()
+    else()
+        message(STATUS "imgui Use OpenMP")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+        set(LINK_LIBS ${LINK_LIBS} gmp pthread)
+    endif()
+endif()
+
 if(OPENGL_FOUND)
     set(IMGUI_OPENGL ON)
     message(STATUS "    [ImGui with OpenGL support]")
@@ -268,6 +316,7 @@ set(IMGUI_SRC
     imgui_widgets.cpp
     imgui_tables.cpp
     imgui_helper.cpp
+    immat.cpp
     misc/cpp/codewin.cpp
     misc/cpp/imgui_stdlib.cpp
     misc/cpp/dir_iterate.cpp
@@ -824,6 +873,7 @@ if (IMGUI_ICONS)
         icons/kenney.cpp
         icons/StepMath.cpp
         icons/Code.cpp
+        icons/lucide.cpp
     )
     set(IMGUI_INC_DIRS
         ${IMGUI_INC_DIRS}
@@ -838,6 +888,8 @@ set(IMGUI_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/misc/cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/misc/freetype
 )
+
+include_directories(${IMGUI_INC_DIRS})
 
 # ImVulkanShader
 if(IMGUI_VULKAN_SHADER)
@@ -859,6 +911,17 @@ add_subdirectory(addon/ImMaskCreator)
 set(IMGUI_INC_DIRS
     ${IMGUI_INC_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImMaskCreator/Include
+)
+
+# Potrace
+add_subdirectory(addon/Potrace)
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/Potrace/inc
+)
+set(LINK_LIBS
+    ${LINK_LIBS}
+    ${POTRACE_LIBRARYS}
 )
 
 # Dither
@@ -1176,47 +1239,6 @@ set(IMGUI_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImCoolbar
 )
 
-#Potrace
-set(IMGUI_SRC
-    ${IMGUI_SRC}
-    addon/Potrace/src/backend_dxf.cpp
-    addon/Potrace/src/backend_geojson.cpp
-    addon/Potrace/src/backend_pgm.cpp
-    addon/Potrace/src/backend_svg.cpp
-    addon/Potrace/src/backend_mem.cpp
-    addon/Potrace/src/bbox.cpp
-    addon/Potrace/src/curve.cpp
-    addon/Potrace/src/decompose.cpp
-    addon/Potrace/src/greymap.cpp
-    addon/Potrace/src/potracelib.cpp
-    addon/Potrace/src/render.cpp
-    addon/Potrace/src/trace.cpp
-    addon/Potrace/src/trans.cpp
-)
-
-set(IMGUI_INCS
-    ${IMGUI_INCS}
-    addon/Potrace/inc/potracelib.h
-    addon/Potrace/inc/auxiliary.h
-    addon/Potrace/inc/backend.h
-    addon/Potrace/inc/trans.h
-    addon/Potrace/inc/bitmap.h
-    addon/Potrace/inc/greymap.h
-    addon/Potrace/src/bbox.h
-    addon/Potrace/src/bitops.h
-    addon/Potrace/src/curve.h
-    addon/Potrace/src/decompose.h
-    addon/Potrace/src/lists.h
-    addon/Potrace/src/progress.h
-    addon/Potrace/src/render.h
-    addon/Potrace/src/trace.h
-)
-
-set(IMGUI_INC_DIRS
-    ${IMGUI_INC_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/addon/Potrace/inc
-)
-
 # ZLib
 if(ZLIB_FOUND)
     add_definitions(-DIMGUI_USE_ZLIB)
@@ -1365,7 +1387,7 @@ endif(IMGUI_STATIC)
 
 set(IMGUI_VERSION_MAJOR 1)
 set(IMGUI_VERSION_MINOR 89)
-set(IMGUI_VERSION_PATCH 95)
+set(IMGUI_VERSION_PATCH 97)
 string(TIMESTAMP IMGUI_VERSION_BUILD "%y%m%d")
 set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH})
 add_definitions(-DIMGUI_VERSION_MAJOR=${IMGUI_VERSION_MAJOR})
@@ -1719,15 +1741,12 @@ target_link_libraries(
     immat_test
     imgui
 )
-
 add_executable(
-    potrace_test
-    addon/Potrace/test/main.cpp
-    addon/Potrace/test/bitmap_io.cpp
-    addon/Potrace/test/bitmap_io.h
+    img2cc
+    misc/tools/img2cc.cpp
 )
 target_link_libraries(
-    potrace_test
+    img2cc
     imgui
 )
 endif()

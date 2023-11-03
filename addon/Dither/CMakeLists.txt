@@ -16,35 +16,35 @@ option(BUILD_DITHER_TEST            "Set to ON to build LLama test"  OFF)
 
 ## core library
 SET(DITHER_SOURCE_FILES
-    src/dither_dbs.c
-    src/dither_dotdiff.c
-    src/dither_dotlippens.c
-    src/dither_errordiff.c
-    src/dither_grid.c
-    src/dither_kallebach.c
-    src/dither_ordered.c
-    src/dither_pattern.c
-    src/dither_riemersma.c
-    src/dither_threshold.c
-    src/dither_varerrdiff.c
-    src/ditherimage.c
-    src/gamma.c
-    src/hash.c
-    src/libdither.c
-    src/queue.c
-    src/random.c
+    src/dither_grid.cpp
+    src/dither_errordiff.cpp
+    src/dither_ordered.cpp
+    src/dither_dotdiff.cpp
+    src/dither_varerrdiff.cpp
+    src/dither_threshold.cpp
+    src/dither_dbs.cpp
+    src/dither_kallebach.cpp
+    src/dither_riemersma.cpp
+    src/dither_pattern.cpp
+    src/dither_dotlippens.cpp
+    src/libdither.cpp
+    src/hash.cpp
+    src/random.cpp
+    src/queue.cpp
 )
 
 SET(DITHER_HEADER_FILES
-    src/dither_dotdiff_data.h
-    src/dither_dotlippens_data.h
     src/dither_errordiff_data.h
-    src/dither_kallebach_data.h
     src/dither_ordered_data.h
-    src/dither_pattern_data.h
-    src/dither_riemersma_data.h
+    src/dither_dotdiff_data.h
     src/dither_varerrdiff_data.h
+    src/dither_kallebach_data.h
+    src/dither_riemersma_data.h
+    src/dither_pattern_data.h
+    src/dither_dotlippens_data.h
     src/hash.h
+    src/random.h
+    src/queue.h
     inc/libdither.h
 )
 
@@ -75,8 +75,8 @@ endif()
 if (BUILD_DITHER_TEST)
 add_executable(
     dither_test
-    test/test.c
-    test/bmp.c
+    test/test.cpp
+    test/bmp.cpp
     test/bmp.h
 )
 
@@ -84,7 +84,6 @@ target_link_libraries(
     dither_test
     dither
 )
-
 endif(BUILD_DITHER_TEST)
 
 get_directory_property(hasParent PARENT_DIRECTORY)

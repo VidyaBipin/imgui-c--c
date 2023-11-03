@@ -3,10 +3,10 @@
 
 /* Constructor */
 PHash* PHash_new(int size) {
-    PHash* self = calloc(1, sizeof(PHash));
+    PHash* self = (PHash*)calloc(1, sizeof(PHash));
     self->size = size;
     self->items = 0;
-    self->hashArray = calloc((size_t)size, sizeof(PHashDataItem));
+    self->hashArray = (PHashDataItem**)calloc((size_t)size, sizeof(PHashDataItem));
     return self;
 }
 
@@ -38,7 +38,7 @@ void* PHash_search(const PHash* self, int key) {
 bool PHash_insert(PHash* self, int key, const void* value) {
     if(self->items == self->size)
         return false; // hash is full - cannot insert new items
-    PHashDataItem* item = calloc(1, sizeof(PHashDataItem));
+    PHashDataItem* item = (PHashDataItem*)calloc(1, sizeof(PHashDataItem));
     item->value = (void*)value;
     item->key = key;
     size_t i = key % self->size;

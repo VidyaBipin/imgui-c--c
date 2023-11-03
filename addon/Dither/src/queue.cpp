@@ -1,8 +1,8 @@
 #include "queue.h"
 
 Queue *Queue_new(size_t size) {
-    Queue *self = calloc(1, sizeof(Queue));
-    self->queue = calloc(size, sizeof(double));
+    Queue *self = (Queue *)calloc(1, sizeof(Queue));
+    self->queue = (double*)calloc(size, sizeof(double));
     self->size = size;
     return self;
 }
