@@ -1869,11 +1869,6 @@ static void ShowDemoWindowWidgets()
     {
         static bool animate = true;
         ImGui::Checkbox("Animate", &animate);
-        // Add By Dicky
-        if (animate)
-            ImGui::SetMaxWaitBeforeNextFrame(1.0 / 30.0); // = 30fps
-        // Add By Dicky end
-
         // Plot as lines and plot as histogram
         IMGUI_DEMO_MARKER("Widgets/Plotting/PlotLines, PlotHistogram");
         static float arr[] = { 0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f };

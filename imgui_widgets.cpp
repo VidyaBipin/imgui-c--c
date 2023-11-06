@@ -5029,6 +5029,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             {
                 if (g.IO.ConfigInputTextCursorBlink)
                 {
+                    /*
                     double time_to_transition;
                     if (state->CursorAnim <= 0.0f)
                         time_to_transition = 0.80f - state->CursorAnim;
@@ -5039,6 +5040,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                     // Make sure the next frame starts after the transition.
                     time_to_transition += 0.05f;
                     SetMaxWaitBeforeNextFrame(time_to_transition);
+                    */
                 }
                 if (cursor_is_visible)
                     draw_window->DrawList->AddLine(cursor_screen_rect.Min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text));

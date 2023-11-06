@@ -2540,7 +2540,7 @@ struct ImGuiContext
         ViewportFocusedStampCount = 0;
 
         // Add by Dicky for power saving
-        MaxWaitBeforeNextFrame = INFINITY;
+        MaxWaitBeforeNextFrame = 0.0;
         WallClock = ImGui::get_current_time();
         FrameFPS = 60.0;
         // Add by Dicky end

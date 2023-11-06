@@ -1691,8 +1691,8 @@ enum ImGuiConfigFlags_
     ImGuiConfigFlags_IsTouchScreen          = 1 << 21,  // Application is using a touch screen instead of a mouse.
 
     // Add By Dicky
-    ImGuiConfigFlags_EnablePowerSavingMode  = 1 << 30,   // Instruct imgui to help save power by not starting new frames when there are no user inputs or if the window is known not to be visible (both features require support in the platform binding). Use SetMaxWaitBeforeNextFrame() to let your application request a maximum wait before the next frame, which helps enforce a minimum frame rate (e.g. when playing an animation).
-    ImGuiConfigFlags_EnableLowRefreshMode   = 1 << 31,   // Instruct imgui to help low refresh by not starting new frames when there are no user inputs or if the window is known not to be visible (both features require support in the platform binding). Use SetMaxWaitBeforeNextFrame() to let your application request a maximum wait before the next frame, which helps enforce a minimum frame rate (e.g. when playing an animation).
+    ImGuiConfigFlags_EnablePowerSavingMode  = 1 << 30,   // Instruct imgui to help save power by not starting new frames when there are no user inputs or if the window is known not to be visible (both features require support in the platform binding).
+    ImGuiConfigFlags_EnableLowRefreshMode   = 1 << 31,   // Instruct imgui to help low refresh by not starting new frames when there are no user inputs or if the window is known not to be visible (both features require support in the platform binding).
     // Add By Dicky end
 };
 

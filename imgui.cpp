@@ -4852,11 +4852,12 @@ void ImGui::NewFrame()
     g.TooltipOverrideCount = 0;
     g.WindowsActiveCount = 0;
     g.MenusIdSubmittedThisFrame.resize(0);
+
     // Add By Dicky for Power Saving
-    g.MaxWaitBeforeNextFrame = INFINITY;
+    g.MaxWaitBeforeNextFrame = 0;
     g.WallClock = get_current_time();
     if (g.IO.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
-        ImGui::SetMaxWaitBeforeNextFrame(1.0 / g.FrameFPS);
+        g.MaxWaitBeforeNextFrame = 1.0 / g.FrameFPS;
     // Add By Dicky end
 
     // Calculate frame-rate for the user, as a purely luxurious feature
@@ -5547,7 +5548,7 @@ void ImGui::UpdateData()
 {
     ImGuiContext& g = *GImGui;
     IM_ASSERT(g.Initialized);
-    //g.IO.FrameCountSinceLastUpdate = 0; // TODO::Dicky disable for now
+    g.IO.FrameCountSinceLastUpdate = 0;
 }
 
 void ImGui::SetMaxFrameRate(double fps)
@@ -20369,20 +20370,13 @@ double ImGui::GetEventWaitingTime()
         double current_time = get_current_time();
         double deltaTime = g.WallClock > 0 ? current_time - g.WallClock : g.MaxWaitBeforeNextFrame;
         double delta = g.MaxWaitBeforeNextFrame - deltaTime;
+        if ((g.IO.ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode) && g.IO.FrameCountSinceLastUpdate > 2)
+            delta = INFINITY;
         return ImMax(0.0, delta);
     }
-
-    if ((g.IO.ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode) && g.IO.FrameCountSinceLastUpdate > 2)
+    else if ((g.IO.ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode) && g.IO.FrameCountSinceLastUpdate > 2)
         return ImMax(0.0, g.MaxWaitBeforeNextFrame);
-
     return 0.0;
-}
-
-void ImGui::SetMaxWaitBeforeNextFrame(double time)
-{
-    ImGuiContext& g = *GImGui;
-
-    g.MaxWaitBeforeNextFrame = ImMin(g.MaxWaitBeforeNextFrame, time);
 }
 // Add By Dicky end
 
