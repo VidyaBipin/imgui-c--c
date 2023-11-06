@@ -1337,6 +1337,7 @@ void ImGui_ImplGlfw_WaitForEvent()
 {
     auto flags = ImGui::GetIO().ConfigFlags;
     auto count = ImGui::GetIO().FrameCountSinceLastUpdate;
+    auto delay = ImGui::GetIO().MaxDelayFrameCount;
     if (!(flags & ImGuiConfigFlags_EnablePowerSavingMode) &&
         !(flags & ImGuiConfigFlags_EnableLowRefreshMode))
         return;
@@ -1351,12 +1352,12 @@ void ImGui_ImplGlfw_WaitForEvent()
     }
     else if (flags & ImGuiConfigFlags_EnablePowerSavingMode)
     {
-        if (count <= 2 && (flags & ImGuiConfigFlags_EnableLowRefreshMode))
+        if (count <= delay && (flags & ImGuiConfigFlags_EnableLowRefreshMode))
         {
             const int waiting_time_ms = (int)(1000.0 * ImGui::GetEventWaitingTime());
             if (waiting_time_ms > 0.0) ImGui::sleep(waiting_time_ms);
         }
-        else if (count > 2)
+        else if (count > delay)
         {
             glfwWaitEvents(); //glfwWaitEventsTimeout(waiting_time);
         }

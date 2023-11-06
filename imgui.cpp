@@ -1398,6 +1398,7 @@ ImGuiIO::ImGuiIO()
     MouseStrawed = false;
     MouseStrawValue = {};
     FrameCountSinceLastUpdate = 0;
+    MaxDelayFrameCount = 2;
     // Add By Dicky end
 }
 
@@ -20370,11 +20371,11 @@ double ImGui::GetEventWaitingTime()
         double current_time = get_current_time();
         double deltaTime = g.WallClock > 0 ? current_time - g.WallClock : g.MaxWaitBeforeNextFrame;
         double delta = g.MaxWaitBeforeNextFrame - deltaTime;
-        if ((g.IO.ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode) && g.IO.FrameCountSinceLastUpdate > 2)
+        if ((g.IO.ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode) && g.IO.FrameCountSinceLastUpdate > g.IO.MaxDelayFrameCount)
             delta = INFINITY;
         return ImMax(0.0, delta);
     }
-    else if ((g.IO.ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode) && g.IO.FrameCountSinceLastUpdate > 2)
+    else if ((g.IO.ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode) && g.IO.FrameCountSinceLastUpdate > g.IO.MaxDelayFrameCount)
         return ImMax(0.0, g.MaxWaitBeforeNextFrame);
     return 0.0;
 }

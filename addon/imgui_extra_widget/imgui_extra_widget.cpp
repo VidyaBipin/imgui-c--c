@@ -385,6 +385,8 @@ void ImGui::UvMeter(ImDrawList *draw_list, char const *label, ImVec2 const &size
                 if (*stack < v_min) *stack = v_min;
             }
         }
+        if (*stack)
+            ImGui::UpdateData();
     }
 
     if (size.y > size.x)
