@@ -312,7 +312,7 @@ namespace ImGui
 
     // Add by Dicky
     IMGUI_API void          UpdateData();                               // call it if we need force reflash rendering in power saving mode
-    IMGUI_API void          SetMaxFrameRate(double fps);                // set max frame rate in power saving/low flash rate mode
+    IMGUI_API void          SetCustomFrameRate(double max_fps, double min_fps); // set max/min frame rate in power saving/low flash rate mode
     // add by Dicky end
 
     // Demo, Debug, Information
@@ -2358,6 +2358,8 @@ struct ImGuiIO
     ImVec4      MouseStrawValue;                    // value of mouse straw, usually straw color 
     int         FrameCountSinceLastUpdate;          // How many frames since the last update event; a value of 0 indicates that the current frame was triggered by an update.
     int         MaxDelayFrameCount;                 // How many frames show if tiggle power saving mode, default is 2
+    double      MaxFrameRate;                       // User custom maximum reflash rate 
+    double      MinFrameRate;                       // User custom minimum reflash rate
     ImVector<char> PreEditCharacters;               // IME PreEdit input characters, for MacOS it need show preEdit characters by user
     // Add By Dicky end
     IMGUI_API   ImGuiIO();

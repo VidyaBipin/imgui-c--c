@@ -1399,6 +1399,8 @@ ImGuiIO::ImGuiIO()
     MouseStrawValue = {};
     FrameCountSinceLastUpdate = 0;
     MaxDelayFrameCount = 2;
+    MaxFrameRate = 30;
+    MinFrameRate = 5;
     // Add By Dicky end
 }
 
@@ -4858,7 +4860,7 @@ void ImGui::NewFrame()
     g.MaxWaitBeforeNextFrame = 0;
     g.WallClock = get_current_time();
     if (g.IO.ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode)
-        g.MaxWaitBeforeNextFrame = 1.0 / g.FrameFPS;
+        g.MaxWaitBeforeNextFrame = 1.0 / g.IO.MaxFrameRate;
     // Add By Dicky end
 
     // Calculate frame-rate for the user, as a purely luxurious feature
@@ -5552,11 +5554,12 @@ void ImGui::UpdateData()
     g.IO.FrameCountSinceLastUpdate = 0;
 }
 
-void ImGui::SetMaxFrameRate(double fps)
+void ImGui::SetCustomFrameRate(double max_fps, double min_fps)
 {
     ImGuiContext& g = *GImGui;
     IM_ASSERT(g.Initialized);
-    g.FrameFPS = fps;
+    g.IO.MaxFrameRate = max_fps;
+    g.IO.MinFrameRate = min_fps;
 }
 // Add by Dicky end
 

@@ -2254,7 +2254,6 @@ struct ImGuiContext
     // Add By Dicky Power saving mode
     double                  MaxWaitBeforeNextFrame;             // How much time, in seconds, can we wait for events before starting the next frame
     double                  WallClock;                          // System Clock
-    double                  FrameFPS;                           // User custom reflash rate
     // Add By Dicky end
 
     // Gamepad/keyboard Navigation
@@ -2542,7 +2541,6 @@ struct ImGuiContext
         // Add by Dicky for power saving
         MaxWaitBeforeNextFrame = 0.0;
         WallClock = ImGui::get_current_time();
-        FrameFPS = 60.0;
         // Add by Dicky end
 
         NavWindow = NULL;

@@ -1136,7 +1136,8 @@ void ImGui_ImplSDL2_WaitForEvent()
 {
     auto flags = ImGui::GetIO().ConfigFlags;
     auto count = ImGui::GetIO().FrameCountSinceLastUpdate;
-    auto delay = ImGui::GetIO().MaxDelayFrameCount;
+    auto delay_count = ImGui::GetIO().MaxDelayFrameCount;
+    auto long_delay = 1000.0 / (ImGui::GetIO().MinFrameRate + FLT_EPSILON);
     if (!(flags & ImGuiConfigFlags_EnablePowerSavingMode) &&
         !(flags & ImGuiConfigFlags_EnableLowRefreshMode))
         return;
@@ -1153,14 +1154,15 @@ void ImGui_ImplSDL2_WaitForEvent()
     }
     else if (flags & ImGuiConfigFlags_EnablePowerSavingMode)
     {
-        if (count <= delay && (flags & ImGuiConfigFlags_EnableLowRefreshMode))
+        if (count <= delay_count && (flags & ImGuiConfigFlags_EnableLowRefreshMode))
         {
             const int waiting_time_ms = (int)(1000.0 * ImGui::GetEventWaitingTime());
             if (waiting_time_ms > 0.0) ImGui::sleep(waiting_time_ms);
         }
-        else if (count > delay)
+        else if (count > delay_count)
         {
-            SDL_WaitEvent(nullptr); //SDL_WaitEventTimeout(nullptr, waiting_time_ms);
+            //SDL_WaitEvent(nullptr);
+            SDL_WaitEventTimeout(nullptr, long_delay);
         }
     }
 }

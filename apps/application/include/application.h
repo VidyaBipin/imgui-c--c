@@ -32,7 +32,6 @@ typedef struct ApplicationWindowProperty
     int width       {1440};
     int height      {960};
     float font_scale{1.0};
-    float fps       {30.f};
     bool resizable  {true};
     bool docking    {true};
     bool viewport   {true};
@@ -41,6 +40,8 @@ typedef struct ApplicationWindowProperty
     bool center     {true};
     bool power_save {false};
     bool low_reflash {true};
+    float max_fps   {30.f};
+    float min_fps   {5.f};
     bool full_screen{false};
     bool full_size  {false};
     bool using_setting_path {true};
