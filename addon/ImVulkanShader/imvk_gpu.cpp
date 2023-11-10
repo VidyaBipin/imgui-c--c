@@ -1074,7 +1074,7 @@ static int find_default_vulkan_device_index()
 
 int create_gpu_instance()
 {
-    destroy_gpu_instance();
+    //destroy_gpu_instance();
 
     MutexLockGuard lock(g_instance_lock);
 
