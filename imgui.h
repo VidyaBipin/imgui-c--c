@@ -2947,6 +2947,7 @@ struct ImDrawList
 
     // add by Dicky for Complex Text
     IMGUI_API void AddTextComplex(const ImVec2 pos, const char * str, float font_size, ImU32 text_color, float outline_w = 0.f, ImU32 outline_color = 0, ImVec2 shadow_offset = ImVec2(0, 0), ImU32 shadow_color = 0);
+    IMGUI_API void AddTextComplex(const char * str, float font_size, ImU32 text_color, float outline_w = 0.f, ImU32 outline_color = 0, ImVec2 shadow_offset = ImVec2(0, 0), ImU32 shadow_color = 0);
     // add by Dicky End
 
     // Image primitives
