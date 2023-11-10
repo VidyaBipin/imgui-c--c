@@ -5,7 +5,7 @@
 namespace ImGui {
 
 IMGUI_API void ImGenerateOrUpdateTexture(ImTextureID& imtexid, int width, int height, int channels, const unsigned char* pixels, bool useMipmapsIfPossible, bool wraps, bool wrapt, bool minFilterNearest = false, bool magFilterNearest=false, bool is_immat=false);
-IMGUI_API inline void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width, int height, int channels, const unsigned char* pixels, bool is_immat = false) { ImGenerateOrUpdateTexture(imtexid, width, height, channels, pixels,false,false,false,false,false,is_immat); };
+IMGUI_API void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width, int height, int channels, const unsigned char* pixels, bool is_immat = false);
 IMGUI_API ImTextureID ImCreateTexture(const void* data, int width, int height, double time_stamp = NAN, int bit_depth = 8);
 IMGUI_API ImTextureID ImLoadTexture(const char* path);
 IMGUI_API void ImLoadImageToMat(const char* path, ImMat& mat, bool gray = false);

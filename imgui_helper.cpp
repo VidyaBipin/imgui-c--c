@@ -50,6 +50,8 @@ struct IUnknown;
 #define PATH_SETTINGS "/.config/"
 #endif
 
+#include <string>
+#include <fstream>
 #include <vector>
 #include <algorithm>
 
@@ -2639,7 +2641,6 @@ static std::string GetAppDataLocal() {
 #endif
 
 #if !defined(_WIN32) && !defined(__APPLE__)
-#include <fstream>
 static void PlatformFoldersAddFromFile(const std::string& filename, std::map<std::string, std::string>& folders) {
 	std::ifstream infile(filename.c_str());
 	std::string line;

@@ -337,6 +337,11 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
     //fprintf(stderr, "[ImTexture]:%lu\n", g_Textures.size());
 }
 
+void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width, int height, int channels, const unsigned char* pixels, bool is_immat)
+{
+    ImGenerateOrUpdateTexture(imtexid, width, height, channels, pixels,false,false,false,false,false,is_immat);
+}
+
 void ImCopyToTexture(ImTextureID& imtexid, unsigned char* pixels, int width, int height, int channels, int offset_x, int offset_y, bool is_immat)
 {
     IM_ASSERT(imtexid);
