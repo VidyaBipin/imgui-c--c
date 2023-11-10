@@ -1,7 +1,6 @@
 #include "imvk_gpu.h"
 #include <math.h>
 #include <string.h>
-#include <vulkan/vulkan.h>
 
 #include "glslang/SPIRV/GlslangToSpv.h"
 #include "glslang/Public/ShaderLang.h"
@@ -10,67 +9,6 @@
 #include "imvk_pipelinecache.h"
 #include "imvk_Packing_vulkan.h"
 #include "imvk_Cast_vulkan.h"
-
-#if VK_HEADER_VERSION < 255
-#define VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_FEATURES_KHR   (VkStructureType)1000506000
-#define VK_STRUCTURE_TYPE_COOPERATIVE_MATRIX_PROPERTIES_KHR                 (VkStructureType)1000506001
-#define VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_PROPERTIES_KHR (VkStructureType)1000506002
-typedef enum VkComponentTypeKHR
-{
-    VK_COMPONENT_TYPE_FLOAT16_KHR = 0,
-    VK_COMPONENT_TYPE_FLOAT32_KHR = 1,
-    VK_COMPONENT_TYPE_FLOAT64_KHR = 2,
-    VK_COMPONENT_TYPE_SINT8_KHR = 3,
-    VK_COMPONENT_TYPE_SINT16_KHR = 4,
-    VK_COMPONENT_TYPE_SINT32_KHR = 5,
-    VK_COMPONENT_TYPE_SINT64_KHR = 6,
-    VK_COMPONENT_TYPE_UINT8_KHR = 7,
-    VK_COMPONENT_TYPE_UINT16_KHR = 8,
-    VK_COMPONENT_TYPE_UINT32_KHR = 9,
-    VK_COMPONENT_TYPE_UINT64_KHR = 10,
-    VK_COMPONENT_TYPE_MAX_ENUM_KHR = 0x7FFFFFFF
-} VkComponentTypeKHR;
-typedef enum VkScopeKHR
-{
-    VK_SCOPE_DEVICE_KHR = 1,
-    VK_SCOPE_WORKGROUP_KHR = 2,
-    VK_SCOPE_SUBGROUP_KHR = 3,
-    VK_SCOPE_QUEUE_FAMILY_KHR = 5,
-    VK_SCOPE_MAX_ENUM_KHR = 0x7FFFFFFF
-} VkScopeKHR;
-typedef struct VkCooperativeMatrixPropertiesKHR
-{
-    VkStructureType sType;
-    void* pNext;
-    uint32_t MSize;
-    uint32_t NSize;
-    uint32_t KSize;
-    VkComponentTypeKHR AType;
-    VkComponentTypeKHR BType;
-    VkComponentTypeKHR CType;
-    VkComponentTypeKHR ResultType;
-    VkBool32 saturatingAccumulation;
-    VkScopeKHR scope;
-} VkCooperativeMatrixPropertiesKHR;
-typedef struct VkPhysicalDeviceCooperativeMatrixFeaturesKHR
-{
-    VkStructureType sType;
-    void* pNext;
-    VkBool32 cooperativeMatrix;
-    VkBool32 cooperativeMatrixRobustBufferAccess;
-} VkPhysicalDeviceCooperativeMatrixFeaturesKHR;
-typedef struct VkPhysicalDeviceCooperativeMatrixPropertiesKHR
-{
-    VkStructureType sType;
-    void* pNext;
-    VkShaderStageFlags cooperativeMatrixSupportedStages;
-} VkPhysicalDeviceCooperativeMatrixPropertiesKHR;
-typedef VkResult(VKAPI_PTR* PFN_vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR)(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkCooperativeMatrixPropertiesKHR* pProperties);
-
-// VK_KHR_cooperative_matrix
-extern PFN_vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR;
-
-#endif // VK_HEADER_VERSION < 255
 
 // There is known issue that vkDestroyDebugUtilsMessengerEXT crash on exit when vulkan validation layer enabled
 // upstream fix https://github.com/KhronosGroup/Vulkan-Loader/pull/539
@@ -89,6 +27,7 @@ public:
     __vulkan_shader_instance_holder()
     {
         instance = 0;
+        created = 0;
 #if ENABLE_VALIDATION_LAYER
         callback = 0;
 #endif
@@ -105,6 +44,8 @@ public:
     }
 
     VkInstance instance;
+    int created;
+
 #if ENABLE_VALIDATION_LAYER
     VkDebugUtilsMessengerEXT callback;
 #endif
@@ -128,6 +69,103 @@ struct layer_shader_registry_entry
     int comp_data_size;
 };
 
+// vulkan core
+PFN_vkAllocateCommandBuffers vkAllocateCommandBuffers = 0;
+PFN_vkAllocateDescriptorSets vkAllocateDescriptorSets = 0;
+PFN_vkAllocateMemory vkAllocateMemory = 0;
+PFN_vkBeginCommandBuffer vkBeginCommandBuffer = 0;
+PFN_vkBindBufferMemory vkBindBufferMemory = 0;
+PFN_vkBindImageMemory vkBindImageMemory = 0;
+PFN_vkCmdBeginQuery vkCmdBeginQuery = 0;
+PFN_vkCmdBindDescriptorSets vkCmdBindDescriptorSets = 0;
+PFN_vkCmdBindIndexBuffer vkCmdBindIndexBuffer = 0;
+PFN_vkCmdBindPipeline vkCmdBindPipeline = 0;
+PFN_vkCmdCopyBuffer vkCmdCopyBuffer = 0;
+PFN_vkCmdCopyBufferToImage vkCmdCopyBufferToImage = 0;
+PFN_vkCmdCopyImage vkCmdCopyImage = 0;
+PFN_vkCmdCopyImageToBuffer vkCmdCopyImageToBuffer = 0;
+PFN_vkCmdCopyQueryPoolResults vkCmdCopyQueryPoolResults = 0;
+PFN_vkCmdDispatch vkCmdDispatch = 0;
+PFN_vkCmdDispatchIndirect vkCmdDispatchIndirect = 0;
+PFN_vkCmdEndQuery vkCmdEndQuery = 0;
+PFN_vkCmdExecuteCommands vkCmdExecuteCommands = 0;
+PFN_vkCmdFillBuffer vkCmdFillBuffer = 0;
+PFN_vkCmdPipelineBarrier vkCmdPipelineBarrier = 0;
+PFN_vkCmdPushConstants vkCmdPushConstants = 0;
+PFN_vkCmdResetQueryPool vkCmdResetQueryPool = 0;
+PFN_vkCmdResolveImage vkCmdResolveImage = 0;
+PFN_vkCmdUpdateBuffer vkCmdUpdateBuffer = 0;
+PFN_vkCmdWriteTimestamp vkCmdWriteTimestamp = 0;
+PFN_vkCreateBuffer vkCreateBuffer = 0;
+PFN_vkCreateBufferView vkCreateBufferView = 0;
+PFN_vkCreateCommandPool vkCreateCommandPool = 0;
+PFN_vkCreateComputePipelines vkCreateComputePipelines = 0;
+PFN_vkCreateDescriptorPool vkCreateDescriptorPool = 0;
+PFN_vkCreateDescriptorSetLayout vkCreateDescriptorSetLayout = 0;
+PFN_vkCreateDevice vkCreateDevice = 0;
+PFN_vkCreateFence vkCreateFence = 0;
+PFN_vkCreateImage vkCreateImage = 0;
+PFN_vkCreateImageView vkCreateImageView = 0;
+PFN_vkCreatePipelineCache vkCreatePipelineCache = 0;
+PFN_vkCreatePipelineLayout vkCreatePipelineLayout = 0;
+PFN_vkCreateQueryPool vkCreateQueryPool = 0;
+PFN_vkCreateSampler vkCreateSampler = 0;
+PFN_vkCreateSemaphore vkCreateSemaphore = 0;
+PFN_vkCreateShaderModule vkCreateShaderModule = 0;
+PFN_vkDestroyBuffer vkDestroyBuffer = 0;
+PFN_vkDestroyBufferView vkDestroyBufferView = 0;
+PFN_vkDestroyCommandPool vkDestroyCommandPool = 0;
+PFN_vkDestroyDescriptorPool vkDestroyDescriptorPool = 0;
+PFN_vkDestroyDescriptorSetLayout vkDestroyDescriptorSetLayout = 0;
+PFN_vkDestroyDevice vkDestroyDevice = 0;
+PFN_vkDestroyFence vkDestroyFence = 0;
+PFN_vkDestroyImage vkDestroyImage = 0;
+PFN_vkDestroyImageView vkDestroyImageView = 0;
+PFN_vkDestroyInstance vkDestroyInstance = 0;
+PFN_vkDestroyPipeline vkDestroyPipeline = 0;
+PFN_vkDestroyPipelineCache vkDestroyPipelineCache = 0;
+PFN_vkDestroyPipelineLayout vkDestroyPipelineLayout = 0;
+PFN_vkDestroyQueryPool vkDestroyQueryPool = 0;
+PFN_vkDestroySampler vkDestroySampler = 0;
+PFN_vkDestroySemaphore vkDestroySemaphore = 0;
+PFN_vkDestroyShaderModule vkDestroyShaderModule = 0;
+PFN_vkDeviceWaitIdle vkDeviceWaitIdle = 0;
+PFN_vkEndCommandBuffer vkEndCommandBuffer = 0;
+PFN_vkEnumerateDeviceExtensionProperties vkEnumerateDeviceExtensionProperties = 0;
+PFN_vkEnumerateDeviceLayerProperties vkEnumerateDeviceLayerProperties = 0;
+PFN_vkEnumeratePhysicalDevices vkEnumeratePhysicalDevices = 0;
+PFN_vkFlushMappedMemoryRanges vkFlushMappedMemoryRanges = 0;
+PFN_vkFreeCommandBuffers vkFreeCommandBuffers = 0;
+PFN_vkFreeDescriptorSets vkFreeDescriptorSets = 0;
+PFN_vkFreeMemory vkFreeMemory = 0;
+PFN_vkGetBufferMemoryRequirements vkGetBufferMemoryRequirements = 0;
+PFN_vkGetDeviceMemoryCommitment vkGetDeviceMemoryCommitment = 0;
+PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr = 0;
+PFN_vkGetDeviceQueue vkGetDeviceQueue = 0;
+PFN_vkGetFenceStatus vkGetFenceStatus = 0;
+PFN_vkGetImageMemoryRequirements vkGetImageMemoryRequirements = 0;
+PFN_vkGetImageSubresourceLayout vkGetImageSubresourceLayout = 0;
+PFN_vkGetPhysicalDeviceFeatures vkGetPhysicalDeviceFeatures = 0;
+PFN_vkGetPhysicalDeviceFormatProperties vkGetPhysicalDeviceFormatProperties = 0;
+PFN_vkGetPhysicalDeviceImageFormatProperties vkGetPhysicalDeviceImageFormatProperties = 0;
+PFN_vkGetPhysicalDeviceMemoryProperties vkGetPhysicalDeviceMemoryProperties = 0;
+PFN_vkGetPhysicalDeviceProperties vkGetPhysicalDeviceProperties = 0;
+PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties = 0;
+PFN_vkGetPipelineCacheData vkGetPipelineCacheData = 0;
+PFN_vkGetQueryPoolResults vkGetQueryPoolResults = 0;
+PFN_vkInvalidateMappedMemoryRanges vkInvalidateMappedMemoryRanges = 0;
+PFN_vkMapMemory vkMapMemory = 0;
+PFN_vkMergePipelineCaches vkMergePipelineCaches = 0;
+PFN_vkQueueSubmit vkQueueSubmit = 0;
+PFN_vkQueueWaitIdle vkQueueWaitIdle = 0;
+PFN_vkResetCommandBuffer vkResetCommandBuffer = 0;
+PFN_vkResetCommandPool vkResetCommandPool = 0;
+PFN_vkResetDescriptorPool vkResetDescriptorPool = 0;
+PFN_vkResetFences vkResetFences = 0;
+PFN_vkUnmapMemory vkUnmapMemory = 0;
+PFN_vkUpdateDescriptorSets vkUpdateDescriptorSets = 0;
+PFN_vkWaitForFences vkWaitForFences = 0;
+
 int support_VK_KHR_external_memory_capabilities = 0;
 int support_VK_KHR_get_physical_device_properties2 = 0;
 int support_VK_KHR_get_surface_capabilities2 = 0;
@@ -150,7 +188,6 @@ PFN_vkGetPhysicalDeviceFormatProperties2KHR vkGetPhysicalDeviceFormatProperties2
 PFN_vkGetPhysicalDeviceImageFormatProperties2KHR vkGetPhysicalDeviceImageFormatProperties2KHR = 0;
 PFN_vkGetPhysicalDeviceQueueFamilyProperties2KHR vkGetPhysicalDeviceQueueFamilyProperties2KHR = 0;
 PFN_vkGetPhysicalDeviceMemoryProperties2KHR vkGetPhysicalDeviceMemoryProperties2KHR = 0;
-PFN_vkGetPhysicalDeviceSparseImageFormatProperties2KHR vkGetPhysicalDeviceSparseImageFormatProperties2KHR = 0;
 
 // VK_KHR_get_surface_capabilities2
 PFN_vkGetPhysicalDeviceSurfaceCapabilities2KHR vkGetPhysicalDeviceSurfaceCapabilities2KHR = 0;
@@ -702,6 +739,107 @@ int GpuInfo::support_VK_NV_cooperative_matrix() const
     return d->support_VK_NV_cooperative_matrix;
 }
 
+static int init_instance_core()
+{
+    vkAllocateCommandBuffers = (PFN_vkAllocateCommandBuffers)vkGetInstanceProcAddr(g_instance, "vkAllocateCommandBuffers");
+    vkAllocateDescriptorSets = (PFN_vkAllocateDescriptorSets)vkGetInstanceProcAddr(g_instance, "vkAllocateDescriptorSets");
+    vkAllocateMemory = (PFN_vkAllocateMemory)vkGetInstanceProcAddr(g_instance, "vkAllocateMemory");
+    vkBeginCommandBuffer = (PFN_vkBeginCommandBuffer)vkGetInstanceProcAddr(g_instance, "vkBeginCommandBuffer");
+    vkBindBufferMemory = (PFN_vkBindBufferMemory)vkGetInstanceProcAddr(g_instance, "vkBindBufferMemory");
+    vkBindImageMemory = (PFN_vkBindImageMemory)vkGetInstanceProcAddr(g_instance, "vkBindImageMemory");
+    vkCmdBeginQuery = (PFN_vkCmdBeginQuery)vkGetInstanceProcAddr(g_instance, "vkCmdBeginQuery");
+    vkCmdBindDescriptorSets = (PFN_vkCmdBindDescriptorSets)vkGetInstanceProcAddr(g_instance, "vkCmdBindDescriptorSets");
+    vkCmdBindIndexBuffer = (PFN_vkCmdBindIndexBuffer)vkGetInstanceProcAddr(g_instance, "vkCmdBindIndexBuffer");
+    vkCmdBindPipeline = (PFN_vkCmdBindPipeline)vkGetInstanceProcAddr(g_instance, "vkCmdBindPipeline");
+    vkCmdCopyBuffer = (PFN_vkCmdCopyBuffer)vkGetInstanceProcAddr(g_instance, "vkCmdCopyBuffer");
+    vkCmdCopyBufferToImage = (PFN_vkCmdCopyBufferToImage)vkGetInstanceProcAddr(g_instance, "vkCmdCopyBufferToImage");
+    vkCmdCopyImage = (PFN_vkCmdCopyImage)vkGetInstanceProcAddr(g_instance, "vkCmdCopyImage");
+    vkCmdCopyImageToBuffer = (PFN_vkCmdCopyImageToBuffer)vkGetInstanceProcAddr(g_instance, "vkCmdCopyImageToBuffer");
+    vkCmdCopyQueryPoolResults = (PFN_vkCmdCopyQueryPoolResults)vkGetInstanceProcAddr(g_instance, "vkCmdCopyQueryPoolResults");
+    vkCmdDispatch = (PFN_vkCmdDispatch)vkGetInstanceProcAddr(g_instance, "vkCmdDispatch");
+    vkCmdDispatchIndirect = (PFN_vkCmdDispatchIndirect)vkGetInstanceProcAddr(g_instance, "vkCmdDispatchIndirect");
+    vkCmdEndQuery = (PFN_vkCmdEndQuery)vkGetInstanceProcAddr(g_instance, "vkCmdEndQuery");
+    vkCmdExecuteCommands = (PFN_vkCmdExecuteCommands)vkGetInstanceProcAddr(g_instance, "vkCmdExecuteCommands");
+    vkCmdFillBuffer = (PFN_vkCmdFillBuffer)vkGetInstanceProcAddr(g_instance, "vkCmdFillBuffer");
+    vkCmdPipelineBarrier = (PFN_vkCmdPipelineBarrier)vkGetInstanceProcAddr(g_instance, "vkCmdPipelineBarrier");
+    vkCmdPushConstants = (PFN_vkCmdPushConstants)vkGetInstanceProcAddr(g_instance, "vkCmdPushConstants");
+    vkCmdResetQueryPool = (PFN_vkCmdResetQueryPool)vkGetInstanceProcAddr(g_instance, "vkCmdResetQueryPool");
+    vkCmdResolveImage = (PFN_vkCmdResolveImage)vkGetInstanceProcAddr(g_instance, "vkCmdResolveImage");
+    vkCmdUpdateBuffer = (PFN_vkCmdUpdateBuffer)vkGetInstanceProcAddr(g_instance, "vkCmdUpdateBuffer");
+    vkCmdWriteTimestamp = (PFN_vkCmdWriteTimestamp)vkGetInstanceProcAddr(g_instance, "vkCmdWriteTimestamp");
+    vkCreateBuffer = (PFN_vkCreateBuffer)vkGetInstanceProcAddr(g_instance, "vkCreateBuffer");
+    vkCreateBufferView = (PFN_vkCreateBufferView)vkGetInstanceProcAddr(g_instance, "vkCreateBufferView");
+    vkCreateCommandPool = (PFN_vkCreateCommandPool)vkGetInstanceProcAddr(g_instance, "vkCreateCommandPool");
+    vkCreateComputePipelines = (PFN_vkCreateComputePipelines)vkGetInstanceProcAddr(g_instance, "vkCreateComputePipelines");
+    vkCreateDescriptorPool = (PFN_vkCreateDescriptorPool)vkGetInstanceProcAddr(g_instance, "vkCreateDescriptorPool");
+    vkCreateDescriptorSetLayout = (PFN_vkCreateDescriptorSetLayout)vkGetInstanceProcAddr(g_instance, "vkCreateDescriptorSetLayout");
+    vkCreateDevice = (PFN_vkCreateDevice)vkGetInstanceProcAddr(g_instance, "vkCreateDevice");
+    vkCreateFence = (PFN_vkCreateFence)vkGetInstanceProcAddr(g_instance, "vkCreateFence");
+    vkCreateImage = (PFN_vkCreateImage)vkGetInstanceProcAddr(g_instance, "vkCreateImage");
+    vkCreateImageView = (PFN_vkCreateImageView)vkGetInstanceProcAddr(g_instance, "vkCreateImageView");
+    vkCreatePipelineCache = (PFN_vkCreatePipelineCache)vkGetInstanceProcAddr(g_instance, "vkCreatePipelineCache");
+    vkCreatePipelineLayout = (PFN_vkCreatePipelineLayout)vkGetInstanceProcAddr(g_instance, "vkCreatePipelineLayout");
+    vkCreateQueryPool = (PFN_vkCreateQueryPool)vkGetInstanceProcAddr(g_instance, "vkCreateQueryPool");
+    vkCreateSampler = (PFN_vkCreateSampler)vkGetInstanceProcAddr(g_instance, "vkCreateSampler");
+    vkCreateSemaphore = (PFN_vkCreateSemaphore)vkGetInstanceProcAddr(g_instance, "vkCreateSemaphore");
+    vkCreateShaderModule = (PFN_vkCreateShaderModule)vkGetInstanceProcAddr(g_instance, "vkCreateShaderModule");
+    vkDestroyBuffer = (PFN_vkDestroyBuffer)vkGetInstanceProcAddr(g_instance, "vkDestroyBuffer");
+    vkDestroyBufferView = (PFN_vkDestroyBufferView)vkGetInstanceProcAddr(g_instance, "vkDestroyBufferView");
+    vkDestroyCommandPool = (PFN_vkDestroyCommandPool)vkGetInstanceProcAddr(g_instance, "vkDestroyCommandPool");
+    vkDestroyDescriptorPool = (PFN_vkDestroyDescriptorPool)vkGetInstanceProcAddr(g_instance, "vkDestroyDescriptorPool");
+    vkDestroyDescriptorSetLayout = (PFN_vkDestroyDescriptorSetLayout)vkGetInstanceProcAddr(g_instance, "vkDestroyDescriptorSetLayout");
+    vkDestroyDevice = (PFN_vkDestroyDevice)vkGetInstanceProcAddr(g_instance, "vkDestroyDevice");
+    vkDestroyFence = (PFN_vkDestroyFence)vkGetInstanceProcAddr(g_instance, "vkDestroyFence");
+    vkDestroyImage = (PFN_vkDestroyImage)vkGetInstanceProcAddr(g_instance, "vkDestroyImage");
+    vkDestroyImageView = (PFN_vkDestroyImageView)vkGetInstanceProcAddr(g_instance, "vkDestroyImageView");
+    vkDestroyInstance = (PFN_vkDestroyInstance)vkGetInstanceProcAddr(g_instance, "vkDestroyInstance");
+    vkDestroyPipeline = (PFN_vkDestroyPipeline)vkGetInstanceProcAddr(g_instance, "vkDestroyPipeline");
+    vkDestroyPipelineCache = (PFN_vkDestroyPipelineCache)vkGetInstanceProcAddr(g_instance, "vkDestroyPipelineCache");
+    vkDestroyPipelineLayout = (PFN_vkDestroyPipelineLayout)vkGetInstanceProcAddr(g_instance, "vkDestroyPipelineLayout");
+    vkDestroyQueryPool = (PFN_vkDestroyQueryPool)vkGetInstanceProcAddr(g_instance, "vkDestroyQueryPool");
+    vkDestroySampler = (PFN_vkDestroySampler)vkGetInstanceProcAddr(g_instance, "vkDestroySampler");
+    vkDestroySemaphore = (PFN_vkDestroySemaphore)vkGetInstanceProcAddr(g_instance, "vkDestroySemaphore");
+    vkDestroyShaderModule = (PFN_vkDestroyShaderModule)vkGetInstanceProcAddr(g_instance, "vkDestroyShaderModule");
+    vkDeviceWaitIdle = (PFN_vkDeviceWaitIdle)vkGetInstanceProcAddr(g_instance, "vkDeviceWaitIdle");
+    vkEndCommandBuffer = (PFN_vkEndCommandBuffer)vkGetInstanceProcAddr(g_instance, "vkEndCommandBuffer");
+    vkEnumerateDeviceExtensionProperties = (PFN_vkEnumerateDeviceExtensionProperties)vkGetInstanceProcAddr(g_instance, "vkEnumerateDeviceExtensionProperties");
+    vkEnumerateDeviceLayerProperties = (PFN_vkEnumerateDeviceLayerProperties)vkGetInstanceProcAddr(g_instance, "vkEnumerateDeviceLayerProperties");
+    vkEnumeratePhysicalDevices = (PFN_vkEnumeratePhysicalDevices)vkGetInstanceProcAddr(g_instance, "vkEnumeratePhysicalDevices");
+    vkFlushMappedMemoryRanges = (PFN_vkFlushMappedMemoryRanges)vkGetInstanceProcAddr(g_instance, "vkFlushMappedMemoryRanges");
+    vkFreeCommandBuffers = (PFN_vkFreeCommandBuffers)vkGetInstanceProcAddr(g_instance, "vkFreeCommandBuffers");
+    vkFreeDescriptorSets = (PFN_vkFreeDescriptorSets)vkGetInstanceProcAddr(g_instance, "vkFreeDescriptorSets");
+    vkFreeMemory = (PFN_vkFreeMemory)vkGetInstanceProcAddr(g_instance, "vkFreeMemory");
+    vkGetBufferMemoryRequirements = (PFN_vkGetBufferMemoryRequirements)vkGetInstanceProcAddr(g_instance, "vkGetBufferMemoryRequirements");
+    vkGetDeviceMemoryCommitment = (PFN_vkGetDeviceMemoryCommitment)vkGetInstanceProcAddr(g_instance, "vkGetDeviceMemoryCommitment");
+    vkGetDeviceProcAddr = (PFN_vkGetDeviceProcAddr)vkGetInstanceProcAddr(g_instance, "vkGetDeviceProcAddr");
+    vkGetDeviceQueue = (PFN_vkGetDeviceQueue)vkGetInstanceProcAddr(g_instance, "vkGetDeviceQueue");
+    vkGetFenceStatus = (PFN_vkGetFenceStatus)vkGetInstanceProcAddr(g_instance, "vkGetFenceStatus");
+    vkGetImageMemoryRequirements = (PFN_vkGetImageMemoryRequirements)vkGetInstanceProcAddr(g_instance, "vkGetImageMemoryRequirements");
+    vkGetImageSubresourceLayout = (PFN_vkGetImageSubresourceLayout)vkGetInstanceProcAddr(g_instance, "vkGetImageSubresourceLayout");
+    vkGetPhysicalDeviceFeatures = (PFN_vkGetPhysicalDeviceFeatures)vkGetInstanceProcAddr(g_instance, "vkGetPhysicalDeviceFeatures");
+    vkGetPhysicalDeviceFormatProperties = (PFN_vkGetPhysicalDeviceFormatProperties)vkGetInstanceProcAddr(g_instance, "vkGetPhysicalDeviceFormatProperties");
+    vkGetPhysicalDeviceImageFormatProperties = (PFN_vkGetPhysicalDeviceImageFormatProperties)vkGetInstanceProcAddr(g_instance, "vkGetPhysicalDeviceImageFormatProperties");
+    vkGetPhysicalDeviceMemoryProperties = (PFN_vkGetPhysicalDeviceMemoryProperties)vkGetInstanceProcAddr(g_instance, "vkGetPhysicalDeviceMemoryProperties");
+    vkGetPhysicalDeviceProperties = (PFN_vkGetPhysicalDeviceProperties)vkGetInstanceProcAddr(g_instance, "vkGetPhysicalDeviceProperties");
+    vkGetPhysicalDeviceQueueFamilyProperties = (PFN_vkGetPhysicalDeviceQueueFamilyProperties)vkGetInstanceProcAddr(g_instance, "vkGetPhysicalDeviceQueueFamilyProperties");
+    vkGetPipelineCacheData = (PFN_vkGetPipelineCacheData)vkGetInstanceProcAddr(g_instance, "vkGetPipelineCacheData");
+    vkGetQueryPoolResults = (PFN_vkGetQueryPoolResults)vkGetInstanceProcAddr(g_instance, "vkGetQueryPoolResults");
+    vkInvalidateMappedMemoryRanges = (PFN_vkInvalidateMappedMemoryRanges)vkGetInstanceProcAddr(g_instance, "vkInvalidateMappedMemoryRanges");
+    vkMapMemory = (PFN_vkMapMemory)vkGetInstanceProcAddr(g_instance, "vkMapMemory");
+    vkMergePipelineCaches = (PFN_vkMergePipelineCaches)vkGetInstanceProcAddr(g_instance, "vkMergePipelineCaches");
+    vkQueueSubmit = (PFN_vkQueueSubmit)vkGetInstanceProcAddr(g_instance, "vkQueueSubmit");
+    vkQueueWaitIdle = (PFN_vkQueueWaitIdle)vkGetInstanceProcAddr(g_instance, "vkQueueWaitIdle");
+    vkResetCommandBuffer = (PFN_vkResetCommandBuffer)vkGetInstanceProcAddr(g_instance, "vkResetCommandBuffer");
+    vkResetCommandPool = (PFN_vkResetCommandPool)vkGetInstanceProcAddr(g_instance, "vkResetCommandPool");
+    vkResetDescriptorPool = (PFN_vkResetDescriptorPool)vkGetInstanceProcAddr(g_instance, "vkResetDescriptorPool");
+    vkResetFences = (PFN_vkResetFences)vkGetInstanceProcAddr(g_instance, "vkResetFences");
+    vkUnmapMemory = (PFN_vkUnmapMemory)vkGetInstanceProcAddr(g_instance, "vkUnmapMemory");
+    vkUpdateDescriptorSets = (PFN_vkUpdateDescriptorSets)vkGetInstanceProcAddr(g_instance, "vkUpdateDescriptorSets");
+    vkWaitForFences = (PFN_vkWaitForFences)vkGetInstanceProcAddr(g_instance, "vkWaitForFences");
+
+    return 0;
+}
+
 static int init_instance_extension()
 {
     if (support_VK_KHR_external_memory_capabilities)
@@ -717,7 +855,6 @@ static int init_instance_extension()
         vkGetPhysicalDeviceImageFormatProperties2KHR = (PFN_vkGetPhysicalDeviceImageFormatProperties2KHR)vkGetInstanceProcAddr(g_instance, "vkGetPhysicalDeviceImageFormatProperties2KHR");
         vkGetPhysicalDeviceQueueFamilyProperties2KHR = (PFN_vkGetPhysicalDeviceQueueFamilyProperties2KHR)vkGetInstanceProcAddr(g_instance, "vkGetPhysicalDeviceQueueFamilyProperties2KHR");
         vkGetPhysicalDeviceMemoryProperties2KHR = (PFN_vkGetPhysicalDeviceMemoryProperties2KHR)vkGetInstanceProcAddr(g_instance, "vkGetPhysicalDeviceMemoryProperties2KHR");
-        vkGetPhysicalDeviceSparseImageFormatProperties2KHR = (PFN_vkGetPhysicalDeviceSparseImageFormatProperties2KHR)vkGetInstanceProcAddr(g_instance, "vkGetPhysicalDeviceSparseImageFormatProperties2KHR");
     }
 
     if (support_VK_KHR_get_surface_capabilities2)
@@ -937,10 +1074,14 @@ static int find_default_vulkan_device_index()
 
 int create_gpu_instance()
 {
+    destroy_gpu_instance();
+
     MutexLockGuard lock(g_instance_lock);
 
-    if ((VkInstance)g_instance != 0)
-        return 0;
+    if (g_instance.created != 0)
+        return g_instance.instance ? 0 : -1;
+
+    g_instance.created = 1;
 
     // fprintf(stderr, "create_gpu_instance");
 
@@ -1143,6 +1284,8 @@ int create_gpu_instance()
     }
 
     g_instance.instance = instance;
+
+    init_instance_core();
 
 #if ENABLE_VALIDATION_LAYER
     if (support_VK_EXT_debug_utils)
@@ -1813,7 +1956,7 @@ void destroy_gpu_instance()
 {
     MutexLockGuard lock(g_instance_lock);
 
-    if ((VkInstance)g_instance == 0)
+    if (g_instance.created == 0)
         return;
 
     // fprintf(stderr, "destroy_gpu_instance");
@@ -1840,19 +1983,20 @@ void destroy_gpu_instance()
     vkDestroyInstance(g_instance, 0);
 
     g_instance.instance = 0;
-}
 
-static bool is_gpu_instance_ready()
-{
-    MutexLockGuard lock(g_instance_lock);
-
-    return (VkInstance)g_instance != 0;
+    g_instance.created = 0;
 }
 
 static void try_create_gpu_instance()
 {
-    if (!is_gpu_instance_ready())
-        create_gpu_instance();
+    {
+        MutexLockGuard lock(g_instance_lock);
+
+        if (g_instance.created != 0)
+            return;
+    }
+
+    create_gpu_instance();
 }
 
 int get_gpu_count()
@@ -3364,14 +3508,6 @@ int VulkanDevice::init_device_extension()
         vkGetDeviceMemoryOpaqueCaptureAddressKHR = (PFN_vkGetDeviceMemoryOpaqueCaptureAddressKHR)vkGetDeviceProcAddr(d->device, "vkGetDeviceMemoryOpaqueCaptureAddressKHR");
     }
 
-    if (info.support_VK_KHR_create_renderpass2())
-    {
-        vkCmdBeginRenderPass2KHR = (PFN_vkCmdBeginRenderPass2KHR)vkGetDeviceProcAddr(d->device, "vkCmdBeginRenderPass2KHR");
-        vkCmdEndRenderPass2KHR = (PFN_vkCmdEndRenderPass2KHR)vkGetDeviceProcAddr(d->device, "vkCmdEndRenderPass2KHR");
-        vkCmdNextSubpass2KHR = (PFN_vkCmdNextSubpass2KHR)vkGetDeviceProcAddr(d->device, "vkCmdNextSubpass2KHR");
-        vkCreateRenderPass2KHR = (PFN_vkCreateRenderPass2KHR)vkGetDeviceProcAddr(d->device, "vkCreateRenderPass2KHR");
-    }
-
     if (info.support_VK_KHR_descriptor_update_template())
     {
         vkCreateDescriptorUpdateTemplateKHR = (PFN_vkCreateDescriptorUpdateTemplateKHR)vkGetDeviceProcAddr(d->device, "vkCreateDescriptorUpdateTemplateKHR");
@@ -3383,7 +3519,6 @@ int VulkanDevice::init_device_extension()
     {
         vkGetImageMemoryRequirements2KHR = (PFN_vkGetImageMemoryRequirements2KHR)vkGetDeviceProcAddr(d->device, "vkGetImageMemoryRequirements2KHR");
         vkGetBufferMemoryRequirements2KHR = (PFN_vkGetBufferMemoryRequirements2KHR)vkGetDeviceProcAddr(d->device, "vkGetBufferMemoryRequirements2KHR");
-        vkGetImageSparseMemoryRequirements2KHR = (PFN_vkGetImageSparseMemoryRequirements2KHR)vkGetDeviceProcAddr(d->device, "vkGetImageSparseMemoryRequirements2KHR");
     }
 
     if (info.support_VK_KHR_maintenance1())
@@ -3614,13 +3749,13 @@ static void ParserLog(const char* prog, const char *log)
     std::string message = std::string(log);
     if (!message.empty())
     {
-        int row = -1;
+        //int row = -1;
         int col = -1;
         std::vector<std::string> logs;
         GetLines(message, logs);
         std::vector<std::string> code;
         GetLines(program, code);
-        for (int i = 0; i < logs.size() - 2; i++)
+        for (int i = 0; i < (int)logs.size() - 2; i++)
         {
             std::string msg = logs[i];
             size_t start = 0;
@@ -3635,13 +3770,13 @@ static void ParserLog(const char* prog, const char *log)
                     if ((end = logs[i].find(":", start)) != std::string::npos)
                     {
                         this_word = logs[i].substr(start, end - start);
-                        row = std::atoi(this_word.c_str());
+                        //row = std::atoi(this_word.c_str());
                         start = end + 1;
                         if ((end = logs[i].find(":", start)) != std::string::npos)
                         {
                             this_word = logs[i].substr(start, end - start);
                             col = std::atoi(this_word.c_str());
-                            if (col > 0 && col < code.size())
+                            if (col > 0 && col < (int)code.size())
                             {
                                 fprintf(stderr, "[Debug Error] %04d: %s\n", col, code[col - 1].c_str());
                             }
