@@ -1,5 +1,6 @@
 #include "imgui_extra_widget.h"
 #include "imgui_helper.h"
+#include "imgui_fft.h"
 #include <iostream>
 #include <cmath>
 #include <sstream>
@@ -816,7 +817,7 @@ void ImGui::RoundProgressBar(float radius, float *p_value, float v_min, float v_
     auto draw_size = ImGui::CalcTextSize(label);
     float font_scale = radius / draw_size.x;
     draw_size *= font_scale;
-    ImGui::AddTextComplex(draw_list, center - draw_size * ImVec2(0.5, 0.6), label, font_scale, IM_COL32(255, 255, 255, 255), 1.f, IM_COL32(255, 255, 255, 255), ImVec2(3, 3), ImGui::GetColorU32(bar_color.base));
+    draw_list->AddTextComplex(center - draw_size * ImVec2(0.5, 0.6), label, font_scale, IM_COL32(255, 255, 255, 255), 1.f, IM_COL32(255, 255, 255, 255), ImVec2(3, 3), ImGui::GetColorU32(bar_color.base));
 }
 
 // Splitter

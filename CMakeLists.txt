@@ -329,6 +329,7 @@ set(IMGUI_SRC
     misc/cpp/imgui_stdlib.cpp
     misc/cpp/dir_iterate.cpp
     misc/cpp/imgui_cpu.cpp
+    misc/cpp/imgui_fft.cpp
     misc/json/imgui_json.cpp
 )
 
@@ -350,6 +351,7 @@ set(IMGUI_INCS
     misc/cpp/imgui_stdlib.h
     misc/cpp/dir_iterate.h
     misc/cpp/imgui_cpu.h
+    misc/cpp/imgui_fft.h
     misc/stb_image.h
     misc/stb_image_write.h
     misc/stb_image_resize.h

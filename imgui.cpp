@@ -11333,6 +11333,24 @@ void ImGui::SetItemTooltipV(const char* fmt, va_list args)
         SetTooltipV(fmt, args);
 }
 
+// add by Dicky
+void ImGui::ShowTooltipOnHoverV(const char* fmt, va_list args)
+{
+    if (IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && BeginTooltip())
+    {
+        TextV(fmt, args);
+        EndTooltip();
+    }
+}
+
+void ImGui::ShowTooltipOnHover(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    ShowTooltipOnHoverV(fmt, args);
+    va_end(args);
+}
+// add by Dicky end
 
 //-----------------------------------------------------------------------------
 // [SECTION] POPUPS

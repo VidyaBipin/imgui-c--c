@@ -4,9 +4,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <immat.h>
-#if IMGUI_VULKAN_SHADER
-#include <imvk_gpu.h>
-#endif
 #include <functional>
 #include <map>
 #include <string>
@@ -59,9 +56,6 @@ IMGUI_API bool IsItemActiveLastFrame();
 IMGUI_API bool IsItemJustReleased();
 IMGUI_API bool IsItemDisabled();
 
-IMGUI_API void ShowTooltipOnHover(const char* fmt, ...) IM_FMTARGS(1);
-IMGUI_API void ShowTooltipOnHoverV(const char* fmt, va_list args) IM_FMTLIST(1);
-
 // Drawn an rectangle around last ImGui widget.
 IMGUI_API void Debug_DrawItemRect(const ImVec4& col = ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
 
@@ -71,8 +65,6 @@ IMGUI_API void TextColoredV(int fntIndex,const ImVec4& col, const char* fmt, va_
 IMGUI_API void TextColored(int fntIndex,const ImVec4& col, const char* fmt, ...) IM_FMTARGS(3);
 IMGUI_API void TextV(int fntIndex,const char* fmt, va_list args);
 IMGUI_API void Text(int fntIndex,const char* fmt, ...) IM_FMTARGS(2);
-IMGUI_API void AddTextComplex(ImDrawList *draw_list, const ImVec2 pos, const char * str, float font_size, ImU32 text_color, float outline_w = 0.f, ImU32 outline_color = 0, ImVec2 shadow_offset = ImVec2(0, 0), ImU32 shadow_color = 0);
-IMGUI_API void AddTextComplex(const char * str, float font_size, ImU32 text_color, float outline_w = 0.f, ImU32 outline_color = 0, ImVec2 shadow_offset = ImVec2(0, 0), ImU32 shadow_color = 0);
 // Handy if we want to use ImGui::Image(...) or ImGui::ImageButton(...) with a glyph
 IMGUI_API bool GetTexCoordsFromGlyph(unsigned short glyph, ImVec2& uv0, ImVec2& uv1);
 
@@ -106,35 +98,6 @@ IMGUI_API bool Base85DecodeFromFile(const char* filePath,ImVector<char>& rv);
 // Generate color
 IMGUI_API void RandomColor(ImVec4& color, float alpha = 1.0);
 IMGUI_API void RandomColor(ImU32& color, float alpha = 1.0);
-
-// FFT 1D
-IMGUI_API void ImFFT (float* data, int N, bool forward);
-IMGUI_API void ImRFFT (float* data, int N, bool forward);
-IMGUI_API void ImRFFT (float* in, float* out, int N, bool forward);
-IMGUI_API int ImReComposeDB(float * in, float * out, int samples, bool inverse = true);
-IMGUI_API int ImReComposeAmplitude(float * in, float * out, int samples);
-IMGUI_API int ImReComposePhase(float * in, float * out, int samples);
-IMGUI_API int ImReComposeDBShort(float * in, float * out, int samples, bool inverse = true);
-IMGUI_API int ImReComposeDBLong(float * in, float * out, int samples, bool inverse = true);
-IMGUI_API float ImDoDecibel(float * in, int samples, bool inverse = true);
-
-// STFT 1D
-struct IMGUI_API ImSTFT
-{
-    ImSTFT(int _window, int _hope);
-    ~ImSTFT();
-    void stft(float* in, float* out);
-    void istft(float* in, float* out);
-
-private:
-    void *hannwin {nullptr};
-    void *overlap {nullptr};
-
-    int frame_size;
-    int shift_size;
-    int overlap_size;
-    float* buf  {nullptr};
-};
 
 #ifdef IMGUI_USE_ZLIB	// requires linking to library -lZlib
 // Two methods that fill rv and return true on success

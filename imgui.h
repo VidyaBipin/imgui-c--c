@@ -725,6 +725,11 @@ namespace ImGui
     IMGUI_API void          SetItemTooltip(const char* fmt, ...) IM_FMTARGS(1);                 // set a text-only tooltip if preceeding item was hovered. override any previous call to SetTooltip().
     IMGUI_API void          SetItemTooltipV(const char* fmt, va_list args) IM_FMTLIST(1);
 
+    // add by Dicky for hovered tooltips
+    IMGUI_API void ShowTooltipOnHover(const char* fmt, ...) IM_FMTARGS(1);
+    IMGUI_API void ShowTooltipOnHoverV(const char* fmt, va_list args) IM_FMTLIST(1);
+    // add by Dicky end
+
     // Popups, Modals
     //  - They block normal mouse hovering detection (and therefore most mouse interactions) behind them.
     //  - If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
@@ -2939,6 +2944,10 @@ struct ImDrawList
     IMGUI_API void  AddConvexPolyFilled(const ImVec2* points, int num_points, ImU32 col);
     IMGUI_API void  AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments = 0); // Cubic Bezier (4 control points)
     IMGUI_API void  AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness, int num_segments = 0);               // Quadratic Bezier (3 control points)
+
+    // add by Dicky for Complex Text
+    IMGUI_API void AddTextComplex(const ImVec2 pos, const char * str, float font_size, ImU32 text_color, float outline_w = 0.f, ImU32 outline_color = 0, ImVec2 shadow_offset = ImVec2(0, 0), ImU32 shadow_color = 0);
+    // add by Dicky End
 
     // Image primitives
     // - Read FAQ to understand what ImTextureID is.

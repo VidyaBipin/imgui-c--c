@@ -1722,6 +1722,26 @@ void ImDrawList::AddText(const ImVec2& pos, ImU32 col, const char* text_begin, c
     AddText(NULL, 0.0f, pos, col, text_begin, text_end);
 }
 
+// add by Dicky
+void ImDrawList::AddTextComplex(const ImVec2 pos, const char * str, float font_size, ImU32 text_color, float outline_w, ImU32 outline_color, ImVec2 shadow_offset, ImU32 shadow_color)
+{
+    ImGui::SetWindowFontScale(font_size);
+    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, shadow_offset);
+    ImGui::PushStyleColor(ImGuiCol_TexGlyphShadow, ImGui::ColorConvertU32ToFloat4(shadow_color));
+    if (outline_w > 0)
+    {
+        AddText(ImVec2(pos.x - outline_w, pos.y), outline_color, str);
+        AddText(ImVec2(pos.x, pos.y - outline_w), outline_color, str);
+        AddText(ImVec2(pos.x + outline_w, pos.y), outline_color, str);
+        AddText(ImVec2(pos.x, pos.y + outline_w), outline_color, str);
+    }
+    AddText(pos, text_color, str);
+    ImGui::PopStyleColor();
+    ImGui::PopStyleVar();
+    ImGui::SetWindowFontScale(1.0);
+}
+// add by Dicky end
+
 void ImDrawList::AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col)
 {
     if ((col & IM_COL32_A_MASK) == 0)
