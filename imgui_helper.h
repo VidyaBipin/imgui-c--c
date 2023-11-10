@@ -22,30 +22,6 @@ struct IMGUI_API codewin
 namespace ImGui {
 // ImGui Info
 IMGUI_API void ShowImGuiInfo();
-// Image load
-IMGUI_API void ImGenerateOrUpdateTexture(ImTextureID& imtexid, int width, int height, int channels, const unsigned char* pixels, bool useMipmapsIfPossible, bool wraps, bool wrapt, bool minFilterNearest = false, bool magFilterNearest=false, bool is_immat=false);
-IMGUI_API inline void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width, int height, int channels, const unsigned char* pixels, bool is_immat = false) { ImGenerateOrUpdateTexture(imtexid, width, height, channels, pixels,false,false,false,false,false,is_immat); };
-IMGUI_API ImTextureID ImCreateTexture(const void* data, int width, int height, double time_stamp = NAN, int bit_depth = 8);
-IMGUI_API ImTextureID ImLoadTexture(const char* path);
-IMGUI_API void ImLoadImageToMat(const char* path, ImMat& mat, bool gray = false);
-IMGUI_API void ImDestroyTexture(ImTextureID texture);
-IMGUI_API int ImGetTextureWidth(ImTextureID texture);
-IMGUI_API int ImGetTextureHeight(ImTextureID texture);
-IMGUI_API int ImGetTextureData(ImTextureID texture, void* data);
-IMGUI_API ImPixel ImGetTexturePixel(ImTextureID texture, float x, float y);
-IMGUI_API double ImGetTextureTimeStamp(ImTextureID texture);
-IMGUI_API bool ImTextureToFile(ImTextureID texture, std::string path);
-IMGUI_API void ImMatToTexture(ImGui::ImMat mat, ImTextureID& texture);
-IMGUI_API void ImTextureToMat(ImTextureID texture, ImGui::ImMat& mat, ImVec2 offset = {}, ImVec2 size = {});
-IMGUI_API void ImCopyToTexture(ImTextureID& imtexid, unsigned char* pixels, int width, int height, int channels, int offset_x, int offset_y, bool is_immat=false);
-#if IMGUI_RENDERING_VULKAN && IMGUI_VULKAN_SHADER
-IMGUI_API ImTextureID ImCreateTexture(ImGui::VkImageMat & image, double time_stamp = NAN);
-#endif
-IMGUI_API void ImUpdateTextures(); // update internal textures, check need destroy texture and destroy it if we can
-IMGUI_API void ImDestroyTextures(); // clean internal textures
-IMGUI_API size_t ImGetTextureCount();
-
-IMGUI_API void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, ImVec2 size, float* offset_x = nullptr, float* offset_y = nullptr, float* tf_x = nullptr, float* tf_y = nullptr, bool bLandscape = true, bool out_border = false, const ImVec2& uvMin = ImVec2(0, 0), const ImVec2& uvMax = ImVec2(1, 1));
 
 // Experimental: tested on Ubuntu only. Should work with urls, folders and files.
 IMGUI_API bool OpenWithDefaultApplication(const char* url,bool exploreModeForWindowsOS=false);
@@ -347,51 +323,8 @@ struct IMGUI_API ImTree
             return nullptr;
     }
 };
-}   // ImGui
-
-namespace ImGui
-{
-class IMGUI_API ImKalman
-{
-public:
-    ImKalman(int state_size, int mea_size);
-    ~ImKalman() {};
-
-public:
-    void covariance(float noise_covariance, float measurement_noise_covariance);
-    void update(ImMat& Y);
-    ImMat& predicted();
-
-public:
-    ImMat statePre;            //预测状态矩阵(x'(k)) x(k) = A*x(k - 1) + B * u(k)
-    ImMat statePost;           //状态估计修正矩阵(x(k)) x(k) = x'(k) + K(k)*(z(k) - H * x'(k)) ： 1 * 8
-    ImMat transitionMatrix;    //转移矩阵(A)  ： 8 * 8
-    ImMat controMatrix;        //控制矩阵(B)
-    ImMat measurementMatrix;   //测量矩阵(H) ：4 * 8
-    ImMat processNoiseCov;     //预测模型噪声协方差矩阵(Q) ：8 * 8
-    ImMat measurementNoiseCov; //测量噪声协方差矩阵(R)  ： 4 * 4
-    ImMat errorCovPre;         //转移噪声矩阵(P'(k)) p'(k) = A * p(k - 1) * At + Q 
-    ImMat K;                   //kalman增益矩阵 K = p'(k) * Ht * inv(H * p'(k) * Ht + R)
-    ImMat errorCovPost;        //转移噪声修正矩阵(p(k)) p(k) = (I - K(k) * H) * p'(k)  ： 8 * 8
-};
 } // namespace ImGui
 
-// warpAffine helper
-namespace ImGui
-{
-IMGUI_API ImMat getPerspectiveTransform(const ImVec2 src[], const ImVec2 dst[]);
-IMGUI_API ImMat getAffineTransform(const ImVec2 src[], const ImVec2 dst[]);
-} // namespace ImGui
-
-// Draw helper for ImMat
-namespace ImGui
-{
-IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);
-IMGUI_API ImMat GrayToImage(const ImMat& mat);
-IMGUI_API ImMat CreateTextMat(const char* str, const ImPixel& color, float scale);
-IMGUI_API void  DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, const ImPixel& color, float scale);
-IMGUI_API void  ImageMatCopyTo(const ImMat& src, ImMat& dst, ImPoint pos);
-} // namespace ImGui
 // These classed are supposed to be used internally
 namespace ImGuiHelper {
 typedef ImGui::FieldType FieldType;

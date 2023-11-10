@@ -323,6 +323,7 @@ set(IMGUI_SRC
     imgui_draw.cpp
     imgui_widgets.cpp
     imgui_tables.cpp
+    imgui_texture.cpp
     imgui_helper.cpp
     immat.cpp
     misc/cpp/codewin.cpp
@@ -342,6 +343,7 @@ set(IMGUI_INC_DIRS
 set(IMGUI_INCS
     imgui.h
     imgui_internal.h
+    imgui_texture.h
     imgui_helper.h
     imstb_rectpack.h
     imstb_textedit.h

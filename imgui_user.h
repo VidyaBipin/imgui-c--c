@@ -36,6 +36,8 @@ IMGUI_API void      sleep(float seconds);
 IMGUI_API void      sleep(int ms_seconds);
 } // namespace ImGui
 
+#include <imgui_texture.h>
+
 #if IMGUI_ICONS
 #include "icons/icons.h"
 #endif

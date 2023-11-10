@@ -726,8 +726,8 @@ namespace ImGui
     IMGUI_API void          SetItemTooltipV(const char* fmt, va_list args) IM_FMTLIST(1);
 
     // add by Dicky for hovered tooltips
-    IMGUI_API void ShowTooltipOnHover(const char* fmt, ...) IM_FMTARGS(1);
-    IMGUI_API void ShowTooltipOnHoverV(const char* fmt, va_list args) IM_FMTLIST(1);
+    IMGUI_API void          ShowTooltipOnHover(const char* fmt, ...) IM_FMTARGS(1);             // show tooltips if item is hovered
+    IMGUI_API void          ShowTooltipOnHoverV(const char* fmt, va_list args) IM_FMTLIST(1);   // show tooltips if item is hovered with va_list
     // add by Dicky end
 
     // Popups, Modals
