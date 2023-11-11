@@ -81,7 +81,6 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     init_info.Allocator = g_Allocator;
     init_info.CheckVkResultFn = check_vk_result;
     ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
-    UpdateVulkanFont(wd);
 
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     if (property.application.Application_SetupContext)
@@ -341,7 +340,6 @@ int main(int argc, char** argv)
     init_info.CheckVkResultFn = check_vk_result;
     ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
 
-    UpdateVulkanFont(wd);
     SDL_GetWindowSize(window, &property.width, &property.height);
 #if IMGUI_VULKAN_SHADER
     ImGui::ImVulkanShaderInit();

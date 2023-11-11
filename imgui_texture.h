@@ -2,6 +2,7 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <immat.h>
+
 namespace ImGui {
 
 IMGUI_API void ImGenerateOrUpdateTexture(ImTextureID& imtexid, int width, int height, int channels, const unsigned char* pixels, bool useMipmapsIfPossible, bool wraps, bool wrapt, bool minFilterNearest = false, bool magFilterNearest=false, bool is_immat=false);
@@ -20,7 +21,7 @@ IMGUI_API void ImMatToTexture(ImMat mat, ImTextureID& texture);
 IMGUI_API void ImTextureToMat(ImTextureID texture, ImMat& mat, ImVec2 offset = {}, ImVec2 size = {});
 IMGUI_API void ImCopyToTexture(ImTextureID& imtexid, unsigned char* pixels, int width, int height, int channels, int offset_x, int offset_y, bool is_immat=false);
 #if IMGUI_RENDERING_VULKAN && IMGUI_VULKAN_SHADER
-IMGUI_API ImTextureID ImCreateTexture(VkImageMat & image, double time_stamp = NAN);
+//IMGUI_API ImTextureID ImCreateTexture(VkImageMat & image, double time_stamp = NAN);
 #endif
 IMGUI_API void ImUpdateTextures(); // update internal textures, check need destroy texture and destroy it if we can
 IMGUI_API void ImDestroyTextures(); // clean internal textures

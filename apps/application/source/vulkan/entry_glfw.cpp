@@ -116,8 +116,6 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     // Setup ImGui binding
     ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
 
-    UpdateVulkanFont(wd);
-
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     if (property.application.Application_SetupContext)
         property.application.Application_SetupContext(ctx, true);
@@ -360,8 +358,6 @@ int main(int argc, char** argv)
     init_info.CheckVkResultFn = check_vk_result;
     // Setup ImGui binding
     ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
-
-    UpdateVulkanFont(wd);
 
 #if IMGUI_VULKAN_SHADER
     ImGui::ImVulkanShaderInit();

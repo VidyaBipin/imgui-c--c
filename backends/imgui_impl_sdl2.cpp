@@ -336,7 +336,6 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
 {
     ImGuiIO& io = ImGui::GetIO();
     ImGui_ImplSDL2_Data* bd = ImGui_ImplSDL2_GetBackendData();
-    //io.FrameCountSinceLastUpdate = 0; // Add By Dicky
 
     switch (event->type)
     {
@@ -359,7 +358,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
         {
             //IMGUI_DEBUG_LOG("wheel %.2f %.2f, precise %.2f %.2f\n", (float)event->wheel.x, (float)event->wheel.y, event->wheel.preciseX, event->wheel.preciseY);
 #if SDL_VERSION_ATLEAST(2,0,18) // If this fails to compile on Emscripten: update to latest Emscripten!
-                                // modify by dicky to using mouse wheel axis config 
+            // modify by dicky to using mouse wheel axis config 
             float wheel_x = io.ConfigFlippedMouseWheelAxisX ? -event->wheel.preciseX : event->wheel.preciseX;
             float wheel_y = io.ConfigFlippedMouseWheelAxisY ? -event->wheel.preciseY : event->wheel.preciseY;
 #else
