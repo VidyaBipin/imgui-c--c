@@ -5044,7 +5044,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                     ImGui::UpdateData();
                 }
                 if (cursor_is_visible)
-                    draw_window->DrawList->AddLine(cursor_screen_rect.Min + ImVec2(1, 0), cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text), 2);
+                    draw_window->DrawList->AddLine(cursor_screen_rect.Min + ImVec2(1, 0), cursor_screen_rect.GetBL() + ImVec2(1, 0), GetColorU32(ImGuiCol_Text, 0.7), 2.5);
             }
 #if defined(__APPLE__) || defined(_WIN32)
             // we need display IME preedit character by ourself for MacOS and Windows
