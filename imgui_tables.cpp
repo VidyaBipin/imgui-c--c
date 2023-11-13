@@ -3645,6 +3645,7 @@ static void TableSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, 
 {
     // "Column 0  UserID=0x42AD2D21 Width=100 Visible=1 Order=0 Sort=0v"
     ImGuiTableSettings* settings = (ImGuiTableSettings*)entry;
+    if (!settings) return; // add by Dicky for NULL entry check
     float f = 0.0f;
     int column_n = 0, r = 0, n = 0;
 

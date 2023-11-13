@@ -180,12 +180,12 @@ struct StorageHandler
         handler.ReadLineFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line) -> void
         {
             auto storage = reinterpret_cast<StorageHandler*>(handler->UserData);
-            storage->DoReadLine(ctx, reinterpret_cast<Settings*>(entry), line);
+            if (storage && entry) storage->DoReadLine(ctx, reinterpret_cast<Settings*>(entry), line);
         };
         handler.WriteAllFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* out_buf)
         {
             auto storage = reinterpret_cast<StorageHandler*>(handler->UserData);
-            storage->DoWriteAll(ctx, out_buf);
+            if (storage) storage->DoWriteAll(ctx, out_buf);
         };
         return handler;
     }

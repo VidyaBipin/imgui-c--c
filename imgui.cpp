@@ -14240,9 +14240,9 @@ void ImGui::LoadIniSettingsFromMemory(const char* ini_data, size_t ini_size)
             *type_end = 0; // Overwrite first ']'
             name_start++;  // Skip second '['
             entry_handler = FindSettingsHandler(type_start);
-            entry_data = entry_handler ? entry_handler->ReadOpenFn(&g, entry_handler, name_start) : NULL;
+            entry_data = (entry_handler && entry_handler->ReadOpenFn) ? entry_handler->ReadOpenFn(&g, entry_handler, name_start) : NULL; // modify by Dicky check ReadOpenFn exist
         }
-        else if (entry_handler != NULL && entry_data != NULL)
+        else if (entry_handler != NULL/* && entry_data != NULL*/) // modify by Dicky, allow no entry data
         {
             // Let type handler parse the line
             entry_handler->ReadLineFn(&g, entry_handler, entry_data, line);
@@ -14470,6 +14470,7 @@ static void* WindowSettingsHandler_ReadOpen(ImGuiContext*, ImGuiSettingsHandler*
 static void WindowSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entry, const char* line)
 {
     ImGuiWindowSettings* settings = (ImGuiWindowSettings*)entry;
+    if (!settings) return; // add by Dicky for NULL entry point
     int x, y;
     int i;
     ImU32 u1;

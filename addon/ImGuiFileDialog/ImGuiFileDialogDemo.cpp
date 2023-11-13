@@ -265,7 +265,7 @@ void show_file_dialog_demo_window(ImGuiFileDialog * dlg, bool * open)
 		{
             dlg->OpenDialog("embedded", "Select File", ".*", "", -1, nullptr, 
 					ImGuiFileDialogFlags_NoDialog | 
-					ImGuiFileDialogFlags_DisableBookmarkMode | 
+					ImGuiFileDialogFlags_ShowBookmark |
 					ImGuiFileDialogFlags_DisableCreateDirectoryButton | 
 					ImGuiFileDialogFlags_ReadOnlyFileNameField);
         }
