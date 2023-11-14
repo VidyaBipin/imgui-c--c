@@ -16,6 +16,7 @@
 #include <ImGuiTabWindow.h>
 #include <imgui_node_editor.h>
 #include <imgui_curve.h>
+#include <ImNewCurve.h>
 #include <imgui_spline.h>
 #include <ImGuiZMOquat.h>
 #include <ImGuiZmo.h>
@@ -320,6 +321,7 @@ public:
     bool show_tab_window = false;
     bool show_node_editor_window = false;
     bool show_curve_demo_window = false;
+    bool show_new_curve_demo_window = false;
     bool show_spline_demo_window = false;
     bool show_zmoquat_window = false;
     bool show_zmo_window = false;
@@ -804,6 +806,7 @@ bool Example_Frame(void* handle, bool app_will_quit)
         ImGui::Checkbox("Tab Window", &example->show_tab_window);
         ImGui::Checkbox("Node Editor Window", &example->show_node_editor_window);
         ImGui::Checkbox("Curve Demo Window", &example->show_curve_demo_window);
+        ImGui::Checkbox("New Curve Demo Window", &example->show_new_curve_demo_window);
         ImGui::Checkbox("Spline Demo Window", &example->show_spline_demo_window);
         ImGui::Checkbox("ZmoQuat Demo Window", &example->show_zmoquat_window);
         ImGui::Checkbox("Zmo Demo Window", &example->show_zmo_window);
@@ -1099,6 +1102,17 @@ bool Example_Frame(void* handle, bool app_will_quit)
         if (ImGui::Begin("Example: Curve Demo", &example->show_curve_demo_window, ImGuiWindowFlags_NoScrollbar))
         {
             ImGui::ShowCurveDemo();   // see its code for further info         
+        }
+        ImGui::End();
+    }
+
+    // Show Curve Demo Window
+    if (example->show_new_curve_demo_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(800,600), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Example: New Curve Demo", &example->show_new_curve_demo_window, ImGuiWindowFlags_NoScrollbar))
+        {
+            ImGui::ImNewCurve::ShowDemo();
         }
         ImGui::End();
     }

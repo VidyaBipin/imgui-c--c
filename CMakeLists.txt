@@ -1041,6 +1041,26 @@ if (IMGUI_BUILD_EXAMPLE)
     )
 endif(IMGUI_BUILD_EXAMPLE)
 
+# New Curve
+set(IMGUI_SRC
+    ${IMGUI_SRC}
+    addon/ImNewCurve/ImNewCurve.cpp
+)
+set(IMGUI_INCS
+    ${IMGUI_INCS}
+    addon/ImNewCurve/ImNewCurve.h
+)
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImNewCurve
+)
+if (IMGUI_BUILD_EXAMPLE)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        addon/ImNewCurve/ImNewCurveDemo.cpp
+    )
+endif(IMGUI_BUILD_EXAMPLE)
+
 # Memory Editor
 set(IMGUI_INCS
     ${IMGUI_INCS}
