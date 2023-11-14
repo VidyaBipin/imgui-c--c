@@ -2678,6 +2678,22 @@ std::map<std::string, std::string> IGFD::FileManager::GetResultingSelection(File
 
 #pragma endregion
 
+// add By Dicky for drag drop support
+#pragma region DragDropInfo
+IGFD::DropInfos::DropInfos(std::shared_ptr<IGFD::FileInfos> info, FileManager* fdi)
+{
+    fileType = info->fileType;
+    //fileNameExt = info->fileNameExt.c_str();
+    strncpy(fileNameExt, info->fileNameExt.c_str(), sizeof(fileNameExt));
+    auto path = fdi->GetCurrentPath();
+    if (path != fdi->fsRoot)
+        path += std::string(1u, PATH_SEP);
+    //filePath = (path + fileNameExt).c_str();
+    strncpy(filePath, (path + fileNameExt).c_str(), sizeof(filePath));
+}
+#pragma endregion
+// add By Dicky end
+
 #pragma region FileDialogInternal
 
 void IGFD::FileDialogInternal::NewFrame() {
@@ -4525,6 +4541,18 @@ void IGFD::FileDialog::m_DrawFileListView(ImVec2 vSize) {
                     if (ImGui::TableNextColumn())  // file name
                     {
                         m_SelectableItem(i, infos, selected, _str.c_str());
+                        // add by Dicky for drag drop support
+                        if (!(m_FileDialogInternal.dLGflags & ImGuiFileDialogFlags_DisableDragDrop))
+                        {
+                            if (ImGui::BeginDragDropSource())
+                            {
+                                DropInfos dinfo(infos, &fdi);
+                                ImGui::SetDragDropPayload("ImGuiFileDialog", &dinfo, sizeof(DropInfos));
+                                ImGui::TextUnformatted(_str.c_str());
+                                ImGui::EndDragDropSource();
+                            }
+                        }
+                        // add by Dicky end
                     }
                     if (ImGui::TableNextColumn())  // file type
                     {

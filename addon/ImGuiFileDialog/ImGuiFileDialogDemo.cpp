@@ -207,6 +207,14 @@ void show_file_dialog_demo_window(ImGuiFileDialog * dlg, bool * open)
 				&flags, ImGuiFileDialogFlags_CaseInsensitiveExtention);
 		}
 		ImGui::Unindent();
+		// add by Dicky for disable drag drop support
+		static bool DragDropSupport = true;
+		ImGui::Checkbox("Disable Drag drop", &DragDropSupport);
+		if (!DragDropSupport)
+			flags |= ImGuiFileDialogFlags_DisableDragDrop;
+		else
+			flags &= ~ImGuiFileDialogFlags_DisableDragDrop;
+		// add by Dicky end
 
 		ImGui::Text("Singleton acces :");
 		if (ImGui::Button(ICON_IGFD_FOLDER_OPEN " Open File Dialog"))
@@ -369,6 +377,21 @@ void show_file_dialog_demo_window(ImGuiFileDialog * dlg, bool * open)
 		ImGui::Indent();
 		{
 			ImGui::Text("GetFilePathName() : %s", filePathName.c_str());
+			// add by Dicky for drag drop
+			if (ImGui::BeginDragDropTarget())
+            {
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ImGuiFileDialog"))
+                {
+					if (payload->Data)
+					{
+						IGFD::DropInfos* dinfo = (IGFD::DropInfos*)payload->Data;
+						filePathName = dinfo->fileNameExt;
+						filePath = dinfo->filePath;
+					}
+				}
+				ImGui::EndDragDropTarget();
+			}
+			// add by Dicky end
 			ImGui::Text("GetFilePath() : %s", filePath.c_str());
 			ImGui::Text("GetCurrentFilter() : %s", filter.c_str());
 			ImGui::Text("GetUserDatas() (was a std::string in this sample) : %s", userDatas.c_str());
