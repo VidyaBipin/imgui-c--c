@@ -552,16 +552,16 @@ void Example::WarpMatrixDemo()
 {
     const float width = 1920.f;
     const float height = 1080.f;
-    ImVec2 src_corners[4];
-    ImVec2 dst_corners[4];
-    src_corners[0] = ImVec2(width / 1.80, height / 4.20);
-    src_corners[1] = ImVec2(width / 1.15, height / 3.32);
-    src_corners[2] = ImVec2(width / 1.33, height / 1.10);
-    src_corners[3] = ImVec2(width / 1.93, height / 1.36);
-    dst_corners[0] = ImVec2(0, 0);
-    dst_corners[1] = ImVec2(width, 0);
-    dst_corners[2] = ImVec2(width, height);
-    dst_corners[3] = ImVec2(0, height);
+    ImPoint src_corners[4];
+    ImPoint dst_corners[4];
+    src_corners[0] = ImPoint(width / 1.80, height / 4.20);
+    src_corners[1] = ImPoint(width / 1.15, height / 3.32);
+    src_corners[2] = ImPoint(width / 1.33, height / 1.10);
+    src_corners[3] = ImPoint(width / 1.93, height / 1.36);
+    dst_corners[0] = ImPoint(0, 0);
+    dst_corners[1] = ImPoint(width, 0);
+    dst_corners[2] = ImPoint(width, height);
+    dst_corners[3] = ImPoint(0, height);
     ImGui::ImMat M0 = ImGui::getPerspectiveTransform(dst_corners, src_corners);
     ImGui::ImMat M1 = ImGui::getAffineTransform(dst_corners, src_corners);
     for (int i = 0; i < 4; i++)

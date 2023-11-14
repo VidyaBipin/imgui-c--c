@@ -439,9 +439,9 @@ bool ImGui_ImplAllegro5_Init(ALLEGRO_DISPLAY* display)
     // We still use a custom declaration to use 'ALLEGRO_PRIM_TEX_COORD' instead of 'ALLEGRO_PRIM_TEX_COORD_PIXEL' else we can't do a reliable conversion.
     ALLEGRO_VERTEX_ELEMENT elems[] =
     {
-        { ALLEGRO_PRIM_POSITION, ALLEGRO_PRIM_FLOAT_2, IM_OFFSETOF(ImDrawVertAllegro, pos) },
-        { ALLEGRO_PRIM_TEX_COORD, ALLEGRO_PRIM_FLOAT_2, IM_OFFSETOF(ImDrawVertAllegro, uv) },
-        { ALLEGRO_PRIM_COLOR_ATTR, 0, IM_OFFSETOF(ImDrawVertAllegro, col) },
+        { ALLEGRO_PRIM_POSITION, ALLEGRO_PRIM_FLOAT_2, offsetof(ImDrawVertAllegro, pos) },
+        { ALLEGRO_PRIM_TEX_COORD, ALLEGRO_PRIM_FLOAT_2, offsetof(ImDrawVertAllegro, uv) },
+        { ALLEGRO_PRIM_COLOR_ATTR, 0, offsetof(ImDrawVertAllegro, col) },
         { 0, 0, 0 }
     };
     bd->VertexDecl = al_create_vertex_decl(elems, sizeof(ImDrawVertAllegro));
@@ -617,7 +617,7 @@ void ImGui_ImplAllegro5_WaitForEvent(ALLEGRO_EVENT_QUEUE* queue)
         !(ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode))
         return;
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();
-    int display_flags = al_get_display_flags(bd-》Display);
+    int display_flags = al_get_display_flags(bd->Display);
     bool window_is_hidden = display_flags & ALLEGRO_MINIMIZED;
     double waiting_time = window_is_hidden ? INFINITY : ImGui::GetEventWaitingTime();
     if (waiting_time > 0.0)

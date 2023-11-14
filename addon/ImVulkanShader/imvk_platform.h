@@ -166,5 +166,8 @@ private:
 #include <vector>
 #include <string>
 
+#include <vulkan/vulkan.h>
+#include "imvk_vulkan_header_fix.h"
+
 #endif // __cplusplus
 

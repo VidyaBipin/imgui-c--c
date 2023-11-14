@@ -2254,7 +2254,6 @@ struct ImGuiContext
     // Add By Dicky Power saving mode
     double                  MaxWaitBeforeNextFrame;             // How much time, in seconds, can we wait for events before starting the next frame
     double                  WallClock;                          // System Clock
-    double                  FrameFPS;                           // User custom reflash rate
     // Add By Dicky end
 
     // Gamepad/keyboard Navigation
@@ -2540,9 +2539,8 @@ struct ImGuiContext
         ViewportFocusedStampCount = 0;
 
         // Add by Dicky for power saving
-        MaxWaitBeforeNextFrame = INFINITY;
+        MaxWaitBeforeNextFrame = 0.0;
         WallClock = ImGui::get_current_time();
-        FrameFPS = 60.0;
         // Add by Dicky end
 
         NavWindow = NULL;
@@ -3149,6 +3147,7 @@ struct IMGUI_API ImGuiTable
     bool                        IsSortSpecsDirty;
     bool                        IsUsingHeaders;             // Set when the first row had the ImGuiTableRowFlags_Headers flag.
     bool                        IsContextPopupOpen;         // Set when default context menu is open (also see: ContextPopupColumn, InstanceInteracted).
+    bool                        DisableDefaultContextMenu;  // Disable default context menu contents. You may submit your own using TableBeginContextMenuPopup()/EndPopup()
     bool                        IsSettingsRequestLoad;
     bool                        IsSettingsDirty;            // Set when table settings have changed and needs to be reported into ImGuiTableSetttings data.
     bool                        IsDefaultDisplayOrder;      // Set when display order is unchanged from default (DisplayOrder contains 0...Count-1)
@@ -3491,6 +3490,7 @@ namespace ImGui
     IMGUI_API bool              IsMouseDown(ImGuiMouseButton button, ImGuiID owner_id);
     IMGUI_API bool              IsMouseClicked(ImGuiMouseButton button, ImGuiID owner_id, ImGuiInputFlags flags = 0);
     IMGUI_API bool              IsMouseReleased(ImGuiMouseButton button, ImGuiID owner_id);
+    IMGUI_API bool              IsMouseDoubleClicked(ImGuiMouseButton button, ImGuiID owner_id);
 
     // [EXPERIMENTAL] Shortcut Routing
     // - ImGuiKeyChord = a ImGuiKey optionally OR-red with ImGuiMod_Alt/ImGuiMod_Ctrl/ImGuiMod_Shift/ImGuiMod_Super.
@@ -3626,7 +3626,7 @@ namespace ImGui
     IMGUI_API void          TableUpdateBorders(ImGuiTable* table);
     IMGUI_API void          TableUpdateColumnsWeightFromWidth(ImGuiTable* table);
     IMGUI_API void          TableDrawBorders(ImGuiTable* table);
-    IMGUI_API void          TableDrawContextMenu(ImGuiTable* table);
+    IMGUI_API void          TableDrawDefaultContextMenu(ImGuiTable* table, ImGuiTableFlags flags_for_section_to_display);
     IMGUI_API bool          TableBeginContextMenuPopup(ImGuiTable* table);
     IMGUI_API void          TableMergeDrawChannels(ImGuiTable* table);
     inline ImGuiTableInstanceData*  TableGetInstanceData(ImGuiTable* table, int instance_no) { if (instance_no == 0) return &table->InstanceDataFirst; return &table->InstanceDataExtra[instance_no - 1]; }

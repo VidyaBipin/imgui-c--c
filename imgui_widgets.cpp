@@ -5029,6 +5029,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
             {
                 if (g.IO.ConfigInputTextCursorBlink)
                 {
+                    /*
                     double time_to_transition;
                     if (state->CursorAnim <= 0.0f)
                         time_to_transition = 0.80f - state->CursorAnim;
@@ -5039,9 +5040,11 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
                     // Make sure the next frame starts after the transition.
                     time_to_transition += 0.05f;
                     SetMaxWaitBeforeNextFrame(time_to_transition);
+                    */
+                    ImGui::UpdateData();
                 }
                 if (cursor_is_visible)
-                    draw_window->DrawList->AddLine(cursor_screen_rect.Min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text));
+                    draw_window->DrawList->AddLine(cursor_screen_rect.Min + ImVec2(1, 0), cursor_screen_rect.GetBL() + ImVec2(1, 0), GetColorU32(ImGuiCol_Text, 0.7), 2.5);
             }
 #if defined(__APPLE__) || defined(_WIN32)
             // we need display IME preedit character by ourself for MacOS and Windows
@@ -6954,6 +6957,7 @@ void ImGui::SetNextItemSelectionUserData(ImGuiSelectionUserData selection_user_d
 // - ListBox()
 //-------------------------------------------------------------------------
 
+// This is essentially a thin wrapper to using BeginChild/EndChild with the ImGuiChildFlags_FrameStyle flag for stylistic changes + displaying a label.
 // Tip: To have a list filling the entire window width, use size.x = -FLT_MIN and pass an non-visible label e.g. "##empty"
 // Tip: If your vertical size is calculated from an item count (e.g. 10 * item_height) consider adding a fractional part to facilitate seeing scrolling boundaries (e.g. 10.25 * item_height).
 bool ImGui::BeginListBox(const char* label, const ImVec2& size_arg)
@@ -6983,7 +6987,7 @@ bool ImGui::BeginListBox(const char* label, const ImVec2& size_arg)
         return false;
     }
 
-    // FIXME-OPT: We could omit the BeginGroup() if label_size.x but would need to omit the EndGroup() as well.
+    // FIXME-OPT: We could omit the BeginGroup() if label_size.x == 0.0f but would need to omit the EndGroup() as well.
     BeginGroup();
     if (label_size.x > 0.0f)
     {
@@ -6992,7 +6996,7 @@ bool ImGui::BeginListBox(const char* label, const ImVec2& size_arg)
         window->DC.CursorMaxPos = ImMax(window->DC.CursorMaxPos, label_pos + label_size);
     }
 
-    BeginChildFrame(id, frame_bb.GetSize());
+    BeginChild(id, frame_bb.GetSize(), ImGuiChildFlags_FrameStyle);
     return true;
 }
 
@@ -7003,7 +7007,7 @@ void ImGui::EndListBox()
     IM_ASSERT((window->Flags & ImGuiWindowFlags_ChildWindow) && "Mismatched BeginListBox/EndListBox calls. Did you test the return value of BeginListBox?");
     IM_UNUSED(window);
 
-    EndChildFrame();
+    EndChild();
     EndGroup(); // This is only required to be able to do IsItemXXX query on the whole ListBox including label
 }
 

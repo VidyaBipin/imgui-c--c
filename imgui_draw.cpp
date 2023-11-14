@@ -449,9 +449,9 @@ void ImDrawListSharedData::SetCircleTessellationMaxError(float max_error)
 void ImDrawList::_ResetForNewFrame()
 {
     // Verify that the ImDrawCmd fields we want to memcmp() are contiguous in memory.
-    IM_STATIC_ASSERT(IM_OFFSETOF(ImDrawCmd, ClipRect) == 0);
-    IM_STATIC_ASSERT(IM_OFFSETOF(ImDrawCmd, TextureId) == sizeof(ImVec4));
-    IM_STATIC_ASSERT(IM_OFFSETOF(ImDrawCmd, VtxOffset) == sizeof(ImVec4) + sizeof(ImTextureID));
+    IM_STATIC_ASSERT(offsetof(ImDrawCmd, ClipRect) == 0);
+    IM_STATIC_ASSERT(offsetof(ImDrawCmd, TextureId) == sizeof(ImVec4));
+    IM_STATIC_ASSERT(offsetof(ImDrawCmd, VtxOffset) == sizeof(ImVec4) + sizeof(ImTextureID));
     if (_Splitter._Count > 1)
         _Splitter.Merge(this);
 
@@ -538,7 +538,7 @@ void ImDrawList::AddCallback(ImDrawCallback callback, void* callback_data)
 }
 
 // Compare ClipRect, TextureId and VtxOffset with a single memcmp()
-#define ImDrawCmd_HeaderSize                            (IM_OFFSETOF(ImDrawCmd, VtxOffset) + sizeof(unsigned int))
+#define ImDrawCmd_HeaderSize                            (offsetof(ImDrawCmd, VtxOffset) + sizeof(unsigned int))
 #define ImDrawCmd_HeaderCompare(CMD_LHS, CMD_RHS)       (memcmp(CMD_LHS, CMD_RHS, ImDrawCmd_HeaderSize))    // Compare ClipRect, TextureId, VtxOffset
 #define ImDrawCmd_HeaderCopy(CMD_DST, CMD_SRC)          (memcpy(CMD_DST, CMD_SRC, ImDrawCmd_HeaderSize))    // Copy ClipRect, TextureId, VtxOffset
 #define ImDrawCmd_AreSequentialIdxOffset(CMD_0, CMD_1)  (CMD_0->IdxOffset + CMD_0->ElemCount == CMD_1->IdxOffset)
@@ -1721,6 +1721,31 @@ void ImDrawList::AddText(const ImVec2& pos, ImU32 col, const char* text_begin, c
 {
     AddText(NULL, 0.0f, pos, col, text_begin, text_end);
 }
+
+// add by Dicky
+void ImDrawList::AddTextComplex(const ImVec2 pos, const char * str, float font_size, ImU32 text_color, float outline_w, ImU32 outline_color, ImVec2 shadow_offset, ImU32 shadow_color)
+{
+    ImGui::SetWindowFontScale(font_size);
+    ImGui::PushStyleVar(ImGuiStyleVar_TexGlyphShadowOffset, shadow_offset);
+    ImGui::PushStyleColor(ImGuiCol_TexGlyphShadow, ImGui::ColorConvertU32ToFloat4(shadow_color));
+    if (outline_w > 0)
+    {
+        AddText(ImVec2(pos.x - outline_w, pos.y), outline_color, str);
+        AddText(ImVec2(pos.x, pos.y - outline_w), outline_color, str);
+        AddText(ImVec2(pos.x + outline_w, pos.y), outline_color, str);
+        AddText(ImVec2(pos.x, pos.y + outline_w), outline_color, str);
+    }
+    AddText(pos, text_color, str);
+    ImGui::PopStyleColor();
+    ImGui::PopStyleVar();
+    ImGui::SetWindowFontScale(1.0);
+}
+
+void ImDrawList::AddTextComplex(const char * str, float font_size, ImU32 text_color, float outline_w, ImU32 outline_color, ImVec2 shadow_offset, ImU32 shadow_color)
+{
+    return AddTextComplex(ImGui::GetCursorScreenPos(), str, font_size, text_color, outline_w, outline_color, shadow_offset, shadow_color);
+}
+// add by Dicky end
 
 void ImDrawList::AddImage(ImTextureID user_texture_id, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col)
 {

@@ -4,9 +4,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <immat.h>
-#if IMGUI_VULKAN_SHADER
-#include <imvk_gpu.h>
-#endif
 #include <functional>
 #include <map>
 #include <string>
@@ -25,30 +22,6 @@ struct IMGUI_API codewin
 namespace ImGui {
 // ImGui Info
 IMGUI_API void ShowImGuiInfo();
-// Image load
-IMGUI_API void ImGenerateOrUpdateTexture(ImTextureID& imtexid, int width, int height, int channels, const unsigned char* pixels, bool useMipmapsIfPossible, bool wraps, bool wrapt, bool minFilterNearest = false, bool magFilterNearest=false, bool is_immat=false);
-IMGUI_API inline void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width, int height, int channels, const unsigned char* pixels, bool is_immat = false) { ImGenerateOrUpdateTexture(imtexid, width, height, channels, pixels,false,false,false,false,false,is_immat); };
-IMGUI_API ImTextureID ImCreateTexture(const void* data, int width, int height, double time_stamp = NAN, int bit_depth = 8);
-IMGUI_API ImTextureID ImLoadTexture(const char* path);
-IMGUI_API void ImLoadImageToMat(const char* path, ImMat& mat, bool gray = false);
-IMGUI_API void ImDestroyTexture(ImTextureID texture);
-IMGUI_API int ImGetTextureWidth(ImTextureID texture);
-IMGUI_API int ImGetTextureHeight(ImTextureID texture);
-IMGUI_API int ImGetTextureData(ImTextureID texture, void* data);
-IMGUI_API ImPixel ImGetTexturePixel(ImTextureID texture, float x, float y);
-IMGUI_API double ImGetTextureTimeStamp(ImTextureID texture);
-IMGUI_API bool ImTextureToFile(ImTextureID texture, std::string path);
-IMGUI_API void ImMatToTexture(ImGui::ImMat mat, ImTextureID& texture);
-IMGUI_API void ImTextureToMat(ImTextureID texture, ImGui::ImMat& mat, ImVec2 offset = {}, ImVec2 size = {});
-IMGUI_API void ImCopyToTexture(ImTextureID& imtexid, unsigned char* pixels, int width, int height, int channels, int offset_x, int offset_y, bool is_immat=false);
-#if IMGUI_RENDERING_VULKAN && IMGUI_VULKAN_SHADER
-IMGUI_API ImTextureID ImCreateTexture(ImGui::VkImageMat & image, double time_stamp = NAN);
-#endif
-IMGUI_API void ImUpdateTextures(); // update internal textures, check need destroy texture and destroy it if we can
-IMGUI_API void ImDestroyTextures(); // clean internal textures
-IMGUI_API size_t ImGetTextureCount();
-
-IMGUI_API void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, ImVec2 size, float* offset_x = nullptr, float* offset_y = nullptr, float* tf_x = nullptr, float* tf_y = nullptr, bool bLandscape = true, bool out_border = false, const ImVec2& uvMin = ImVec2(0, 0), const ImVec2& uvMax = ImVec2(1, 1));
 
 // Experimental: tested on Ubuntu only. Should work with urls, folders and files.
 IMGUI_API bool OpenWithDefaultApplication(const char* url,bool exploreModeForWindowsOS=false);
@@ -59,9 +32,6 @@ IMGUI_API bool IsItemActiveLastFrame();
 IMGUI_API bool IsItemJustReleased();
 IMGUI_API bool IsItemDisabled();
 
-IMGUI_API void ShowTooltipOnHover(const char* fmt, ...) IM_FMTARGS(1);
-IMGUI_API void ShowTooltipOnHoverV(const char* fmt, va_list args) IM_FMTLIST(1);
-
 // Drawn an rectangle around last ImGui widget.
 IMGUI_API void Debug_DrawItemRect(const ImVec4& col = ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
 
@@ -71,8 +41,6 @@ IMGUI_API void TextColoredV(int fntIndex,const ImVec4& col, const char* fmt, va_
 IMGUI_API void TextColored(int fntIndex,const ImVec4& col, const char* fmt, ...) IM_FMTARGS(3);
 IMGUI_API void TextV(int fntIndex,const char* fmt, va_list args);
 IMGUI_API void Text(int fntIndex,const char* fmt, ...) IM_FMTARGS(2);
-IMGUI_API void AddTextComplex(ImDrawList *draw_list, const ImVec2 pos, const char * str, float font_size, ImU32 text_color, float outline_w = 0.f, ImU32 outline_color = 0, ImVec2 shadow_offset = ImVec2(0, 0), ImU32 shadow_color = 0);
-IMGUI_API void AddTextComplex(const char * str, float font_size, ImU32 text_color, float outline_w = 0.f, ImU32 outline_color = 0, ImVec2 shadow_offset = ImVec2(0, 0), ImU32 shadow_color = 0);
 // Handy if we want to use ImGui::Image(...) or ImGui::ImageButton(...) with a glyph
 IMGUI_API bool GetTexCoordsFromGlyph(unsigned short glyph, ImVec2& uv0, ImVec2& uv1);
 
@@ -106,35 +74,6 @@ IMGUI_API bool Base85DecodeFromFile(const char* filePath,ImVector<char>& rv);
 // Generate color
 IMGUI_API void RandomColor(ImVec4& color, float alpha = 1.0);
 IMGUI_API void RandomColor(ImU32& color, float alpha = 1.0);
-
-// FFT 1D
-IMGUI_API void ImFFT (float* data, int N, bool forward);
-IMGUI_API void ImRFFT (float* data, int N, bool forward);
-IMGUI_API void ImRFFT (float* in, float* out, int N, bool forward);
-IMGUI_API int ImReComposeDB(float * in, float * out, int samples, bool inverse = true);
-IMGUI_API int ImReComposeAmplitude(float * in, float * out, int samples);
-IMGUI_API int ImReComposePhase(float * in, float * out, int samples);
-IMGUI_API int ImReComposeDBShort(float * in, float * out, int samples, bool inverse = true);
-IMGUI_API int ImReComposeDBLong(float * in, float * out, int samples, bool inverse = true);
-IMGUI_API float ImDoDecibel(float * in, int samples, bool inverse = true);
-
-// STFT 1D
-struct IMGUI_API ImSTFT
-{
-    ImSTFT(int _window, int _hope);
-    ~ImSTFT();
-    void stft(float* in, float* out);
-    void istft(float* in, float* out);
-
-private:
-    void *hannwin {nullptr};
-    void *overlap {nullptr};
-
-    int frame_size;
-    int shift_size;
-    int overlap_size;
-    float* buf  {nullptr};
-};
 
 #ifdef IMGUI_USE_ZLIB	// requires linking to library -lZlib
 // Two methods that fill rv and return true on success
@@ -241,12 +180,12 @@ struct StorageHandler
         handler.ReadLineFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line) -> void
         {
             auto storage = reinterpret_cast<StorageHandler*>(handler->UserData);
-            storage->DoReadLine(ctx, reinterpret_cast<Settings*>(entry), line);
+            if (storage && entry) storage->DoReadLine(ctx, reinterpret_cast<Settings*>(entry), line);
         };
         handler.WriteAllFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* out_buf)
         {
             auto storage = reinterpret_cast<StorageHandler*>(handler->UserData);
-            storage->DoWriteAll(ctx, out_buf);
+            if (storage) storage->DoWriteAll(ctx, out_buf);
         };
         return handler;
     }
@@ -384,51 +323,8 @@ struct IMGUI_API ImTree
             return nullptr;
     }
 };
-}   // ImGui
-
-namespace ImGui
-{
-class IMGUI_API ImKalman
-{
-public:
-    ImKalman(int state_size, int mea_size);
-    ~ImKalman() {};
-
-public:
-    void covariance(float noise_covariance, float measurement_noise_covariance);
-    void update(ImMat& Y);
-    ImMat& predicted();
-
-public:
-    ImMat statePre;            //预测状态矩阵(x'(k)) x(k) = A*x(k - 1) + B * u(k)
-    ImMat statePost;           //状态估计修正矩阵(x(k)) x(k) = x'(k) + K(k)*(z(k) - H * x'(k)) ： 1 * 8
-    ImMat transitionMatrix;    //转移矩阵(A)  ： 8 * 8
-    ImMat controMatrix;        //控制矩阵(B)
-    ImMat measurementMatrix;   //测量矩阵(H) ：4 * 8
-    ImMat processNoiseCov;     //预测模型噪声协方差矩阵(Q) ：8 * 8
-    ImMat measurementNoiseCov; //测量噪声协方差矩阵(R)  ： 4 * 4
-    ImMat errorCovPre;         //转移噪声矩阵(P'(k)) p'(k) = A * p(k - 1) * At + Q 
-    ImMat K;                   //kalman增益矩阵 K = p'(k) * Ht * inv(H * p'(k) * Ht + R)
-    ImMat errorCovPost;        //转移噪声修正矩阵(p(k)) p(k) = (I - K(k) * H) * p'(k)  ： 8 * 8
-};
 } // namespace ImGui
 
-// warpAffine helper
-namespace ImGui
-{
-IMGUI_API ImMat getPerspectiveTransform(const ImVec2 src[], const ImVec2 dst[]);
-IMGUI_API ImMat getAffineTransform(const ImVec2 src[], const ImVec2 dst[]);
-} // namespace ImGui
-
-// Draw helper for ImMat
-namespace ImGui
-{
-IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);
-IMGUI_API ImMat GrayToImage(const ImMat& mat);
-IMGUI_API ImMat CreateTextMat(const char* str, const ImPixel& color, float scale);
-IMGUI_API void  DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, const ImPixel& color, float scale);
-IMGUI_API void  ImageMatCopyTo(const ImMat& src, ImMat& dst, ImPoint pos);
-} // namespace ImGui
 // These classed are supposed to be used internally
 namespace ImGuiHelper {
 typedef ImGui::FieldType FieldType;

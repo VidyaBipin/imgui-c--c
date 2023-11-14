@@ -100,7 +100,7 @@ int main(int argc, char** argv)
     io.FontGlobalScale = 1.0f / property.font_scale;
     if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnablePowerSavingMode;
     if (property.low_reflash) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
-    ImGui::SetMaxFrameRate(property.fps);
+    ImGui::SetCustomFrameRate(property.max_fps, property.min_fps);
     if (property.navigator)
     {
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;

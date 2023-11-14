@@ -323,12 +323,14 @@ set(IMGUI_SRC
     imgui_draw.cpp
     imgui_widgets.cpp
     imgui_tables.cpp
+    imgui_texture.cpp
     imgui_helper.cpp
     immat.cpp
     misc/cpp/codewin.cpp
     misc/cpp/imgui_stdlib.cpp
     misc/cpp/dir_iterate.cpp
     misc/cpp/imgui_cpu.cpp
+    misc/cpp/imgui_fft.cpp
     misc/json/imgui_json.cpp
 )
 
@@ -341,6 +343,7 @@ set(IMGUI_INC_DIRS
 set(IMGUI_INCS
     imgui.h
     imgui_internal.h
+    imgui_texture.h
     imgui_helper.h
     imstb_rectpack.h
     imstb_textedit.h
@@ -350,6 +353,7 @@ set(IMGUI_INCS
     misc/cpp/imgui_stdlib.h
     misc/cpp/dir_iterate.h
     misc/cpp/imgui_cpu.h
+    misc/cpp/imgui_fft.h
     misc/stb_image.h
     misc/stb_image_write.h
     misc/stb_image_resize.h
@@ -1415,7 +1419,7 @@ endif(IMGUI_STATIC)
 
 set(IMGUI_VERSION_MAJOR 1)
 set(IMGUI_VERSION_MINOR 89)
-set(IMGUI_VERSION_PATCH 97)
+set(IMGUI_VERSION_PATCH 98)
 string(TIMESTAMP IMGUI_VERSION_BUILD "%y%m%d")
 set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH})
 add_definitions(-DIMGUI_VERSION_MAJOR=${IMGUI_VERSION_MAJOR})

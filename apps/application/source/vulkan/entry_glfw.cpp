@@ -116,8 +116,6 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     // Setup ImGui binding
     ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
 
-    UpdateVulkanFont(wd);
-
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     if (property.application.Application_SetupContext)
         property.application.Application_SetupContext(ctx, true);
@@ -196,7 +194,7 @@ int main(int argc, char** argv)
     io.FontGlobalScale = 1.0f / property.font_scale;
     if (property.power_save) io.ConfigFlags |= ImGuiConfigFlags_EnablePowerSavingMode;
     if (property.low_reflash) io.ConfigFlags |= ImGuiConfigFlags_EnableLowRefreshMode;
-    ImGui::SetMaxFrameRate(property.fps);
+    ImGui::SetCustomFrameRate(property.max_fps, property.min_fps);
     if (property.navigator)
     {
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -360,8 +358,6 @@ int main(int argc, char** argv)
     init_info.CheckVkResultFn = check_vk_result;
     // Setup ImGui binding
     ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
-
-    UpdateVulkanFont(wd);
 
 #if IMGUI_VULKAN_SHADER
     ImGui::ImVulkanShaderInit();

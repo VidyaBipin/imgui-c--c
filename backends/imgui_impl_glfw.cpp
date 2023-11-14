@@ -1335,23 +1335,33 @@ static LRESULT CALLBACK ImGui_ImplGlfw_WndProc(HWND hWnd, UINT msg, WPARAM wPara
 // Add By Dicky
 void ImGui_ImplGlfw_WaitForEvent()
 {
-    ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
-    if (!(ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode) &&
-        !(ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode))
+    auto flags = ImGui::GetIO().ConfigFlags;
+    auto count = ImGui::GetIO().FrameCountSinceLastUpdate;
+    auto delay_count = ImGui::GetIO().MaxDelayFrameCount;
+    auto long_delay = 1000.0 / (ImGui::GetIO().MinFrameRate + FLT_EPSILON);
+    if (!(flags & ImGuiConfigFlags_EnablePowerSavingMode) &&
+        !(flags & ImGuiConfigFlags_EnableLowRefreshMode))
         return;
 
+    ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
     bool window_is_hidden = !glfwGetWindowAttrib(bd->Window, GLFW_VISIBLE) || glfwGetWindowAttrib(bd->Window, GLFW_ICONIFIED);
-    double waiting_time = window_is_hidden ? INFINITY : ImGui::GetEventWaitingTime();
-    if (waiting_time > 0.0)
+    if (window_is_hidden) glfwWaitEvents();
+    else if (flags & ImGuiConfigFlags_EnableLowRefreshMode && !(flags & ImGuiConfigFlags_EnablePowerSavingMode))
     {
-        if (isinf(waiting_time) || waiting_time > 2.0)
-            glfwWaitEvents();
-        else
+        const int waiting_time_ms = (int)(1000.0 * ImGui::GetEventWaitingTime());
+        if (waiting_time_ms > 0.0) ImGui::sleep(waiting_time_ms);
+    }
+    else if (flags & ImGuiConfigFlags_EnablePowerSavingMode)
+    {
+        if (count <= delay_count && (flags & ImGuiConfigFlags_EnableLowRefreshMode))
         {
-            if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode)
-                glfwWaitEventsTimeout(waiting_time);
-            else
-                ImGui::sleep((float)waiting_time);
+            const int waiting_time_ms = (int)(1000.0 * ImGui::GetEventWaitingTime());
+            if (waiting_time_ms > 0.0) ImGui::sleep(waiting_time_ms);
+        }
+        else if (count > delay_count)
+        {
+            //glfwWaitEvents();
+            glfwWaitEventsTimeout(long_delay);
         }
     }
 }

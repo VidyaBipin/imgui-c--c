@@ -4679,4 +4679,42 @@ inline ImMat& ImMat::operator*=(const ImMat& mat)
 }
 } // namespace ImGui 
 
+// mat utils
+namespace ImGui
+{
+// Kalman filter
+class IMGUI_API ImKalman
+{
+public:
+    ImKalman(int state_size, int mea_size);
+    ~ImKalman() {};
+
+public:
+    void covariance(float noise_covariance, float measurement_noise_covariance);
+    void update(ImMat& Y);
+    ImMat& predicted();
+
+public:
+    ImMat statePre;            //预测状态矩阵(x'(k)) x(k) = A*x(k - 1) + B * u(k)
+    ImMat statePost;           //状态估计修正矩阵(x(k)) x(k) = x'(k) + K(k)*(z(k) - H * x'(k)) ： 1 * 8
+    ImMat transitionMatrix;    //转移矩阵(A)  ： 8 * 8
+    ImMat controMatrix;        //控制矩阵(B)
+    ImMat measurementMatrix;   //测量矩阵(H) ：4 * 8
+    ImMat processNoiseCov;     //预测模型噪声协方差矩阵(Q) ：8 * 8
+    ImMat measurementNoiseCov; //测量噪声协方差矩阵(R)  ： 4 * 4
+    ImMat errorCovPre;         //转移噪声矩阵(P'(k)) p'(k) = A * p(k - 1) * At + Q 
+    ImMat K;                   //kalman增益矩阵 K = p'(k) * Ht * inv(H * p'(k) * Ht + R)
+    ImMat errorCovPost;        //转移噪声修正矩阵(p(k)) p(k) = (I - K(k) * H) * p'(k)  ： 8 * 8
+};
+// warpAffine helper
+IMGUI_API ImMat getPerspectiveTransform(const ImPoint src[], const ImPoint dst[]);
+IMGUI_API ImMat getAffineTransform(const ImPoint src[], const ImPoint dst[]);
+// draw utils
+IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);
+IMGUI_API ImMat GrayToImage(const ImMat& mat);
+IMGUI_API ImMat CreateTextMat(const char* str, const ImPixel& color, float scale);
+IMGUI_API void  DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, const ImPixel& color, float scale);
+IMGUI_API void  ImageMatCopyTo(const ImMat& src, ImMat& dst, ImPoint pos);
+} // namespace ImGui
+
 #endif /* __IMMAT_H__ */

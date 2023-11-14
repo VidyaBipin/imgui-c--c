@@ -336,7 +336,6 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
 {
     ImGuiIO& io = ImGui::GetIO();
     ImGui_ImplSDL2_Data* bd = ImGui_ImplSDL2_GetBackendData();
-    io.FrameCountSinceLastUpdate = 0; // Add By Dicky
 
     switch (event->type)
     {
@@ -359,7 +358,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
         {
             //IMGUI_DEBUG_LOG("wheel %.2f %.2f, precise %.2f %.2f\n", (float)event->wheel.x, (float)event->wheel.y, event->wheel.preciseX, event->wheel.preciseY);
 #if SDL_VERSION_ATLEAST(2,0,18) // If this fails to compile on Emscripten: update to latest Emscripten!
-                                // modify by dicky to using mouse wheel axis config 
+            // modify by dicky to using mouse wheel axis config 
             float wheel_x = io.ConfigFlippedMouseWheelAxisX ? -event->wheel.preciseX : event->wheel.preciseX;
             float wheel_y = io.ConfigFlippedMouseWheelAxisY ? -event->wheel.preciseY : event->wheel.preciseY;
 #else
@@ -1134,25 +1133,35 @@ static void ImGui_ImplSDL2_ShutdownPlatformInterface()
 // Add By Dicky
 void ImGui_ImplSDL2_WaitForEvent()
 {
-    if (!(ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode) &&
-        !(ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_EnableLowRefreshMode))
+    auto flags = ImGui::GetIO().ConfigFlags;
+    auto count = ImGui::GetIO().FrameCountSinceLastUpdate;
+    auto delay_count = ImGui::GetIO().MaxDelayFrameCount;
+    auto long_delay = 1000.0 / (ImGui::GetIO().MinFrameRate + FLT_EPSILON);
+    if (!(flags & ImGuiConfigFlags_EnablePowerSavingMode) &&
+        !(flags & ImGuiConfigFlags_EnableLowRefreshMode))
         return;
 
     ImGui_ImplSDL2_Data* bd = ImGui_ImplSDL2_GetBackendData();
     Uint32 window_flags = SDL_GetWindowFlags(bd->Window);
     bool window_is_hidden = window_flags & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED);
-    double waiting_time = window_is_hidden ? INFINITY : ImGui::GetEventWaitingTime();
-    if (waiting_time > 0.0)
+
+    if (window_is_hidden) SDL_WaitEvent(nullptr);
+    else if (flags & ImGuiConfigFlags_EnableLowRefreshMode && !(flags & ImGuiConfigFlags_EnablePowerSavingMode))
     {
-        if (isinf(waiting_time) || waiting_time > 2.0)
-            SDL_WaitEvent(nullptr);
-        else
+        const int waiting_time_ms = (int)(1000.0 * ImGui::GetEventWaitingTime());
+        if (waiting_time_ms > 0.0) ImGui::sleep(waiting_time_ms);
+    }
+    else if (flags & ImGuiConfigFlags_EnablePowerSavingMode)
+    {
+        if (count <= delay_count && (flags & ImGuiConfigFlags_EnableLowRefreshMode))
         {
             const int waiting_time_ms = (int)(1000.0 * ImGui::GetEventWaitingTime());
-            if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode)
-                SDL_WaitEventTimeout(nullptr, waiting_time_ms);
-            else
-                ImGui::sleep(waiting_time_ms);
+            if (waiting_time_ms > 0.0) ImGui::sleep(waiting_time_ms);
+        }
+        else if (count > delay_count)
+        {
+            //SDL_WaitEvent(nullptr);
+            SDL_WaitEventTimeout(nullptr, long_delay);
         }
     }
 }
