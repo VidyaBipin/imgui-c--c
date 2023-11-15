@@ -10,8 +10,8 @@ namespace ImGui
 {
 struct ContourPoint
 {
-    virtual MatUtils::Point2i GetPos() const = 0;
-    virtual MatUtils::Point2i GetBezierGrabberOffset(int idx) const = 0;
+    virtual MatUtils::Point2f GetPos(int64_t t = 0) const = 0;
+    virtual MatUtils::Point2f GetBezierGrabberOffset(int idx, int64_t t = 0) const = 0;
     virtual int GetHoverType() const = 0;
 };
 
@@ -31,13 +31,15 @@ struct MaskCreator
 
     virtual std::string GetName() const = 0;
     virtual void SetName(const std::string& name) = 0;
-    virtual bool DrawContent(const ImVec2& v2Pos, const ImVec2& v2Size, bool bUpdateUiScale = true) = 0;
+    virtual bool DrawContent(const ImVec2& v2Pos, const ImVec2& v2ViewSize, bool bEditable = true, int64_t i64Tick = 0) = 0;
     virtual bool ChangeMaskSize(const MatUtils::Size2i& size) = 0;
     virtual MatUtils::Size2i GetMaskSize() const = 0;
     virtual ImGui::ImMat GetMask(int iLineType, bool bFilled = true, ImDataType eDataType = IM_DT_INT8, double dMaskValue = 255, double dNonMaskValue = 0) = 0;
     virtual const ContourPoint* GetHoveredPoint() const = 0;
     virtual ImVec4 GetContourContainBox() const = 0;
     virtual ImVec2 GetUiScale() const = 0;
+    virtual bool IsKeyFrameEnabled() const = 0;
+    virtual void EnableKeyFrames(bool bEnable) = 0;
 
     virtual bool SaveAsJson(imgui_json::value& j) const = 0;
     virtual bool SaveAsJson(const std::string& filePath) const = 0;

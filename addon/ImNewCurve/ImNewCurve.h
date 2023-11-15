@@ -90,6 +90,28 @@ namespace ImNewCurve
                 return ImVec2(t, z);
         }
 
+        ImVec2 GetVec2PointValByDim(ValueDimension eDim1, ValueDimension eDim2) const
+        {
+            float x_, y_;
+            if (eDim1 == DIM_X)
+                x_ = x;
+            else if (eDim1 == DIM_Y)
+                x_ = y;
+            else if (eDim1 == DIM_Z)
+                x_ = z;
+            else
+                x_ = t;
+            if (eDim2 == DIM_X)
+                y_ = x;
+            else if (eDim2 == DIM_Y)
+                y_ = y;
+            else if (eDim2 == DIM_Z)
+                y_ = z;
+            else
+                y_ = t;
+            return ImVec2(x_, y_);
+        }
+
         imgui_json::value SaveAsJson() const;
         void LoadFromJson(const imgui_json::value& j);
 
@@ -127,6 +149,13 @@ namespace ImNewCurve
     class Curve
     {
     public:
+        using Holder = std::shared_ptr<Curve>;
+        static Holder CreateInstance(const std::string& name, CurveType eCurveType, const std::pair<uint32_t, uint32_t>& tTimeBase,
+                const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal);
+        static Holder CreateInstance(const std::string& name, CurveType eCurveType,
+                const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal);
+        static Holder CreateFromJson(const imgui_json::value& j);
+
         Curve(const std::string& name, CurveType eCurveType, const std::pair<uint32_t, uint32_t>& tTimeBase,
                 const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal);
         Curve(const std::string& name, CurveType eCurveType,
@@ -147,8 +176,8 @@ namespace ImNewCurve
 
         void SetMinVal(const KeyPoint::ValType& minVal);
         void SetMaxVal(const KeyPoint::ValType& maxVal);
-        virtual int AddPoint(KeyPoint::Holder hKp, bool bNeedNormalize);
-        virtual int AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize);
+        virtual int AddPoint(KeyPoint::Holder hKp, bool bNeedNormalize, bool bOverwriteIfExists = true);
+        virtual int AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize, bool bOverwriteIfExists = true);
         virtual int EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCurveType, bool bNormalize);
         virtual int EditPointByDim(ValueDimension eDim, size_t idx, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize);
         virtual int ChangePointVal(size_t idx, const KeyPoint::ValType& tKpVal, bool bNormalize);
@@ -211,8 +240,8 @@ namespace ImNewCurve
         bool DrawDim(ValueDimension eDim, ImDrawList* pDrawList, const ImVec2& v2CursorPos, bool bIsHovering);
         bool CheckMouseHoverCurve(ValueDimension eDim, const ImVec2& pos);
         int CheckMouseHoverPoint(ValueDimension eDim, const ImVec2& pos) const;
-        int AddPoint(KeyPoint::Holder hKp, bool bNeedNormalize) override;
-        int AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize) override;
+        int AddPoint(KeyPoint::Holder hKp, bool bNeedNormalize, bool bOverwriteIfExists = true) override;
+        int AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize, bool bOverwriteIfExists = true) override;
         int EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCurveType, bool bNormalize) override;
         int EditPointByDim(ValueDimension eDim, size_t idx, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize) override;
         int ChangeCurveType(size_t idx, CurveType eCurveType) override;

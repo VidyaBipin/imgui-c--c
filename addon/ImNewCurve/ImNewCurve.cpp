@@ -165,6 +165,27 @@ KeyPoint::Holder KeyPoint::CreateInstance(const ValType& val, CurveType type)
     return Holder(new KeyPoint(val, type));
 }
 
+Curve::Holder Curve::CreateInstance(
+        const std::string& name, CurveType eCurveType, const std::pair<uint32_t, uint32_t>& tTimeBase,
+        const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal)
+{
+    return Curve::Holder(new Curve(name, eCurveType, tTimeBase, minVal, maxVal, defaultVal));
+}
+
+Curve::Holder Curve::CreateInstance(
+        const std::string& name, CurveType eCurveType,
+        const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal)
+{
+    return CreateInstance(name, eCurveType, {0, 0}, minVal, maxVal, defaultVal);
+}
+
+Curve::Holder Curve::CreateFromJson(const imgui_json::value& j)
+{
+    auto hCurve = Curve::Holder(new Curve());
+    hCurve->LoadFromJson(j);
+    return hCurve;
+}
+
 Curve::Curve(const std::string& name, CurveType eCurveType, const std::pair<uint32_t, uint32_t>& tTimeBase,
         const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal)
     : m_strName(name), m_eCurveType(eCurveType), m_tTimeBase(tTimeBase), m_tDefaultVal(defaultVal)
@@ -216,13 +237,13 @@ void Curve::SetMaxVal(const KeyPoint::ValType& maxVal)
     m_tValRange = m_tMaxVal-m_tMinVal;
 }
 
-int Curve::AddPoint(KeyPoint::Holder hKp, bool bNormalize)
+int Curve::AddPoint(KeyPoint::Holder hKp, bool bNormalize, bool bOverwriteIfExists)
 {
     hKp->t = Time2TickAligned(hKp->t);
     auto iter = std::find_if(m_aKeyPoints.begin(), m_aKeyPoints.end(), [hKp] (const auto& elem) {
         return hKp->t == elem->t;
     });
-    if (iter != m_aKeyPoints.end())
+    if (iter != m_aKeyPoints.end() && !bOverwriteIfExists)
         return -1;
 
     if (bNormalize)
@@ -232,18 +253,23 @@ int Curve::AddPoint(KeyPoint::Holder hKp, bool bNormalize)
         hKp->t = t;
     }
 
-    m_aKeyPoints.push_back(hKp);
-    SortKeyPoints();
+    if (iter == m_aKeyPoints.end())
+    {
+        m_aKeyPoints.push_back(hKp);
+        SortKeyPoints();
+    }
+    else
+        (*iter)->val = hKp->val;
     return GetKeyPointIndex(hKp);
 }
 
-int Curve::AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize)
+int Curve::AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize, bool bOverwriteIfExists)
 {
     KeyPoint::ValType tKpVal(m_tDefaultVal);
     KeyPoint::SetDimVal(tKpVal, v2DimVal.y, eDim);
     tKpVal.w = v2DimVal.x;
     auto hKp = KeyPoint::CreateInstance(tKpVal, eCurveType);
-    return AddPoint(hKp, bNormalize);
+    return AddPoint(hKp, bNormalize, bOverwriteIfExists);
 }
 
 int Curve::EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCurveType, bool bNormalize)
@@ -524,7 +550,7 @@ imgui_json::value Curve::SaveAsJson() const
     j["min_val"] = imgui_json::vec4(m_tMinVal);
     j["max_val"] = imgui_json::vec4(m_tMaxVal);
     j["default_val"] = imgui_json::vec4(m_tDefaultVal);
-    j["time_basse"] = imgui_json::vec2(m_tTimeBase.first, m_tTimeBase.second);
+    j["time_base"] = imgui_json::vec2(m_tTimeBase.first, m_tTimeBase.second);
     imgui_json::array jaKps;
     for (const auto& hKp : m_aKeyPoints)
         jaKps.push_back(hKp->SaveAsJson());
@@ -644,20 +670,20 @@ int CurveUiObj::CheckMouseHoverPoint(ValueDimension eDim, const ImVec2& pos) con
     return i;
 }
 
-int CurveUiObj::AddPoint(KeyPoint::Holder hKp, bool bNormalize)
+int CurveUiObj::AddPoint(KeyPoint::Holder hKp, bool bNormalize, bool bOverwriteIfExists)
 {
-    int idx = Curve::AddPoint(hKp, bNormalize);
+    int idx = Curve::AddPoint(hKp, bNormalize, bOverwriteIfExists);
     if (idx < 0)
         return idx;
     UpdateContourPoints(idx);
     return idx;
 }
 
-int CurveUiObj::AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize)
+int CurveUiObj::AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize, bool bOverwriteIfExists)
 {
     if (m_aContourPoints.find(eDim) == m_aContourPoints.end())
         UpdateContourPointsByDim(eDim, -1);
-    return Curve::AddPointByDim(eDim, v2DimVal, eCurveType, bNormalize);
+    return Curve::AddPointByDim(eDim, v2DimVal, eCurveType, bNormalize, bOverwriteIfExists);
 }
 
 int CurveUiObj::EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCurveType, bool bNormalize)

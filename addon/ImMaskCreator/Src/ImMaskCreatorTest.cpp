@@ -23,6 +23,9 @@ static ImTextureID g_tidMask = 0;
 static int g_iMorphSize = 1;
 static char g_acMaskSavePath[256];
 static ImVec2 g_v2MousePos(0, 0);
+static bool g_bEnableKeyFrame = false;
+static float g_fTime = 0;
+static const float g_fTimeMax = 30.f;
 
 // Application Framework Functions
 static void _AppInitialize(void** handle)
@@ -48,18 +51,21 @@ static bool _AppFrame(void* handle, bool closeApp)
     ImVec2 mousePos(0, 0);
     if (BeginChild("left", {wndAvailSize.x/2, 0}, true))
     {
-        TextUnformatted("Draw Mask Area");
-        SameLine(0, 20);
-        Checkbox("Show contain box", &g_bShowContainBox);
-        SameLine(0, 20);
+        TextUnformatted("Draw Mask Area"); SameLine(0, 20);
+        Checkbox("Show contain box", &g_bShowContainBox); SameLine(0, 20);
+        if (Checkbox("Key Frame", &g_bEnableKeyFrame))
+        {
+            g_hMaskCreator->EnableKeyFrames(g_bEnableKeyFrame);
+            if (!g_bEnableKeyFrame)
+                g_fTime = 0;
+        } SameLine(0, 20);
         if (Button("Load json"))
         {
             const char *filters = "JSON文件(*.json){.JSON},.*";
             ImGuiFileDialog::Instance()->OpenDialog("LoadJsonFileDlgKey", ICON_IGFD_FOLDER_OPEN " 打开JSON文件", 
                                                     filters, "./", 1, nullptr, 
                                                     ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_Modal);
-        }
-        SameLine(0, 20);
+        } SameLine(0, 20);
         if (Button("Save json"))
         {
             const char *filters = "JSON文件(*.json){.JSON},.*";
@@ -67,6 +73,12 @@ static bool _AppFrame(void* handle, bool closeApp)
                                                     filters, "./", 1, nullptr, 
                                                     ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_Modal);
         }
+
+        BeginDisabled(!g_bEnableKeyFrame);
+        TextUnformatted("Time:"); SameLine(0, 10);
+        SliderFloat("##time_slider", &g_fTime, 0, g_fTimeMax, "%.03f"); SameLine(0, 10);
+        Button("Play");
+        EndDisabled();
 
         ostringstream oss;
         oss << "Hovered point: ";
@@ -97,7 +109,7 @@ static bool _AppFrame(void* handle, bool closeApp)
             g_bMaskSizeInited = true;
         }
         mousePos = GetMousePos()-cursorPos;
-        g_hMaskCreator->DrawContent(cursorPos, wndAvailSize);
+        g_hMaskCreator->DrawContent(cursorPos, wndAvailSize, true, g_fTime*1000);
         if (g_bShowContainBox)
         {
             ImDrawList* pDrawList = GetWindowDrawList();

@@ -917,14 +917,6 @@ if(IMGUI_VULKAN_SHADER)
     )
 endif(IMGUI_VULKAN_SHADER)
 
-# ImMaskCreator
-set(ImMaskCreator_STATIC ON)
-add_subdirectory(addon/ImMaskCreator)
-set(IMGUI_INC_DIRS
-    ${IMGUI_INC_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImMaskCreator/Include
-)
-
 # Potrace
 add_subdirectory(addon/Potrace)
 set(IMGUI_INC_DIRS
@@ -1064,6 +1056,14 @@ if (IMGUI_BUILD_EXAMPLE)
         addon/ImNewCurve/ImNewCurveDemo.cpp
     )
 endif(IMGUI_BUILD_EXAMPLE)
+
+# ImMaskCreator
+set(ImMaskCreator_STATIC ON)
+add_subdirectory(addon/ImMaskCreator)
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImMaskCreator/Include
+)
 
 # Memory Editor
 set(IMGUI_INCS
