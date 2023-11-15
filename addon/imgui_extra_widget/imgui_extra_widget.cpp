@@ -7617,36 +7617,43 @@ void ImGui::SpinnerFilledArcFade(const char *label, float radius, const ImColor 
     }
 }
 
-void ImGui::SpinnerPointsArcFade(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t points)
+void ImGui::SpinnerPointsArcBounce(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t points, int circles, float rspeed)
 {
     SPINNER_HEADER(pos, size, centre, num_segments);
     const float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 4.f);
     const float arc_angle = PI_2 / (float)points;
     const float angle_offset = arc_angle / num_segments;
-    for (size_t arc_num = 0; arc_num < points; ++arc_num)
+    float dspeed = rspeed;
+    for (int c_num = 0; c_num < circles; c_num++)
     {
-        const float b = arc_angle * arc_num - PI_DIV_2 - PI_DIV_4;
-        const float e = arc_angle * arc_num + arc_angle - PI_DIV_2 - PI_DIV_4;
-        const float a = arc_angle * arc_num;
-        ImColor c = color;
-        float vradius = radius;
-        if (start < PI_2) {
-            c.Value.w = 0.f;
-            if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
-            else if (start < a) { c.Value.w = 1.f; }
-            c.Value.w = ImMax(0.f, 1.f - c.Value.w);
-             vradius = radius * c.Value.w;
-        }
-        else
+        float mr = radius * (1.f - (1.f / (circles + 2.f) * c_num));
+        float adv_angle = IM_PI * c_num;// *(1.f + (0.1f * circles) * c_num);
+        for (size_t arc_num = 0; arc_num < points; ++arc_num)
         {
-            const float startk = start - PI_2;
-            c.Value.w = 0.f;
-            if (startk > a && startk < (a + arc_angle)) { c.Value.w = 1.f - (startk - a) / (float)arc_angle; }
-            else if (startk < a) { c.Value.w = 1.f; }
-            vradius = radius * c.Value.w;
+            const float b = arc_angle * arc_num - PI_DIV_2 - PI_DIV_4;
+            const float e = arc_angle * arc_num + arc_angle - PI_DIV_2 - PI_DIV_4;
+            const float a = arc_angle * arc_num;
+            ImColor c = color;
+            float vradius = mr;
+            if (start < PI_2) {
+                c.Value.w = 0.f;
+                if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
+                else if (start < a) { c.Value.w = 1.f; }
+                c.Value.w = ImMax(0.f, 1.f - c.Value.w);
+                 vradius = mr * c.Value.w;
+            }
+            else
+            {
+                const float startk = start - PI_2;
+                c.Value.w = 0.f;
+                if (startk > a && startk < (a + arc_angle)) { c.Value.w = 1.f - (startk - a) / (float)arc_angle; }
+                else if (startk < a) { c.Value.w = 1.f; }
+                vradius = mr * c.Value.w;
+            }
+            const float ar = start * dspeed + adv_angle + arc_angle * arc_num - PI_DIV_2 - PI_DIV_4;
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(ar) * vradius, centre.y + ImSin(ar) * vradius), thickness, color_alpha(c, 1.f), 8);
         }
-        const float ar = start + arc_angle * arc_num - PI_DIV_2 - PI_DIV_4;
-        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(ar) * vradius, centre.y + ImSin(ar) * vradius), thickness, color_alpha(c, 1.f), 8);
+        dspeed += rspeed;
     }
 }
 
@@ -7765,6 +7772,27 @@ void ImGui::SpinnerTwinBall(const char *label, float radius1, float radius2, flo
         float b_start = PI_2 / balls;
         const float a = b_start * b_num + start;
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2), b_thickness, color_alpha(ball, 1.f));
+    }
+}
+
+void ImGui::SpinnerSomeScaleDots(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t dots, int mode)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    float start = (float)ImGui::GetTime() * speed;
+    float astart = ImFmod(start, IM_PI / dots);
+    start -= astart;
+    const float bg_angle_offset = IM_PI / dots;
+    dots = ImMin(dots, (size_t)32);
+    for (size_t j = 0; j < 4; j++)
+    {
+        float r = radius * (1.f - (0.15f * j));
+        for (size_t i = 0; i <= dots; i++)
+        {
+            float a = start * (mode ? (1.f + j * 0.05f) : 1.f) + (i * bg_angle_offset);
+            float th = thickness * ImMax(0.1f, i / (float)dots);
+            float thh = th * (1.f - (0.2f * j));
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r), thh, color_alpha(color, 1.f), 8);
+        }
     }
 }
 
@@ -8757,6 +8785,35 @@ void ImGui::SpinnerBlocks(const char *label, float radius, float thickness, cons
                                         ImVec2(lt.x + rpos.x * (offset_block) + thickness, lt.y + rpos.y * offset_block + thickness),
                                         color_alpha(c, 1.f));
         ti++;
+    }
+}
+
+void ImGui::SpinnerTwinBlocks(const char *label, float radius, float thickness, const ImColor &bg, const ImColor &color, float speed)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);
+    const float offset_block = radius * 2.f / 3.f;
+    ImVec2 lt{centre.x - radius - offset_block / 2.f, centre.y - radius - offset_block / 2.f};
+    int start = (int)ImFmod((float)ImGui::GetTime() * speed, 8.f);
+    const ImVec2ih poses[] = {{0, 0}, {1, 0}, {2, 0}, {2, 1}, {2, 2}, {1, 2}, {0, 2}, {0, 1}};
+    int ti = 0;
+    for (const auto &rpos: poses)
+    {
+        const ImColor &c = (ti == start) ? color : bg;
+        window->DrawList->AddRectFilled(ImVec2(lt.x + rpos.x * (offset_block), lt.y + rpos.y * offset_block),
+                                        ImVec2(lt.x + rpos.x * (offset_block) + thickness, lt.y + rpos.y * offset_block + thickness),
+                                        color_alpha(c, 1.f));
+        ti++;
+    }
+    lt = ImVec2{centre.x - radius + offset_block / 2.f, centre.y - radius + offset_block / 2.f};
+    ti = 7;//std::size(poses) - 1;
+    start = (int)ImFmod((float)ImGui::GetTime() * speed * 1.1f, 8.f);
+    for (const auto &rpos: poses)
+    {
+        const ImColor &c = (ti == start) ? color : bg;
+        window->DrawList->AddRectFilled(ImVec2(lt.x + rpos.x * (offset_block), lt.y + rpos.y * offset_block),
+                                        ImVec2(lt.x + rpos.x * (offset_block) + thickness, lt.y + rpos.y * offset_block + thickness),
+                                        color_alpha(c, 1.f));
+        ti--;
     }
 }
 
