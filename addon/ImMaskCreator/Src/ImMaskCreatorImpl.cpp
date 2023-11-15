@@ -228,6 +228,24 @@ public:
                         {
                             m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::FromImVec2<float>(-coordOff);
                             m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::FromImVec2<float>(coordOff);
+                            ImNewCurve::KeyPoint::ValType tKpVal(-coordOff.x, -coordOff.y, 0, 0);
+                            auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                            m_itHoveredVertex->m_hCurves[1]->AddPoint(hKp, false);
+                            if (i64Tick > 0)
+                            {
+                                tKpVal.w = i64Tick;
+                                auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                m_itHoveredVertex->m_hCurves[1]->AddPoint(hKp, false);
+                            }
+                            tKpVal.x = coordOff.x; tKpVal.y = coordOff.y; tKpVal.w = 0;
+                            hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                            m_itHoveredVertex->m_hCurves[2]->AddPoint(hKp, false);
+                            if (i64Tick > 0)
+                            {
+                                tKpVal.w = i64Tick;
+                                auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                m_itHoveredVertex->m_hCurves[2]->AddPoint(hKp, false);
+                            }
                         }
                         bContourChanged = true;
                     }
@@ -273,6 +291,9 @@ public:
                             hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
                             m_itHoveredVertex->m_hCurves[2]->AddPoint(hKp, false);
                             m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::Point2f(tKpVal.x, tKpVal.y);
+                            const auto log1 = m_itHoveredVertex->m_hCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
+                            const auto log2 = m_itHoveredVertex->m_hCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                            cout << "G0 X:" << log1 << ", Y:" << log2 << endl;
                         }
                         bContourChanged = true;
                     }
@@ -304,6 +325,9 @@ public:
                             hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
                             m_itHoveredVertex->m_hCurves[1]->AddPoint(hKp, false);
                             m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::Point2f(tKpVal.x, tKpVal.y);
+                            const auto log1 = m_itHoveredVertex->m_hCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
+                            const auto log2 = m_itHoveredVertex->m_hCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                            cout << "G1 X:" << log1 << ", Y:" << log2 << endl;
                         }
                         bContourChanged = true;
                     }
@@ -587,7 +611,7 @@ public:
     {
         if (m_bKeyFrameEnabled != bEnable)
         {
-            if (!bEnable)
+            if (!bEnable && !m_atContourPoints.empty())
             {
                 const auto szCpCnt = m_atContourPoints.size();
                 vector<bool> aCpChanged(szCpCnt);
@@ -745,6 +769,8 @@ private:
             , m_rContourContBox(-1.f, -1.f, -1.f, -1.f)
         {
             m_ptCurrPos = MatUtils::FromImVec2<float>(m_pos);
+            if (owner->m_bKeyFrameEnabled)
+                EnableKeyFrames(true);
         }
 
         MaskCreatorImpl* m_owner;
