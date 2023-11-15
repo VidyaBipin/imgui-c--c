@@ -1155,6 +1155,7 @@ enum ImGuiFileDialogFlags_ {
 	ImGuiFileDialogFlags_ShowBookmark                 = (1 << 13),    // show bookmark at openning
 	ImGuiFileDialogFlags_NoButton                     = (1 << 14),    // dont't show ok/cancel button, it will using embedded mode
 	ImGuiFileDialogFlags_PathDecompositionShort       = (1 << 15),    // show Path Decomposition only current and parents
+    ImGuiFileDialogFlags_DisableDragDrop              = (1 << 16),    // disable drag drop support
     // add by dicky end
     // default behavior when no flags is defined. seems to be the more common cases
     ImGuiFileDialogFlags_Default = ImGuiFileDialogFlags_ConfirmOverwrite |  //
@@ -1751,6 +1752,17 @@ public:
     void DrawPathComposer(const FileDialogInternal& vFileDialogInternal);       // draw path composer widget
 };
 
+#pragma endregion
+
+// add by Dicky for drag drop support
+#pragma region DragDropInfo
+struct IGFD_API DropInfos {
+    DropInfos(std::shared_ptr<IGFD::FileInfos> info, FileManager* fdi);
+    FileType fileType {FileType::ContentType::Invalid, false};
+    char filePath[PATH_MAX] {0};
+    char fileNameExt[PATH_MAX] {0};
+};
+// add by Dicky end
 #pragma endregion
 
 #pragma region FileDialogInternal

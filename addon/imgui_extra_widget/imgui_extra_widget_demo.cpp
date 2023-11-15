@@ -565,7 +565,13 @@ void ShowExtraWidgetDemoWindow()
                     case 181: ImGui::SpinnerRotateSegmentsPulsar("SpinnerRotateSegmentsPulsar", 16, 2, ImColor(255, 255, 255), 1.1f * velocity, 4, 2); ImGui::ShowTooltipOnHover("SpinnerRotateSegmentsPulsar"); break;
                     case 182: ImGui::SpinnerRotateSegmentsPulsar("SpinnerRotateSegmentsPulsar2", 16, 2, ImColor(255, 255, 255), 1.1f * velocity, 1, 3); ImGui::ShowTooltipOnHover("SpinnerRotateSegmentsPulsar2"); break;
                     case 183: ImGui::SpinnerRotateSegmentsPulsar("SpinnerRotateSegmentsPulsar3", 16, 2, ImColor(255, 255, 255), 1.1f * velocity, 3, 3); ImGui::ShowTooltipOnHover("SpinnerRotateSegmentsPulsar3"); break;
-                    case 184: ImGui::SpinnerPointsArcFade("SpinnerPointsArcFade", 16, 2, ImColor(255, 255, 255), 3 * velocity, 12); ImGui::ShowTooltipOnHover("SpinnerPointsArcFade"); break;
+                    case 184: ImGui::SpinnerPointsArcBounce("SpinnerPointsArcBounce", 16, 2, ImColor(255, 255, 255), 3 * velocity, 12, 1, 0.f); ImGui::ShowTooltipOnHover("SpinnerPointsArcBounce"); break;
+                    case 185: ImGui::SpinnerSomeScaleDots("SpinnerSomeScaleDots0", 16, 4, ImColor(255, 255, 255), 5.6f * velocity, 6, 0); ImGui::ShowTooltipOnHover("SpinnerSomeScaleDots0"); break;
+                    case 186: ImGui::SpinnerSomeScaleDots("SpinnerSomeScaleDots1", 16, 4, ImColor(255, 255, 255), 6.6f * velocity, 6, 1); ImGui::ShowTooltipOnHover("SpinnerSomeScaleDots1"); break;
+                    case 187: ImGui::SpinnerPointsArcBounce("SpinnerPointsArcBounce2", 16, 2, ImColor(255, 255, 255), 3 * velocity, 12, 1, 0.5f); ImGui::ShowTooltipOnHover("SpinnerPointsArcBounce2"); break;
+                    case 188: ImGui::SpinnerPointsArcBounce("SpinnerPointsArcBounce3", 16, 2, ImColor(255, 255, 255), 3 * velocity, 12, 2, 0.3f); ImGui::ShowTooltipOnHover("SpinnerPointsArcBounce3"); break;
+                    case 189: ImGui::SpinnerPointsArcBounce("SpinnerPointsArcBounce4", 16, 2, ImColor(255, 255, 255), 3 * velocity, 12, 3, 0.3f); ImGui::ShowTooltipOnHover("SpinnerPointsArcBounce4"); break;
+                    case 190: ImGui::SpinnerTwinBlocks("SpinnerTwinBlocks", 16, 7, ImColor(255, 255, 255, 30), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), 5 * velocity); ImGui::ShowTooltipOnHover("SpinnerTwinBlocks"); break;
 
                     // ...
                     default: break;
