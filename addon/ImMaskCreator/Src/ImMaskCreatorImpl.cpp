@@ -1998,7 +1998,7 @@ private:
         m_ptCenter.y = (m_rContianBox.Min.y+m_rContianBox.Max.y)/2;
     }
 
-    void UpdateContourVertices(list<ContourPointImpl>::iterator iterCurrVt)
+    void UpdateContourVertices(list<ContourPointImpl>::iterator iterCurrVt, bool bUpdateNextVt = true)
     {
         if (m_bContourCompleted && iterCurrVt == m_atContourPoints.begin())
         {
@@ -2011,15 +2011,18 @@ private:
             iterCurrVt->CalcContourVertices(*iterPrevVt);
         }
 
-        auto iterNextVt = iterCurrVt;
-        iterNextVt++;
-        if (m_bContourCompleted && iterNextVt == m_atContourPoints.end())
+        if (bUpdateNextVt)
         {
-            iterNextVt = m_atContourPoints.begin();
-        }
-        if (iterNextVt != m_atContourPoints.end())
-        {
-            iterNextVt->CalcContourVertices(*iterCurrVt);
+            auto iterNextVt = iterCurrVt;
+            iterNextVt++;
+            if (m_bContourCompleted && iterNextVt == m_atContourPoints.end())
+            {
+                iterNextVt = m_atContourPoints.begin();
+            }
+            if (iterNextVt != m_atContourPoints.end())
+            {
+                iterNextVt->CalcContourVertices(*iterCurrVt);
+            }
         }
 
         if (m_bContourCompleted)
@@ -2633,24 +2636,17 @@ private:
                 aCpChanged[i] = cp.UpdateByTick(i64Tick);
             }
             itCp = m_atContourPoints.begin();
-            for (auto i = 0; i < szCpCnt; i += 2)
+            bool bChanged1, bChanged2;
+            bChanged2 = aCpChanged[0];
+            for (auto i = 0; i < szCpCnt; i++, itCp++)
             {
-                const bool bChanged1 = aCpChanged[i];
-                const bool bChanged2 = i+1 == szCpCnt ? aCpChanged[0] : aCpChanged[i+1];
-                itCp++;
-                if (itCp == m_atContourPoints.end())
-                    itCp = m_atContourPoints.begin();
-                if (bChanged1 || bChanged2)
+                bChanged1 = bChanged2;
+                bChanged2 = i+1 == szCpCnt ? aCpChanged[0] : aCpChanged[i+1];
+                if (bChanged1)
                 {
-                    UpdateContourVertices(itCp);
+                    UpdateContourVertices(itCp, !bChanged2);
                     bUpdated = true;
                 }
-                itCp++;
-            }
-            if (itCp == m_atContourPoints.end() && aCpChanged[0])
-            {
-                UpdateContourVertices(m_atContourPoints.begin());
-                bUpdated = true;
             }
             m_i64PrevTick = i64Tick;
         }
