@@ -72,9 +72,12 @@ public:
             {
                 const bool bChanged1 = aCpChanged[i];
                 const bool bChanged2 = i+1 == szCpCnt ? aCpChanged[0] : aCpChanged[i+1];
-                itCp++; if (itCp == m_atContourPoints.end()) itCp = m_atContourPoints.begin();
+                itCp++;
+                if (itCp == m_atContourPoints.end())
+                    itCp = m_atContourPoints.begin();
                 if (bChanged1 || bChanged2)
-                    UpdateContourVertices(itCp++);
+                    UpdateContourVertices(itCp);
+                itCp++;
             }
             if (itCp == m_atContourPoints.end() && aCpChanged[0])
                 UpdateContourVertices(m_atContourPoints.begin());
@@ -214,10 +217,10 @@ public:
                         m_itHoveredVertex->m_iHoverType = 2;
                     }
                     bool bContourChanged = false;
-                    const auto coordOff = mousePos-m_itHoveredVertex->m_pos;
                     const auto v2CpPos = m_bKeyFrameEnabled ? MatUtils::ToImVec2(m_itHoveredVertex->m_ptCurrPos) : m_itHoveredVertex->m_pos;
                     const auto v2Grabber0Offset = m_bKeyFrameEnabled ? MatUtils::ToImVec2(m_itHoveredVertex->m_ptCurrGrabber0Offset) : m_itHoveredVertex->m_grabber0Offset;
                     const auto v2Grabber1Offset = m_bKeyFrameEnabled ? MatUtils::ToImVec2(m_itHoveredVertex->m_ptCurrGrabber1Offset) : m_itHoveredVertex->m_grabber1Offset;
+                    const auto coordOff = mousePos-v2CpPos;
                     // cout << "---> iHoverType = " << m_itHoveredVertex->m_iHoverType << endl;
                     if (m_itHoveredVertex->m_bFirstDrag && m_itHoveredVertex->m_bEnableBezier && m_itHoveredVertex->m_grabber1Offset != coordOff)
                     {
@@ -260,6 +263,9 @@ public:
                             auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
                             m_itHoveredVertex->m_hCurves[0]->AddPoint(hKp, false);
                             m_itHoveredVertex->m_ptCurrPos = MatUtils::FromImVec2<float>(mousePos);
+                            // const auto log1 = m_itHoveredVertex->m_hCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
+                            // const auto log2 = m_itHoveredVertex->m_hCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                            // cout << "Pos X:" << log1 << ", Y:" << log2 << endl;
                         }
                         bContourChanged = true;
                     }
@@ -291,9 +297,9 @@ public:
                             hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
                             m_itHoveredVertex->m_hCurves[2]->AddPoint(hKp, false);
                             m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::Point2f(tKpVal.x, tKpVal.y);
-                            const auto log1 = m_itHoveredVertex->m_hCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
-                            const auto log2 = m_itHoveredVertex->m_hCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
-                            cout << "G0 X:" << log1 << ", Y:" << log2 << endl;
+                            // const auto log1 = m_itHoveredVertex->m_hCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
+                            // const auto log2 = m_itHoveredVertex->m_hCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                            // cout << "G0 X:" << log1 << ", Y:" << log2 << endl;
                         }
                         bContourChanged = true;
                     }
@@ -325,9 +331,9 @@ public:
                             hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
                             m_itHoveredVertex->m_hCurves[1]->AddPoint(hKp, false);
                             m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::Point2f(tKpVal.x, tKpVal.y);
-                            const auto log1 = m_itHoveredVertex->m_hCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
-                            const auto log2 = m_itHoveredVertex->m_hCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
-                            cout << "G1 X:" << log1 << ", Y:" << log2 << endl;
+                            // const auto log1 = m_itHoveredVertex->m_hCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
+                            // const auto log2 = m_itHoveredVertex->m_hCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                            // cout << "G1 X:" << log1 << ", Y:" << log2 << endl;
                         }
                         bContourChanged = true;
                     }
@@ -626,9 +632,12 @@ public:
                 {
                     const bool bChanged1 = aCpChanged[i];
                     const bool bChanged2 = i+1 == szCpCnt ? aCpChanged[0] : aCpChanged[i+1];
-                    itCp++; if (itCp == m_atContourPoints.end()) itCp = m_atContourPoints.begin();
+                    itCp++;
+                    if (itCp == m_atContourPoints.end())
+                        itCp = m_atContourPoints.begin();
                     if (bChanged1 || bChanged2)
-                        UpdateContourVertices(itCp++);
+                        UpdateContourVertices(itCp);
+                    itCp++;
                 }
                 if (itCp == m_atContourPoints.end() && aCpChanged[0])
                     UpdateContourVertices(m_atContourPoints.begin());
