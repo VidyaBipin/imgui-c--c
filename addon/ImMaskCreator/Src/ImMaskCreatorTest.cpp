@@ -31,6 +31,7 @@ static const float g_fTimeMax = 30.f;
 static void _AppInitialize(void** handle)
 {
     g_hMaskCreator = MaskCreator::CreateInstance({1920, 1080});
+    g_hMaskCreator->SetTickRange(0, 30000);
     strncpy(g_acMaskSavePath, "./mask.png", sizeof(g_acMaskSavePath));
 }
 
@@ -47,6 +48,7 @@ static bool _AppFrame(void* handle, bool closeApp)
     SetNextWindowSize(io.DisplaySize, ImGuiCond_None);
     ImGui:Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
+    const int64_t i64Tick = g_fTime*1000;
     auto wndAvailSize = GetContentRegionAvail();
     ImVec2 mousePos(0, 0);
     if (BeginChild("left", {wndAvailSize.x/2, 0}, true))
@@ -101,6 +103,8 @@ static bool _AppFrame(void* handle, bool closeApp)
         string hoverPointInfo = oss.str();
         TextUnformatted(hoverPointInfo.c_str());
 
+        g_hMaskCreator->DrawContourPointKeyFrames(i64Tick);
+
         wndAvailSize = GetContentRegionAvail();
         auto cursorPos = GetCursorScreenPos();
         if (!g_bMaskSizeInited)
@@ -109,7 +113,7 @@ static bool _AppFrame(void* handle, bool closeApp)
             g_bMaskSizeInited = true;
         }
         mousePos = GetMousePos()-cursorPos;
-        g_hMaskCreator->DrawContent(cursorPos, wndAvailSize, true, g_fTime*1000);
+        g_hMaskCreator->DrawContent(cursorPos, wndAvailSize, true, i64Tick);
         if (g_bShowContainBox)
         {
             ImDrawList* pDrawList = GetWindowDrawList();
@@ -149,7 +153,7 @@ static bool _AppFrame(void* handle, bool closeApp)
         SameLine(0, 20);
         Checkbox("Fill contour", &g_bFillContour);
 
-        g_mMask = g_hMaskCreator->GetMask(s_iLintTypeSelIdx, g_bFillContour, IM_DT_FLOAT32, 1, 0);
+        g_mMask = g_hMaskCreator->GetMask(s_iLintTypeSelIdx, g_bFillContour, IM_DT_FLOAT32, 1, 0, i64Tick);
         if (!g_mMask.empty())
         {
             ImGui::ImMat mRgba; mRgba.type = IM_DT_INT8;

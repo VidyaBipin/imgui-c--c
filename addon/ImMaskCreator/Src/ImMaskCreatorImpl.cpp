@@ -1,14 +1,16 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <iomanip>
 #include <list>
 #include <vector>
+#include <utility>
+#include <unordered_map>
 #include <cmath>
 #include <limits>
 #include <algorithm>
 #include <chrono>
 #include <imgui_internal.h>
-#include <unordered_map>
 #include "ImNewCurve.h"
 #include "ImMaskCreator.h"
 #include "Contour2Mask.h"
@@ -28,7 +30,7 @@ public:
     MaskCreatorImpl(const MatUtils::Size2i& size, const string& name) : m_szMaskSize(size), m_strMaskName(name), m_tMorphCtrl(this)
     {
         m_v2PointSizeHalf = m_v2PointSize/2;
-        m_itMorphCtrlVt = m_itHoveredVertex = m_atContourPoints.end();
+        m_itMorphCtrlVt = m_itHoveredVertex = m_itSelectedVertex = m_atContourPoints.end();
         m_mMorphKernel = MatUtils::GetStructuringElement(MatUtils::MORPH_ELLIPSE, {5, 5});
     }
 
@@ -47,7 +49,7 @@ public:
         ImRect bb(v2Pos, v2Pos+v2ViewSize);
         if (!ItemAdd(bb, 0))
         {
-            ostringstream oss; oss << "FAILED at 'ItemAdd' with item rect (("
+            ostringstream oss; oss << "DrawContent: FAILED at 'ItemAdd' with item rect (("
                     << bb.Min.x << ", " << bb.Min.y << "), (" << bb.Max.x << ", " << bb.Max.y << "))!";
             m_sErrMsg = oss.str();
             return false;
@@ -56,33 +58,8 @@ public:
         m_v2UiScale.x = v2ViewSize.x/(float)m_szMaskSize.x;
         m_v2UiScale.y = v2ViewSize.y/(float)m_szMaskSize.y;
 
-        // update contour points if key-frame is enabled
-        if (m_bKeyFrameEnabled && i64Tick >= 0 && i64Tick != m_i64PrevTick && !m_atContourPoints.empty())
-        {
-            const auto szCpCnt = m_atContourPoints.size();
-            vector<bool> aCpChanged(szCpCnt);
-            auto itCp = m_atContourPoints.begin();
-            for (auto i = 0; i < szCpCnt; i++)
-            {
-                auto& cp = *itCp++;
-                aCpChanged[i] = cp.UpdateByTick(i64Tick);
-            }
-            itCp = m_atContourPoints.begin();
-            for (auto i = 0; i < szCpCnt; i += 2)
-            {
-                const bool bChanged1 = aCpChanged[i];
-                const bool bChanged2 = i+1 == szCpCnt ? aCpChanged[0] : aCpChanged[i+1];
-                itCp++;
-                if (itCp == m_atContourPoints.end())
-                    itCp = m_atContourPoints.begin();
-                if (bChanged1 || bChanged2)
-                    UpdateContourVertices(itCp);
-                itCp++;
-            }
-            if (itCp == m_atContourPoints.end() && aCpChanged[0])
-                UpdateContourVertices(m_atContourPoints.begin());
-            m_i64PrevTick = i64Tick;
-        }
+        if (m_bKeyFrameEnabled)
+            UpdateKeyFrameContour(i64Tick);
 
         // reactions
         const auto mousePosAbs = GetMousePos();
@@ -146,6 +123,7 @@ public:
                     auto iter = m_atContourPoints.end();
                     iter--;
                     m_itHoveredVertex = iter;
+                    SelectVertex(iter);
                     iter->UpdateGrabberContainBox();
                     UpdateContourVertices(m_itHoveredVertex);
                 }
@@ -201,7 +179,12 @@ public:
                         m_itHoveredVertex = m_atContourPoints.insert(m_itHoveredVertex, {this, m_itHoveredVertex->m_v2HoverPointOnContour});
                         if (bNeedUpdateMorphCtrlIter) m_itMorphCtrlVt = m_itHoveredVertex;
                         m_itHoveredVertex->UpdateGrabberContainBox();
+                        SelectVertex(m_itHoveredVertex);
                         UpdateContourVertices(m_itHoveredVertex);
+                    }
+                    else
+                    {
+                        SelectVertex(m_itHoveredVertex);
                     }
                 }
             }
@@ -233,21 +216,21 @@ public:
                             m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::FromImVec2<float>(coordOff);
                             ImNewCurve::KeyPoint::ValType tKpVal(-coordOff.x, -coordOff.y, 0, 0);
                             auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                            m_itHoveredVertex->m_hCurves[1]->AddPoint(hKp, false);
+                            m_itHoveredVertex->m_ahCurves[1]->AddPoint(hKp, false);
                             if (i64Tick > 0)
                             {
                                 tKpVal.w = i64Tick;
                                 auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                                m_itHoveredVertex->m_hCurves[1]->AddPoint(hKp, false);
+                                m_itHoveredVertex->m_ahCurves[1]->AddPoint(hKp, false);
                             }
                             tKpVal.x = coordOff.x; tKpVal.y = coordOff.y; tKpVal.w = 0;
                             hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                            m_itHoveredVertex->m_hCurves[2]->AddPoint(hKp, false);
+                            m_itHoveredVertex->m_ahCurves[2]->AddPoint(hKp, false);
                             if (i64Tick > 0)
                             {
                                 tKpVal.w = i64Tick;
                                 auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                                m_itHoveredVertex->m_hCurves[2]->AddPoint(hKp, false);
+                                m_itHoveredVertex->m_ahCurves[2]->AddPoint(hKp, false);
                             }
                         }
                         bContourChanged = true;
@@ -261,10 +244,10 @@ public:
                         {
                             const ImNewCurve::KeyPoint::ValType tKpVal(mousePos.x, mousePos.y, 0, i64Tick);
                             auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                            m_itHoveredVertex->m_hCurves[0]->AddPoint(hKp, false);
+                            m_itHoveredVertex->m_ahCurves[0]->AddPoint(hKp, false);
                             m_itHoveredVertex->m_ptCurrPos = MatUtils::FromImVec2<float>(mousePos);
-                            // const auto log1 = m_itHoveredVertex->m_hCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
-                            // const auto log2 = m_itHoveredVertex->m_hCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                            // const auto log1 = m_itHoveredVertex->m_ahCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
+                            // const auto log2 = m_itHoveredVertex->m_ahCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
                             // cout << "Pos X:" << log1 << ", Y:" << log2 << endl;
                         }
                         bContourChanged = true;
@@ -286,7 +269,7 @@ public:
                         {
                             ImNewCurve::KeyPoint::ValType tKpVal(coordOff.x, coordOff.y, 0, i64Tick);
                             auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                            m_itHoveredVertex->m_hCurves[1]->AddPoint(hKp, false);
+                            m_itHoveredVertex->m_ahCurves[1]->AddPoint(hKp, false);
                             m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::FromImVec2<float>(coordOff);
                             auto c0sqr = coordOff.x*coordOff.x+coordOff.y*coordOff.y;
                             const auto& coordOff1 = m_itHoveredVertex->m_ptCurrGrabber1Offset;
@@ -295,10 +278,10 @@ public:
                             tKpVal.x = -coordOff.x*ratio;
                             tKpVal.y = -coordOff.y*ratio;
                             hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                            m_itHoveredVertex->m_hCurves[2]->AddPoint(hKp, false);
+                            m_itHoveredVertex->m_ahCurves[2]->AddPoint(hKp, false);
                             m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::Point2f(tKpVal.x, tKpVal.y);
-                            // const auto log1 = m_itHoveredVertex->m_hCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
-                            // const auto log2 = m_itHoveredVertex->m_hCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                            // const auto log1 = m_itHoveredVertex->m_ahCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
+                            // const auto log2 = m_itHoveredVertex->m_ahCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
                             // cout << "G0 X:" << log1 << ", Y:" << log2 << endl;
                         }
                         bContourChanged = true;
@@ -320,7 +303,7 @@ public:
                         {
                             ImNewCurve::KeyPoint::ValType tKpVal(coordOff.x, coordOff.y, 0, i64Tick);
                             auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                            m_itHoveredVertex->m_hCurves[2]->AddPoint(hKp, false);
+                            m_itHoveredVertex->m_ahCurves[2]->AddPoint(hKp, false);
                             m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::FromImVec2<float>(coordOff);
                             auto c1sqr = coordOff.x*coordOff.x+coordOff.y*coordOff.y;
                             const auto& coordOff0 = m_itHoveredVertex->m_ptCurrGrabber0Offset;
@@ -329,10 +312,10 @@ public:
                             tKpVal.x = -coordOff.x*ratio;
                             tKpVal.y = -coordOff.y*ratio;
                             hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                            m_itHoveredVertex->m_hCurves[1]->AddPoint(hKp, false);
+                            m_itHoveredVertex->m_ahCurves[1]->AddPoint(hKp, false);
                             m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::Point2f(tKpVal.x, tKpVal.y);
-                            // const auto log1 = m_itHoveredVertex->m_hCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
-                            // const auto log2 = m_itHoveredVertex->m_hCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                            // const auto log1 = m_itHoveredVertex->m_ahCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
+                            // const auto log2 = m_itHoveredVertex->m_ahCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
                             // cout << "G1 X:" << log1 << ", Y:" << log2 << endl;
                         }
                         bContourChanged = true;
@@ -476,6 +459,207 @@ public:
         return m_bContourCompleted && (m_bContourChanged || bMorphChanged);
     }
 
+    bool DrawContourPointKeyFrames(int64_t i64Tick, const ContourPoint* ptContourPoint, uint32_t u32Width) override
+    {
+        if (!m_bKeyFrameEnabled)
+            return false;
+        list<ContourPointImpl>::iterator itTargetCp = m_atContourPoints.end();
+        if (ptContourPoint)
+            itTargetCp = find_if(m_atContourPoints.begin(), m_atContourPoints.end(), [ptContourPoint] (const auto& elem) {
+                return ptContourPoint == static_cast<const ContourPoint*>(&elem);
+            });
+        else
+            itTargetCp = m_itSelectedVertex;
+        if (itTargetCp == m_atContourPoints.end())
+            return false;
+        const auto& cp = *itTargetCp;
+
+        auto tKpVal = cp.m_ahCurves[0]->CalcPointVal(i64Tick, false, true);
+        ostringstream oss; oss << setw(4) << setfill(' ') << (int)roundf(tKpVal.x) << "," << setw(4) << setfill(' ') << (int)roundf(tKpVal.y);
+        string strPointCoord = oss.str();
+        const ImVec2 v2PaddingUnit(5.f, 2.f);
+        auto v2PointCoordTextSize = CalcTextSize(strPointCoord.c_str());
+
+        const auto v2ViewPos = GetCursorScreenPos();
+        const auto v2AvailSize = GetContentRegionAvail();
+        const ImVec2 v2ViewSize(u32Width == 0 ? v2AvailSize.x : u32Width, v2PointCoordTextSize.y+v2PaddingUnit.y*2);
+        ImRect bb(v2ViewPos, v2ViewPos+v2ViewSize);
+        if (!ItemAdd(bb, 0))
+        {
+            ostringstream oss; oss << "DrawSelectedPointKeyFrames: FAILED at 'ItemAdd' with item rect (("
+                    << bb.Min.x << ", " << bb.Min.y << "), (" << bb.Max.x << ", " << bb.Max.y << "))!";
+            m_sErrMsg = oss.str();
+            return false;
+        }
+
+        // draw point coordinates
+        string strTag = "Point Coords:";
+        SetCursorScreenPos(v2ViewPos+v2PaddingUnit);
+        const ImU32 u32TagColor{IM_COL32(180, 170, 150, 255)};
+        TextColored(ImColor(u32TagColor), "%s", strTag.c_str()); SameLine();
+        auto v2CursorPos = GetCursorScreenPos();
+        ImVec2 v2TextBgRectLt, v2TextBgRectRb;
+        v2TextBgRectLt = v2CursorPos; v2TextBgRectLt.y -= v2PaddingUnit.y;
+        v2TextBgRectRb = v2TextBgRectLt+v2PointCoordTextSize+v2PaddingUnit*2;
+        ImDrawList* pDrawList = GetWindowDrawList();
+        pDrawList->AddRectFilled(v2TextBgRectLt, v2TextBgRectRb, m_u32CpkfCoordBgColor, m_fCpkfCoordBgRectRounding);
+        const ImU32 u32PointCoordTextColor{IM_COL32(30, 30, 30, 255)};
+        SetCursorScreenPos(v2TextBgRectLt+v2PaddingUnit);
+        TextColored(ImColor(u32PointCoordTextColor), "%s", strPointCoord.c_str()); SameLine();
+        // draw bezier grabber0 offset
+        strTag = "Bezier Grabber0:";
+        v2CursorPos = GetCursorScreenPos();
+        v2CursorPos.x += v2PaddingUnit.x;
+        SetCursorScreenPos(v2CursorPos);
+        TextColored(ImColor(u32TagColor), "%s", strTag.c_str()); SameLine();
+        tKpVal = cp.m_ahCurves[1]->CalcPointVal(i64Tick, false, true);
+        oss.str(""); oss << setw(4) << setfill(' ') << showpos << (int)roundf(tKpVal.x) << "," << setw(4) << setfill(' ') << showpos << (int)roundf(tKpVal.y);
+        strPointCoord = oss.str();
+        v2PointCoordTextSize = CalcTextSize(strPointCoord.c_str());
+        v2CursorPos = GetCursorScreenPos();
+        v2TextBgRectLt = v2CursorPos; v2TextBgRectLt.y -= v2PaddingUnit.y;
+        v2TextBgRectRb = v2TextBgRectLt+v2PointCoordTextSize+v2PaddingUnit*2;
+        pDrawList->AddRectFilled(v2TextBgRectLt, v2TextBgRectRb, m_u32CpkfCoordBgColor, m_fCpkfCoordBgRectRounding);
+        SetCursorScreenPos(v2TextBgRectLt+v2PaddingUnit);
+        TextColored(ImColor(u32PointCoordTextColor), "%s", strPointCoord.c_str()); SameLine();
+        // draw bezier grabber1 offset
+        strTag = "Bezier Grabber1:";
+        v2CursorPos = GetCursorScreenPos();
+        v2CursorPos.x += v2PaddingUnit.x;
+        SetCursorScreenPos(v2CursorPos);
+        TextColored(ImColor(u32TagColor), "%s", strTag.c_str()); SameLine();
+        tKpVal = cp.m_ahCurves[2]->CalcPointVal(i64Tick, false, true);
+        oss.str(""); oss << setw(4) << setfill(' ') << showpos << (int)roundf(tKpVal.x) << "," << setw(4) << setfill(' ') << showpos << (int)roundf(tKpVal.y);
+        strPointCoord = oss.str();
+        v2PointCoordTextSize = CalcTextSize(strPointCoord.c_str());
+        v2CursorPos = GetCursorScreenPos();
+        v2TextBgRectLt = v2CursorPos; v2TextBgRectLt.y -= v2PaddingUnit.y;
+        v2TextBgRectRb = v2TextBgRectLt+v2PointCoordTextSize+v2PaddingUnit*2;
+        pDrawList->AddRectFilled(v2TextBgRectLt, v2TextBgRectRb, m_u32CpkfCoordBgColor, m_fCpkfCoordBgRectRounding);
+        SetCursorScreenPos(v2TextBgRectLt+v2PaddingUnit);
+        TextColored(ImColor(u32PointCoordTextColor), "%s", strPointCoord.c_str()); SameLine();
+
+        // draw key frame timeline
+        v2CursorPos.x = v2ViewPos.x;
+        v2CursorPos.y = v2TextBgRectRb.y;
+        SetCursorScreenPos(v2CursorPos);
+        auto prTickRange = m_prTickRange;
+        const auto szKpCnt0 = cp.m_ahCurves[0]->GetKeyPointCount();
+        const auto szKpCnt1 = cp.m_ahCurves[1]->GetKeyPointCount();
+        const auto szKpCnt2 = cp.m_ahCurves[2]->GetKeyPointCount();
+        if (prTickRange.first >= prTickRange.second)
+        {
+            prTickRange.first = INT64_MAX;
+            prTickRange.second = INT64_MIN;
+            if (szKpCnt0 > 0)
+            {
+                auto hKp = cp.m_ahCurves[0]->GetKeyPoint(0);
+                if ((int64_t)hKp->t < prTickRange.first) prTickRange.first = (int64_t)hKp->t;
+                if (szKpCnt0 > 1)
+                {
+                    hKp = cp.m_ahCurves[0]->GetKeyPoint(szKpCnt0-1);
+                    if ((int64_t)hKp->t > prTickRange.second) prTickRange.second = (int64_t)hKp->t;
+                }
+            }
+            if (szKpCnt1 > 0)
+            {
+                auto hKp = cp.m_ahCurves[1]->GetKeyPoint(0);
+                if ((int64_t)hKp->t < prTickRange.first) prTickRange.first = (int64_t)hKp->t;
+                if (szKpCnt1 > 1)
+                {
+                    hKp = cp.m_ahCurves[1]->GetKeyPoint(szKpCnt1-1);
+                    if ((int64_t)hKp->t > prTickRange.second) prTickRange.second = (int64_t)hKp->t;
+                }
+            }
+            if (szKpCnt2 > 0)
+            {
+                auto hKp = cp.m_ahCurves[2]->GetKeyPoint(0);
+                if ((int64_t)hKp->t < prTickRange.first) prTickRange.first = (int64_t)hKp->t;
+                if (szKpCnt2 > 1)
+                {
+                    hKp = cp.m_ahCurves[2]->GetKeyPoint(szKpCnt2-1);
+                    if ((int64_t)hKp->t > prTickRange.second) prTickRange.second = (int64_t)hKp->t;
+                }
+            }
+            if (prTickRange.first >= prTickRange.second)
+                prTickRange.second = prTickRange.first+10;
+        }
+        // draw timeline slider
+        const auto i64TickLength = prTickRange.second-prTickRange.first;
+        const ImVec2 v2TimeLineWdgSize(v2ViewSize.x, v2TextBgRectRb.y-v2TextBgRectLt.y);
+        const float fTimelineSliderHeight = 5.f;
+        const float fKeyFrameIndicatorRadius = 5.f;
+        ImVec2 v2SliderRectLt(v2ViewPos.x+fKeyFrameIndicatorRadius+v2PaddingUnit.x, v2CursorPos.y+(v2TimeLineWdgSize.y-fTimelineSliderHeight)/2);
+        ImVec2 v2SliderRectRb(v2SliderRectLt.x+v2ViewSize.x-(fKeyFrameIndicatorRadius+v2PaddingUnit.x)*2, v2SliderRectLt.y+fTimelineSliderHeight);
+        const auto fSliderWdgWidth = v2SliderRectRb.x-v2SliderRectLt.x;
+        const ImU32 u32TimelineSliderBorderColor{IM_COL32(80, 80, 80, 255)};
+        pDrawList->AddRect(v2SliderRectLt, v2SliderRectRb, u32TimelineSliderBorderColor, fTimelineSliderHeight/2, 0, 1);
+        // draw key point indicators
+        size_t idx0, idx1, idx2;
+        idx0 = idx1 = idx2 = 0;
+        auto hKp0 = cp.m_ahCurves[0]->GetKeyPoint(0);
+        auto hKp1 = cp.m_ahCurves[0]->GetKeyPoint(0);
+        auto hKp2 = cp.m_ahCurves[0]->GetKeyPoint(0);
+        int64_t i64PrevTick = INT64_MIN;
+        const float fKeyFrameIndicatorY = v2CursorPos.y+v2TimeLineWdgSize.y/2;
+        const ImU32 u32KeyFrameIndicatorColor{IM_COL32(200, 150, 20, 255)};
+        const ImU32 u32KeyFrameIndicatorBorderColor = u32TimelineSliderBorderColor;
+        const float fHoverBrightnessIncreament = 0.4;
+        ImColor tHoverColor(u32KeyFrameIndicatorColor);
+        tHoverColor.Value.x += fHoverBrightnessIncreament; tHoverColor.Value.y += fHoverBrightnessIncreament; tHoverColor.Value.z += fHoverBrightnessIncreament;
+        const ImU32 u32KeyFrameIndicatorHoverColor = (ImU32)tHoverColor;
+        tHoverColor = ImColor(u32KeyFrameIndicatorBorderColor);
+        tHoverColor.Value.x += fHoverBrightnessIncreament; tHoverColor.Value.y += fHoverBrightnessIncreament; tHoverColor.Value.z += fHoverBrightnessIncreament;
+        const ImU32 u32KeyFrameIndicatorBorderHoverColor = (ImU32)tHoverColor;
+        bool bHasPointAtCurrTick = false;
+        while (hKp0 || hKp1 || hKp2)
+        {
+            auto hKpDraw = hKp0;
+            if (!hKpDraw || (hKp1 && hKp1->t < hKpDraw->t))
+                hKpDraw = hKp1;
+            if (!hKpDraw || (hKp2 && hKp2->t < hKpDraw->t))
+                hKpDraw = hKp2;
+            const int64_t t = (int64_t)roundf(hKpDraw->t);
+            if (t != i64PrevTick && t >= prTickRange.first && t <= prTickRange.second)
+            {
+                if (t != i64Tick)
+                {
+                    const float fKeyFrameIndicatorX = v2SliderRectLt.x+((double)(t-prTickRange.first)/i64TickLength)*fSliderWdgWidth;
+                    pDrawList->AddCircleFilled(ImVec2(fKeyFrameIndicatorX, fKeyFrameIndicatorY), fKeyFrameIndicatorRadius+1, u32KeyFrameIndicatorBorderColor);
+                    pDrawList->AddCircleFilled(ImVec2(fKeyFrameIndicatorX, fKeyFrameIndicatorY), fKeyFrameIndicatorRadius, u32KeyFrameIndicatorColor);
+                }
+                else
+                    bHasPointAtCurrTick = true;
+                i64PrevTick = t;
+            }
+            if (hKpDraw == hKp0)
+            { idx0++; hKp0 = cp.m_ahCurves[0]->GetKeyPoint(idx0); }
+            if (hKpDraw == hKp1)
+            { idx1++; hKp1 = cp.m_ahCurves[1]->GetKeyPoint(idx1); }
+            if (hKpDraw == hKp2)
+            { idx2++; hKp2 = cp.m_ahCurves[2]->GetKeyPoint(idx2); }
+        }
+        if (bHasPointAtCurrTick)
+        {
+            const float fKeyFrameIndicatorX = v2SliderRectLt.x+((double)(i64Tick-prTickRange.first)/i64TickLength)*fSliderWdgWidth;
+            pDrawList->AddCircleFilled(ImVec2(fKeyFrameIndicatorX, fKeyFrameIndicatorY), fKeyFrameIndicatorRadius+1, u32KeyFrameIndicatorBorderHoverColor);
+            pDrawList->AddCircleFilled(ImVec2(fKeyFrameIndicatorX, fKeyFrameIndicatorY), fKeyFrameIndicatorRadius, u32KeyFrameIndicatorHoverColor);
+        }
+
+        // draw tick indicator
+        const ImVec2 v2TickIndicatorPos(v2SliderRectLt.x+((double)(i64Tick-prTickRange.first)/i64TickLength)*fSliderWdgWidth, v2SliderRectRb.y+fKeyFrameIndicatorRadius+2);
+        const ImVec2 v2TickIndicatorSize(10, 6);
+        const ImU32 u32TickIndicatorColor{IM_COL32(80, 180, 80, 255)};
+        pDrawList->AddTriangleFilled(
+                v2TickIndicatorPos,
+                v2TickIndicatorPos+ImVec2(-v2TickIndicatorSize.x/2, v2TickIndicatorSize.y),
+                v2TickIndicatorPos+ImVec2(v2TickIndicatorSize.x/2, v2TickIndicatorSize.y),
+                u32TickIndicatorColor);
+
+        SetCursorScreenPos(ImVec2(v2ViewPos.x, v2ViewPos.y+v2ViewSize.y));
+        return true;
+    }
+
     bool ChangeMaskSize(const MatUtils::Size2i& size) override
     {
         if (m_szMaskSize != size)
@@ -491,11 +675,14 @@ public:
         return m_szMaskSize;
     }
 
-    ImGui::ImMat GetMask(int iLineType, bool bFilled, ImDataType eDataType, double dMaskValue, double dNonMaskValue) override
+    ImGui::ImMat GetMask(int iLineType, bool bFilled, ImDataType eDataType, double dMaskValue, double dNonMaskValue, int64_t i64Tick) override
     {
         ImGui::ImMat res;
         if (!m_bContourCompleted)
             return res;
+
+        if (m_bKeyFrameEnabled)
+            UpdateKeyFrameContour(i64Tick);
 
         res = m_mMask;
         const auto iMorphIters = m_tMorphCtrl.m_bInsidePoly ? -m_tMorphCtrl.m_iMorphIterations : m_tMorphCtrl.m_iMorphIterations;
@@ -593,6 +780,13 @@ public:
         return nullptr;
     }
 
+    const ContourPoint* GetSelectedPoint() const override
+    {
+        if (HasSelectedVertex())
+            return static_cast<ContourPoint*>(&(*m_itSelectedVertex));
+        return nullptr;
+    }
+
     ImVec4 GetContourContainBox() const override
     {
         ImRect rBox(m_rContianBox);
@@ -617,36 +811,24 @@ public:
     {
         if (m_bKeyFrameEnabled != bEnable)
         {
-            if (!bEnable && !m_atContourPoints.empty())
-            {
-                const auto szCpCnt = m_atContourPoints.size();
-                vector<bool> aCpChanged(szCpCnt);
-                auto itCp = m_atContourPoints.begin();
-                for (auto i = 0; i < szCpCnt; i++)
-                {
-                    auto& cp = *itCp++;
-                    aCpChanged[i] = cp.UpdateByTick(0);
-                }
-                itCp = m_atContourPoints.begin();
-                for (auto i = 0; i < szCpCnt; i += 2)
-                {
-                    const bool bChanged1 = aCpChanged[i];
-                    const bool bChanged2 = i+1 == szCpCnt ? aCpChanged[0] : aCpChanged[i+1];
-                    itCp++;
-                    if (itCp == m_atContourPoints.end())
-                        itCp = m_atContourPoints.begin();
-                    if (bChanged1 || bChanged2)
-                        UpdateContourVertices(itCp);
-                    itCp++;
-                }
-                if (itCp == m_atContourPoints.end() && aCpChanged[0])
-                    UpdateContourVertices(m_atContourPoints.begin());
-            }
+            if (m_bKeyFrameEnabled)
+                UpdateKeyFrameContour(0);
             for (auto& cp : m_atContourPoints)
                 cp.EnableKeyFrames(bEnable);
             m_bKeyFrameEnabled = bEnable;
+            if (!bEnable)
+                SelectVertex(m_atContourPoints.end());
             m_i64PrevTick = 0;
         }
+    }
+
+    bool SetTickRange(int64_t i64Start, int64_t i64End) override
+    {
+        if (i64Start >= i64End)
+            return false;
+        m_prTickRange.first = i64Start;
+        m_prTickRange.second = i64End;
+        return true;
     }
 
     bool SaveAsJson(imgui_json::value& j) const override
@@ -789,6 +971,7 @@ private:
         bool m_bFirstDrag{true};  // 1st time dragging bezier grabber, both 1&2 grabbers move together
         bool m_bHovered{true};
         int m_iHoverType{0};  // 0: on contour point, 1: on 1st bezier grabber, 2: on 2nd bezier grabber, 4: on contour
+        bool m_bSelected{false};
         ImVec2 m_grabber0Offset{0.f, 0.f};
         ImVec2 m_grabber1Offset{0.f, 0.f};
         list<ImVec2> m_aContourVertices;
@@ -796,7 +979,7 @@ private:
         int m_iHoverPointOnContourIdx;
         ImRect m_rGrabberContBox;
         ImRect m_rContourContBox;
-        ImNewCurve::Curve::Holder m_hCurves[3];
+        ImNewCurve::Curve::Holder m_ahCurves[3];
         MatUtils::Point2f m_ptCurrPos;
         MatUtils::Point2f m_ptCurrGrabber0Offset{0, 0}, m_ptCurrGrabber1Offset{0, 0};
 
@@ -808,12 +991,12 @@ private:
             j["first_drag"] = m_bFirstDrag;
             j["grabber0_offset"] = m_grabber0Offset;
             j["grabber1_offset"] = m_grabber1Offset;
-            if (m_hCurves[0])
-                j["curve0"] = m_hCurves[0]->SaveAsJson();
-            if (m_hCurves[1])
-                j["curve1"] = m_hCurves[1]->SaveAsJson();
-            if (m_hCurves[2])
-                j["curve2"] = m_hCurves[2]->SaveAsJson();
+            if (m_ahCurves[0])
+                j["curve0"] = m_ahCurves[0]->SaveAsJson();
+            if (m_ahCurves[1])
+                j["curve1"] = m_ahCurves[1]->SaveAsJson();
+            if (m_ahCurves[2])
+                j["curve2"] = m_ahCurves[2]->SaveAsJson();
             return std::move(j);
         }
 
@@ -828,19 +1011,19 @@ private:
             m_bHovered = false;
             m_iHoverType = -1;
             if (j.contains("curve0"))
-                m_hCurves[0] = ImNewCurve::Curve::CreateFromJson(j["curve0"]);
+                m_ahCurves[0] = ImNewCurve::Curve::CreateFromJson(j["curve0"]);
             if (j.contains("curve1"))
-                m_hCurves[1] = ImNewCurve::Curve::CreateFromJson(j["curve1"]);
+                m_ahCurves[1] = ImNewCurve::Curve::CreateFromJson(j["curve1"]);
             if (j.contains("curve2"))
-                m_hCurves[2] = ImNewCurve::Curve::CreateFromJson(j["curve2"]);
+                m_ahCurves[2] = ImNewCurve::Curve::CreateFromJson(j["curve2"]);
             UpdateGrabberContainBox();
         }
 
         MatUtils::Point2f GetPos(int64_t t) const override
         {
-            if (t <= 0 || !m_hCurves[0])
+            if (t <= 0 || !m_ahCurves[0])
                 return MatUtils::FromImVec2<float>(m_pos);
-            const auto tKpVal = m_hCurves[0]->CalcPointVal(t, false, false);
+            const auto tKpVal = m_ahCurves[0]->CalcPointVal(t, false, false);
             const ImVec2 v2Pos(ImNewCurve::KeyPoint::GetDimVal(tKpVal, ImNewCurve::DIM_X), ImNewCurve::KeyPoint::GetDimVal(tKpVal, ImNewCurve::DIM_Y));
             return MatUtils::FromImVec2<float>(v2Pos);
         }
@@ -851,17 +1034,17 @@ private:
                 return {-1, -1};
             if (idx == 0)
             {
-                if (t <= 0 || !m_hCurves[1])
+                if (t <= 0 || !m_ahCurves[1])
                     return MatUtils::FromImVec2<float>(m_grabber0Offset);
-                const auto tKpVal = m_hCurves[1]->CalcPointVal(t, false, false);
+                const auto tKpVal = m_ahCurves[1]->CalcPointVal(t, false, false);
                 const ImVec2 v2Offset(ImNewCurve::KeyPoint::GetDimVal(tKpVal, ImNewCurve::DIM_X), ImNewCurve::KeyPoint::GetDimVal(tKpVal, ImNewCurve::DIM_Y));
                 return MatUtils::FromImVec2<float>(v2Offset);
             }
             else
             {
-                if (t <= 0 || !m_hCurves[2])
+                if (t <= 0 || !m_ahCurves[2])
                     return MatUtils::FromImVec2<float>(m_grabber1Offset);
-                const auto tKpVal = m_hCurves[2]->CalcPointVal(t, false, false);
+                const auto tKpVal = m_ahCurves[2]->CalcPointVal(t, false, false);
                 const ImVec2 v2Offset(ImNewCurve::KeyPoint::GetDimVal(tKpVal, ImNewCurve::DIM_X), ImNewCurve::KeyPoint::GetDimVal(tKpVal, ImNewCurve::DIM_Y));
                 return MatUtils::FromImVec2<float>(v2Offset);
             }
@@ -872,44 +1055,50 @@ private:
             return m_iHoverType;
         }
 
+        bool IsSelected() const override
+        {
+            return m_bSelected;
+        }
+
         void EnableKeyFrames(bool bEnable)
         {
             if (bEnable)
             {
+                const auto& prTickRange = m_owner->m_prTickRange;
                 ostringstream oss; oss << "ContourPont_Curve";
                 string strCurveName = oss.str();
                 {
-                    const ImNewCurve::KeyPoint::ValType tMinVal(0, 0, 0, 0);
-                    const ImNewCurve::KeyPoint::ValType tMaxVal(7680, 4320, 0, 1e9);
+                    const ImNewCurve::KeyPoint::ValType tMinVal(0, 0, 0, prTickRange.first);
+                    const ImNewCurve::KeyPoint::ValType tMaxVal(7680, 4320, 0, prTickRange.second);
                     const ImNewCurve::KeyPoint::ValType tDefaultVal(m_pos.x, m_pos.y, 0, 0);
-                    m_hCurves[0] = ImNewCurve::Curve::CreateInstance(strCurveName, ImNewCurve::Smooth, tMinVal, tMaxVal, tDefaultVal);
+                    m_ahCurves[0] = ImNewCurve::Curve::CreateInstance(strCurveName, ImNewCurve::Smooth, tMinVal, tMaxVal, tDefaultVal);
                 }
                 {
-                    const ImNewCurve::KeyPoint::ValType tMinVal(-1000, -1000, 0, 0);
-                    const ImNewCurve::KeyPoint::ValType tMaxVal(1000, 1000, 0, 1e9);
+                    const ImNewCurve::KeyPoint::ValType tMinVal(-1000, -1000, 0, prTickRange.first);
+                    const ImNewCurve::KeyPoint::ValType tMaxVal(1000, 1000, 0, prTickRange.second);
                     ImNewCurve::KeyPoint::ValType tDefaultVal(m_grabber0Offset.x, m_grabber0Offset.y, 0, 0);
                     oss.str(""); oss << "Grabber0Offset_Curve";
                     strCurveName = oss.str();
-                    m_hCurves[1] = ImNewCurve::Curve::CreateInstance(strCurveName, ImNewCurve::Smooth, tMinVal, tMaxVal, tDefaultVal);
+                    m_ahCurves[1] = ImNewCurve::Curve::CreateInstance(strCurveName, ImNewCurve::Smooth, tMinVal, tMaxVal, tDefaultVal);
                     tDefaultVal = ImNewCurve::KeyPoint::ValType(m_grabber1Offset.x, m_grabber1Offset.y, 0, 0);
                     oss.str(""); oss << "Grabber1Offset_Curve";
                     strCurveName = oss.str();
-                    m_hCurves[2] = ImNewCurve::Curve::CreateInstance(strCurveName, ImNewCurve::Smooth, tMinVal, tMaxVal, tDefaultVal);
+                    m_ahCurves[2] = ImNewCurve::Curve::CreateInstance(strCurveName, ImNewCurve::Smooth, tMinVal, tMaxVal, tDefaultVal);
                 }
                 m_ptCurrPos = MatUtils::FromImVec2<float>(m_pos);
                 m_ptCurrGrabber0Offset = MatUtils::FromImVec2<float>(m_grabber0Offset);
                 m_ptCurrGrabber1Offset = MatUtils::FromImVec2<float>(m_grabber1Offset);
-                auto hKp = ImNewCurve::KeyPoint::CreateInstance(m_hCurves[0]->GetDefaultVal(), ImNewCurve::Smooth);
-                m_hCurves[0]->AddPoint(hKp, false);
-                hKp = ImNewCurve::KeyPoint::CreateInstance(m_hCurves[1]->GetDefaultVal(), ImNewCurve::Smooth);
-                m_hCurves[1]->AddPoint(hKp, false);
-                hKp = ImNewCurve::KeyPoint::CreateInstance(m_hCurves[2]->GetDefaultVal(), ImNewCurve::Smooth);
-                m_hCurves[2]->AddPoint(hKp, false);
+                auto hKp = ImNewCurve::KeyPoint::CreateInstance(m_ahCurves[0]->GetDefaultVal(), ImNewCurve::Smooth);
+                m_ahCurves[0]->AddPoint(hKp, false);
+                hKp = ImNewCurve::KeyPoint::CreateInstance(m_ahCurves[1]->GetDefaultVal(), ImNewCurve::Smooth);
+                m_ahCurves[1]->AddPoint(hKp, false);
+                hKp = ImNewCurve::KeyPoint::CreateInstance(m_ahCurves[2]->GetDefaultVal(), ImNewCurve::Smooth);
+                m_ahCurves[2]->AddPoint(hKp, false);
             }
             else
             {
                 for (int i = 0; i < 3; i++)
-                    m_hCurves[i] = nullptr;
+                    m_ahCurves[i] = nullptr;
             }
         }
 
@@ -1094,9 +1283,10 @@ private:
             const auto& v2UiScale = m_owner->m_v2UiScale;
             const auto& pointSizeHalf = m_owner->m_v2PointSizeHalf;
             const auto& pointColor = m_owner->m_u32PointColor;
-            const auto& pointBorderThickness = m_owner->m_fPointBorderThickness;
+            const auto& pointBorderThickness = m_owner->m_bKeyFrameEnabled && m_bSelected ? m_owner->m_fPointBorderSelectedThickness : m_owner->m_fPointBorderThickness;
             const auto& pointBorderColor = m_owner->m_u32PointBorderColor;
             const auto& pointBorderHoverColor = m_owner->m_u32PointBorderHoverColor;
+            const auto& pointBorderSelectedColor = m_owner->m_u32PointBorderSelectedColor;
             const auto grabberRadiusInner = m_owner->m_fGrabberRadius-m_owner->m_fGrabberBorderThickness;
             const auto& grabberColorInner = m_owner->m_u32GrabberColor;
             const auto& grabberRadiusOutter = m_owner->m_fGrabberRadius;
@@ -1118,10 +1308,10 @@ private:
                 pDrawList->AddCircleFilled(grabber1Center, grabberRadiusOutter, borderColor);
                 pDrawList->AddCircleFilled(grabber1Center, grabberRadiusInner, grabberColorInner);
             }
-            const auto& offsetSize1 = pointSizeHalf;
-            auto borderColor = m_bHovered && m_iHoverType==0 ? pointBorderHoverColor : pointBorderColor;
-            pDrawList->AddRectFilled(pointPos-offsetSize1, pointPos+offsetSize1, borderColor);
-            const ImVec2 offsetSize2(pointSizeHalf.x-pointBorderThickness, pointSizeHalf.y-pointBorderThickness);
+            const ImVec2 offsetSize1(pointSizeHalf.x+pointBorderThickness, pointSizeHalf.y+pointBorderThickness);
+            auto borderColor = m_bHovered && m_iHoverType==0 ? pointBorderHoverColor : (m_owner->m_bKeyFrameEnabled && m_bSelected ? pointBorderSelectedColor : pointBorderColor);
+            pDrawList->AddRectFilled(pointPos-offsetSize1, pointPos+offsetSize1-ImVec2(1,1), borderColor);
+            const auto& offsetSize2 = pointSizeHalf;
             pDrawList->AddRectFilled(pointPos-offsetSize2, pointPos+offsetSize2, pointColor);
         }
 
@@ -1888,6 +2078,20 @@ private:
         return m_itHoveredVertex != m_atContourPoints.end();
     }
 
+    bool HasSelectedVertex() const
+    {
+        return m_itSelectedVertex != m_atContourPoints.end();
+    }
+
+    void SelectVertex(list<ContourPointImpl>::iterator itCp)
+    {
+        if (m_itSelectedVertex != m_atContourPoints.end())
+            m_itSelectedVertex->m_bSelected = false;
+        m_itSelectedVertex = itCp;
+        if (itCp != m_atContourPoints.end())
+            itCp->m_bSelected = true;
+    }
+
     bool HasHoveredContour() const
     {
         return m_itHoveredVertex != m_atContourPoints.end() && m_itHoveredVertex->m_iHoverType == 4;
@@ -2414,6 +2618,45 @@ private:
         return res;
     }
 
+    bool UpdateKeyFrameContour(int64_t i64Tick)
+    {
+        bool bUpdated = false;
+        // update contour points if key-frame is enabled
+        if (m_bKeyFrameEnabled && i64Tick >= 0 && i64Tick != m_i64PrevTick && !m_atContourPoints.empty())
+        {
+            const auto szCpCnt = m_atContourPoints.size();
+            vector<bool> aCpChanged(szCpCnt);
+            auto itCp = m_atContourPoints.begin();
+            for (auto i = 0; i < szCpCnt; i++)
+            {
+                auto& cp = *itCp++;
+                aCpChanged[i] = cp.UpdateByTick(i64Tick);
+            }
+            itCp = m_atContourPoints.begin();
+            for (auto i = 0; i < szCpCnt; i += 2)
+            {
+                const bool bChanged1 = aCpChanged[i];
+                const bool bChanged2 = i+1 == szCpCnt ? aCpChanged[0] : aCpChanged[i+1];
+                itCp++;
+                if (itCp == m_atContourPoints.end())
+                    itCp = m_atContourPoints.begin();
+                if (bChanged1 || bChanged2)
+                {
+                    UpdateContourVertices(itCp);
+                    bUpdated = true;
+                }
+                itCp++;
+            }
+            if (itCp == m_atContourPoints.end() && aCpChanged[0])
+            {
+                UpdateContourVertices(m_atContourPoints.begin());
+                bUpdated = true;
+            }
+            m_i64PrevTick = i64Tick;
+        }
+        return bUpdated;
+    }
+
 private:
     string m_strMaskName;
     MatUtils::Size2i m_szMaskSize;
@@ -2421,12 +2664,13 @@ private:
     ImRect m_rWorkArea{{-1, -1}, {-1, -1}};
     list<ContourPointImpl> m_atContourPoints;
     list<ImVec2> m_av2AllContourVertices;
-    ImVec2 m_v2PointSize{7.f, 7.f}, m_v2PointSizeHalf;
+    ImVec2 m_v2PointSize{5.f, 5.f}, m_v2PointSizeHalf;
     ImU32 m_u32PointColor{IM_COL32(40, 170, 40, 255)};
     ImU32 m_u32ContourHoverPointColor{IM_COL32(80, 80, 80, 255)};
-    float m_fPointBorderThickness{1.5f};
+    float m_fPointBorderThickness{2.5f}, m_fPointBorderSelectedThickness{3.5f};
     ImU32 m_u32PointBorderColor{IM_COL32(150, 150, 150, 255)};
     ImU32 m_u32PointBorderHoverColor{IM_COL32(240, 240, 240, 255)};
+    ImU32 m_u32PointBorderSelectedColor{IM_COL32(240, 180, 50, 255)};
     float m_fGrabberRadius{4.5f}, m_fGrabberBorderThickness{1.5f};
     ImU32 m_u32GrabberColor{IM_COL32(80, 80, 150, 255)};
     ImU32 m_u32GrabberBorderColor{IM_COL32(150, 150, 150, 255)};
@@ -2440,6 +2684,7 @@ private:
     ImVec2 m_ptCenter;
     float m_fContourHoverDetectExRadius{4.f}, m_fHoverDetectExRadius{5.f};
     list<ContourPointImpl>::iterator m_itHoveredVertex;
+    list<ContourPointImpl>::iterator m_itSelectedVertex;
     MorphController m_tMorphCtrl;
     list<ContourPointImpl>::iterator m_itMorphCtrlVt;
     ImGuiKey m_eRemoveVertexKey{ImGuiKey_LeftAlt};
@@ -2448,6 +2693,9 @@ private:
     bool m_bContourChanged{false};
     bool m_bLastMaskFilled{false};
     int m_iLastMaskLineType{0};
+    float m_fCpkfViewFixedHeight{20.f};
+    float m_fCpkfCoordBgRectRounding{3.f};
+    ImU32 m_u32CpkfCoordBgColor{IM_COL32(100, 100, 100, 255)};
     ImDataType m_eLastMaskDataType{IM_DT_UNDEFINED};
     double m_dLastMaskValue{0}, m_dLastNonMaskValue{0};
     ImGui::ImMat m_mMask, m_mMorphMask;
@@ -2455,6 +2703,7 @@ private:
     int m_iLastMorphIters{0}, m_iLastFeatherIters{0};
     bool m_bKeyFrameEnabled{false};
     int64_t m_i64PrevTick{0};
+    pair<int64_t, int64_t> m_prTickRange{0, 0};
     string m_sErrMsg;
 };
 
