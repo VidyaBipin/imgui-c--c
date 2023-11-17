@@ -651,6 +651,7 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARA
     ImGuiIO& io = ImGui::GetIO();
     ImGui_ImplWin32_Data* bd = ImGui_ImplWin32_GetBackendData();
     io.FrameCountSinceLastUpdate = 0; // Add By Dicky
+    io.FrameCountSinceLastEvent = 0; // Add By Dicky
 
     switch (msg)
     {

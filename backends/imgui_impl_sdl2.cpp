@@ -352,6 +352,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             io.AddMouseSourceEvent(event->motion.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
             io.AddMousePosEvent(mouse_pos.x, mouse_pos.y);
             io.FrameCountSinceLastUpdate = 0; // add By Dicky
+            io.FrameCountSinceLastEvent = 0; // Add By Dicky
             return true;
         }
         case SDL_MOUSEWHEEL:
@@ -371,6 +372,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             io.AddMouseSourceEvent(event->wheel.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
             io.AddMouseWheelEvent(wheel_x, wheel_y);
             io.FrameCountSinceLastUpdate = 0; // add By Dicky
+            io.FrameCountSinceLastEvent = 0; // Add By Dicky
             return true;
         }
         case SDL_MOUSEBUTTONDOWN:
@@ -387,6 +389,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             io.AddMouseSourceEvent(event->button.which == SDL_TOUCH_MOUSEID ? ImGuiMouseSource_TouchScreen : ImGuiMouseSource_Mouse);
             io.AddMouseButtonEvent(mouse_button, (event->type == SDL_MOUSEBUTTONDOWN));
             io.FrameCountSinceLastUpdate = 0; // add By Dicky
+            io.FrameCountSinceLastEvent = 0; // Add By Dicky
             bd->MouseButtonsDown = (event->type == SDL_MOUSEBUTTONDOWN) ? (bd->MouseButtonsDown | (1 << mouse_button)) : (bd->MouseButtonsDown & ~(1 << mouse_button));
             return true;
         }
@@ -411,6 +414,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             io.AddInputCharactersUTF8(event->text.text);
             io.PreEditCharacters.clear(); // clean preedit characters
             io.FrameCountSinceLastUpdate = 0; // add By Dicky
+            io.FrameCountSinceLastEvent = 0; // Add By Dicky
             return true;
         }
         case SDL_KEYDOWN:
@@ -426,6 +430,7 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             }
             // modify by Dicky end
             io.FrameCountSinceLastUpdate = 0; // add By Dicky
+            io.FrameCountSinceLastEvent = 0; // Add By Dicky
             return true;
         }
 #if SDL_HAS_DISPLAY_EVENT

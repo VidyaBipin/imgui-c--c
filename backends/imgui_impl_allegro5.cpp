@@ -494,6 +494,7 @@ bool ImGui_ImplAllegro5_ProcessEvent(ALLEGRO_EVENT* ev)
     ImGuiIO& io = ImGui::GetIO();
     ImGui_ImplAllegro5_Data* bd = ImGui_ImplAllegro5_GetBackendData();
     io.FrameCountSinceLastUpdate = 0; // Add By Dicky
+    io.FrameCountSinceLastEvent = 0; // Add By Dicky
 
     switch (ev->type)
     {

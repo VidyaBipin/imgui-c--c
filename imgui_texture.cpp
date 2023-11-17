@@ -914,7 +914,7 @@ void ImTextureToMat(ImTextureID texture, ImGui::ImMat& mat, ImVec2 offset, ImVec
     }
 }
 
-void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, ImVec2 size, float* offset_x, float* offset_y, float* tf_x, float* tf_y, bool bLandscape, bool out_border, const ImVec2& uvMin, const ImVec2& uvMax)
+void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, ImVec2 size, float zoom_size, float* offset_x, float* offset_y, float* tf_x, float* tf_y, bool bLandscape, bool out_border, const ImVec2& uvMin, const ImVec2& uvMax)
 {
     if (texture)
     {
@@ -976,7 +976,7 @@ void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, I
         {
             ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
             ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
-            float region_sz = 320.0f / texture_zoom;
+            float region_sz = zoom_size / texture_zoom;
             float scale_w = texture_width / (_tf_x - _offset_x);
             float scale_h = texture_height / (_tf_y - _offset_y);
             float pos_x = (io.MousePos.x - _offset_x) * scale_w;

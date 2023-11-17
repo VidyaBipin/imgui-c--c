@@ -1920,8 +1920,7 @@ enum ImGuiSliderFlags_
     ImGuiSliderFlags_NoRoundToFormat        = 1 << 6,       // Disable rounding underlying value to match precision of the display format string (e.g. %.3f values are rounded to those 3 digits)
     ImGuiSliderFlags_NoInput                = 1 << 7,       // Disable CTRL+Click or Enter key allowing to input text directly into the widget
     // add By Dicky
-    ImGuiSliderFlags_NoLabel                = 1 << 16,       // Disable widget label show
-    ImGuiSliderFlags_Mark                   = 1 << 17,       // add mark on handle
+    ImGuiSliderFlags_Mark                   = 1 << 16,       // add mark on handle
     // add By Dicky end
     ImGuiSliderFlags_InvalidMask_           = 0x7000000F,   // [Internal] We treat using those bits as being potentially a 'float power' argument from the previous API that has got miscast to this enum, and will trigger an assert if needed.
 
@@ -2384,7 +2383,8 @@ struct ImGuiIO
     int         MouseType;                          // type of current mouse status, 0 = normal, 1 = straw ...
     bool        MouseStrawed;                       // mouse is straw something
     ImVec4      MouseStrawValue;                    // value of mouse straw, usually straw color 
-    int         FrameCountSinceLastUpdate;          // How many frames since the last update event; a value of 0 indicates that the current frame was triggered by an update.
+    int         FrameCountSinceLastUpdate;          // How many frames since the last update, a value of 0 indicates that the current frame was triggered by an update.
+    int         FrameCountSinceLastEvent;           // How many frames since the last event
     int         MaxDelayFrameCount;                 // How many frames show if tiggle power saving mode, default is 2
     double      MaxFrameRate;                       // User custom maximum reflash rate 
     double      MinFrameRate;                       // User custom minimum reflash rate

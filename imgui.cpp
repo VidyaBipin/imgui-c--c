@@ -1401,6 +1401,7 @@ ImGuiIO::ImGuiIO()
     MouseStrawed = false;
     MouseStrawValue = {};
     FrameCountSinceLastUpdate = 0;
+    FrameCountSinceLastEvent = 0;
     MaxDelayFrameCount = 2;
     MaxFrameRate = 30;
     MinFrameRate = 5;
@@ -5445,6 +5446,7 @@ void ImGui::EndFrame()
 
     // Add By Dicky For Power Save
     g.IO.FrameCountSinceLastUpdate++;
+    g.IO.FrameCountSinceLastEvent++;
     // Add By Dicky end
 
     // Initiate moving window + handle left-click and right-click focus

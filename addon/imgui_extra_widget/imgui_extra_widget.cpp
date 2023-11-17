@@ -10562,3 +10562,32 @@ void ImGui::ShowDigitalTime(ImDrawList *draw_list, int64_t millisec, int show_mi
     ImGui::PopStyleVar();
 }
 
+void ImGui::ShowDigitalTimeDuration(ImDrawList *draw_list, int64_t millisec, int64_t duration, int show_millisec, ImVec2 pos, ImU32 color)
+{
+    auto ReplaceDigital = [](std::string str)
+    {
+        if (str.empty()) return str;
+        std::string result = "";
+        for (auto c : str)
+        {
+            if (c >= 0x30 && c <= 0x39)
+                result += DIGITALS[c - 0x30];
+            else if (c == 0x3A)
+                result += DIGITAL_COLON;
+            else if (c == 0x2E)
+                result += DIGITAL_DOT;
+            else
+                result += c;
+        }
+        return result;
+    };
+    auto time_str = ImGuiHelper::MillisecToString(millisec, show_millisec);
+    auto dur_str = ImGuiHelper::MillisecToString(duration, show_millisec);
+    auto show_time_text = ReplaceDigital(time_str);
+    auto show_dur_text = ReplaceDigital(dur_str);
+    auto show_text = show_time_text + " / " + show_dur_text;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_TextSpacing, 0.75f);
+    draw_list->AddText(pos, color, show_text.c_str());
+    ImGui::PopStyleVar();
+}

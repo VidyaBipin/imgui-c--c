@@ -64,7 +64,7 @@ namespace ImNewCurve
         DIM_T,
     };
 
-    struct KeyPoint
+    struct IMGUI_API KeyPoint
     {
         using Holder = std::shared_ptr<KeyPoint>;
         using ValType = ImVec4;
@@ -146,7 +146,7 @@ namespace ImNewCurve
     static inline KeyPoint::ValType Max(const KeyPoint::ValType& a, const KeyPoint::ValType& b)
     { return KeyPoint::ValType(a.x>b.x?a.x:b.x, a.y>b.y?a.y:b.y, a.z>b.z?a.z:b.z, a.w>b.w?a.w:b.w); }
 
-    class Curve
+    class IMGUI_API Curve
     {
     public:
         using Holder = std::shared_ptr<Curve>;
@@ -211,7 +211,7 @@ namespace ImNewCurve
     // forward declaration
     class Editor;
 
-    class CurveUiObj : public Curve
+    class IMGUI_API CurveUiObj : public Curve
     {
     public:
         using Holder = std::shared_ptr<CurveUiObj>;
@@ -280,7 +280,7 @@ namespace ImNewCurve
         std::unordered_map<ValueDimension, ContourPointsTable> m_aContourPoints;
     };
 
-    class Editor
+    class IMGUI_API Editor
     {
     public:
         using Holder = std::shared_ptr<Editor>;
