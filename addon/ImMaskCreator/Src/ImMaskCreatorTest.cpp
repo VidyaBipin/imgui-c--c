@@ -48,7 +48,7 @@ static bool _AppFrame(void* handle, bool closeApp)
     SetNextWindowSize(io.DisplaySize, ImGuiCond_None);
     ImGui:Begin("##MainWindow", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-    const int64_t i64Tick = g_fTime*1000;
+    int64_t i64Tick = g_fTime*1000;
     auto wndAvailSize = GetContentRegionAvail();
     ImVec2 mousePos(0, 0);
     if (BeginChild("left", {wndAvailSize.x/2, 0}, true))
@@ -103,8 +103,15 @@ static bool _AppFrame(void* handle, bool closeApp)
         string hoverPointInfo = oss.str();
         TextUnformatted(hoverPointInfo.c_str());
 
-        g_hMaskCreator->DrawContourPointKeyFrames(i64Tick);
+        int64_t i64Tick_ = i64Tick;
+        g_hMaskCreator->DrawContourPointKeyFrames(i64Tick_);
+        if (i64Tick_ != i64Tick)
+        {
+            i64Tick = i64Tick_;
+            g_fTime = (float)((double)i64Tick_/1000);
+        }
 
+        BeginChild("##DrawMaskArea");
         wndAvailSize = GetContentRegionAvail();
         auto cursorPos = GetCursorScreenPos();
         if (!g_bMaskSizeInited)
@@ -125,6 +132,7 @@ static bool _AppFrame(void* handle, bool closeApp)
             pDrawList->AddLine(rContBox.Max, {rContBox.Min.x, rContBox.Max.y}, CONTBOX_COLOR);
             pDrawList->AddLine({rContBox.Min.x, rContBox.Max.y}, rContBox.Min, CONTBOX_COLOR);
         }
+        EndChild();
     }
     EndChild();
 

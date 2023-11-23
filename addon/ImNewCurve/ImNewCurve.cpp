@@ -217,6 +217,21 @@ int Curve::GetKeyPointIndex(const KeyPoint::Holder& hKp) const
     return idx;
 }
 
+int Curve::GetKeyPointIndex(float t) const
+{
+    int idx = -1;
+    const auto szKpCnt = m_aKeyPoints.size();
+    for (auto i = 0; i < szKpCnt; i++)
+    {
+        if (m_aKeyPoints[i]->t == t)
+        {
+            idx = (int)i;
+            break;
+        }
+    }
+    return idx;
+}
+
 void Curve::SetMinVal(const KeyPoint::ValType& minVal)
 {
     const ImVec2 v2TimeRange(m_tMinVal.w, m_tMaxVal.w);
@@ -260,7 +275,7 @@ int Curve::AddPoint(KeyPoint::Holder hKp, bool bNormalize, bool bOverwriteIfExis
     }
     else
         (*iter)->val = hKp->val;
-    return GetKeyPointIndex(hKp);
+    return GetKeyPointIndex(hKp->t);
 }
 
 int Curve::AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize, bool bOverwriteIfExists)

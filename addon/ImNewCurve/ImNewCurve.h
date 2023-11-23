@@ -171,6 +171,7 @@ namespace ImNewCurve
         size_t GetKeyPointCount() const { return m_aKeyPoints.size(); }
         const KeyPoint::Holder GetKeyPoint(size_t idx) const { if (idx >= m_aKeyPoints.size()) return nullptr; return m_aKeyPoints[idx]; }
         int GetKeyPointIndex(const KeyPoint::Holder& hKp) const;
+        int GetKeyPointIndex(float t) const;
         KeyPoint::ValType CalcPointVal(float t, bool bDenormalize, bool bAlignTime = true) const;
         float Tick2Time(float tick) const { if (m_bTimeBaseValid) return tick*1000*m_tTimeBase.first/m_tTimeBase.second; return tick; }
         float Time2Tick(float time) const { if (m_bTimeBaseValid) return time*m_tTimeBase.second/(m_tTimeBase.first*1000); return time; }
