@@ -662,11 +662,14 @@ public:
         const ImVec2 v2TickIndicatorPos(v2SliderRectLt.x+((double)(i64Tick-prTickRange.first)/i64TickLength)*fSliderWdgWidth, v2SliderRectRb.y+fKeyFrameIndicatorRadius+2);
         const ImVec2 v2TickIndicatorSize(10, 6);
         const ImU32 u32TickIndicatorColor{IM_COL32(80, 180, 80, 255)};
-        pDrawList->AddTriangleFilled(
-                v2TickIndicatorPos,
-                v2TickIndicatorPos+ImVec2(-v2TickIndicatorSize.x/2, v2TickIndicatorSize.y),
-                v2TickIndicatorPos+ImVec2(v2TickIndicatorSize.x/2, v2TickIndicatorSize.y),
-                u32TickIndicatorColor);
+        if (i64Tick >= prTickRange.first && i64Tick <= prTickRange.second)
+        {
+            pDrawList->AddTriangleFilled(
+                    v2TickIndicatorPos,
+                    v2TickIndicatorPos+ImVec2(-v2TickIndicatorSize.x/2, v2TickIndicatorSize.y),
+                    v2TickIndicatorPos+ImVec2(v2TickIndicatorSize.x/2, v2TickIndicatorSize.y),
+                    u32TickIndicatorColor);
+        }
 
         v2ViewSize.y = v2TickIndicatorPos.y+v2TickIndicatorSize.y-v2ViewPos.y+1;
         ImRect bb(v2ViewPos, v2ViewPos+v2ViewSize);
@@ -850,6 +853,14 @@ public:
             return false;
         m_prTickRange.first = i64Start;
         m_prTickRange.second = i64End;
+        if (m_bKeyFrameEnabled)
+        {
+            for (const auto& cp : m_atContourPoints)
+            {
+                for (auto i = 0; i < 3; i++)
+                    cp.m_ahCurves[i]->SetTimeRange(ImVec2(i64Start, i64End), true);
+            }
+        }
         return true;
     }
 
@@ -900,6 +911,9 @@ public:
         j["contour_complete"] = m_bContourCompleted;
         j["mask_filled"] = m_bLastMaskFilled;
         j["mask_line_type"] = json::number(m_iLastMaskLineType);
+        j["key_frame_enabled"] = m_bKeyFrameEnabled;
+        j["tick_range_0"] = json::number(m_prTickRange.first);
+        j["tick_range_1"] = json::number(m_prTickRange.second);
         return true;
     }
 
@@ -936,12 +950,24 @@ public:
         m_bContourCompleted = j["contour_complete"].get<json::boolean>();
         m_bLastMaskFilled = j["mask_filled"].get<json::boolean>();
         m_iLastMaskLineType = j["mask_line_type"].get<json::number>();
+        if (j.contains("key_frame_enabled"))
+            m_bKeyFrameEnabled = j["key_frame_enabled"].get<json::boolean>();
+        if (j.contains("tick_range_0"))
+            m_prTickRange.first = j["tick_range_0"].get<json::number>();
+        if (j.contains("tick_range_1"))
+            m_prTickRange.second = j["tick_range_1"].get<json::number>();
+        m_i64PrevTick = m_prTickRange.first;
         const auto& subj = j["contour_points"].get<json::array>();
         for (const auto& elem : subj)
         {
             ContourPointImpl cp(this, {0, 0});
             cp.FromJson(elem);
             m_atContourPoints.push_back(std::move(cp));
+        }
+        if (m_bKeyFrameEnabled)
+        {
+            for (auto& cp : m_atContourPoints)
+                cp.UpdateByTick(m_i64PrevTick);
         }
         m_tMorphCtrl.FromJson(j["morph_controller"]);
 
@@ -1066,6 +1092,25 @@ private:
                 m_ahCurves[1] = ImNewCurve::Curve::CreateFromJson(j["curve1"]);
             if (j.contains("curve2"))
                 m_ahCurves[2] = ImNewCurve::Curve::CreateFromJson(j["curve2"]);
+            // rebuild tick array
+            list<float> aKpTicks;
+            for (int i = 0; i < 3; i++)
+            {
+                if (!m_ahCurves[i])
+                    continue;
+                const auto& hCurve = m_ahCurves[i];
+                const auto szKpCnt = hCurve->GetKeyPointCount();
+                for (auto j = 0; j < szKpCnt; j++)
+                {
+                    const auto t = hCurve->GetKeyPoint(j)->t;
+                    auto itIns = find_if(aKpTicks.begin(), aKpTicks.end(), [t] (const auto& elem) {
+                        return elem >= t;
+                    });
+                    if (itIns == aKpTicks.end() || *itIns > t)
+                        aKpTicks.insert(itIns, t);
+                }
+            }
+            m_aKpTicks = std::move(aKpTicks);
             UpdateGrabberContainBox();
         }
 

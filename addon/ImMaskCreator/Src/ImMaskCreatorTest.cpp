@@ -23,7 +23,6 @@ static ImTextureID g_tidMask = 0;
 static int g_iMorphSize = 1;
 static char g_acMaskSavePath[256];
 static ImVec2 g_v2MousePos(0, 0);
-static bool g_bEnableKeyFrame = false;
 static float g_fTime = 0;
 static const float g_fTimeMax = 30.f;
 
@@ -55,10 +54,11 @@ static bool _AppFrame(void* handle, bool closeApp)
     {
         TextUnformatted("Draw Mask Area"); SameLine(0, 20);
         Checkbox("Show contain box", &g_bShowContainBox); SameLine(0, 20);
-        if (Checkbox("Key Frame", &g_bEnableKeyFrame))
+        bool bEnableKeyFrame = g_hMaskCreator->IsKeyFrameEnabled();
+        if (Checkbox("Key Frame", &bEnableKeyFrame))
         {
-            g_hMaskCreator->EnableKeyFrames(g_bEnableKeyFrame);
-            if (!g_bEnableKeyFrame)
+            g_hMaskCreator->EnableKeyFrames(bEnableKeyFrame);
+            if (!bEnableKeyFrame)
                 g_fTime = 0;
         } SameLine(0, 20);
         if (Button("Load json"))
@@ -76,7 +76,7 @@ static bool _AppFrame(void* handle, bool closeApp)
                                                     ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_Modal);
         }
 
-        BeginDisabled(!g_bEnableKeyFrame);
+        BeginDisabled(!bEnableKeyFrame);
         TextUnformatted("Time:"); SameLine(0, 10);
         SliderFloat("##time_slider", &g_fTime, 0, g_fTimeMax, "%.03f"); SameLine(0, 10);
         Button("Play");
