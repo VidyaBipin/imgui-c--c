@@ -40,12 +40,14 @@ SOFTWARE.
 #pragma region Includes
 
 #include "imgui.h" // add by Dicky
+#include "imgui_helper.h" // add by Dicky
 #include <cfloat>
 #include <cstring>  // stricmp / strcasecmp
 #include <cstdarg>  // variadic
 #include <sstream>
 #include <iomanip>
 #include <ctime>
+#include <memory>
 #include <sys/stat.h>
 #include <cstdio>
 #include <cerrno>
@@ -96,6 +98,11 @@ SOFTWARE.
 
 #include "imgui.h"
 #include "imgui_internal.h"
+
+// legacy compatibility 1.89
+#ifndef IM_TRUNC
+#define IM_TRUNC IM_FLOOR
+#endif
 
 #include <cstdlib>
 #include <algorithm>
@@ -402,13 +409,354 @@ public:
 
 #pragma endregion
 
-#pragma region Utils
+#pragma region FILE SYSTEM INTERFACE
 
-#ifndef USE_STD_FILESYSTEM
-inline int inAlphaSort(const struct dirent** a, const struct dirent** b) {
-    return strcoll((*a)->d_name, (*b)->d_name);
-}
+#ifndef CUSTOM_FILESYSTEM_INCLUDE
+#ifdef USE_STD_FILESYSTEM
+class FileSystemStd : public IGFD::IFileSystem {
+public:
+    bool IsDirectoryCanBeOpened(const std::string& vName) override {
+        bool bExists = false;
+        if (!vName.empty()) {
+            namespace fs = std::filesystem;
+#ifdef _IGFD_WIN_
+            std::wstring wname = IGFD::Utils::UTF8Decode(vName.c_str());
+            fs::path pathName  = fs::path(wname);
+#else   // _IGFD_WIN_
+            fs::path pathName = fs::path(vName);
+#endif  // _IGFD_WIN_
+            try {
+                // interesting, in the case of a protected dir or for any reason the dir cant be opened
+                // this func will work but will say nothing more . not like the dirent version
+                bExists = fs::is_directory(pathName);
+                // test if can be opened, this function can thrown an exception if there is an issue with this dir
+                // here, the dir_iter is need else not exception is thrown..
+                const auto dir_iter = std::filesystem::directory_iterator(pathName);
+                (void)dir_iter;  // for avoid unused warnings
+            } catch (const std::exception& /*ex*/) {
+                // fail so this dir cant be opened
+                bExists = false;
+            }
+        }
+        return bExists;  // this is not a directory!
+    }
+    bool IsDirectoryExist(const std::string& vName) override {
+        if (!vName.empty()) {
+            namespace fs = std::filesystem;
+#ifdef _IGFD_WIN_
+            std::wstring wname = IGFD::Utils::UTF8Decode(vName.c_str());
+            fs::path pathName  = fs::path(wname);
+#else   // _IGFD_WIN_
+            fs::path pathName = fs::path(vName);
+#endif  // _IGFD_WIN_
+            return fs::is_directory(pathName);
+        }
+        return false;  // this is not a directory!
+    }
+    bool IsFileExist(const std::string& vName) override {
+        return fs::is_regular_file(vName);
+    }
+    bool CreateDirectoryIfNotExist(const std::string& vName) override {
+        bool res = false;
+        if (!vName.empty()) {
+            if (!IsDirectoryExist(vName)) {
+#ifdef _IGFD_WIN_
+                namespace fs       = std::filesystem;
+                std::wstring wname = IGFD::Utils::UTF8Decode(vName.c_str());
+                fs::path pathName  = fs::path(wname);
+                res                = fs::create_directory(pathName);
+#elif defined(__EMSCRIPTEN__)  // _IGFD_WIN_
+                std::string str = std::string("FS.mkdir('") + vName + "');";
+                emscripten_run_script(str.c_str());
+                res = true;
+#elif defined(_IGFD_UNIX_)
+                char buffer[PATH_MAX] = {};
+                snprintf(buffer, PATH_MAX, "mkdir -p \"%s\"", vName.c_str());
+                const int dir_err = std::system(buffer);
+                if (dir_err != -1) {
+                    res = true;
+                }
+#endif  // _IGFD_WIN_
+                if (!res) {
+                    std::cout << "Error creating directory " << vName << std::endl;
+                }
+            }
+        }
+        return res;
+    }
+    std::vector<std::string> GetDrivesList() override {
+        std::vector<std::string> res;
+#ifdef _IGFD_WIN_
+        const DWORD mydrives = 2048;
+        char lpBuffer[2048];
+#define mini(a, b) (((a) < (b)) ? (a) : (b))
+        const DWORD countChars = mini(GetLogicalDriveStringsA(mydrives, lpBuffer), 2047);
+#undef mini
+        if (countChars > 0U && countChars < 2049U) {
+            std::string var = std::string(lpBuffer, (size_t)countChars);
+            IGFD::Utils::ReplaceString(var, "\\", "");
+            res = IGFD::Utils::SplitStringToVector(var, '\0', false);
+        }
+#endif  // _IGFD_WIN_
+        return res;
+    }
+
+    IGFD::Utils::PathStruct ParsePathFileName(const std::string& vPathFileName) override {
+        // https://github.com/aiekick/ImGuiFileDialog/issues/54
+        namespace fs = std::filesystem;
+        IGFD::Utils::PathStruct res;
+        if (vPathFileName.empty()) return res;
+        auto fsPath = fs::path(vPathFileName);
+        if (fs::is_directory(fsPath)) {
+            res.name = "";
+            res.path = fsPath.string();
+            res.isOk = true;
+        } else if (fs::is_regular_file(fsPath)) {
+            res.name = fsPath.filename().string();
+            res.path = fsPath.parent_path().string();
+            res.isOk = true;
+        }
+        return res;
+    }
+
+    std::vector<IGFD::FileInfos> ScanDirectory(const std::string& vPath) override {
+        std::vector<IGFD::FileInfos> res;
+        try {
+            const std::filesystem::path fspath(vPath);
+            const auto dir_iter = std::filesystem::directory_iterator(fspath);
+            IGFD::FileType fstype = IGFD::FileType(IGFD::FileType::ContentType::Directory, std::filesystem::is_symlink(std::filesystem::status(fspath)));
+            {
+                IGFD::FileInfos file_two_dot;
+                file_two_dot.filePath    = vPath;
+                file_two_dot.fileNameExt = "..";
+                file_two_dot.fileType    = fstype;
+                res.push_back(file_two_dot);
+            }
+            for (const auto& file : dir_iter) {
+                IGFD::FileType fileType;
+                if (file.is_symlink()) {
+                    fileType.SetSymLink(file.is_symlink());
+                    fileType.SetContent(IGFD::FileType::ContentType::LinkToUnknown);
+                }
+                if (file.is_directory()) {
+                    fileType.SetContent(IGFD::FileType::ContentType::Directory);
+                }  // directory or symlink to directory
+                else if (file.is_regular_file()) {
+                    fileType.SetContent(IGFD::FileType::ContentType::File);
+                }
+                if (fileType.isValid()) {
+                    auto fileNameExt = file.path().filename().string();
+                    {
+                        IGFD::FileInfos _file;
+                        _file.filePath    = vPath;
+                        _file.fileNameExt = fileNameExt;
+                        _file.fileType    = fileType;
+                        res.push_back(_file);
+                    }
+                }
+            }
+        } catch (const std::exception& ex) {
+            printf("%s", ex.what());
+        }
+        return res;
+    }
+    bool IsDirectory(const std::string& vFilePathName) override {
+        namespace fs = std::filesystem;
+        return fs::is_directory(vFilePathName);
+    }
+};
+#define FILE_SYSTEM_OVERRIDE FileSystemStd
+#else
+class FileSystemDirent : public IGFD::IFileSystem {
+public:
+    bool IsDirectoryCanBeOpened(const std::string& vName) override {
+        if (!vName.empty()) {
+            DIR* pDir = nullptr;
+            // interesting, in the case of a protected dir or for any reason the dir cant be opened
+            // this func will fail
+            pDir = opendir(vName.c_str());
+            if (pDir != nullptr) {
+                return true;
+                (void)closedir(pDir);
+            }
+        }
+        return false;
+    }
+    bool IsDirectoryExist(const std::string& vName) override {
+        bool bExists = false;
+        if (!vName.empty()) {
+            DIR* pDir = nullptr;
+            pDir      = opendir(vName.c_str());
+            if (pDir) {
+                bExists = true;
+                closedir(pDir);
+            } else if (ENOENT == errno) {
+                /* Directory does not exist. */
+                // bExists = false;
+            } else {
+                /* opendir() failed for some other reason.
+                   like if a dir is protected, or not accessable with user right
+                */
+                bExists = true;
+            }
+        }
+        return bExists;
+    }
+    bool IsFileExist(const std::string& vName) override {
+        std::ifstream docFile(vName, std::ios::in);
+        if (docFile.is_open()) {
+            docFile.close();
+            return true;
+        }
+        return false;
+    }
+    bool CreateDirectoryIfNotExist(const std::string& vName) override {
+        bool res = false;
+        if (!vName.empty()) {
+            if (!IsDirectoryExist(vName)) {
+#ifdef _IGFD_WIN_
+                std::wstring wname = IGFD::Utils::UTF8Decode(vName);
+                if (CreateDirectoryW(wname.c_str(), nullptr)) {
+                    res = true;
+                }
+#elif defined(__EMSCRIPTEN__)  // _IGFD_WIN_
+                std::string str = std::string("FS.mkdir('") + vName + "');";
+                emscripten_run_script(str.c_str());
+                res = true;
+#elif defined(_IGFD_UNIX_)
+                char buffer[PATH_MAX] = {};
+                snprintf(buffer, PATH_MAX, "mkdir -p \"%s\"", vName.c_str());
+                const int dir_err = std::system(buffer);
+                if (dir_err != -1) {
+                    res = true;
+                }
+#endif  // _IGFD_WIN_
+                if (!res) {
+                    std::cout << "Error creating directory " << vName << std::endl;
+                }
+            }
+        }
+
+        return res;
+    }
+
+    std::vector<std::string> GetDrivesList() override { // modify by Dicky
+        std::vector<std::string> res;
+#ifdef _IGFD_WIN_
+        const DWORD mydrives = 2048;
+        char lpBuffer[2048];
+#define mini(a, b) (((a) < (b)) ? (a) : (b))
+        const DWORD countChars = mini(GetLogicalDriveStringsA(mydrives, lpBuffer), 2047);
+#undef mini
+        if (countChars > 0U && countChars < 2049U) {
+            std::string var = std::string(lpBuffer, (size_t)countChars);
+            IGFD::Utils::ReplaceString(var, "\\", "");
+            res = IGFD::Utils::SplitStringToVector(var, '\0', false);
+        }
+#endif  // _IGFD_WIN_
+        return res;
+    }
+
+    IGFD::Utils::PathStruct ParsePathFileName(const std::string& vPathFileName) override { // modify by Dicky
+        IGFD::Utils::PathStruct res;
+        if (!vPathFileName.empty()) {
+            std::string pfn = vPathFileName;
+            std::string separator(1u, PATH_SEP);
+            IGFD::Utils::ReplaceString(pfn, "\\", separator);
+            IGFD::Utils::ReplaceString(pfn, "/", separator);
+            size_t lastSlash = pfn.find_last_of(separator);
+            if (lastSlash != std::string::npos) {
+                res.name = pfn.substr(lastSlash + 1);
+                res.path = pfn.substr(0, lastSlash);
+                res.isOk = true;
+            }
+            size_t lastPoint = pfn.find_last_of('.');
+            if (lastPoint != std::string::npos) {
+                if (!res.isOk) {
+                    res.name = pfn;
+                    res.isOk = true;
+                }
+                res.ext = pfn.substr(lastPoint + 1);
+                IGFD::Utils::ReplaceString(res.name, "." + res.ext, "");
+            }
+            if (!res.isOk) {
+                res.name = std::move(pfn);
+                res.isOk = true;
+            }
+        }
+        return res;
+    }
+
+    std::vector<IGFD::FileInfos> ScanDirectory(const std::string& vPath) override {
+        std::vector<IGFD::FileInfos> res;
+        struct dirent** files = nullptr;
+        size_t n              = scandir(vPath.c_str(), &files, nullptr,                         //
+                                        [](const struct dirent** a, const struct dirent** b) {  //
+                               return strcoll((*a)->d_name, (*b)->d_name);
+                           });
+        if (n && files) {
+            for (size_t i = 0; i < n; ++i) {
+                struct dirent* ent = files[i];
+                IGFD::FileType fileType;
+                switch (ent->d_type) {
+                    case DT_DIR: fileType.SetContent(IGFD::FileType::ContentType::Directory); break;
+                    case DT_REG: fileType.SetContent(IGFD::FileType::ContentType::File); break;
+#if defined(_IGFD_UNIX_) || (DT_LNK != DT_UNKNOWN)
+                    case DT_LNK:
 #endif
+                    case DT_UNKNOWN: {
+                        struct stat sb = {};
+#ifdef _IGFD_WIN_
+                        auto filePath  = vPath + ent->d_name;
+#else
+                        auto filePath = vPath + std::string(1u, PATH_SEP) + ent->d_name;
+#endif
+                        if (!stat(filePath.c_str(), &sb)) {
+                            if (sb.st_mode & S_IFLNK) {
+                                fileType.SetSymLink(true);
+                                // by default if we can't figure out the target type.
+                                fileType.SetContent(IGFD::FileType::ContentType::LinkToUnknown); 
+                            }
+                            if (sb.st_mode & S_IFREG) {
+                                fileType.SetContent(IGFD::FileType::ContentType::File);
+                                break;
+                            } else if (sb.st_mode & S_IFDIR) {
+                                fileType.SetContent(IGFD::FileType::ContentType::Directory);
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    default: break;  // leave it invalid (devices, etc.)
+                }
+                if (fileType.isValid()) {
+                    IGFD::FileInfos _file;
+                    _file.filePath    = vPath;
+                    _file.fileNameExt = ent->d_name;
+                    _file.fileType    = fileType;
+                    res.push_back(_file);
+                }
+            }
+            for (size_t i = 0; i < n; ++i) {
+                free(files[i]);
+            }
+            free(files);
+        }
+        return res;
+    }
+    bool IsDirectory(const std::string& vFilePathName) override {
+        return (opendir(vFilePathName.c_str()) != nullptr);
+    }
+};
+#define FILE_SYSTEM_OVERRIDE FileSystemDirent
+#endif  // USE_STD_FILESYSTEM
+#else
+#include CUSTOM_FILESYSTEM_INCLUDE
+#endif  // USE_CUSTOM_FILESYSTEM
+
+#pragma endregion
+
+#pragma region Utils
 
 // https://github.com/ocornut/imgui/issues/1720
 bool IGFD::Utils::ImSplitter(
@@ -502,194 +850,6 @@ std::vector<std::string> IGFD::Utils::SplitStringToVector(const std::string& vTe
         }
     }
     return arr;
-}
-
-std::vector<std::string> IGFD::Utils::GetDrivesList() {
-    std::vector<std::string> res;
-
-#ifdef _IGFD_WIN_
-    const DWORD mydrives = 2048;
-    char lpBuffer[2048];
-#define mini(a, b) (((a) < (b)) ? (a) : (b))
-    const DWORD countChars = mini(GetLogicalDriveStringsA(mydrives, lpBuffer), 2047);
-#undef mini
-    if (countChars > 0U && countChars < 2049U) {
-        std::string var = std::string(lpBuffer, (size_t)countChars);
-        IGFD::Utils::ReplaceString(var, "\\", "");
-        res = IGFD::Utils::SplitStringToVector(var, '\0', false);
-    }
-#endif  // _IGFD_WIN_
-
-    return res;
-}
-
-bool IGFD::Utils::IsDirectoryCanBeOpened(const std::string& name) {
-    bool bExists = false;
-
-    if (!name.empty()) {
-#ifdef USE_STD_FILESYSTEM
-        namespace fs = std::filesystem;
-#ifdef _IGFD_WIN_
-        std::wstring wname = IGFD::Utils::UTF8Decode(name.c_str());
-        fs::path pathName = fs::path(wname);
-#else   // _IGFD_WIN_
-        fs::path pathName = fs::path(name);
-#endif  // _IGFD_WIN_
-        try {
-            // interesting, in the case of a protected dir or for any reason the dir cant be opened
-            // this func will work but will say nothing more . not like the dirent version
-            bExists = fs::is_directory(pathName);
-            // test if can be opened, this function can thrown an exception if there is an issue with this dir
-            // here, the dir_iter is need else not exception is thrown..
-            const auto dir_iter = std::filesystem::directory_iterator(pathName);
-            (void)dir_iter;  // for avoid unused warnings
-        } catch (const std::exception& /*ex*/) {
-            // fail so this dir cant be opened
-            bExists = false;
-        }
-#else
-        DIR* pDir = nullptr;
-        // interesting, in the case of a protected dir or for any reason the dir cant be opened
-        // this func will fail
-        pDir = opendir(name.c_str());
-        if (pDir != nullptr) {
-            bExists = true;
-            (void)closedir(pDir);
-        }
-#endif  // USE_STD_FILESYSTEM
-    }
-
-    return bExists;  // this is not a directory!
-}
-
-bool IGFD::Utils::IsDirectoryExist(const std::string& name) {
-    bool bExists = false;
-
-    if (!name.empty()) {
-#ifdef USE_STD_FILESYSTEM
-        namespace fs = std::filesystem;
-#ifdef _IGFD_WIN_
-        std::wstring wname = IGFD::Utils::UTF8Decode(name.c_str());
-        fs::path pathName = fs::path(wname);
-#else   // _IGFD_WIN_
-        fs::path pathName = fs::path(name);
-#endif  // _IGFD_WIN_
-        bExists = fs::is_directory(pathName);
-#else
-        DIR* pDir = nullptr;
-        pDir = opendir(name.c_str());
-        if (pDir) {
-            bExists = true;
-            closedir(pDir);
-        } else if (ENOENT == errno) {
-            /* Directory does not exist. */
-            // bExists = false;
-        } else {
-            /* opendir() failed for some other reason.
-               like if a dir is protected, or not accessable with user right
-            */
-            bExists = true;
-        }
-#endif  // USE_STD_FILESYSTEM
-    }
-
-    return bExists;  // this is not a directory!
-}
-
-bool IGFD::Utils::CreateDirectoryIfNotExist(const std::string& name) {
-    bool res = false;
-
-    if (!name.empty()) {
-        if (!IsDirectoryExist(name)) {
-#ifdef _IGFD_WIN_
-#ifdef USE_STD_FILESYSTEM
-            namespace fs = std::filesystem;
-            std::wstring wname = IGFD::Utils::UTF8Decode(name.c_str());
-            fs::path pathName = fs::path(wname);
-            res = fs::create_directory(pathName);
-#else                          // USE_STD_FILESYSTEM
-            std::wstring wname = IGFD::Utils::UTF8Decode(name);
-            if (CreateDirectoryW(wname.c_str(), nullptr)) {
-                res = true;
-            }
-#endif                         // USE_STD_FILESYSTEM
-#elif defined(__EMSCRIPTEN__)  // _IGFD_WIN_
-            std::string str = std::string("FS.mkdir('") + name + "');";
-            emscripten_run_script(str.c_str());
-            res = true;
-#elif defined(_IGFD_UNIX_)
-            char buffer[PATH_MAX] = {};
-            snprintf(buffer, PATH_MAX, "mkdir -p \"%s\"", name.c_str());
-            const int dir_err = std::system(buffer);
-            if (dir_err != -1) {
-                res = true;
-            }
-#endif  // _IGFD_WIN_
-            if (!res) {
-                std::cout << "Error creating directory " << name << std::endl;
-            }
-        }
-    }
-
-    return res;
-}
-
-IGFD::Utils::PathStruct IGFD::Utils::ParsePathFileName(const std::string& vPathFileName) {
-#ifdef USE_STD_FILESYSTEM
-    // https://github.com/aiekick/ImGuiFileDialog/issues/54
-    namespace fs = std::filesystem;
-    PathStruct res;
-    if (vPathFileName.empty())
-        return res;
-
-    auto fsPath = fs::path(vPathFileName);
-
-    if (fs::is_directory(fsPath)) {
-        res.name = "";
-        res.path = fsPath.string();
-        res.isOk = true;
-
-    } else if (fs::is_regular_file(fsPath)) {
-        res.name = fsPath.filename().string();
-        res.path = fsPath.parent_path().string();
-        res.isOk = true;
-    }
-
-    return res;
-#else
-    PathStruct res;
-
-    if (!vPathFileName.empty()) {
-        std::string pfn = vPathFileName;
-        std::string separator(1u, PATH_SEP);
-        IGFD::Utils::ReplaceString(pfn, "\\", separator);
-        IGFD::Utils::ReplaceString(pfn, "/", separator);
-
-        size_t lastSlash = pfn.find_last_of(separator);
-        if (lastSlash != std::string::npos) {
-            res.name = pfn.substr(lastSlash + 1);
-            res.path = pfn.substr(0, lastSlash);
-            res.isOk = true;
-        }
-
-        size_t lastPoint = pfn.find_last_of('.');
-        if (lastPoint != std::string::npos) {
-            if (!res.isOk) {
-                res.name = pfn;
-                res.isOk = true;
-            }
-            res.ext = pfn.substr(lastPoint + 1);
-            IGFD::Utils::ReplaceString(res.name, "." + res.ext, "");
-        }
-
-        if (!res.isOk) {
-            res.name = std::move(pfn);
-            res.isOk = true;
-        }
-    }
-
-    return res;
-#endif  // USE_STD_FILESYSTEM
 }
 
 void IGFD::Utils::AppendToBuffer(char* vBuffer, size_t vBufferLen, const std::string& vStr) {
@@ -1504,6 +1664,9 @@ bool IGFD::FileInfos::FinalizeFileTypeParsing(const size_t& vMaxDotToExtract) {
 
 IGFD::FileManager::FileManager() {
     fsRoot = std::string(1u, PATH_SEP);
+    // std::make_unique is not available un cpp11
+    m_FileSystemPtr = std::unique_ptr<FILE_SYSTEM_OVERRIDE>(new FILE_SYSTEM_OVERRIDE());
+    //m_FileSystemPtr = std::make_unique<FILE_SYSTEM_OVERRIDE>();
 }
 
 void IGFD::FileManager::OpenCurrentPath(const FileDialogInternal& vFileDialogInternal) {
@@ -1807,89 +1970,10 @@ void IGFD::FileManager::ScanDir(const FileDialogInternal& vFileDialogInternal, c
 
         ClearFileLists();
 
-#ifdef USE_STD_FILESYSTEM
-        try {
-            const std::filesystem::path fspath(path);
-            const auto dir_iter = std::filesystem::directory_iterator(fspath);
-            FileType fstype = FileType(FileType::ContentType::Directory, std::filesystem::is_symlink(std::filesystem::status(fspath)));
-            m_AddFile(vFileDialogInternal, path, "..", fstype);
-            for (const auto& file : dir_iter) {
-                FileType fileType;
-                if (file.is_symlink()) {
-                    fileType.SetSymLink(file.is_symlink());
-                    fileType.SetContent(FileType::ContentType::LinkToUnknown);
-                }
-
-                if (file.is_directory()) {
-                    fileType.SetContent(FileType::ContentType::Directory);
-                }  // directory or symlink to directory
-                else if (file.is_regular_file()) {
-                    fileType.SetContent(FileType::ContentType::File);
-                }
-
-                if (fileType.isValid()) {
-                    auto fileNameExt = file.path().filename().string();
-                    m_AddFile(vFileDialogInternal, path, fileNameExt, fileType);
-                }
-            }
-        } catch (const std::exception& ex) {
-            printf("%s", ex.what());
+        const auto& files = m_FileSystemPtr->ScanDirectory(vPath);
+        for (const auto& file : files) {
+            m_AddFile(vFileDialogInternal, path, file.fileNameExt, file.fileType);
         }
-#else  // dirent
-        struct dirent** files = nullptr;
-        size_t n = scandir(path.c_str(), &files, nullptr, inAlphaSort);
-        if (n && files) {
-            size_t i;
-
-            for (i = 0; i < n; i++) {
-                struct dirent* ent = files[i];
-
-                FileType fileType;
-                switch (ent->d_type) {
-                    case DT_DIR: fileType.SetContent(FileType::ContentType::Directory); break;
-                    case DT_REG: fileType.SetContent(FileType::ContentType::File); break;
-#if defined(_IGFD_UNIX_) || (DT_LNK != DT_UNKNOWN)
-                    case DT_LNK:
-#endif
-                    case DT_UNKNOWN: {
-                        struct stat sb = {};
-#ifdef _IGFD_WIN_
-                        auto filePath = path + ent->d_name;
-#else
-                        auto filePath = path + std::string(1u, PATH_SEP) + ent->d_name;
-#endif
-
-                        if (!stat(filePath.c_str(), &sb)) {
-                            if (sb.st_mode & S_IFLNK) {
-                                fileType.SetSymLink(true);
-                                fileType.SetContent(FileType::ContentType::LinkToUnknown);  // by default if we can't figure out the
-                                                                                            // target type.
-                            }
-                            if (sb.st_mode & S_IFREG) {
-                                fileType.SetContent(FileType::ContentType::File);
-                                break;
-                            } else if (sb.st_mode & S_IFDIR) {
-                                fileType.SetContent(FileType::ContentType::Directory);
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                    default: break;  // leave it invalid (devices, etc.)
-                }
-
-                if (fileType.isValid()) {
-                    m_AddFile(vFileDialogInternal, path, ent->d_name, fileType);
-                }
-            }
-
-            for (i = 0; i < n; i++) {
-                free(files[i]);
-            }
-
-            free(files);
-        }
-#endif  // USE_STD_FILESYSTEM
 
         m_SortFields(vFileDialogInternal, m_FileList, m_FilteredFileList);
     }
@@ -1906,55 +1990,12 @@ void IGFD::FileManager::m_ScanDirForPathSelection(const FileDialogInternal& vFil
 
         ClearPathLists();
 
-#ifdef USE_STD_FILESYSTEM
-        const std::filesystem::path fspath(path);
-        const auto dir_iter = std::filesystem::directory_iterator(fspath);
-        FileType fstype = FileType(FileType::ContentType::Directory, std::filesystem::is_symlink(std::filesystem::status(fspath)));
-        m_AddPath(vFileDialogInternal, path, "..", fstype);
-        for (const auto& file : dir_iter) {
-            FileType fileType;
-            if (file.is_symlink()) {
-                fileType.SetSymLink(file.is_symlink());
-                fileType.SetContent(FileType::ContentType::LinkToUnknown);
-            }
-            if (file.is_directory()) {
-                fileType.SetContent(FileType::ContentType::Directory);
-                auto fileNameExt = file.path().filename().string();
-                m_AddPath(vFileDialogInternal, path, fileNameExt, fileType);
+        const auto& files = m_FileSystemPtr->ScanDirectory(path);
+        for (const auto& file : files) {
+            if (file.fileType.isDir()) {
+                m_AddPath(vFileDialogInternal, path, file.fileNameExt, file.fileType);
             }
         }
-#else  // dirent
-        struct dirent** files = nullptr;
-        size_t n = scandir(path.c_str(), &files, nullptr, inAlphaSort);
-        if (n) {
-            size_t i;
-
-            for (i = 0; i < n; i++) {
-                struct dirent* ent = files[i];
-                struct stat sb = {};
-                int result = 0;
-                if (ent->d_type == DT_UNKNOWN) {
-#ifdef _IGFD_WIN_
-                    auto filePath = path + ent->d_name;
-#else
-                    auto filePath = path + std::string(1u, PATH_SEP) + ent->d_name;
-#endif
-
-                    result = stat(filePath.c_str(), &sb);
-                }
-
-                if (ent->d_type == DT_DIR || (ent->d_type == DT_UNKNOWN && result == 0 && sb.st_mode & S_IFDIR)) {
-                    m_AddPath(vFileDialogInternal, path, ent->d_name, FileType(FileType::ContentType::Directory, false));
-                }
-            }
-
-            for (i = 0; i < n; i++) {
-                free(files[i]);
-            }
-
-            free(files);
-        }
-#endif  // USE_STD_FILESYSTEM
 
         m_SortFields(vFileDialogInternal, m_PathList, m_FilteredPathList);
     }
@@ -1968,7 +2009,7 @@ void IGFD::FileManager::m_OpenPathPopup(const FileDialogInternal& vFileDialogInt
 }
 
 bool IGFD::FileManager::GetDrives() {
-    auto drives = IGFD::Utils::GetDrivesList();
+    auto drives = m_FileSystemPtr->GetDrivesList();
     if (!drives.empty()) {
         m_CurrentPath.clear();
         m_CurrentPathDecomposition.clear();
@@ -2200,23 +2241,12 @@ void IGFD::FileManager::SetCurrentDir(const std::string& vPath) {
         path += std::string(1u, PATH_SEP);
 #endif  // _IGFD_WIN_
 
-#ifdef USE_STD_FILESYSTEM
-    namespace fs = std::filesystem;
-    bool dir_opened = fs::is_directory(vPath);
+    bool dir_opened = m_FileSystemPtr->IsDirectory(path);
     if (!dir_opened) {
         path = ".";
-        dir_opened = fs::is_directory(vPath);
+        dir_opened = m_FileSystemPtr->IsDirectory(path);
     }
     if (dir_opened)
-#else
-    DIR* dir = opendir(path.c_str());
-    if (dir == nullptr) {
-        path = ".";
-        dir = opendir(path.c_str());
-    }
-
-    if (dir != nullptr)
-#endif  // USE_STD_FILESYSTEM
     {
 #ifdef _IGFD_WIN_
         DWORD numchar = 0;
@@ -2249,22 +2279,15 @@ void IGFD::FileManager::SetCurrentDir(const std::string& vPath) {
 #endif  // _IGFD_WIN_
             }
         }
-#ifndef USE_STD_FILESYSTEM
-        closedir(dir);
-#endif
     }
 }
 
 bool IGFD::FileManager::CreateDir(const std::string& vPath) {
-    bool res = false;
-
     if (!vPath.empty()) {
         std::string path = m_CurrentPath + std::string(1u, PATH_SEP) + vPath;
-
-        res = IGFD::Utils::CreateDirectoryIfNotExist(path);
+        return m_FileSystemPtr->CreateDirectoryIfNotExist(path);
     }
-
-    return res;
+    return false;
 }
 
 std::string IGFD::FileManager::ComposeNewPath(std::vector<std::string>::iterator vIter) {
@@ -2318,15 +2341,6 @@ void IGFD::FileManager::SetCurrentPath(const std::string& vCurrentPath) {
         m_CurrentPath = vCurrentPath;
 }
 
-bool IGFD::FileManager::IsFileExist(const std::string& vFile) {
-    std::ifstream docFile(vFile, std::ios::in);
-    if (docFile.is_open()) {
-        docFile.close();
-        return true;
-    }
-    return false;
-}
-
 void IGFD::FileManager::SetDefaultFileName(const std::string& vFileName) {
     dLGDefaultFileName = vFileName;
     IGFD::Utils::SetBuffer(fileNameBuffer, MAX_FILE_DIALOG_NAME_BUFFER, vFileName);
@@ -2354,7 +2368,7 @@ bool IGFD::FileManager::SelectDirectory(const std::shared_ptr<FileInfos>& vInfos
                 newPath = m_CurrentPath + std::string(1u, PATH_SEP) + vInfos->fileNameExt;
         }
 
-        if (IGFD::Utils::IsDirectoryCanBeOpened(newPath)) {
+        if (m_FileSystemPtr->IsDirectoryCanBeOpened(newPath)) {
             if (showDrives) {
                 m_CurrentPath = vInfos->fileNameExt;
                 fsRoot = m_CurrentPath;
@@ -3153,10 +3167,11 @@ void IGFD::BookMarkFeature::DeserializeBookmarks(const std::string& vBookmarks) 
                 bookmark.name = arr[i];
                 // if bad format we jump this bookmark
                 bookmark.path = arr[i + 1];
-                // Modify by Dicky, remove not exist path from bookmark
-                if (Utils::IsDirectoryExist(bookmark.path))
+                // Modify by Dicky, remove not exist path from bookmark, new version no global IsDirectoryExist API
+                if (ImGuiHelper::file_exists(bookmark.path))
                     m_Bookmarks.push_back(bookmark);
                 // Modify by Dicky end
+                //m_Bookmarks.push_back(bookmark);
             }
         }
     }
@@ -3744,7 +3759,7 @@ void IGFD::FileDialog::OpenDialog(const std::string& vKey,
     m_FileDialogInternal.dLGuserDatas = vUserDatas;
     m_FileDialogInternal.dLGflags = vFlags;
 
-    auto ps = IGFD::Utils::ParsePathFileName(vFilePathName);
+    auto ps = m_FileDialogInternal.fileManager.GetFileSystemInstance()->ParsePathFileName(vFilePathName);
     if (ps.isOk) {
         m_FileDialogInternal.fileManager.dLGpath = ps.path;
         m_FileDialogInternal.fileManager.SetDefaultFileName(ps.name);
@@ -3854,7 +3869,7 @@ void IGFD::FileDialog::OpenDialogWithPane(const std::string& vKey,
     m_FileDialogInternal.dLGuserDatas = vUserDatas;
     m_FileDialogInternal.dLGflags = vFlags;
 
-    auto ps = IGFD::Utils::ParsePathFileName(vFilePathName);
+    auto ps = m_FileDialogInternal.fileManager.GetFileSystemInstance()->ParsePathFileName(vFilePathName);
     if (ps.isOk) {
         m_FileDialogInternal.fileManager.dLGpath = ps.path;
         m_FileDialogInternal.fileManager.SetDefaultFileName(vFilePathName);
@@ -4951,7 +4966,7 @@ bool IGFD::FileDialog::m_Confirm_Or_OpenOverWriteFileDialog_IfNeeded(bool vLastA
         (m_FileDialogInternal.dLGflags & ImGuiFileDialogFlags_ConfirmOverwrite)) {
         if (m_FileDialogInternal.isOk)  // catched only one time
         {
-            if (!m_FileDialogInternal.fileManager.IsFileExist(GetFilePathName()))  // not existing => quit dialog
+            if (!m_FileDialogInternal.fileManager.GetFileSystemInstance()->IsFileExist(GetFilePathName()))  // not existing => quit dialog
             {
                 m_QuitFrame();
                 return true;

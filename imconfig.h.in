@@ -42,6 +42,7 @@
 #cmakedefine01 IMGUI_FONT_SARASA
 #cmakedefine01 IMGUI_FONT_WEIHEI
 #cmakedefine01 IMGUI_FONT_SANS
+#cmakedefine01 IMGUI_FONT_ZPIX
 #cmakedefine01 IMGUI_FONT_MONONARROW
 #cmakedefine01 IMGUI_FONT_INCONSOLATA
 #cmakedefine01 IMGUI_FONT_TAHOMA

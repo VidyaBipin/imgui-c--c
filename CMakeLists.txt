@@ -363,7 +363,7 @@ set(IMGUI_INCS
 
 set(IMGUI_FONT_UTF8 WeiHei CACHE STRING "ImGui internal UTF8 font")
 set_property(CACHE IMGUI_FONT_UTF8 PROPERTY STRINGS 
-    None WeiHei BoldHei Hei Yuan Song Kai Sans
+    None WeiHei BoldHei Hei Yuan Song Kai Sans Zpix
 )
 
 set(IMGUI_FONT_LATIN MonoNarrow CACHE STRING "ImGui internal Latin font")
@@ -394,6 +394,9 @@ if (${IMGUI_FONT_UTF8} MATCHES "Song")
 endif()
 if (${IMGUI_FONT_UTF8} MATCHES "Kai")
     set(IMGUI_FONT_KAI ON)
+endif()
+if (${IMGUI_FONT_UTF8} MATCHES "Zpix")
+    set(IMGUI_FONT_ZPIX ON)
 endif()
 
 if (${IMGUI_FONT_LATIN} MATCHES "None")
@@ -866,6 +869,12 @@ if (IMGUI_FONT_SANS)
         fonts/mono_sans.cpp
     )
 endif(IMGUI_FONT_SANS)
+if (IMGUI_FONT_ZPIX)
+    set(IMGUI_SRC
+        ${IMGUI_SRC}
+        fonts/mono_zpix.cpp
+    )
+endif(IMGUI_FONT_ZPIX)
 message(STATUS "    [ImGui Internal UTF-8 Font] ${IMGUI_FONT_UTF8}")
 message(STATUS "    [ImGui Internal Latin Font] ${IMGUI_FONT_LATIN}")
 
@@ -1695,9 +1704,10 @@ if (IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
         imgui
         ${LINK_LIBS}
     )
+    set (FONT_SRC test/show_fonts.cpp)
     add_executable(
         show_fonts
-        test/show_fonts.cpp
+        ${FONT_SRC}
         ${IMGUI_APP_SRC}
     )
     target_link_libraries(

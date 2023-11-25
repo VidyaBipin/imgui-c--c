@@ -221,6 +221,9 @@ extern const char mono_weihei_compressed_data_base85[];
 #if IMGUI_FONT_SANS
 extern const char mono_sans_compressed_data_base85[];
 #endif
+#if IMGUI_FONT_ZPIX
+extern const char zpix_compressed_data_base85[];
+#endif
 // Add by Dicky end
 
 //-----------------------------------------------------------------------------
@@ -2388,6 +2391,12 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template, float
     {
         ImFormatString(font_cfg.Name, IM_ARRAYSIZE(font_cfg.Name), "等宽粗圆, %dpx", (int)font_cfg.SizePixels);
         ImFont* cfont = AddFontFromMemoryCompressedBase85TTF(mono_yuan_compressed_data_base85, font_cfg.SizePixels, &font_cfg, glyph_ranges);  
+        if (font == nullptr) font = cfont;
+    }
+#elif IMGUI_FONT_ZPIX
+    {
+        ImFormatString(font_cfg.Name, IM_ARRAYSIZE(font_cfg.Name), "等宽像素, %dpx", (int)font_cfg.SizePixels);
+        ImFont* cfont = AddFontFromMemoryCompressedBase85TTF(zpix_compressed_data_base85, font_cfg.SizePixels, &font_cfg, glyph_ranges);  
         if (font == nullptr) font = cfont;
     }
 #endif
