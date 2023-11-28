@@ -647,7 +647,7 @@ public:
             pDrawList->AddCircleFilled(v2TickPos, fKeyFrameIndicatorRadius+1, u32KeyFrameIndicatorBorderHoverColor);
             pDrawList->AddCircleFilled(v2TickPos, fKeyFrameIndicatorRadius, u32KeyFrameIndicatorHoverColor);
         }
-        if (bHasHoveredTick >= 0)
+        if (bHasHoveredTick)
         {
             const float fKeyFrameIndicatorX = v2SliderRectLt.x+((double)(i64HoveredTick-prTickRange.first)/i64TickLength)*fSliderWdgWidth;
             const ImVec2 v2TickPos(fKeyFrameIndicatorX, fKeyFrameIndicatorY);
@@ -685,12 +685,35 @@ public:
         return true;
     }
 
-    bool ChangeMaskSize(const MatUtils::Size2i& size) override
+    bool ChangeMaskSize(const MatUtils::Size2i& size, bool bScaleMask) override
     {
         if (m_szMaskSize != size)
         {
+            const ImVec2 v2Scale((float)size.x/m_szMaskSize.x, (float)size.y/m_szMaskSize.y);
             m_szMaskSize = size;
             m_bContourChanged = true;
+            if (bScaleMask)
+            {
+                for (auto& cp : m_atContourPoints)
+                {
+                    cp.m_pos *= v2Scale;
+                    cp.m_grabber0Offset *= v2Scale;
+                    cp.m_grabber1Offset *= v2Scale;
+                    if (m_bKeyFrameEnabled)
+                    {
+                        const ImNewCurve::KeyPoint::ValType tScale(v2Scale.x, v2Scale.y, 1.f, 1.f);
+                        for (auto i = 0; i < 3; i++)
+                            cp.m_ahCurves[i]->ScaleKeyPoints(tScale);
+                        cp.UpdateByTick(m_i64PrevTick);
+                    }
+                }
+                RefreshAllContourVertices();
+                if (IsMorphCtrlShown())
+                {
+                    m_tMorphCtrl.m_fDistant *= v2Scale.x;
+                    m_tMorphCtrl.SetPosAndSlope(m_itMorphCtrlVt, m_tMorphCtrl.m_fDistant);
+                }
+            }
         }
         return true;
     }
@@ -973,15 +996,7 @@ public:
 
         m_v2PointSizeHalf = m_v2PointSize/2;
         m_itMorphCtrlVt = m_itHoveredVertex = m_atContourPoints.end();
-        auto itVt = m_atContourPoints.begin();
-        while (itVt != m_atContourPoints.end())
-        {
-            itVt->UpdateGrabberContainBox();
-            UpdateContourVertices(itVt);
-            itVt++; if (itVt == m_atContourPoints.end()) break;
-            itVt->UpdateGrabberContainBox();
-            itVt++;
-        }
+        RefreshAllContourVertices();
         int cpidx = j["morph_ctrl_cpidx"].get<json::number>();
         if (cpidx >= 0)
         {
@@ -989,7 +1004,7 @@ public:
             for (int i = 0; i < cpidx; i++)
                 it++;
             m_itMorphCtrlVt = it;
-            m_tMorphCtrl.SetPosAndSlope(it, m_tMorphCtrl.m_fMorphCtrlLength);
+            m_tMorphCtrl.SetPosAndSlope(it, m_tMorphCtrl.m_fDistant);
         }
     }
 
@@ -2208,6 +2223,19 @@ private:
     bool IsMorphCtrlShown() const
     {
         return m_itMorphCtrlVt != m_atContourPoints.end();
+    }
+
+    void RefreshAllContourVertices()
+    {
+        auto itVt = m_atContourPoints.begin();
+        while (itVt != m_atContourPoints.end())
+        {
+            itVt->UpdateGrabberContainBox();
+            UpdateContourVertices(itVt);
+            itVt++; if (itVt == m_atContourPoints.end()) break;
+            itVt->UpdateGrabberContainBox();
+            itVt++;
+        }
     }
 
     MatUtils::Point2f CalcEdgeVerticalPoint(const ImVec2& v2Root, double fVertSlope, float fLen, bool bInside)

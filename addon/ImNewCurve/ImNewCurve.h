@@ -188,6 +188,7 @@ namespace ImNewCurve
         virtual int ChangeCurveType(size_t idx, CurveType eCurveType);
         virtual float MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint, bool bNormalize);
         virtual bool SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds);
+        virtual bool ScaleKeyPoints(const KeyPoint::ValType& tScale);
 
         std::string PrintKeyPointsByDim(ValueDimension eDim) const;
         virtual imgui_json::value SaveAsJson() const;

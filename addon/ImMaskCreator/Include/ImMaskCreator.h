@@ -34,7 +34,7 @@ struct MaskCreator
     virtual void SetName(const std::string& name) = 0;
     virtual bool DrawContent(const ImVec2& v2Pos, const ImVec2& v2ViewSize, bool bEditable = true, int64_t i64Tick = 0) = 0;
     virtual bool DrawContourPointKeyFrames(int64_t& i64Tick, const ContourPoint* ptContourPoint = nullptr, uint32_t u32Width = 0) = 0;
-    virtual bool ChangeMaskSize(const MatUtils::Size2i& size) = 0;
+    virtual bool ChangeMaskSize(const MatUtils::Size2i& size, bool bScaleMask = false) = 0;
     virtual MatUtils::Size2i GetMaskSize() const = 0;
     virtual ImGui::ImMat GetMask(int iLineType, bool bFilled = true, ImDataType eDataType = IM_DT_INT8, double dMaskValue = 255, double dNonMaskValue = 0, int64_t i64Tick = 0) = 0;
     virtual const ContourPoint* GetHoveredPoint() const = 0;

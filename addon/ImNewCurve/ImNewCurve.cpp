@@ -532,6 +532,13 @@ bool Curve::SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds)
     return true;
 }
 
+bool Curve::ScaleKeyPoints(const KeyPoint::ValType& tScale)
+{
+    for (auto& hKp : m_aKeyPoints)
+        hKp->val *= tScale;
+    return true;
+}
+
 std::string Curve::PrintKeyPointsByDim(ValueDimension eDim) const
 {
     std::ostringstream oss;
