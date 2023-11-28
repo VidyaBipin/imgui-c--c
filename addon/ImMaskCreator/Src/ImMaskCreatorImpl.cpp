@@ -9,6 +9,7 @@
 #include <cmath>
 #include <limits>
 #include <algorithm>
+#include <mutex>
 #include <chrono>
 #include <imgui_internal.h>
 #include "ImNewCurve.h"
@@ -741,13 +742,12 @@ public:
         {
             if ((iMorphIters == 0 && iFeatherIters == 0) || !bFilled)
             {
-                int iTotalVertexCount = m_av2AllContourVertices.size();
-                vector<MatUtils::Point2f> av2TotalVertices(iTotalVertexCount);
-                auto itVtSrc = m_av2AllContourVertices.begin();
-                auto itVtDst = av2TotalVertices.begin();
-                while (itVtSrc != m_av2AllContourVertices.end())
-                    *itVtDst++ = MatUtils::FromImVec2<float>(*itVtSrc++);
-                m_mMask = MatUtils::Contour2Mask(av2TotalVertices, m_szMaskSize, {0, 0}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled);
+                vector<MatUtils::Point2f> aContourVertices;
+                {
+                    lock_guard<recursive_mutex> _lk(m_mtxContourPointsLock);
+                    aContourVertices = ConvertPointsType(m_av2AllContourVertices);
+                }
+                m_mMask = MatUtils::Contour2Mask(aContourVertices, m_szMaskSize, {0, 0}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled);
                 res = m_mMask;
             }
             else
@@ -797,7 +797,6 @@ public:
                         const auto iOutterMorphIters = iMorphIters+iFeatherIters;
                         aMorphContourVertices = iOutterMorphIters < 0 ? ErodeContour(-iOutterMorphIters) : DilateContour(iOutterMorphIters);
                         const auto iFeatherSize = 2*iFeatherIters+1;
-                        // aMorphContourVertices = ConvertPointsType(m_av2AllContourVertices);
                         m_mMorphMask = MatUtils::Contour2Mask(aMorphContourVertices, m_szMaskSize, {0, 0}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled, iFeatherSize);
                     }
                     else
@@ -2110,6 +2109,7 @@ private:
 
     void UpdateContourVertices(list<ContourPointImpl>::iterator iterCurrVt, bool bUpdateNextVt = true)
     {
+        lock_guard<recursive_mutex> _lk(m_mtxContourPointsLock);
         if (m_bContourCompleted && iterCurrVt == m_atContourPoints.begin())
         {
             iterCurrVt->CalcContourVertices(m_atContourPoints.back());
@@ -2346,6 +2346,7 @@ private:
 
     vector<MatUtils::Point2f> DilateContour(int iDilateSize)
     {
+        lock_guard<recursive_mutex> _lk(m_mtxContourPointsLock);
         if (iDilateSize <= 0)
             return ConvertPointsType(m_av2AllContourVertices);
 
@@ -2581,6 +2582,7 @@ private:
 
     vector<MatUtils::Point2f> ErodeContour(int iDilateSize)
     {
+        lock_guard<recursive_mutex> _lk(m_mtxContourPointsLock);
         if (iDilateSize <= 0)
             return ConvertPointsType(m_av2AllContourVertices);
 
@@ -2783,6 +2785,7 @@ private:
     ImRect m_rWorkArea{{-1, -1}, {-1, -1}};
     list<ContourPointImpl> m_atContourPoints;
     list<ImVec2> m_av2AllContourVertices;
+    recursive_mutex m_mtxContourPointsLock;
     ImVec2 m_v2PointSize{5.f, 5.f}, m_v2PointSizeHalf;
     ImU32 m_u32PointColor{IM_COL32(40, 170, 40, 255)};
     ImU32 m_u32ContourHoverPointColor{IM_COL32(80, 80, 80, 255)};
