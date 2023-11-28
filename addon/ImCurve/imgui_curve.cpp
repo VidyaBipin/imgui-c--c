@@ -363,8 +363,6 @@ bool ImCurveEdit::Edit(
         {
             const auto p1 = pointToRange(pts[p].GetVec2PointByDim(eDim));
             const auto p2 = pointToRange(pts[p + 1].GetVec2PointByDim(eDim));
-            if (p1.x > lastTime || p2.x < firstTime)
-                continue;
             CurveType ctype = delegate->GetCurvePointType(c, p + 1);
             size_t subStepCount = distance(p1.x, p1.y, p2.x, p2.y);
             if (subStepCount <= 1) subStepCount = 100;
@@ -656,7 +654,7 @@ bool ImCurveEdit::Edit(
     PopStyleVar();
     if (changed)
         *changed = curve_changed;
-    return hold;
+    return hold | delegate->selectingQuad;
 }
 
 bool ImCurveEdit::Edit(
