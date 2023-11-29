@@ -168,7 +168,7 @@ static bool ImGui_ImplWin32_InitEx(void* hwnd, bool platform_has_own_dc)
     bd->WantUpdateMonitors = true;
     bd->TicksPerSecond = perf_frequency;
     bd->Time = perf_counter;
-    bd->LastMouseCursor = ImGuiMouseCursor_COUNT;
+    bd->LastMouseCursor = ImGuiMouseCursor_Internal; // modify by Dicky
     ImGui_ImplWin32_UpdateKeyboardCodePage();
 
     // Our mouse update function expect PlatformHandle to be filled for the main viewport
@@ -239,7 +239,8 @@ static bool ImGui_ImplWin32_UpdateMouseCursor()
         return false;
 
     ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
-    if (imgui_cursor == ImGuiMouseCursor_None || io.MouseDrawCursor)
+    if (imgui_cursor == ImGuiMouseCursor_None || io.MouseDrawCursor
+        || (imgui_cursor >= ImGuiMouseCursor_Internal && imgui_cursor < ImGuiMouseCursor_COUNT)) // modify by Dicky
     {
         // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
         ::SetCursor(nullptr);
@@ -259,6 +260,7 @@ static bool ImGui_ImplWin32_UpdateMouseCursor()
         case ImGuiMouseCursor_ResizeNWSE:   win32_cursor = IDC_SIZENWSE; break;
         case ImGuiMouseCursor_Hand:         win32_cursor = IDC_HAND; break;
         case ImGuiMouseCursor_NotAllowed:   win32_cursor = IDC_NO; break;
+        case ImGuiMouseCursor_Waiting:      win32_cursor = IDC_ARROW; break;
         }
         ::SetCursor(::LoadCursor(nullptr, win32_cursor));
     }

@@ -1,4 +1,4 @@
-// dear imgui, v1.90.0
+// dear imgui, v1.90.1 WIP
 // (headers)
 
 // Help:
@@ -23,8 +23,8 @@
 
 // Library Version
 // (Integer encoded as XYYZZ for use in #if preprocessor conditionals, e.g. '#if IMGUI_VERSION_NUM >= 12345')
-#define IMGUI_VERSION       "1.90.0"
-#define IMGUI_VERSION_NUM   19000
+#define IMGUI_VERSION       "1.90.1 WIP"
+#define IMGUI_VERSION_NUM   19001
 #define IMGUI_HAS_TABLE
 #define IMGUI_HAS_VIEWPORT          // Viewport WIP branch
 #define IMGUI_HAS_DOCK              // Docking WIP branch
@@ -1940,6 +1940,7 @@ enum ImGuiMouseButton_
 
 // Enumeration for GetMouseCursor()
 // User code may request backend to display given cursor by calling SetMouseCursor(), which is why we have some cursors that are marked unused here
+#define ImGuiMouseCursor_Internal 10 // add by Dicky, internal mouse cursor is 10, other is soft cursor 
 enum ImGuiMouseCursor_
 {
     ImGuiMouseCursor_None = -1,
@@ -1952,6 +1953,12 @@ enum ImGuiMouseCursor_
     ImGuiMouseCursor_ResizeNWSE,        // When hovering over the bottom-right corner of a window
     ImGuiMouseCursor_Hand,              // (Unused by Dear ImGui functions. Use for e.g. hyperlinks)
     ImGuiMouseCursor_NotAllowed,        // When hovering something with disallowed interaction. Usually a crossed circle.
+    ImGuiMouseCursor_Waiting,           // add By Dicky for sandglass
+    ImGuiMouseCursor_Minus,             // add By Dicky for mouse with minus
+    ImGuiMouseCursor_Add,               // add By Dicky for mouse with plus
+    ImGuiMouseCursor_Cross,             // add By Dicky for mouse with cross
+    ImGuiMouseCursor_Question,          // add By Dicky for mouse with question mark
+    ImGuiMouseCursor_Straw,             // add By Dicky for straw mouse 
     ImGuiMouseCursor_COUNT
 };
 

@@ -76,7 +76,7 @@
 struct ImGui_ImplOSX_Data
 {
     CFTimeInterval              Time;
-    NSCursor*                   MouseCursors[ImGuiMouseCursor_COUNT];
+    NSCursor*                   MouseCursors[ImGuiMouseCursor_Internal]; // modify by Dicky
     bool                        MouseCursorHidden;
     ImGuiObserver*              Observer;
     KeyEventResponder*          KeyEventResponder;
@@ -432,6 +432,7 @@ bool ImGui_ImplOSX_Init(NSView* view)
     bd->MouseCursors[ImGuiMouseCursor_ResizeEW] = [NSCursor respondsToSelector:@selector(_windowResizeEastWestCursor)] ? [NSCursor _windowResizeEastWestCursor] : [NSCursor resizeLeftRightCursor];
     bd->MouseCursors[ImGuiMouseCursor_ResizeNESW] = [NSCursor respondsToSelector:@selector(_windowResizeNorthEastSouthWestCursor)] ? [NSCursor _windowResizeNorthEastSouthWestCursor] : [NSCursor closedHandCursor];
     bd->MouseCursors[ImGuiMouseCursor_ResizeNWSE] = [NSCursor respondsToSelector:@selector(_windowResizeNorthWestSouthEastCursor)] ? [NSCursor _windowResizeNorthWestSouthEastCursor] : [NSCursor closedHandCursor];
+    bd->MouseCursors[ImGuiMouseCursor_Waiting] = [NSCursor arrowCursor]; // add by Dicky
 
     // Note that imgui.cpp also include default OSX clipboard handlers which can be enabled
     // by adding '#define IMGUI_ENABLE_OSX_DEFAULT_CLIPBOARD_FUNCTIONS' in imconfig.h and adding '-framework ApplicationServices' to your linker command-line.
@@ -525,7 +526,8 @@ static void ImGui_ImplOSX_UpdateMouseCursor()
         return;
 
     ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
-    if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None)
+    if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None
+        || (imgui_cursor >= ImGuiMouseCursor_Internal && imgui_cursor < ImGuiMouseCursor_COUNT)) // modify by Dicky
     {
         // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
         if (!bd->MouseCursorHidden)
