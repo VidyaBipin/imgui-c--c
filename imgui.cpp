@@ -1397,7 +1397,6 @@ ImGuiIO::ImGuiIO()
     BackendUsingLegacyNavInputArray = true; // assume using legacy array until proven wrong
 
     // Add By Dicky
-    MouseType = 0;
     MouseStrawed = false;
     MouseStrawValue = {};
     FrameCountSinceLastUpdate = 0;
@@ -5535,7 +5534,7 @@ void ImGui::Render()
     if (g.IO.MouseDrawCursor && g.MouseCursor != ImGuiMouseCursor_None)
         RenderMouseCursor(g.IO.MousePos, g.Style.MouseCursorScale, g.MouseCursor, IM_COL32_WHITE, IM_COL32_BLACK, IM_COL32(0, 0, 0, 48));
     // add by Dicky for draw extra mouse cursor
-    else if (g.MouseCursor >= ImGuiMouseCursor_Internal && g.MouseCursor < ImGuiMouseCursor_COUNT)
+    else if (g.MouseCursor >= ImGuiMouseCursor_Backend && g.MouseCursor < ImGuiMouseCursor_COUNT)
         RenderMouseCursor(g.IO.MousePos, g.Style.MouseCursorScale, g.MouseCursor, IM_COL32_WHITE, IM_COL32_BLACK, IM_COL32(0, 0, 0, 48));
     // add by Dicky end
     // Setup ImDrawData structures for end-user
@@ -9389,12 +9388,9 @@ ImVec2 ImGui::GetMousePos()
 bool ImGui::GetMouseStraw(ImVec4& data)
 {
     ImGuiContext& g = *GImGui;
-    if (g.IO.MouseType != 1)
-        return false;
     if (!g.IO.MouseStrawed)
         return false;
     data = g.IO.MouseStrawValue;
-    g.IO.MouseStrawed = false;
     return true;
 }
 
@@ -9403,7 +9399,6 @@ void ImGui::ClearMouseStraw()
     if (GImGui)
     {
         ImGuiContext& g = *GImGui;
-        g.IO.MouseType = 0;
         g.IO.MouseStrawed = false;
         g.IO.MouseStrawValue = {};
     }

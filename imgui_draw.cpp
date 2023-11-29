@@ -2160,25 +2160,25 @@ static const char FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS[FONT_ATLAS_DEFAULT_TEX_DATA
     "                                                      -  X..X           X..X  -                                           "
     "                                                      -   X.X           X.X   -              -              XXX    -      "
     "XXXXXXXXXXXXXXX -                                     -    XX           XX    -              -       XXX   X...X   -      "
-    "X.............X -X                -X        XXXX    -X     XXX    XXX -X           XXXXX     -      X...X X.   .X  -      "
-    "XXXXXXXXXXXXXXX -XX   XXXXXXXXXXX -XX       X..X    -XX    X..X  X..X -XX       XX.......XX  -       X. .X.     .X -      "
-    " X           X  -X.X  X.........X -X.X      X..X    -X.X    X..XX..X  -X.X     X...........X -        X. .      .X -      "
-    " X...........X  -X..X X.........X -X..X  XXXX..XXXX -X..X    X....X   -X..X    X....XXX....X -         X. .    .X  -      "
-    "  X.........X   -X...XXXXXXXXXXXX -X...X X........X -X...X    X..X    -X...X   X...X   X...X -         XX. .  .X   -      "
+    "X.............X -X                -X        XXXX    -X     XXX    XXX -X           XXXXX     -      X...X X.. ..X  -      "
+    "XXXXXXXXXXXXXXX -XX   XXXXXXXXXXX -XX       X..X    -XX    X..X  X..X -XX       XX.......XX  -       X. .X..   ..X -      "
+    " X           X  -X.X  X.........X -X.X      X..X    -X.X    X..XX..X  -X.X     X...........X -        X. ..    ..X -      "
+    " X...........X  -X..X X.........X -X..X  XXXX..XXXX -X..X    X....X   -X..X    X....XXX....X -         X. ..  ..X  -      "
+    "  X.........X   -X...XXXXXXXXXXXX -X...X X........X -X...X    X..X    -X...X   X...X   X...X -         XX. ....X   -      "
     "  X.........X   -X....X           -X....XX........X -X....X  X....X   -X....X  X...X   X...X -        X..X. . X    -      "
     "   X.......X    -X.....X          -X.....XXXX..XXXX -X.....XX..XX..X  -X.....X XXXX   X...X  -       X....X. .X    -      "
     "    X.....X     -X......X         -X......X X..X    -X.....X..X  X..X -X......X      X...X   -      X......X. .X   -      "
     "     X...X      -X.......X        -X.......XX..X    -X.......XX   XXX -X.......X    X...X    -     X......X X...X  -      "
     "     X...X      -X........X       -X........XXXX    -X........X       -X........X  X...X     -    X......X   XXX   -      "
     "    X.X.X.X     -X.........X      -X.........X      -X.........X      -X.........X X...X     -   X......X          -      "
-    "   X..X.X..X    -X..........X     -X..........X     -X..........X     -X..........XX...X     -  X......X           -      "
-    "  X..X...X..X   -X......XXXXX     -X......XXXXX     -X......XXXXX     -X.......XXX XXXXX     - X......X            -      "
-    "  X..X...X..X   -X...X..X         -X...X..X         -X...X..X         -X...X..X              -X.XXXX.X             -      "
-    " X..X.....X..X  -X..X X..X        -X..X X..X        -X..X X..X        -X..X X..X    XXX      -X.XXX.X              -      "
-    " XX.........XX  -X.X  X..X        -X.X  X..X        -X.X  X..X        -X.X  X..X   X...X     -X.XX.X               -      "
-    "X.............X -XX    X..X       -XX    X..X       -XX    X..X       -XX    X..X  X...X     -X.X.X                -      "
-    "X.............X -      X..X       -      X..X       -      X..X       -      X..X  X...X     -X..X                 -      "
-    "XXXXXXXXXXXXXXX -       XX        -       XX        -       XX        -       XX    XXX      -XXX                  -      "
+    "   X. X.X .X    -X..........X     -X..........X     -X..........X     -X..........XX...X     -  X......X           -      "
+    "  X.  X.X  .X   -X......XXXXX     -X......XXXXX     -X......XXXXX     -X.......XXX XXXXX     - X......X            -      "
+    "  X.  X.X  .X   -X...X..X         -X...X..X         -X...X..X         -X...X..X              -X.XXXX.X             -      "
+    " X.  X...X  .X  -X..X X..X        -X..X X..X        -X..X X..X        -X..X X..X    XXX      -X.   .X              -      "
+    " X...........X  -X.X  X..X        -X.X  X..X        -X.X  X..X        -X.X  X..X   X...X     -X.  .X               -      "
+    "X.............X -XX    X..X       -XX    X..X       -XX    X..X       -XX    X..X  X...X     -X...X                -      "
+    "X.............X -      X..X       -      X..X       -      X..X       -      X..X  X...X     -XXXX                 -      "
+    "XXXXXXXXXXXXXXX -       XX        -       XX        -       XX        -       XX    XXX      -                     -      "
     "--------------------------------------------------------------------------------------------------------------------------"
 };
 
@@ -2199,7 +2199,7 @@ static const ImVec2 FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[ImGuiMouseCursor_COUNT][3
     { ImVec2(35,27),ImVec2(17,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Add
     { ImVec2(53,27),ImVec2(17,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Cross
     { ImVec2(71,27),ImVec2(22,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Question
-    { ImVec2(94,27),ImVec2(21,19), ImVec2( 0,18) }, // ImGuiMouseCursor_Straw
+    { ImVec2(94,25),ImVec2(21,21), ImVec2( 0,20) }, // ImGuiMouseCursor_Straw
 };
 // modify by Dicky end
 

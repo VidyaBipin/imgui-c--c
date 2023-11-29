@@ -127,7 +127,7 @@ struct ImGui_ImplSDL2_Data
     Uint64          Time;
     Uint32          MouseWindowID;
     int             MouseButtonsDown;
-    SDL_Cursor*     MouseCursors[ImGuiMouseCursor_Internal]; // modify by Dicky
+    SDL_Cursor*     MouseCursors[ImGuiMouseCursor_Backend]; // modify by Dicky
     SDL_Cursor*     LastMouseCursor;
     int             PendingMouseLeaveFrame;
     char*           ClipboardTextData;
@@ -545,7 +545,6 @@ static bool ImGui_ImplSDL2_Init(SDL_Window* window, SDL_Renderer* renderer, void
     bd->MouseCursors[ImGuiMouseCursor_ResizeNWSE] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_SIZENWSE);
     bd->MouseCursors[ImGuiMouseCursor_Hand] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
     bd->MouseCursors[ImGuiMouseCursor_NotAllowed] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NO);
-    bd->MouseCursors[ImGuiMouseCursor_Waiting] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAIT); // add by Dicky
 
     // Set platform dependent data in viewport
     // Our mouse update function expect PlatformHandle to be filled for the main viewport
@@ -642,7 +641,7 @@ void ImGui_ImplSDL2_Shutdown()
 
     if (bd->ClipboardTextData)
         SDL_free(bd->ClipboardTextData);
-    for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_Internal; cursor_n++) // modify by Dicky
+    for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_Backend; cursor_n++) // modify by Dicky
         SDL_FreeCursor(bd->MouseCursors[cursor_n]);
     bd->LastMouseCursor = nullptr;
 
@@ -725,7 +724,7 @@ static void ImGui_ImplSDL2_UpdateMouseCursor()
 
     ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
     if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None
-        || (imgui_cursor >= ImGuiMouseCursor_Internal && imgui_cursor < ImGuiMouseCursor_COUNT)) // modify by Dicky
+        || (imgui_cursor >= ImGuiMouseCursor_Backend && imgui_cursor < ImGuiMouseCursor_COUNT)) // modify by Dicky
     {
         // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
         SDL_ShowCursor(SDL_FALSE);

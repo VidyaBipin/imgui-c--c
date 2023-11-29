@@ -1940,7 +1940,7 @@ enum ImGuiMouseButton_
 
 // Enumeration for GetMouseCursor()
 // User code may request backend to display given cursor by calling SetMouseCursor(), which is why we have some cursors that are marked unused here
-#define ImGuiMouseCursor_Internal 10 // add by Dicky, internal mouse cursor is 10, other is soft cursor 
+#define ImGuiMouseCursor_Backend 9      // add by Dicky, internal mouse cursor support by backends, other is soft cursor 
 enum ImGuiMouseCursor_
 {
     ImGuiMouseCursor_None = -1,
@@ -2387,7 +2387,6 @@ struct ImGuiIO
     ImWchar16   InputQueueSurrogate;                // For AddInputCharacterUTF16()
     ImVector<ImWchar> InputQueueCharacters;         // Queue of _characters_ input (obtained by platform backend). Fill using AddInputCharacter() helper.
     // Add By Dicky
-    int         MouseType;                          // type of current mouse status, 0 = normal, 1 = straw ...
     bool        MouseStrawed;                       // mouse is straw something
     ImVec4      MouseStrawValue;                    // value of mouse straw, usually straw color 
     int         FrameCountSinceLastUpdate;          // How many frames since the last update, a value of 0 indicates that the current frame was triggered by an update.
