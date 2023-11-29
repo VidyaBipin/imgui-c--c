@@ -12,6 +12,7 @@
 #include <mutex>
 #include <chrono>
 #include <imgui_internal.h>
+#include <imgui_helper.h>
 #include "ImNewCurve.h"
 #include "ImMaskCreator.h"
 #include "Contour2Mask.h"
@@ -114,6 +115,10 @@ public:
                     if (iter != m_atContourPoints.end())
                         m_itHoveredVertex = iter;
                 }
+            }
+            if (IsKeyDown(m_eRemoveVertexKey) && bMouseInWorkArea)
+            {
+                RenderMouseCursor(u8"\ue15d", ImVec2(-2.f, -2.f), 0.8f, 0, IM_COL32(40, 40, 40, 255), IM_COL32(255, 255, 255, 255));
             }
             if (IsMouseClicked(ImGuiMouseButton_Left) && bMouseInWorkArea)
             {
