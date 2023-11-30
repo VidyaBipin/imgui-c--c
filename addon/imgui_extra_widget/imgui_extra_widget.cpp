@@ -10591,3 +10591,31 @@ void ImGui::ShowDigitalTimeDuration(ImDrawList *draw_list, int64_t millisec, int
     draw_list->AddText(pos, color, show_text.c_str());
     ImGui::PopStyleVar();
 }
+
+void ImGui::RainbowText(const char* text)
+{
+    ImVec4 rainbowColors[] = {
+        ImVec4(1.0f, 0.0f, 0.0f, 1.0f),   
+        ImVec4(1.0f, 0.5f, 0.0f, 1.0f),   
+        ImVec4(1.0f, 1.0f, 0.0f, 1.0f), 
+        ImVec4(0.0f, 1.0f, 0.0f, 1.0f), 
+        ImVec4(0.0f, 0.0f, 1.0f, 1.0f),  
+        ImVec4(0.5f, 0.0f, 0.5f, 1.0f)  
+    };
+
+    static float time = 0.0f;
+    time += 0.1f;
+    int colorIndex = int(time) % 6;
+    float lerpFactor = time - int(time);
+
+    ImVec4 color1 = rainbowColors[colorIndex];
+    ImVec4 color2 = rainbowColors[(colorIndex + 1) % 6];
+
+    ImVec4 lerpedColor;
+    lerpedColor.x = color1.x + lerpFactor * (color2.x - color1.x);
+    lerpedColor.y = color1.y + lerpFactor * (color2.y - color1.y);
+    lerpedColor.z = color1.z + lerpFactor * (color2.z - color1.z);
+    lerpedColor.w = color1.w + lerpFactor * (color2.w - color1.w);
+
+    ImGui::TextColored(lerpedColor, "%s", text);
+}

@@ -166,6 +166,9 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SliderInt("Speed##rolling text", &speed, 1, 100);
         ImGui::PopItemWidth();
 
+        //Rainbow Text
+        ImGui::RainbowText("The quick brown fox jumps over the lazy dog, 那只敏捷的棕毛狐狸跃过那只懒狗");
+
         // SliderBar with Marks
         ImGui::Spacing();
         static float slider_vol = 0.0f;

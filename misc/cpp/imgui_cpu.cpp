@@ -43,6 +43,8 @@
 #include <stdint.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <setjmp.h>
+#include <signal.h>
 #endif
 
 #if __APPLE__
