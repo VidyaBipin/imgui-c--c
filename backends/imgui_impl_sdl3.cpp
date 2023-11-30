@@ -69,7 +69,7 @@ struct ImGui_ImplSDL3_Data
     Uint64          Time;
     Uint32          MouseWindowID;
     int             MouseButtonsDown;
-    SDL_Cursor*     MouseCursors[ImGuiMouseCursor_COUNT];
+    SDL_Cursor*     MouseCursors[ImGuiMouseCursor_Backend]; // modify by Dicky
     SDL_Cursor*     LastMouseCursor;
     int             PendingMouseLeaveFrame;
     char*           ClipboardTextData;
@@ -514,7 +514,7 @@ void ImGui_ImplSDL3_Shutdown()
 
     if (bd->ClipboardTextData)
         SDL_free(bd->ClipboardTextData);
-    for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_COUNT; cursor_n++)
+    for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_Backend; cursor_n++) // modify by Dicky
         SDL_DestroyCursor(bd->MouseCursors[cursor_n]);
     bd->LastMouseCursor = nullptr;
 
@@ -596,7 +596,8 @@ static void ImGui_ImplSDL3_UpdateMouseCursor()
     ImGui_ImplSDL3_Data* bd = ImGui_ImplSDL3_GetBackendData();
 
     ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
-    if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None)
+    if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None
+        || (imgui_cursor >= ImGuiMouseCursor_Backend && imgui_cursor < ImGuiMouseCursor_COUNT)) // modify by Dicky
     {
         // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
         SDL_HideCursor();

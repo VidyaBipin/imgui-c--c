@@ -76,7 +76,7 @@
 struct ImGui_ImplOSX_Data
 {
     CFTimeInterval              Time;
-    NSCursor*                   MouseCursors[ImGuiMouseCursor_COUNT];
+    NSCursor*                   MouseCursors[ImGuiMouseCursor_Backend]; // modify by Dicky
     bool                        MouseCursorHidden;
     ImGuiObserver*              Observer;
     KeyEventResponder*          KeyEventResponder;
@@ -525,7 +525,8 @@ static void ImGui_ImplOSX_UpdateMouseCursor()
         return;
 
     ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
-    if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None)
+    if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None
+        || (imgui_cursor >= ImGuiMouseCursor_Backend && imgui_cursor < ImGuiMouseCursor_COUNT)) // modify by Dicky
     {
         // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
         if (!bd->MouseCursorHidden)

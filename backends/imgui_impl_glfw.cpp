@@ -146,7 +146,7 @@ struct ImGui_ImplGlfw_Data
     GlfwClientApi           ClientApi;
     double                  Time;
     GLFWwindow*             MouseWindow;
-    GLFWcursor*             MouseCursors[ImGuiMouseCursor_COUNT];
+    GLFWcursor*             MouseCursors[ImGuiMouseCursor_Backend];    // modify by Dicky
     ImVec2                  LastValidMousePos;
     GLFWwindow*             KeyOwnerWindows[GLFW_KEY_LAST];
     bool                    InstalledCallbacks;
@@ -696,7 +696,7 @@ void ImGui_ImplGlfw_Shutdown()
     emscripten_set_wheel_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, false, nullptr);
 #endif
 
-    for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_COUNT; cursor_n++)
+    for (ImGuiMouseCursor cursor_n = 0; cursor_n < ImGuiMouseCursor_Backend; cursor_n++) // modify by Dicky
         glfwDestroyCursor(bd->MouseCursors[cursor_n]);
 
     // Windows: restore our WndProc hook
@@ -795,7 +795,8 @@ static void ImGui_ImplGlfw_UpdateMouseCursor()
     for (int n = 0; n < platform_io.Viewports.Size; n++)
     {
         GLFWwindow* window = (GLFWwindow*)platform_io.Viewports[n]->PlatformHandle;
-        if (imgui_cursor == ImGuiMouseCursor_None || io.MouseDrawCursor)
+        if (imgui_cursor == ImGuiMouseCursor_None || io.MouseDrawCursor
+            || (imgui_cursor >= ImGuiMouseCursor_Backend && imgui_cursor < ImGuiMouseCursor_COUNT)) // modify by Dicky
         {
             // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);

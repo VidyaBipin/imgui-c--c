@@ -346,6 +346,9 @@ IMGUI_API void ImageInspect(const int width,
 // Show Digital number
 IMGUI_API void ShowDigitalTime(ImDrawList *draw_list, int64_t millisec, int show_millisec, ImVec2 pos, ImU32 color);
 IMGUI_API void ShowDigitalTimeDuration(ImDrawList *draw_list, int64_t millisec, int64_t duration, int show_millisec, ImVec2 pos, ImU32 color);
+
+// Rainbow Text
+IMGUI_API void RainbowText(const char* text);
 // Demo Window
 #if IMGUI_BUILD_EXAMPLE
 IMGUI_API void ShowExtraWidgetDemoWindow();

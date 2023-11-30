@@ -42,8 +42,7 @@ SOFTWARE.
 
 /*
 // generated with "Text to ASCII Art Generator (TAAG)"
-// https://patorjk.com/software/taag/#p=display&h=1&v=0&f=Big&t=ImGuiFileDialog%0Av0.6.5
-
+// https://patorjk.com/software/taag/#p=display&h=1&v=0&f=Big&t=ImGuiFileDialog%0Av0.6.7
   _____              _____         _  ______  _  _        _____   _         _
  |_   _|            / ____|       (_)|  ____|(_)| |      |  __ \ (_)       | |
    | |   _ __ ___  | |  __  _   _  _ | |__    _ | |  ___ | |  | | _   __ _ | |  ___    __ _
@@ -1122,7 +1121,7 @@ The Custom Icon Font (in CustomFont.cpp and CustomFont.h) was made with ImGuiFon
 #pragma region IGFD VERSION
 
 // compatible with 1.90.1 WIP
-#define IMGUIFILEDIALOG_VERSION "v0.6.7"
+#define IMGUIFILEDIALOG_VERSION "v0.6.6.1"
 
 #pragma endregion
 
@@ -1634,6 +1633,7 @@ public:
 
 class IFileSystem {
 public:
+    virtual ~IFileSystem() = default;
     // say if a directory can be openened or for any reason locked
     virtual bool IsDirectoryCanBeOpened(const std::string& vName) = 0;
     // say if a directory exist
@@ -1650,8 +1650,6 @@ public:
     virtual bool IsDirectory(const std::string& vFilePathName) = 0;
     // return a drive list on windows, bu can be used on android or linux for give to the suer a list of root dir
     virtual std::vector<std::string> GetDrivesList() = 0;
-
-    virtual ~IFileSystem() {}; // add By Dicky
 };
 
 #pragma endregion
@@ -1684,6 +1682,7 @@ private:
     std::string m_LastSelectedFileName;                          // for shift multi selection
     std::set<std::string> m_SelectedFileNames;                   // the user selection of FilePathNames
     bool m_CreateDirectoryMode = false;                          // for create directory widget
+    std::string m_FileSystemName;
     std::unique_ptr<IFileSystem> m_FileSystemPtr = nullptr;
 
 public:
@@ -1795,6 +1794,9 @@ public:
 
     IFileSystem* GetFileSystemInstance() {
         return m_FileSystemPtr.get();
+    }
+    const std::string& GetFileSystemName() {
+        return m_FileSystemName;
     }
 };
 

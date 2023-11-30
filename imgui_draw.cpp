@@ -1,4 +1,4 @@
-// dear imgui, v1.90.0
+// dear imgui, v1.90.1 WIP
 // (drawing and font code)
 
 /*
@@ -2128,8 +2128,9 @@ ImFontConfig::ImFontConfig()
 // A work of art lies ahead! (. = white layer, X = black layer, others are blank)
 // The 2x2 white texels on the top left are the ones we'll use everywhere in Dear ImGui to render filled shapes.
 // (This is used when io.MouseDrawCursor = true)
+// modify by Dicky, add 6 more cursor
 const int FONT_ATLAS_DEFAULT_TEX_DATA_W = 122; // Actual texture will be 2 times that + 1 spacing.
-const int FONT_ATLAS_DEFAULT_TEX_DATA_H = 27;
+const int FONT_ATLAS_DEFAULT_TEX_DATA_H = 47;
 static const char FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS[FONT_ATLAS_DEFAULT_TEX_DATA_W * FONT_ATLAS_DEFAULT_TEX_DATA_H + 1] =
 {
     "..-         -XXXXXXX-    X    -           X           -XXXXXXX          -          XXXXXXX-     XX          - XX       XX "
@@ -2157,8 +2158,28 @@ static const char FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS[FONT_ATLAS_DEFAULT_TEX_DATA
     "-------------       -    X    -           X           -X.....................X-           -------------------             "
     "                    ----------------------------------- X...XXXXXXXXXXXXX...X -                                           "
     "                                                      -  X..X           X..X  -                                           "
-    "                                                      -   X.X           X.X   -                                           "
-    "                                                      -    XX           XX    -                                           "
+    "                                                      -   X.X           X.X   -              -              XXX    -      "
+    "XXXXXXXXXXXXXXX -                                     -    XX           XX    -              -       XXX   X...X   -      "
+    "X.............X -X                -X        XXXX    -X     XXX    XXX -X           XXXXX     -      X...X X.. ..X  -      "
+    "XXXXXXXXXXXXXXX -XX   XXXXXXXXXXX -XX       X..X    -XX    X..X  X..X -XX       XX.......XX  -       X. .X..   ..X -      "
+    " X           X  -X.X  X.........X -X.X      X..X    -X.X    X..XX..X  -X.X     X...........X -        X. ..    ..X -      "
+    " X...........X  -X..X X.........X -X..X  XXXX..XXXX -X..X    X....X   -X..X    X....XXX....X -         X. ..  ..X  -      "
+    "  X.........X   -X...XXXXXXXXXXXX -X...X X........X -X...X    X..X    -X...X   X...X   X...X -         XX. ....X   -      "
+    "  X.........X   -X....X           -X....XX........X -X....X  X....X   -X....X  X...X   X...X -        X..X. . X    -      "
+    "   X.......X    -X.....X          -X.....XXXX..XXXX -X.....XX..XX..X  -X.....X XXXX   X...X  -       X....X. .X    -      "
+    "    X.....X     -X......X         -X......X X..X    -X.....X..X  X..X -X......X      X...X   -      X......X. .X   -      "
+    "     X...X      -X.......X        -X.......XX..X    -X.......XX   XXX -X.......X    X...X    -     X......X X...X  -      "
+    "     X...X      -X........X       -X........XXXX    -X........X       -X........X  X...X     -    X......X   XXX   -      "
+    "    X.X.X.X     -X.........X      -X.........X      -X.........X      -X.........X X...X     -   X......X          -      "
+    "   X. X.X .X    -X..........X     -X..........X     -X..........X     -X..........XX...X     -  X......X           -      "
+    "  X.  X.X  .X   -X......XXXXX     -X......XXXXX     -X......XXXXX     -X.......XXX XXXXX     - X......X            -      "
+    "  X.  X.X  .X   -X...X..X         -X...X..X         -X...X..X         -X...X..X              -X.XXXX.X             -      "
+    " X.  X...X  .X  -X..X X..X        -X..X X..X        -X..X X..X        -X..X X..X    XXX      -X.   .X              -      "
+    " X...........X  -X.X  X..X        -X.X  X..X        -X.X  X..X        -X.X  X..X   X...X     -X.  .X               -      "
+    "X.............X -XX    X..X       -XX    X..X       -XX    X..X       -XX    X..X  X...X     -X...X                -      "
+    "X.............X -      X..X       -      X..X       -      X..X       -      X..X  X...X     -XXXX                 -      "
+    "XXXXXXXXXXXXXXX -       XX        -       XX        -       XX        -       XX    XXX      -                     -      "
+    "--------------------------------------------------------------------------------------------------------------------------"
 };
 
 static const ImVec2 FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[ImGuiMouseCursor_COUNT][3] =
@@ -2173,7 +2194,14 @@ static const ImVec2 FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[ImGuiMouseCursor_COUNT][3
     { ImVec2(55,0), ImVec2(17,17), ImVec2( 8, 8) }, // ImGuiMouseCursor_ResizeNWSE
     { ImVec2(91,0), ImVec2(17,22), ImVec2( 5, 0) }, // ImGuiMouseCursor_Hand
     { ImVec2(109,0),ImVec2(13,15), ImVec2( 6, 7) }, // ImGuiMouseCursor_NotAllowed
+    { ImVec2( 0,26),ImVec2(16,20), ImVec2( 7,10) }, // ImGuiMouseCursor_Waiting
+    { ImVec2(17,27),ImVec2(17,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Minus
+    { ImVec2(35,27),ImVec2(17,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Add
+    { ImVec2(53,27),ImVec2(17,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Cross
+    { ImVec2(71,27),ImVec2(22,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Question
+    { ImVec2(94,25),ImVec2(21,21), ImVec2( 0,20) }, // ImGuiMouseCursor_Straw
 };
+// modify by Dicky end
 
 ImFontAtlas::ImFontAtlas()
 {
