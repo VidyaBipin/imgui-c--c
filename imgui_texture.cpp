@@ -916,6 +916,8 @@ void ImTextureToMat(ImTextureID texture, ImGui::ImMat& mat, ImVec2 offset, ImVec
 
 void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, ImVec2 size, float zoom_size, float* offset_x, float* offset_y, float* tf_x, float* tf_y, bool bLandscape, bool out_border, const ImVec2& uvMin, const ImVec2& uvMax)
 {
+    // draw background
+    draw_list->AddRectFilled(pos, pos + size, IM_COL32_BLACK);
     if (texture)
     {
         ImGuiIO& io = ImGui::GetIO();
@@ -954,7 +956,6 @@ void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, I
         _tf_y = (size.y - adj_h) / 2.0;
         _offset_x = pos.x + _tf_x;
         _offset_y = pos.y + _tf_y;
-        draw_list->AddRectFilled(ImVec2(_offset_x, _offset_y), ImVec2(_offset_x + adj_w, _offset_y + adj_h), IM_COL32_BLACK);
         
         draw_list->AddImage(
             texture,

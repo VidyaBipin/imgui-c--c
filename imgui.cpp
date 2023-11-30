@@ -11679,7 +11679,15 @@ bool ImGui::BeginPopupModal(const char* name, bool* p_open, ImGuiWindowFlags fla
     if ((g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasPos) == 0)
     {
         const ImGuiViewport* viewport = window->WasActive ? window->Viewport : GetMainViewport(); // FIXME-VIEWPORT: What may be our reference viewport?
-        SetNextWindowPos(viewport->GetCenter(), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+        // modify by Dicky to support full screen popup window display
+        if (flags & ImGuiWindowFlags_FullScreen)
+        {
+            SetNextWindowPos(viewport->Pos, ImGuiCond_FirstUseEver);
+            SetNextWindowSize(viewport->Size, ImGuiCond_FirstUseEver);
+        }
+        else
+            SetNextWindowPos(viewport->GetCenter(), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+        // modify by Dicky end
     }
 
     flags |= ImGuiWindowFlags_Popup | ImGuiWindowFlags_Modal | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking;
