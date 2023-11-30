@@ -117,15 +117,15 @@ public:
                         m_itHoveredVertex = iter;
                 }
             }
-            if (IsKeyDown(m_eRemoveVertexKey) && bMouseInWorkArea)
-            {
-                RenderMouseCursor(m_strRemoveVertexCursorIcon.c_str(), ImVec2(-2.f, -2.f), 0.8f, 0, IM_COL32(40, 40, 40, 255), IM_COL32(255, 255, 255, 255));
-            }
+
+            const bool bRemoveKeyDown = IsKeyDown(m_eRemoveVertexKey);
+            if (bRemoveKeyDown && bMouseInWorkArea)
+                SetMouseCursor(ImGuiMouseCursor_Minus);
 
             lock_guard<mutex> _lk(m_mtxRouteLock);
-            if (IsMouseClicked(ImGuiMouseButton_Left) && bMouseInWorkArea)
+            if (bMouseInWorkArea && IsMouseClicked(ImGuiMouseButton_Left))
             {
-                if (!HasHoveredVertex() && !m_bRouteCompleted && !IsKeyDown(m_eRemoveVertexKey))
+                if (!bRemoveKeyDown && !HasHoveredVertex() && !m_bRouteCompleted)
                 {
                     // add new vertex to the end of vertex list
                     m_aRoutePointsForUi.push_back({this, mousePos});
@@ -139,7 +139,7 @@ public:
                 }
                 else if (HasHoveredVertex())
                 {
-                    if (IsKeyDown(m_eRemoveVertexKey))
+                    if (bRemoveKeyDown)
                     {
                         if (m_itHoveredVertex->m_iHoverType == 0)
                         {
@@ -758,9 +758,7 @@ public:
 
         const bool bMouseInView = bb.Contains(v2MousePosAbs);
         if (IsKeyDown(m_eRemoveVertexKey) && bMouseInView && i64Tick != prTickRange.first)
-        {
-            RenderMouseCursor(m_strRemoveVertexCursorIcon.c_str(), ImVec2(-2.f, -2.f), 0.8f, 0, IM_COL32(40, 40, 40, 255), IM_COL32(255, 255, 255, 255));
-        }
+            SetMouseCursor(ImGuiMouseCursor_Minus);
 
         return true;
     }
