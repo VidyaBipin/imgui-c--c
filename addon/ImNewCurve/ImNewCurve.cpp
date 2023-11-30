@@ -141,6 +141,7 @@ float CalcDistance(const ImVec2& p, const ImVec2& p1, const ImVec2& p2)
     return sqrtf(dx*dx+dy*dy);
 }
 
+// 'KeyPoint' implementation
 imgui_json::value KeyPoint::SaveAsJson() const
 {
     imgui_json::value j;
@@ -165,6 +166,7 @@ KeyPoint::Holder KeyPoint::CreateInstance(const ValType& val, CurveType type)
     return Holder(new KeyPoint(val, type));
 }
 
+// 'Curve' implementation
 Curve::Holder Curve::CreateInstance(
         const std::string& name, CurveType eCurveType, const std::pair<uint32_t, uint32_t>& tTimeBase,
         const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal)
@@ -202,32 +204,73 @@ Curve::Curve(const std::string& name, CurveType eCurveType, const std::pair<uint
     }
 }
 
+Curve::Holder Curve::Clone() const
+{
+    auto hNewInstance = CreateInstance(m_strName, m_eCurveType, m_tTimeBase, m_tMinVal, m_tMaxVal, m_tDefaultVal);
+    auto& aClonedKeyPoints = hNewInstance->m_aKeyPoints;
+    for (const auto& hKp : m_aKeyPoints)
+        aClonedKeyPoints.push_back(KeyPoint::Holder(new KeyPoint(*hKp)));
+    return hNewInstance;
+}
+
+const KeyPoint::Holder Curve::GetKeyPoint(size_t idx) const
+{
+    if (idx >= m_aKeyPoints.size())
+        return nullptr;
+    auto iter = m_aKeyPoints.begin();
+    while (idx-- > 0)
+        iter++;
+    return *iter;
+}
+
+KeyPoint::Holder Curve::GetKeyPoint_(size_t idx) const
+{
+    if (idx >= m_aKeyPoints.size())
+        return nullptr;
+    auto iter = m_aKeyPoints.begin();
+    while (idx-- > 0)
+        iter++;
+    return *iter;
+}
+
+std::list<KeyPoint::Holder>::iterator Curve::GetKpIter(size_t idx)
+{
+    if (idx >= m_aKeyPoints.size())
+        return m_aKeyPoints.end();
+    auto iter = m_aKeyPoints.begin();
+    while (idx-- > 0)
+        iter++;
+    return iter;
+}
+
 int Curve::GetKeyPointIndex(const KeyPoint::Holder& hKp) const
 {
-    int idx = -1;
-    const auto szKpCnt = m_aKeyPoints.size();
-    for (auto i = 0; i < szKpCnt; i++)
+    int idx = -1, i = 0;
+    auto iter = m_aKeyPoints.begin();
+    while (iter != m_aKeyPoints.end())
     {
-        if (m_aKeyPoints[i] == hKp)
+        if (*iter++ == hKp)
         {
-            idx = (int)i;
+            idx = i;
             break;
         }
+        i++;
     }
     return idx;
 }
 
 int Curve::GetKeyPointIndex(float t) const
 {
-    int idx = -1;
-    const auto szKpCnt = m_aKeyPoints.size();
-    for (auto i = 0; i < szKpCnt; i++)
+    int idx = -1, i = 0;
+    auto iter = m_aKeyPoints.begin();
+    while (iter != m_aKeyPoints.end())
     {
-        if (m_aKeyPoints[i]->t == t)
+        if ((*iter++)->t == t)
         {
-            idx = (int)i;
+            idx = i;
             break;
         }
+        i++;
     }
     return idx;
 }
@@ -299,7 +342,7 @@ int Curve::EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCur
     else
         tKpVal_ = tKpVal;
     tKpVal_.w = Time2TickAligned(tKpVal.w);
-    auto hKp = m_aKeyPoints[idx];
+    auto hKp = GetKeyPoint(idx);
     if (tKpVal_ == hKp->val && eCurveType == hKp->type)
         return -2;
 
@@ -325,9 +368,11 @@ int Curve::EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCur
                 {
                     bOutOfRange = false;
                     bool bFoundSame = false;
-                    for (auto i = 0; i < szKpCnt; i++)
+                    auto iter = m_aKeyPoints.begin();
+                    while (iter != m_aKeyPoints.end())
                     {
-                        if (i != idx && m_aKeyPoints[i]->t == fTestTick)
+                        const auto& hKpCheck = *iter++;
+                        if (hKp != hKpCheck && hKpCheck->t == fTestTick)
                         {
                             bFoundSame = true;
                             break;
@@ -344,9 +389,11 @@ int Curve::EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCur
                 {
                     bOutOfRange = false;
                     bool bFoundSame = false;
-                    for (auto i = 0; i < szKpCnt; i++)
+                    auto iter = m_aKeyPoints.begin();
+                    while (iter != m_aKeyPoints.end())
                     {
-                        if (i != idx && m_aKeyPoints[i]->t == fTestTick)
+                        const auto& hKpCheck = *iter++;
+                        if (hKp != hKpCheck && hKpCheck->t == fTestTick)
                         {
                             bFoundSame = true;
                             break;
@@ -381,7 +428,7 @@ int Curve::EditPointByDim(ValueDimension eDim, size_t idx, const ImVec2& v2DimVa
 {
     if (idx >= m_aKeyPoints.size())
         return -1;
-    KeyPoint::ValType tKpVal = m_aKeyPoints[idx]->val;
+    KeyPoint::ValType tKpVal = GetKeyPoint_(idx)->val;
     KeyPoint::SetDimVal(tKpVal, v2DimVal.y, eDim);
     tKpVal.w = v2DimVal.x;
     return EditPoint(idx, tKpVal, eCurveType, bNormalize);
@@ -391,24 +438,43 @@ int Curve::ChangePointVal(size_t idx, const KeyPoint::ValType& tKpVal, bool bNor
 {
     if (idx >= m_aKeyPoints.size())
         return -1;
-    return EditPoint(idx, tKpVal, m_aKeyPoints[idx]->type, bNormalize);
+    return EditPoint(idx, tKpVal, GetKeyPoint(idx)->type, bNormalize);
 }
 
 int Curve::ChangePointValByDim(ValueDimension eDim, size_t idx, const ImVec2& v2DimVal, bool bNormalize)
 {
     if (idx >= m_aKeyPoints.size())
         return -1;
-    return EditPointByDim(eDim, idx, v2DimVal, m_aKeyPoints[idx]->type, bNormalize);
+    return EditPointByDim(eDim, idx, v2DimVal, GetKeyPoint(idx)->type, bNormalize);
 }
 
 int Curve::ChangeCurveType(size_t idx, CurveType eCurveType)
 {
     if (idx >= m_aKeyPoints.size())
         return -1;
-    if (m_aKeyPoints[idx]->type == eCurveType)
-        return -1;
-    m_aKeyPoints[idx]->type = eCurveType;
+    auto hKp = GetKeyPoint_(idx);
+    hKp->type = eCurveType;
     return idx;
+}
+
+KeyPoint::Holder Curve::RemovePoint(size_t idx)
+{
+    if (idx >= m_aKeyPoints.size())
+        return nullptr;
+    auto iter = m_aKeyPoints.begin();
+    while (idx-- > 0)
+        iter++;
+    auto hKp = *iter;
+    m_aKeyPoints.erase(iter);
+    return hKp;
+}
+
+KeyPoint::Holder Curve::RemovePoint(float t)
+{
+    auto idx = GetKeyPointIndex(t);
+    if (idx < 0)
+        return nullptr;
+    return RemovePoint((size_t)idx);
 }
 
 float Curve::MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint, bool bNormalize)
@@ -439,29 +505,33 @@ KeyPoint::ValType Curve::CalcPointVal(float t, bool bDenormalize, bool bAlignTim
     t = bAlignTime ? Time2TickAligned(t) : Time2Tick(t);
     KeyPoint::ValType res(m_tDefaultVal);
     res.w = t;
-    const auto szPointCnt = m_aKeyPoints.size();
-    if (szPointCnt < 1)
+    const auto szKpCnt = m_aKeyPoints.size();
+    if (szKpCnt < 1)
         return res;
-    if (szPointCnt == 1 || t <= m_aKeyPoints[0]->t)
+    const auto& hKpHead = m_aKeyPoints.front();
+    const auto& hKpTail = m_aKeyPoints.back();
+    if (szKpCnt == 1 || t <= hKpHead->t)
     {
-        res = m_aKeyPoints[0]->val;
+        res = hKpHead->val;
         res.w = t;
         return res;
     }
-    if (t >= m_aKeyPoints[szPointCnt-1]->t)
+    if (t >= hKpTail->t)
     {
-        res = m_aKeyPoints[szPointCnt-1]->val;
+        res = hKpTail->val;
         res.w = t;
         return res;
     }
-    size_t idx;
-    for (idx = 0; idx < szPointCnt-1; idx++)
+    auto itKp0 = m_aKeyPoints.begin();
+    auto itKp1 = itKp0; itKp1++;
+    while (itKp1 != m_aKeyPoints.end())
     {
-        if (t >= m_aKeyPoints[idx]->t && t < m_aKeyPoints[idx+1]->t)
+        if (t >= (*itKp0)->t && t < (*itKp1)->t)
             break;
+        itKp0 = itKp1; itKp1++;
     }
-    const auto& p1 = m_aKeyPoints[idx];
-    const auto& p2 = m_aKeyPoints[idx+1];
+    const auto& p1 = *itKp0;
+    const auto& p2 = *itKp1;
     if (t == p1->t)
     {
         res = p1->val;
@@ -498,22 +568,22 @@ bool Curve::SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds)
         return true;
     if (szKpCnt == 1)
     {
-        m_aKeyPoints[0]->t = m_tMinVal.w;
+        m_aKeyPoints.front()->t = m_tMinVal.w;
         return true;
     }
     if (szKpCnt == 2)
     {
-        m_aKeyPoints[0]->t = m_tMinVal.w;
-        m_aKeyPoints[1]->t = m_tMaxVal.w;
+        m_aKeyPoints.front()->t = m_tMinVal.w;
+        m_aKeyPoints.back()->t = m_tMaxVal.w;
         return true;
     }
-    const auto eBeginCurveType = m_aKeyPoints[0]->type;
-    const auto eEndCurveType = m_aKeyPoints[szKpCnt-1]->type;
+    const auto eBeginCurveType = m_aKeyPoints.front()->type;
+    const auto eEndCurveType = m_aKeyPoints.back()->type;
     auto tNewBeginVal = CalcPointVal(Tick2Time(m_tMinVal.w), false);
     tNewBeginVal.w = m_tMinVal.w;
     auto tNewEndVal = CalcPointVal(Tick2Time(m_tMaxVal.w), false);
     tNewEndVal.w = m_tMaxVal.w;
-    std::vector<KeyPoint::Holder> aNewPoints;
+    std::list<KeyPoint::Holder> aNewPoints;
     aNewPoints.push_back(KeyPoint::CreateInstance(tNewBeginVal, eBeginCurveType));
     auto iter = m_aKeyPoints.begin(); iter++;
     auto itEnd = m_aKeyPoints.end(); itEnd--;
@@ -528,7 +598,7 @@ bool Curve::SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds)
             aNewPoints.push_back(hKp);
     }
     aNewPoints.push_back(KeyPoint::CreateInstance(tNewEndVal, eEndCurveType));
-    m_aKeyPoints = aNewPoints;
+    m_aKeyPoints = std::move(aNewPoints);
     return true;
 }
 
@@ -543,13 +613,13 @@ std::string Curve::PrintKeyPointsByDim(ValueDimension eDim) const
 {
     std::ostringstream oss;
     oss << '{';
-    const auto szPtCnt = m_aKeyPoints.size();
-    for (auto i = 0; i < szPtCnt; i++)
+    auto iter = m_aKeyPoints.begin();
+    while (iter != m_aKeyPoints.end())
     {
-        const auto& hKp = m_aKeyPoints[i];
+        const auto& hKp = *iter++;
         const auto v2PtVal = hKp->GetVec2PointValByDim(eDim);
         oss << " (" << v2PtVal.x << ", " << v2PtVal.y << ')';
-        if (i < szPtCnt-1) oss << ','; else oss << ' ';
+        if (iter != m_aKeyPoints.end()) oss << ','; else oss << ' ';
     }
     oss << '}';
     return oss.str();
@@ -559,7 +629,7 @@ void Curve::SortKeyPoints()
 {
     if (m_aKeyPoints.size() < 2)
         return;
-    std::sort(m_aKeyPoints.begin(), m_aKeyPoints.end(), [] (const auto& a, const auto& b) {
+    m_aKeyPoints.sort([] (const auto& a, const auto& b) {
         return a->t < b->t;
     });
 }
@@ -602,7 +672,6 @@ void Curve::LoadFromJson(const imgui_json::value& j)
     }
     m_aKeyPoints.clear();
     imgui_json::array jKps = j["key_points"].get<imgui_json::array>();
-    m_aKeyPoints.reserve(jKps.size());
     for (const auto& jelem : jKps)
     {
         auto hKp = KeyPoint::CreateInstance();
@@ -611,6 +680,7 @@ void Curve::LoadFromJson(const imgui_json::value& j)
     }
 }
 
+// 'CurveUiObj' implementation
 CurveUiObj::Holder CurveUiObj::CreateInstance(Editor* owner, const std::string& name, CurveType type, const std::pair<uint32_t, uint32_t>& tTimeBase,
         const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal,
         ImU32 color, bool visible, int64_t id, int64_t subId)
@@ -638,23 +708,28 @@ bool CurveUiObj::CheckMouseHoverCurve(ValueDimension eDim, const ImVec2& pos)
         return false;
     if (m_aContourPoints.find(eDim) == m_aContourPoints.end())
         UpdateContourPointsByDim(eDim, -1);
-    auto& aDimContourPoints = m_aContourPoints.at(eDim);
-    const auto szPointCnt = m_aKeyPoints.size();
-    for (auto i = 0; i < szPointCnt-1; i++)
+    auto& aDimCpTable = m_aContourPoints.at(eDim);
+    auto iter = m_aKeyPoints.begin();
+    while (iter != m_aKeyPoints.end())
     {
-        const auto& hKp = m_aKeyPoints[i];
-        if (aDimContourPoints.find(hKp) == aDimContourPoints.end())
-            UpdateContourPointsByDim(eDim, i);
+        const auto& hKp = *iter;
+        if (aDimCpTable.find(hKp) == aDimCpTable.end())
+            UpdateDimContourPoints(eDim, iter);
+        iter++;
     }
 
     bool bIsHovering = false;
     ImVec2 p1, p2;
     bool bStartPoint = true;
     const auto fCheckHoverDistanceThresh = m_owner->m_fCheckHoverDistanceThresh;
-    for (auto i = 0; i < szPointCnt-1; i++)
+    iter = m_aKeyPoints.begin();
+    while (true)
     {
+        const auto& hKp = *iter++;
+        if (iter == m_aKeyPoints.end())
+            break;
         p1 = p2;
-        const auto& aKpCurvePoints = aDimContourPoints.at(m_aKeyPoints[i]);
+        const auto& aKpCurvePoints = aDimCpTable.at(hKp);
         for (const auto& v2CurvePt : aKpCurvePoints)
         {
             p2 = v2CurvePt;
@@ -678,18 +753,21 @@ int CurveUiObj::CheckMouseHoverPoint(ValueDimension eDim, const ImVec2& pos) con
     const int iKpCnt = m_aKeyPoints.size();
     if (iKpCnt < 1)
         return false;
-    auto& aDimContourPoints = m_aContourPoints.at(eDim);
+    auto& aDimCpTable = m_aContourPoints.at(eDim);
     const auto fCheckHoverDistanceThresh = m_owner->m_fCheckHoverDistanceThresh;
-    int i;
-    for (i = 0; i < iKpCnt; i++)
+    int idx = 0;
+    auto iter = m_aKeyPoints.begin();
+    while (iter != m_aKeyPoints.end())
     {
-        const auto& p = aDimContourPoints.at(m_aKeyPoints[i])[0];
+        const auto& hKp = *iter++;
+        const auto& p = aDimCpTable.at(hKp)[0];
         if (CalcDistance(pos, p) < fCheckHoverDistanceThresh)
             break;
+        idx++;
     }
-    if (i >= iKpCnt)
+    if (idx >= iKpCnt)
         return -1;
-    return i;
+    return idx;
 }
 
 int CurveUiObj::AddPoint(KeyPoint::Holder hKp, bool bNormalize, bool bOverwriteIfExists)
@@ -730,7 +808,30 @@ int CurveUiObj::ChangeCurveType(size_t idx, CurveType eCurveType)
 {
     if (Curve::ChangeCurveType(idx, eCurveType) < 0)
         return -1;
+    UpdateContourPoints(idx);
     return idx;
+}
+
+KeyPoint::Holder CurveUiObj::RemovePoint(size_t idx)
+{
+    auto hKp = Curve::RemovePoint(idx);
+    if (!hKp)
+        return nullptr;
+    for (auto& elem : m_aContourPoints)
+    {
+        auto& aCpTable = elem.second;
+        aCpTable.erase(hKp);
+    }
+    UpdateContourPoints(idx);
+    return hKp;
+}
+
+KeyPoint::Holder CurveUiObj::RemovePoint(float t)
+{
+    auto idx = GetKeyPointIndex(t);
+    if (idx < 0)
+        return nullptr;
+    return RemovePoint((size_t)idx);
 }
 
 float CurveUiObj::MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint, bool bNormalize)
@@ -744,8 +845,8 @@ float CurveUiObj::MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncP
     {
         const auto v2PosOffset = m_owner->CvtPoint2Pos(ImVec2(m_owner->m_v2TimeRange.x, fOffset));
         const auto fVPosOffset = v2PosOffset.y;
-        auto& aDimContourPoints = m_aContourPoints.at(eDim);
-        for (auto& elem : aDimContourPoints)
+        auto& aDimCpTable = m_aContourPoints.at(eDim);
+        for (auto& elem : aDimCpTable)
         {
             auto& aContourPoints = elem.second;
             for (auto& v2Pos : aContourPoints)
@@ -781,15 +882,17 @@ bool CurveUiObj::DrawDim(ValueDimension eDim, ImDrawList* pDrawList, const ImVec
         return false;
     if (m_aContourPoints.find(eDim) == m_aContourPoints.end())
         UpdateContourPointsByDim(eDim, -1);
-    auto& aDimContourPoints = m_aContourPoints.at(eDim);
-    const auto szPointCnt = m_aKeyPoints.size();
-    if (szPointCnt > 1)
+    auto& aDimCpTable = m_aContourPoints.at(eDim);
+    const auto szKpCnt = m_aKeyPoints.size();
+    if (szKpCnt > 1)
     {
-        for (auto i = 0; i < szPointCnt-1; i++)
+        auto iter = m_aKeyPoints.begin();
+        while (iter != m_aKeyPoints.end())
         {
-            const auto& hKp = m_aKeyPoints[i];
-            if (aDimContourPoints.find(hKp) == aDimContourPoints.end())
-                UpdateContourPointsByDim(eDim, i);
+            const auto& hKp = *iter;
+            if (aDimCpTable.find(hKp) == aDimCpTable.end())
+                UpdateDimContourPoints(eDim, iter);
+            iter++;
         }
     }
 
@@ -799,10 +902,14 @@ bool CurveUiObj::DrawDim(ValueDimension eDim, ImDrawList* pDrawList, const ImVec
     bool bStartPoint = true;
     const auto u32CurveColor = bIsHovering ? m_u32CurveHoveringColor : m_u32CurveColor;
     const auto fCurveWidth = bIsHovering ? m_fCurveHoveringWidth : m_fCurveWidth;
-    for (auto i = 0; i < szPointCnt-1; i++)
+    auto iter = m_aKeyPoints.begin();
+    while (true)
     {
+        const auto& hKp = *iter++;
+        if (iter == m_aKeyPoints.end())
+            break;
         p1 = p2;
-        const auto& aKpCurvePoints = aDimContourPoints.at(m_aKeyPoints[i]);
+        const auto& aKpCurvePoints = aDimCpTable.at(hKp);
         p2 = aKpCurvePoints[0];
         if (bStartPoint)
             bStartPoint = false;
@@ -820,10 +927,13 @@ bool CurveUiObj::DrawDim(ValueDimension eDim, ImDrawList* pDrawList, const ImVec
     // draw key points
     int iHoveringKpIdx = bIsHovering ? m_owner->m_iPointHoveringIdx : -1;
     const auto fKeyPointRadius = m_fKeyPointRadius;
-    for (int i = 0; i < (int)szPointCnt; i++)
+    size_t idx = 0;
+    iter = m_aKeyPoints.begin();
+    while (iter != m_aKeyPoints.end())
     {
-        const auto u32KeyPointColor = i==iHoveringKpIdx ? m_u32KeyPointHoveringColor : m_u32KeyPointColor;
-        const auto v2KpCenter = m_owner->CvtPoint2Pos(m_aKeyPoints[i]->GetVec2PointValByDim(eDim));
+        const auto u32KeyPointColor = idx==iHoveringKpIdx ? m_u32KeyPointHoveringColor : m_u32KeyPointColor;
+        const auto& hKp = *iter++; idx++;
+        const auto v2KpCenter = m_owner->CvtPoint2Pos(hKp->GetVec2PointValByDim(eDim));
         ImVec2 aPolyPoints[] = {
                 ImVec2(v2KpCenter.x+fKeyPointRadius, v2KpCenter.y), ImVec2(v2KpCenter.x, v2KpCenter.y+fKeyPointRadius),
                 ImVec2(v2KpCenter.x-fKeyPointRadius, v2KpCenter.y), ImVec2(v2KpCenter.x, v2KpCenter.y-fKeyPointRadius) };
@@ -855,11 +965,11 @@ void CurveUiObj::UpdateContourPointsByDim(ValueDimension eDim, int idx)
         m_aContourPoints[eDim] = {};
         idx = -1;
     }
-    auto& aDimContourPoints = m_aContourPoints.at(eDim);
+    auto& aDimCpTable = m_aContourPoints.at(eDim);
     const auto szKpCnt = m_aKeyPoints.size();
     if (szKpCnt < 2)
     {
-        aDimContourPoints.clear();
+        aDimCpTable.clear();
         return;
     }
     if (idx >= (int)szKpCnt)
@@ -867,23 +977,27 @@ void CurveUiObj::UpdateContourPointsByDim(ValueDimension eDim, int idx)
     ImVec2 p1, p2;
     size_t szLoopStart = idx > 0 ? idx-1 : 0;
     size_t szLoopEnd = idx >= 0 ? idx+1 : szKpCnt;
-    KeyPoint::ValType tKpVal = m_aKeyPoints[szLoopStart]->val;
+    auto itKp = GetKpIter(szLoopStart);
+    auto itEnd = GetKpIter(szLoopEnd);
+    KeyPoint::ValType tKpVal = (*itKp)->val;
     tKpVal.w = Tick2Time(tKpVal.w);
     p2 = m_owner->CvtPoint2Pos(tKpVal, eDim);
-    for (auto i = szLoopStart; i < szLoopEnd; i++)
+    while (itKp == itEnd)
     {
-        if (i == szKpCnt-1)
+        const auto& hKp0 = *itKp++;
+        if (itKp == m_aKeyPoints.end())
         {
-            aDimContourPoints[m_aKeyPoints[i]] = { p2 };
+            aDimCpTable[hKp0] = { p2 };
             break;
         }
         p1 = p2;
-        tKpVal = m_aKeyPoints[i+1]->val;
+        const auto& hKp1 = *itKp;
+        tKpVal = hKp1->val;
         tKpVal.w = Tick2Time(tKpVal.w);
         p2 = m_owner->CvtPoint2Pos(tKpVal, eDim);
         size_t steps = (size_t)(CalcDistance(p1, p2)/2);
         steps = ImClamp<size_t>(steps, 2, 100);
-        auto eCurveType = m_aKeyPoints[i+1]->type;
+        auto eCurveType = hKp1->type;
         std::vector<ImVec2> aContourPos(steps);
         aContourPos[0] = p1;
         for (auto j = 1; j < steps; j++)
@@ -894,22 +1008,82 @@ void CurveUiObj::UpdateContourPointsByDim(ValueDimension eDim, int idx)
             aContourPos[j].x = t;
             aContourPos[j].y = p1.y==p2.y ? p1.y : ImLerp(p1.y, p2.y, rt);
         }
-        aDimContourPoints[m_aKeyPoints[i]] = std::move(aContourPos);
+        aDimCpTable[hKp0] = std::move(aContourPos);
     }
+}
+
+void CurveUiObj::UpdateDimContourPoints(ValueDimension eDim, std::list<KeyPoint::Holder>::iterator itKp)
+{
+    auto& aDimCpTable = m_aContourPoints.at(eDim);
+    const auto szKpCnt = m_aKeyPoints.size();
+    if (szKpCnt < 2 || itKp == m_aKeyPoints.end())
+    {
+        aDimCpTable.clear();
+        return;
+    }
+    if (itKp != m_aKeyPoints.begin())
+        itKp--;
+    auto hKp0 = *itKp++;
+    KeyPoint::ValType tKpVal = hKp0->val;
+    tKpVal.w = Tick2Time(tKpVal.w);
+    ImVec2 p1 = m_owner->CvtPoint2Pos(tKpVal, eDim);
+    auto hKp1 = *itKp++;
+    tKpVal = hKp1->val;
+    tKpVal.w = Tick2Time(tKpVal.w);
+    ImVec2 p2 = m_owner->CvtPoint2Pos(tKpVal, eDim);
+    size_t steps = (size_t)(CalcDistance(p1, p2)/2);
+    steps = ImClamp<size_t>(steps, 2, 100);
+    auto eCurveType = hKp1->type;
+    std::vector<ImVec2> aContourPos(steps);
+    aContourPos[0] = p1;
+    for (auto j = 1; j < steps; j++)
+    {
+        const float s = (float)j/steps;
+        const auto t = ImLerp(p1.x, p2.x, s);
+        const auto rt = SmoothStep(p1.x, p2.x, t, eCurveType);
+        aContourPos[j].x = t;
+        aContourPos[j].y = p1.y==p2.y ? p1.y : ImLerp(p1.y, p2.y, rt);
+    }
+    aDimCpTable[hKp0] = std::move(aContourPos);
+    if (itKp == m_aKeyPoints.end())
+    {
+        aDimCpTable[hKp1] = { p2 };
+        return;
+    }
+    p1 = p2;
+    hKp0 = hKp1;
+    hKp1 = *itKp++;
+    tKpVal = hKp1->val;
+    tKpVal.w = Tick2Time(tKpVal.w);
+    p2 = m_owner->CvtPoint2Pos(tKpVal, eDim);
+    steps = (size_t)(CalcDistance(p1, p2)/2);
+    steps = ImClamp<size_t>(steps, 2, 100);
+    eCurveType = hKp1->type;
+    aContourPos.resize(steps);
+    aContourPos[0] = p1;
+    for (auto j = 1; j < steps; j++)
+    {
+        const float s = (float)j/steps;
+        const auto t = ImLerp(p1.x, p2.x, s);
+        const auto rt = SmoothStep(p1.x, p2.x, t, eCurveType);
+        aContourPos[j].x = t;
+        aContourPos[j].y = p1.y==p2.y ? p1.y : ImLerp(p1.y, p2.y, rt);
+    }
+    aDimCpTable[hKp0] = std::move(aContourPos);
 }
 
 void CurveUiObj::RemoveInvalidContourPoints()
 {
     for (auto& elem1 : m_aContourPoints)
     {
-        auto& aDimContourPoints = elem1.second;
+        auto& aDimCpTable = elem1.second;
         // remove invalid key-point entries
-        auto iter = aDimContourPoints.begin();
-        while (iter != aDimContourPoints.end())
+        auto iter = aDimCpTable.begin();
+        while (iter != aDimCpTable.end())
         {
             const auto& elem2 = *iter;
             if (std::find(m_aKeyPoints.begin(), m_aKeyPoints.end(), elem2.first) == m_aKeyPoints.end())
-                iter = aDimContourPoints.erase(iter);
+                iter = aDimCpTable.erase(iter);
             else
                 iter++;
         }

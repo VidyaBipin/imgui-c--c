@@ -920,7 +920,8 @@ FillEdgeCollection(ImGui::ImMat& img, vector<_PolyEdge>& edges, const void* pCol
     }
 }
 
-static void FeatherFillHLineU8(const vector<Point2f>& av2ContourVertices, float fFeatherSize, int y, uint8_t* pLine, int x1, int x2, const void* pColor)
+template<template<class T, class Alloc = std::allocator<T>> class Container>
+void FeatherFillHLineU8(const Container<Point2f>& aPolygonVertices, float fFeatherSize, int y, uint8_t* pLine, int x1, int x2, const void* pColor)
 {
     int iLoopCnt = x2-x1;
     uint8_t* pWrite = pLine;
@@ -929,13 +930,14 @@ static void FeatherFillHLineU8(const vector<Point2f>& av2ContourVertices, float 
     for (int i = x1; i < x2; i++)
     {
         float fMinDist;
-        CalcNearestPointOnPloygon(Point2f(i, y), av2ContourVertices, nullptr, nullptr, &fMinDist);
+        CalcNearestPointOnPloygon(Point2f(i, y), aPolygonVertices, nullptr, nullptr, &fMinDist);
         const float factor = fMinDist < fFeatherSize ? fMinDist/fFeatherSize : 1.0f;
         pWrite[i] = (uint8_t)(color*factor);
     }
 }
 
-static void FeatherFillHLineU16(const vector<Point2f>& av2ContourVertices, float fFeatherSize, int y, uint8_t* pLine, int x1, int x2, const void* pColor)
+template<template<class T, class Alloc = std::allocator<T>> class Container>
+void FeatherFillHLineU16(const Container<Point2f>& aPolygonVertices, float fFeatherSize, int y, uint8_t* pLine, int x1, int x2, const void* pColor)
 {
     int iLoopCnt = x2-x1;
     uint16_t* pWrite = ((uint16_t*)pLine);
@@ -944,13 +946,14 @@ static void FeatherFillHLineU16(const vector<Point2f>& av2ContourVertices, float
     for (int i = x1; i < x2; i++)
     {
         float fMinDist;
-        CalcNearestPointOnPloygon(Point2f(i, y), av2ContourVertices, nullptr, nullptr, &fMinDist);
+        CalcNearestPointOnPloygon(Point2f(i, y), aPolygonVertices, nullptr, nullptr, &fMinDist);
         const float factor = fMinDist < fFeatherSize ? fMinDist/fFeatherSize : 1.0f;
         pWrite[i] = (uint16_t)(color*factor);
     }
 }
 
-static void FeatherFillHLineF32(const vector<Point2f>& av2ContourVertices, float fFeatherSize, int y, uint8_t* pLine, int x1, int x2, const void* pColor)
+template<template<class T, class Alloc = std::allocator<T>> class Container>
+void FeatherFillHLineF32(const Container<Point2f>& aPolygonVertices, float fFeatherSize, int y, uint8_t* pLine, int x1, int x2, const void* pColor)
 {
     int iLoopCnt = x2-x1;
     float* pWrite = ((float*)pLine);
@@ -959,25 +962,25 @@ static void FeatherFillHLineF32(const vector<Point2f>& av2ContourVertices, float
     for (int i = x1; i < x2; i++)
     {
         float fMinDist;
-        CalcNearestPointOnPloygon(Point2f(i, y), av2ContourVertices, nullptr, nullptr, &fMinDist);
+        CalcNearestPointOnPloygon(Point2f(i, y), aPolygonVertices, nullptr, nullptr, &fMinDist);
         const float factor = fMinDist < fFeatherSize ? fMinDist/fFeatherSize : 1.0f;
         pWrite[i] = color*factor;
     }
 }
 
-static void
-FillEdgeCollectionWithFeatherEffect(ImGui::ImMat& img, vector<_PolyEdge>& edges, const void* pColor, const vector<Point2f>& av2ContourVertices, float fFeatherSize)
+template<template<class T, class Alloc = std::allocator<T>> class Container>
+void FillEdgeCollectionWithFeatherEffect(ImGui::ImMat& img, vector<_PolyEdge>& edges, const void* pColor, const Container<Point2f>& aPolygonVertices, float fFeatherSize)
 {
     const ImDataType eDtype = img.type;
     if (eDtype != IM_DT_INT8 && eDtype != IM_DT_INT16 && eDtype != IM_DT_FLOAT32)
         throw runtime_error("INVALID data type!");
-    function<void(const vector<Point2f>&,float,int,uint8_t*,int,int,const void*)> fnHLine;
+    function<void(const Container<Point2f>&,float,int,uint8_t*,int,int,const void*)> fnHLine;
     if (eDtype == IM_DT_INT8)
-        fnHLine = FeatherFillHLineU8;
+        fnHLine = FeatherFillHLineU8<Container>;
     else if (eDtype == IM_DT_INT16)
-        fnHLine = FeatherFillHLineU16;
+        fnHLine = FeatherFillHLineU16<Container>;
     else if (eDtype == IM_DT_FLOAT32)
-        fnHLine = FeatherFillHLineF32;
+        fnHLine = FeatherFillHLineF32<Container>;
 
     _PolyEdge tmp;
     int i, y, total = (int)edges.size();
@@ -1077,7 +1080,7 @@ FillEdgeCollectionWithFeatherEffect(ImGui::ImMat& img, vector<_PolyEdge>& edges,
                         if (x2 >= size.x)
                             x2 = size.x-1;
                         uint8_t* pLine = (uint8_t*)img.data+y*img.w*img.elemsize;
-                        fnHLine(av2ContourVertices, fFeatherSize, y, pLine, x1, x2, pColor);
+                        fnHLine(aPolygonVertices, fFeatherSize, y, pLine, x1, x2, pColor);
                     }
                 }
                 keep_prelast->x += keep_prelast->dx;
@@ -1157,29 +1160,20 @@ ImGui::ImMat MakeColor(ImDataType eDtype, double dColorVal)
     return color;
 }
 
-void DrawPolygon(ImGui::ImMat& img, const vector<Point2f>& aContourVertices, const ImGui::ImMat& color, int iLineType)
+void DrawPolygon(ImGui::ImMat& img, const std::vector<Point2l>& aPolygonVertices, int iFixPointShift, const ImGui::ImMat& color, int iLineType)
 {
-    if (aContourVertices.empty())
+    if (aPolygonVertices.empty())
         return;
-    int iFixPointShit = 8;
-    double dFixPointScalar = (double)(1LL << iFixPointShit);
-    int iVertexCount = aContourVertices.size();
-    vector<Point2l> aptPolyVertices;
-    aptPolyVertices.reserve(aContourVertices.size());
-    for (int i = 0; i < iVertexCount; i++)
-    {
-        const auto& v = aContourVertices[i];
-        aptPolyVertices.push_back({(int64_t)((double)v.x*dFixPointScalar), (int64_t)((double)v.y*dFixPointScalar)});
-    }
     vector<_PolyEdge> edges;
     auto orgDims = img.dims;
     img.dims = 3; // wyvern: to pass the assertion in ImMat::draw_line()
-    CollectPolyEdges(img, aptPolyVertices, edges, color.data, iLineType, {0, 0}, iFixPointShit);
+    CollectPolyEdges(img, aPolygonVertices, edges, color.data, iLineType, {0, 0}, iFixPointShift);
     img.dims = orgDims;
 }
 
-ImGui::ImMat Contour2Mask(
-        const vector<Point2f>& av2ContourVertices, const Size2i& szMaskSize, const Point2f& v2ContourOffset,
+template<template<class T, class Alloc = std::allocator<T>> class Container>
+ImGui::ImMat _Contour2Mask(
+        const Size2i& szMaskSize, const Container<Point2f>& aPolygonVertices, const Point2f& ptOffset,
         ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled, float fFeatherSize)
 {
     ImGui::ImMat mask;
@@ -1225,29 +1219,22 @@ ImGui::ImMat Contour2Mask(
     default:
         throw runtime_error("UNSUPPORTED mask image data type!");
     }
-    if (av2ContourVertices.empty())
+    if (aPolygonVertices.empty())
         return mask;
 
     ImGui::ImMat color = MakeColor(mask.type, dMaskValue);
-    int iFixPointShit = 8;
-    double dFixPointScalar = (double)(1LL << iFixPointShit);
-    int iVertexCount = av2ContourVertices.size();
-    vector<Point2l> aptPolyVertices;
-    aptPolyVertices.reserve(av2ContourVertices.size());
-    for (int i = 0; i < iVertexCount; i++)
-    {
-        const auto& v = av2ContourVertices[i];
-        aptPolyVertices.push_back({(int64_t)((double)v.x*dFixPointScalar), (int64_t)((double)v.y*dFixPointScalar)});
-    }
-    Point2l ptContourOffset((int64_t)((double)v2ContourOffset.x*dFixPointScalar), (int64_t)((double)v2ContourOffset.y*dFixPointScalar));
+    const int iFixPointShift = 8;
+    const auto aPolygonVertices_ = ConvertFixPointPolygonVertices(aPolygonVertices, iFixPointShift);
+    const double dFixPointScale = (double)(1LL << iFixPointShift);
+    const MatUtils::Point2l ptOffset_((int64_t)((double)ptOffset.x*dFixPointScale), (int64_t)((double)ptOffset.y*dFixPointScale));
     vector<_PolyEdge> edges;
     mask.dims = 3; // wyvern: to pass the assertion in ImMat::draw_line()
     if (fFeatherSize <= 0)
-        CollectPolyEdges(mask, aptPolyVertices, edges, color.data, iLineType, ptContourOffset, iFixPointShit);
+        CollectPolyEdges(mask, aPolygonVertices_, edges, color.data, iLineType, ptOffset_, iFixPointShift);
     else
     {
         ImGui::ImMat nonMaskColor = MakeColor(mask.type, dNonMaskValue);
-        CollectPolyEdges(mask, aptPolyVertices, edges, nonMaskColor.data, iLineType, ptContourOffset, iFixPointShit);
+        CollectPolyEdges(mask, aPolygonVertices_, edges, nonMaskColor.data, iLineType, ptOffset_, iFixPointShift);
     }
     mask.dims = 2;
     if (bFilled)
@@ -1255,35 +1242,57 @@ ImGui::ImMat Contour2Mask(
         if (fFeatherSize <= 0)
             FillEdgeCollection(mask, edges, color.data);
         else
-            FillEdgeCollectionWithFeatherEffect(mask, edges, color.data, av2ContourVertices, fFeatherSize);
+            FillEdgeCollectionWithFeatherEffect(mask, edges, color.data, aPolygonVertices, fFeatherSize);
     }
     return mask;
 }
 
-void DrawMask(
-        ImGui::ImMat& mMask, const std::vector<Point2f>& av2ContourVertices, const Point2f& v2ContourOffset,
+ImGui::ImMat Contour2Mask(
+        const Size2i& szMaskSize, const vector<Point2f>& aPolygonVertices, const Point2f& ptOffset,
+        ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled, float fFeatherSize)
+{
+    return _Contour2Mask(szMaskSize, aPolygonVertices, ptOffset, dtMaskDataType, dMaskValue, dNonMaskValue, iLineType, bFilled, fFeatherSize);
+}
+
+ImGui::ImMat Contour2Mask(
+        const Size2i& szMaskSize, const list<Point2f>& aPolygonVertices, const Point2f& ptOffset,
+        ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled, float fFeatherSize)
+{
+    return _Contour2Mask(szMaskSize, aPolygonVertices, ptOffset, dtMaskDataType, dMaskValue, dNonMaskValue, iLineType, bFilled, fFeatherSize);
+}
+
+template<template<class T, class Alloc = std::allocator<T>> class Container>
+void _DrawMask(
+        ImGui::ImMat& mMask, const Container<Point2f>& aPolygonVertices, const Point2f& ptOffset,
         double dMaskValue, int iLineType)
 {
-    if (av2ContourVertices.empty())
+    if (aPolygonVertices.empty())
         return;
 
     ImGui::ImMat color = MakeColor(mMask.type, dMaskValue);
-    int iFixPointShit = 8;
-    double dFixPointScalar = (double)(1LL << iFixPointShit);
-    int iVertexCount = av2ContourVertices.size();
-    vector<Point2l> aptPolyVertices;
-    aptPolyVertices.reserve(av2ContourVertices.size());
-    for (int i = 0; i < iVertexCount; i++)
-    {
-        const auto& v = av2ContourVertices[i];
-        aptPolyVertices.push_back({(int64_t)((double)v.x*dFixPointScalar), (int64_t)((double)v.y*dFixPointScalar)});
-    }
-    Point2l ptContourOffset((int64_t)((double)v2ContourOffset.x*dFixPointScalar), (int64_t)((double)v2ContourOffset.y*dFixPointScalar));
+    int iFixPointShift = 8;
+    const auto aPolygonVertices_ = ConvertFixPointPolygonVertices(aPolygonVertices, iFixPointShift);
+    const double dFixPointScale = (double)(1LL << iFixPointShift);
+    Point2l ptOffset_((int64_t)((double)ptOffset.x*dFixPointScale), (int64_t)((double)ptOffset.y*dFixPointScale));
     vector<_PolyEdge> edges;
     mMask.dims = 3; // wyvern: to pass the assertion in ImMat::draw_line()
-    CollectPolyEdges(mMask, aptPolyVertices, edges, color.data, iLineType, ptContourOffset, iFixPointShit);
+    CollectPolyEdges(mMask, aPolygonVertices_, edges, color.data, iLineType, ptOffset_, iFixPointShift);
     mMask.dims = 2;
     FillEdgeCollection(mMask, edges, color.data);
+}
+
+void DrawMask(
+        ImGui::ImMat& mMask, const vector<Point2f>& aPolygonVertices, const Point2f& ptOffset,
+        double dMaskValue, int iLineType)
+{
+    _DrawMask(mMask, aPolygonVertices, ptOffset, dMaskValue, iLineType);
+}
+
+void DrawMask(
+        ImGui::ImMat& mMask, const list<Point2f>& aPolygonVertices, const Point2f& ptOffset,
+        double dMaskValue, int iLineType)
+{
+    _DrawMask(mMask, aPolygonVertices, ptOffset, dMaskValue, iLineType);
 }
 
 bool CheckTwoLinesCross(const Point2f v[4], Point2f* pCross)

@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <list>
 #include <imgui.h>
 #include <imgui_json.h>
 
@@ -161,6 +162,7 @@ namespace ImNewCurve
         Curve(const std::string& name, CurveType eCurveType,
                 const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal)
             : Curve(name, eCurveType, {0, 0}, minVal, maxVal, defaultVal) {}
+        virtual Holder Clone() const;
 
         const std::string& GetName() const { return m_strName; }
         CurveType GetCurveType() const { return m_eCurveType; }
@@ -169,7 +171,7 @@ namespace ImNewCurve
         const KeyPoint::ValType& GetDefaultVal() const { return m_tDefaultVal; }
         const std::pair<uint32_t, uint32_t>& GetTimeBase() const { return m_tTimeBase; }
         size_t GetKeyPointCount() const { return m_aKeyPoints.size(); }
-        const KeyPoint::Holder GetKeyPoint(size_t idx) const { if (idx >= m_aKeyPoints.size()) return nullptr; return m_aKeyPoints[idx]; }
+        const KeyPoint::Holder GetKeyPoint(size_t idx) const;
         int GetKeyPointIndex(const KeyPoint::Holder& hKp) const;
         int GetKeyPointIndex(float t) const;
         KeyPoint::ValType CalcPointVal(float t, bool bDenormalize, bool bAlignTime = true) const;
@@ -186,6 +188,8 @@ namespace ImNewCurve
         virtual int ChangePointVal(size_t idx, const KeyPoint::ValType& tKpVal, bool bNormalize);
         virtual int ChangePointValByDim(ValueDimension eDim, size_t idx, const ImVec2& v2DimVal, bool bNormalize);
         virtual int ChangeCurveType(size_t idx, CurveType eCurveType);
+        virtual KeyPoint::Holder RemovePoint(size_t idx);
+        virtual KeyPoint::Holder RemovePoint(float t);
         virtual float MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint, bool bNormalize);
         virtual bool SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds);
         virtual bool ScaleKeyPoints(const KeyPoint::ValType& tScale);
@@ -197,10 +201,12 @@ namespace ImNewCurve
     protected:
         Curve() {}
         void SortKeyPoints();
+        KeyPoint::Holder GetKeyPoint_(size_t idx) const;
+        std::list<KeyPoint::Holder>::iterator GetKpIter(size_t idx);
 
     protected:
         std::string m_strName;
-        std::vector<KeyPoint::Holder> m_aKeyPoints;
+        std::list<KeyPoint::Holder> m_aKeyPoints;
         CurveType m_eCurveType {Smooth};
         KeyPoint::ValType m_tMinVal;
         KeyPoint::ValType m_tMaxVal;
@@ -249,6 +255,8 @@ namespace ImNewCurve
         int EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCurveType, bool bNormalize) override;
         int EditPointByDim(ValueDimension eDim, size_t idx, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize) override;
         int ChangeCurveType(size_t idx, CurveType eCurveType) override;
+        KeyPoint::Holder RemovePoint(size_t idx) override;
+        KeyPoint::Holder RemovePoint(float t) override;
         float MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint, bool bNormalize) override;
         bool SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds) override;
         void SetVisible(bool bVisible) { m_bVisible = bVisible; }
@@ -262,7 +270,11 @@ namespace ImNewCurve
         void LoadFromJson(const imgui_json::value& j) override;
 
     private:
+        using ContourPointsTable = std::unordered_map<KeyPoint::Holder, std::vector<ImVec2>>;
+        std::unordered_map<ValueDimension, ContourPointsTable> m_aContourPoints;
+
         CurveUiObj(Editor* owner) : m_owner(owner) {}
+        void UpdateDimContourPoints(ValueDimension eDim, std::list<KeyPoint::Holder>::iterator itKp);
 
     private:
         Editor* m_owner;
@@ -277,9 +289,6 @@ namespace ImNewCurve
         bool m_bVisible {true};
         int64_t m_id {-1};
         int64_t m_subId {-1};
-
-        using ContourPointsTable = std::unordered_map<KeyPoint::Holder, std::vector<ImVec2>>;
-        std::unordered_map<ValueDimension, ContourPointsTable> m_aContourPoints;
     };
 
     class IMGUI_API Editor

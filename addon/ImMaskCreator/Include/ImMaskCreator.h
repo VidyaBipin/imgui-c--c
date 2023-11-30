@@ -8,7 +8,7 @@
 
 namespace ImGui
 {
-struct ContourPoint
+struct RoutePoint
 {
     virtual MatUtils::Point2f GetPos(int64_t t = 0) const = 0;
     virtual MatUtils::Point2f GetBezierGrabberOffset(int idx, int64_t t = 0) const = 0;
@@ -33,12 +33,12 @@ struct MaskCreator
     virtual std::string GetName() const = 0;
     virtual void SetName(const std::string& name) = 0;
     virtual bool DrawContent(const ImVec2& v2Pos, const ImVec2& v2ViewSize, bool bEditable = true, int64_t i64Tick = 0) = 0;
-    virtual bool DrawContourPointKeyFrames(int64_t& i64Tick, const ContourPoint* ptContourPoint = nullptr, uint32_t u32Width = 0) = 0;
+    virtual bool DrawContourPointKeyFrames(int64_t& i64Tick, const RoutePoint* ptContourPoint = nullptr, uint32_t u32Width = 0) = 0;
     virtual bool ChangeMaskSize(const MatUtils::Size2i& size, bool bScaleMask = false) = 0;
     virtual MatUtils::Size2i GetMaskSize() const = 0;
     virtual ImGui::ImMat GetMask(int iLineType, bool bFilled = true, ImDataType eDataType = IM_DT_INT8, double dMaskValue = 255, double dNonMaskValue = 0, int64_t i64Tick = 0) = 0;
-    virtual const ContourPoint* GetHoveredPoint() const = 0;
-    virtual const ContourPoint* GetSelectedPoint() const = 0;
+    virtual const RoutePoint* GetHoveredPoint() const = 0;
+    virtual const RoutePoint* GetSelectedPoint() const = 0;
     virtual ImVec4 GetContourContainBox() const = 0;
     virtual ImVec2 GetUiScale() const = 0;
     virtual bool IsKeyFrameEnabled() const = 0;

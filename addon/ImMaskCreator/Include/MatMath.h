@@ -9,7 +9,7 @@
 namespace MatUtils
 {
 template<template<class T, class Alloc = std::allocator<T>> class Container>
-bool CheckPointInsidePolygon(const ImVec2& ptPoint, Container<ImVec2> const& aPolyVertices)
+bool CheckPointInsidePolygon(const ImVec2& ptPoint, const Container<ImVec2>& aPolyVertices)
 {
     if (aPolyVertices.size() < 3)
         return false;
@@ -44,7 +44,42 @@ bool CheckPointInsidePolygon(const ImVec2& ptPoint, Container<ImVec2> const& aPo
 }
 
 template<template<class T, class Alloc = std::allocator<T>> class Container>
-ImVec2 CalcNearestPointOnPloygon(const ImVec2& ptPoint, Container<ImVec2> const& aPolyVertices, ImVec2* pv2VerticalSlope = nullptr, int* piLineIdx = nullptr, float* pfMinDist = nullptr)
+bool CheckPointInsidePolygon(const Point2f& ptPoint, const Container<Point2f>& aPolyVertices)
+{
+    if (aPolyVertices.size() < 3)
+        return false;
+
+    int crossNum = 0;
+    const auto& x = ptPoint.x;
+    const auto& y = ptPoint.y;
+    auto it0 = aPolyVertices.begin();
+    auto it1 = it0; it1++;
+    while (it0 != aPolyVertices.end())
+    {
+        const auto& x0 = it0->x < it1->x ? it0->x : it1->x;
+        const auto& x1 = it0->x < it1->x ? it1->x : it0->x;
+        const auto& y0 = it0->y < it1->y ? it0->y : it1->y;
+        const auto& y1 = it0->y < it1->y ? it1->y : it0->y;
+        if (y >= y0 && y < y1)
+        {
+            if (x <= x0)
+                crossNum++;
+            else if (x < x1)
+            {
+                const auto cx = (it1->x-it0->x)*(y-it0->y)/(it1->y-it0->y)+it0->x;
+                if (x <= cx)
+                    crossNum++;
+            }
+        }
+        it0++; it1++;
+        if (it1 == aPolyVertices.end())
+            it1 = aPolyVertices.begin();
+    }
+    return (crossNum&0x1) > 0;
+}
+
+template<template<class T, class Alloc = std::allocator<T>> class Container>
+ImVec2 CalcNearestPointOnPloygon(const ImVec2& ptPoint, const Container<ImVec2>& aPolyVertices, ImVec2* pv2VerticalSlope = nullptr, int* piLineIdx = nullptr, float* pfMinDist = nullptr)
 {
     if (aPolyVertices.size() < 3)
         return ptPoint;
