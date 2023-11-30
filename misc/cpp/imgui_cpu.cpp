@@ -4,7 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <vector>
-
+#include <setjmp.h>
+#include <signal.h>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -23,7 +24,7 @@
 #include <emscripten/threading.h>
 #endif
 
-#if defined _WIN32 && !(defined __MINGW32__)
+#if defined _WIN32 //&& !(defined __MINGW32__)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <powerbase.h>
@@ -43,8 +44,6 @@
 #include <stdint.h>
 #include <sys/syscall.h>
 #include <unistd.h>
-#include <setjmp.h>
-#include <signal.h>
 #endif
 
 #if __APPLE__
@@ -53,8 +52,6 @@
 #include <mach/thread_act.h>
 #include <sys/sysctl.h>
 #include <sys/types.h>
-#include <setjmp.h>
-#include <signal.h>
 #include "TargetConditionals.h"
 #if TARGET_OS_IPHONE
 #define __IOS__ 1
