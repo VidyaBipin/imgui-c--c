@@ -169,7 +169,7 @@ inline void rotationY(const float angle, float* m16)
     m16[15] = 1.0f;
 }
 
-static void EditTransform(float* cameraView, float* cameraProjection, float* matrix)
+static void EditTransform(float* cameraView, float* cameraProjection, float* matrix, bool boundingBox)
 {
     static ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::LOCAL);
     static bool useSnap = false;
@@ -178,6 +178,9 @@ static void EditTransform(float* cameraView, float* cameraProjection, float* mat
     static float boundsSnap[] = { 0.1f, 0.1f, 0.1f };
     static bool boundSizing = false;
     static bool boundSizingSnap = false;
+
+    ImVec4 _Min = ImVec4(-1.0f, -1.0f, -1.0f, 0.f);
+    ImVec4 _Max = ImVec4(1.0f, 1.0f, 1.0f, 0.f);
 
     ImVec2 window_size = ImGui::GetWindowSize();
     static float size_ctrl = 0.25 * window_size.x, size_zmo = 0.75 * window_size.x;
@@ -261,6 +264,16 @@ static void EditTransform(float* cameraView, float* cameraProjection, float* mat
         ImGuizmo::DrawCubes(cameraView, cameraProjection, &objectMatrix[0][0], gizmoCount);
         ImGuizmo::Manipulate(cameraView, cameraProjection, mCurrentGizmoOperation, mCurrentGizmoMode, matrix, NULL, useSnap ? &snap[0] : NULL, boundSizing ? bounds : NULL, boundSizingSnap ? boundsSnap : NULL);
         ImGuizmo::ViewManipulate(cameraView, camDistance, ImVec2(viewManipulateRight - 128, viewManipulateTop), ImVec2(128, 128), 0x10101010);
+
+        if (boundingBox)
+        {
+            ImGuizmo::DrawBoundingBox(
+                cameraView,
+                cameraProjection,
+                matrix,
+                (float*)&_Min,
+                (float*)&_Max);
+        }
         ImGui::PopStyleColor(1);
     }
     ImGui::EndChild();
@@ -282,8 +295,11 @@ void ShowImGuiZmoDemo()
     static bool isPerspective = true;
     static float fov = 27.f;
     static float viewWidth = 10.f; // for orthographic
+    static float viewHeight = viewWidth;
     static float camYAngle = 165.f / 180.f * 3.14159f;
     static float camXAngle = 32.f / 180.f * 3.14159f;
+
+    static bool boundingBox = false;
 
     static bool firstFrame = true;
     ImVec2 window_size = ImGui::GetWindowSize();
@@ -293,7 +309,7 @@ void ShowImGuiZmoDemo()
     }
     else
     {
-        float viewHeight = viewWidth * window_size.y / window_size.x;
+        viewHeight = viewWidth * window_size.y / window_size.x;
         OrthoGraphic(-viewWidth, viewWidth, -viewHeight, viewHeight, 1000.f, -1000.f, cameraProjection);
     }
     ImGuizmo::SetOrthographic(!isPerspective);
@@ -333,6 +349,7 @@ void ShowImGuiZmoDemo()
             LookAt(eye, at, up, cameraView);
             firstFrame = false;
         }
+        ImGui::Checkbox("Bounding Box", &boundingBox);
         ImGuiIO& io = ImGui::GetIO();
         ImGui::Text("X: %f Y: %f", io.MousePos.x, io.MousePos.y);
         if (ImGuizmo::IsUsing())
@@ -355,10 +372,12 @@ void ShowImGuiZmoDemo()
     for (int matId = 0; matId < gizmoCount; matId++)
     {
         ImGuizmo::SetID(matId);
-        EditTransform(cameraView, cameraProjection, objectMatrix[matId]);
+        EditTransform(cameraView, cameraProjection, objectMatrix[matId], boundingBox);
         ImGui::Separator();
     }
 
     ImGui::EndChild();
+
+
 }
 } // namespace IMGUIZMO_NAMESPACE

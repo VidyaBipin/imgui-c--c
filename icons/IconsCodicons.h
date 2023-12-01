@@ -8,8 +8,8 @@ extern const char Code_compressed_data_base85[];
 #define FONT_ICON_FILE_NAME_CI "codicon.ttf"
 
 #define ICON_MIN_CI 0xea60
-#define ICON_MAX_16_CI 0xec1e
-#define ICON_MAX_CI 0xec1e
+#define ICON_MAX_16_CI 0xec23
+#define ICON_MAX_CI 0xec23
 #define ICON_CI_ADD "\xee\xa9\xa0"	// U+ea60
 #define ICON_CI_PLUS "\xee\xa9\xa0"	// U+ea60
 #define ICON_CI_GIST_NEW "\xee\xa9\xa0"	// U+ea60
@@ -550,3 +550,8 @@ extern const char Code_compressed_data_base85[];
 #define ICON_CI_MIC_FILLED "\xee\xb0\x9c"	// U+ec1c
 #define ICON_CI_GIT_FETCH "\xee\xb0\x9d"	// U+ec1d
 #define ICON_CI_COPILOT "\xee\xb0\x9e"	// U+ec1e
+#define ICON_CI_LIGHTBULB_SPARKLE "\xee\xb0\x9f"	// U+ec1f
+#define ICON_CI_ROBOT "\xee\xb0\xa0"	// U+ec20
+#define ICON_CI_SPARKLE_FILLED "\xee\xb0\xa1"	// U+ec21
+#define ICON_CI_DIFF_SINGLE "\xee\xb0\xa2"	// U+ec22
+#define ICON_CI_DIFF_MULTIPLE "\xee\xb0\xa3"	// U+ec23

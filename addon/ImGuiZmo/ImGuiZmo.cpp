@@ -2993,4 +2993,97 @@ namespace IMGUIZMO_NAMESPACE
       // restore view/projection because it was used to compute ray
       ComputeContext(svgView.m16, svgProjection.m16, gContext.mModelSource.m16, gContext.mMode);
    }
+
+   void DrawBoundingBox(
+      const float *_View,
+      const float *_Projection,
+      const float *_Matrix,
+      const float *_Min,
+      const float *_Max)
+   {
+      matrix_t viewProjection = *(matrix_t *)_View * *(matrix_t *)_Projection;
+      vec_t frustum[6];
+      ComputeFrustumPlanes(frustum, viewProjection.m16);
+      matrix_t res = *(matrix_t *)_Matrix * viewProjection;
+
+      float thickness = 2.f;
+      ImU32 col = IM_COL32(0xE2, 0x52, 0x52, 0xFF);
+
+      vec_t camSpacePosition;
+      camSpacePosition.TransformPoint(makeVect(0.f, 0.f, 0.f), gContext.mMVP);
+      if (!gContext.mIsOrthographic && camSpacePosition.z < 1.5f)
+         return;
+
+      {
+         vec_t ptA = makeVect(_Min[0], _Min[1], _Min[2]);
+         vec_t ptB = makeVect(_Max[0], _Min[1], _Min[2]);
+         gContext.mDrawList->AddLine(worldToPos(ptA, res), worldToPos(ptB, res), col, thickness);
+      }
+
+      {
+         vec_t ptA = makeVect(_Min[0], _Min[1], _Min[2]);
+         vec_t ptB = makeVect(_Min[0], _Max[1], _Min[2]);
+         gContext.mDrawList->AddLine(worldToPos(ptA, res), worldToPos(ptB, res), col, thickness);
+      }
+
+      {
+         vec_t ptA = makeVect(_Min[0], _Min[1], _Min[2]);
+         vec_t ptB = makeVect(_Min[0], _Min[1], _Max[2]);
+         gContext.mDrawList->AddLine(worldToPos(ptA, res), worldToPos(ptB, res), col, thickness);
+      }
+
+      {
+         vec_t ptA = makeVect(_Min[0], _Max[1], _Min[2]);
+         vec_t ptB = makeVect(_Max[0], _Max[1], _Min[2]);
+         gContext.mDrawList->AddLine(worldToPos(ptA, res), worldToPos(ptB, res), col, thickness);
+      }
+
+      {
+         vec_t ptA = makeVect(_Max[0], _Max[1], _Min[2]);
+         vec_t ptB = makeVect(_Max[0], _Min[1], _Min[2]);
+         gContext.mDrawList->AddLine(worldToPos(ptA, res), worldToPos(ptB, res), col, thickness);
+      }
+
+      {
+         vec_t ptA = makeVect(_Max[0], _Min[1], _Min[2]);
+         vec_t ptB = makeVect(_Max[0], _Min[1], _Max[2]);
+         gContext.mDrawList->AddLine(worldToPos(ptA, res), worldToPos(ptB, res), col, thickness);
+      }
+
+      {
+         vec_t ptA = makeVect(_Max[0], _Max[1], _Min[2]);
+         vec_t ptB = makeVect(_Max[0], _Max[1], _Max[2]);
+         gContext.mDrawList->AddLine(worldToPos(ptA, res), worldToPos(ptB, res), col, thickness);
+      }
+
+      {
+         vec_t ptA = makeVect(_Min[0], _Max[1], _Min[2]);
+         vec_t ptB = makeVect(_Min[0], _Max[1], _Max[2]);
+         gContext.mDrawList->AddLine(worldToPos(ptA, res), worldToPos(ptB, res), col, thickness);
+      }
+
+      {
+         vec_t ptA = makeVect(_Min[0], _Max[1], _Max[2]);
+         vec_t ptB = makeVect(_Max[0], _Max[1], _Max[2]);
+         gContext.mDrawList->AddLine(worldToPos(ptA, res), worldToPos(ptB, res), col, thickness);
+      }
+
+      {
+         vec_t ptA = makeVect(_Min[0], _Max[1], _Max[2]);
+         vec_t ptB = makeVect(_Min[0], _Min[1], _Max[2]);
+         gContext.mDrawList->AddLine(worldToPos(ptA, res), worldToPos(ptB, res), col, thickness);
+      }
+
+      {
+         vec_t ptA = makeVect(_Min[0], _Min[1], _Max[2]);
+         vec_t ptB = makeVect(_Max[0], _Min[1], _Max[2]);
+         gContext.mDrawList->AddLine(worldToPos(ptA, res), worldToPos(ptB, res), col, thickness);
+      }
+
+      {
+         vec_t ptA = makeVect(_Max[0], _Max[1], _Max[2]);
+         vec_t ptB = makeVect(_Max[0], _Min[1], _Max[2]);
+         gContext.mDrawList->AddLine(worldToPos(ptA, res), worldToPos(ptB, res), col, thickness);
+      }
+   }
 };

@@ -121,6 +121,13 @@ namespace IMGUIZMO_NAMESPACE
    	// Configure the limit where planes are hiden
    	IMGUI_API void SetPlaneLimit(float value);
 
+    IMGUI_API void DrawBoundingBox(
+        const float* _View,
+        const float* _Projection,
+        const float* _Matrix,
+        const float* _Min,
+        const float* _Max);
+
     enum COLOR
     {
         DIRECTION_X,      // directionColor[0]

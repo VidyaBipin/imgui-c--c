@@ -10592,6 +10592,7 @@ void ImGui::ShowDigitalTimeDuration(ImDrawList *draw_list, int64_t millisec, int
     ImGui::PopStyleVar();
 }
 
+// Rainbow Text
 void ImGui::RainbowText(const char* text)
 {
     ImVec4 rainbowColors[] = {
@@ -10619,3 +10620,4 @@ void ImGui::RainbowText(const char* text)
 
     ImGui::TextColored(lerpedColor, "%s", text);
 }
+
