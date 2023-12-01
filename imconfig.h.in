@@ -150,13 +150,28 @@
     bool operator==(const ImVec2& d) const          { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8; } \
     bool operator==(const ImVec2& d)                { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8; } \
     bool operator!=(const ImVec2& d) const          { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; } \
-    bool operator!=(const ImVec2& d)                { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; }
+    bool operator!=(const ImVec2& d)                { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; } \
+    float cross(const ImVec2& d)                    { return (x * d.y) - (y * d.x); }
 
 #define IM_VEC4_CLASS_EXTRA \
     bool operator==(const ImVec4& d) const          { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8 && fabs(w - d.w) < 10e-8; } \
     bool operator==(const ImVec4& d)                { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8 && fabs(w - d.w) < 10e-8; } \
     bool operator!=(const ImVec4& d) const          { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8 || fabs(w - d.w) > 10e-8; } \
-    bool operator!=(const ImVec4& d)                { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8 || fabs(w - d.w) > 10e-8; }
+    bool operator!=(const ImVec4& d)                { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8 || fabs(w - d.w) > 10e-8; } \
+    ImVec3 rotate(const ImVec3& dir)                { \
+        float ps = -x * dir.x - y * dir.y - z * dir.z; \
+        float px = w * dir.x + y * dir.z - z * dir.y; \
+        float py = w * dir.y + z * dir.x - x * dir.z; \
+        float pz = w * dir.z + x * dir.y - y * dir.x; \
+        return ImVec3(-ps * x + px * w - py * z + pz * y, -ps * y + py * w - pz * x + px * z, -ps * z + pz * w - px * y + py * x); } \
+    ImVec4 mult(const ImVec4& d)                    { \
+        ImVec4 out;                                        \
+        out.x = w * d.x + x * d.w + y * d.z - z * d.y; \
+        out.y = w * d.y + y * d.w + z * d.x - x * d.z; \
+        out.z = w * d.z + z * d.w + x * d.y - y * d.x; \
+        out.w = w * d.w - (x * d.x + y * d.y + z * d.z); \
+        return out;} \
+
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 

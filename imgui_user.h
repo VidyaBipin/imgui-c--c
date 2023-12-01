@@ -13,6 +13,9 @@
 #include "stb_image_resize.h"
 #endif
 
+inline float ImDegToRad(float degree) { return degree * (float(M_PI) / 180.0f); }
+inline float ImRadToDeg(float radian) { return radian * (180.0f / float(M_PI)); }
+
 namespace ImGui
 {
 IMGUI_API void GetVersion(int& major, int& minor, int& patch, int& build);

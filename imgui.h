@@ -273,6 +273,27 @@ struct ImVec2
 #endif
 };
 
+// add by Dicky
+// A Vec3, Matrix 3x3, Dot & Cross products, A Quaternion.  Some helper functions, bare minimum
+struct ImVec3
+{
+    float x, y, z;
+    ImVec3() { x = y = z = 0.0f; }
+    ImVec3(float _x, float _y, float _z) { x = _x; y = _y; z = _z; }
+
+    ImVec3 RotY() const { return ImVec3(-z, y, x); }
+    ImVec3 RotZ() const { return ImVec3(-y, x, z); }
+    ImVec3 Cross(const ImVec3& b) const { return ImVec3(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x); }
+    float Dot(const ImVec3& b) const { return x * b.x + y * b.y + z * b.z; }
+    ImVec3 Mult(float val) const { return ImVec3(x * val, y * val, z * val); }
+    ImVec3 Div(float val) const { return ImVec3(x / val, y / val, z / val); }
+    float Length() const { return (float)sqrt(x * x + y * y + z * z); }
+#ifdef IM_VEC3_CLASS_EXTRA          // Define constructor and implicit cast operators in imconfig.h to convert back<>forth from your math types and ImVec2.
+    IM_VEC3_CLASS_EXTRA
+#endif
+};
+// add by Dicky end
+
 // ImVec4: 4D vector used to store clipping rectangles, colors etc. [Compile-time configurable type]
 struct ImVec4
 {
@@ -283,6 +304,43 @@ struct ImVec4
     IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec4.
 #endif
 };
+
+// add by Dicky
+// Matrix used to allow user to specify axis orientation
+struct ImMat3x3
+{
+    float m[3][3];
+    ImMat3x3()
+    {
+        // init eye
+        for (int x = 0; x < 3; x++)
+        {
+            for (int y = 0; y < 3; y++)
+            {
+                m[y][x] = (x == y) ? 1.0f : 0.0f;
+            }
+        }
+    }
+
+    ImVec3 Transform(const ImVec3& vec)
+    {
+        ImVec3 out;
+        out.x = m[0][0] * vec.x + m[1][0] * vec.y + m[2][0] * vec.z;
+        out.y = m[0][1] * vec.x + m[1][1] * vec.y + m[2][1] * vec.z;
+        out.z = m[0][2] * vec.x + m[1][2] * vec.y + m[2][2] * vec.z;
+        return out;
+    }
+
+    ImVec3 TransformInv(const ImVec3& vec)
+    {
+        ImVec3 out;
+        out.x = m[0][0] * vec.x + m[0][1] * vec.y + m[0][2] * vec.z;
+        out.y = m[1][0] * vec.x + m[1][1] * vec.y + m[1][2] * vec.z;
+        out.z = m[2][0] * vec.x + m[2][1] * vec.y + m[2][2] * vec.z;
+        return out;
+    }
+};
+// add by Dicky end
 IM_MSVC_RUNTIME_CHECKS_RESTORE
 
 //-----------------------------------------------------------------------------

@@ -1280,6 +1280,20 @@ set(IMGUI_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImCoolbar
 )
 
+# 3D orient widget
+set(IMGUI_SRC
+    ${IMGUI_SRC}
+    addon/Orient/imgui_orient.cpp
+)
+set(IMGUI_INCS
+    ${IMGUI_INCS}
+    addon/Orient/imgui_orient.h
+)
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/Orient
+)
+
 # ZLib
 if(ZLIB_FOUND)
     add_definitions(-DIMGUI_USE_ZLIB)

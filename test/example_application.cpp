@@ -23,6 +23,7 @@
 #include <imgui_toggle.h>
 #include <imgui_tex_inspect.h>
 #include <ImCoolbar.h>
+#include <imgui_orient.h>
 #include <portable-file-dialogs.h>
 #include <imgui_cpu.h>
 
@@ -329,6 +330,7 @@ public:
     bool show_tex_inspect_window = false;
     bool show_portable_file_dialogs = false;
     bool show_coolbar_window = false;
+    bool show_orient_widget = false;
 public:
     void DrawLineDemo();
     void WarpMatrixDemo();
@@ -813,6 +815,7 @@ bool Example_Frame(void* handle, bool app_will_quit)
         ImGui::Checkbox("Toggle Demo Window", &example->show_toggle_window);
         ImGui::Checkbox("TexInspect Window", &example->show_tex_inspect_window);
         ImGui::Checkbox("Coolbar Window", &example->show_coolbar_window);
+        ImGui::Checkbox("3D Orient Widget", &example->show_orient_widget);
 
 #if IMGUI_VULKAN_SHADER
         ImGui::Checkbox("Show Vulkan Shader Test Window", &example->show_shader_window);
@@ -1167,6 +1170,21 @@ bool Example_Frame(void* handle, bool app_will_quit)
     if (example->show_coolbar_window)
     {
         Show_Coolbar_demo_window();
+    }
+
+    // Show 3D orient widget
+    if (example->show_orient_widget)
+    {
+        ImGui::SetNextWindowSize(ImVec2(400, 800), ImGuiCond_FirstUseEver);
+        ImGui::Begin("##orient", &example->show_orient_widget, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar);
+        static ImVec3 dir;
+        static ImVec3 axis;
+        static ImVec4 quat;
+        static float angle;
+        ImGui::QuaternionGizmo("Quaternion", quat);
+        ImGui::AxisAngleGizmo("Axis Angle", axis, angle);
+        ImGui::DirectionGizmo("Direction", dir);
+        ImGui::End();
     }
 
 #if IMGUI_VULKAN_SHADER
