@@ -711,20 +711,18 @@ public:
             pDrawList->AddCircleFilled(v2TickPos, fKeyFrameIndicatorRadius+2, u32KeyFrameIndicatorBorderHoverColor);
             pDrawList->AddCircleFilled(v2TickPos, fKeyFrameIndicatorRadius, u32KeyFrameIndicatorHoverColor);
         }
+        
+        const bool bRemoveKeyDown = IsKeyDown(m_eRemoveVertexKey);
         // handle click event on a key-frame indicator
         if (IsMouseClicked(ImGuiMouseButton_Left) && bHasHoveredTick)
         {
-            if (IsKeyDown(m_eRemoveVertexKey) && i64Tick != prTickRange.first)
-            {
-                {
-                    lock_guard<mutex> _lk(m_mtxRouteLock);
-                    for (auto& cp : m_aRoutePointsForUi)
-                    {
-                        for (auto i = 0; i < 3; i++)
-                            cp.m_ahCurves[i]->RemovePoint((float)i64Tick);
-                    }
-                }
-                m_bRouteNeedSync = true;
+            if (bRemoveKeyDown && i64HoveredTick != prTickRange.first)
+            {  // remove a key point
+                lock_guard<mutex> _lk(m_mtxRouteLock);
+                for (auto& cp : m_aRoutePointsForUi)
+                    cp.RemoveKeyPoint(-1, (float)i64HoveredTick);
+                m_i64PrevUiTick = INT64_MIN;
+                m_bRouteChanged = true;
             }
             else
             {
@@ -757,7 +755,7 @@ public:
         SetCursorScreenPos(ImVec2(v2ViewPos.x, v2ViewPos.y+v2ViewSize.y));
 
         const bool bMouseInView = bb.Contains(v2MousePosAbs);
-        if (IsKeyDown(m_eRemoveVertexKey) && bMouseInView && i64Tick != prTickRange.first)
+        if (bRemoveKeyDown && bMouseInView && i64Tick != prTickRange.first)
             SetMouseCursor(ImGuiMouseCursor_Minus);
 
         return true;
@@ -1200,6 +1198,23 @@ private:
             });
             if (itCheck == m_aKpTicks.end() || *itCheck > t)
                 m_aKpTicks.insert(itCheck, t);
+            return true;
+        }
+
+        bool RemoveKeyPoint(int iCurveIdx, float t)
+        {
+            if (iCurveIdx >= 3)
+                return false;
+            if (iCurveIdx < 0)
+            {
+                for (auto i = 0; i < 3; i++)
+                    m_ahCurves[i]->RemovePoint(t);
+            }
+            else
+            {
+                m_ahCurves[iCurveIdx]->RemovePoint(t);
+            }
+            m_aKpTicks.remove(t);
             return true;
         }
 
