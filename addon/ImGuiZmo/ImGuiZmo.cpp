@@ -123,12 +123,12 @@ namespace IMGUIZMO_NAMESPACE
       m16[15] = 0.0;
    }
 
-   void Perspective(float fovyInDegrees, float aspectRatio, float znear, float zfar, float* m16)
+   void Perspective(float fovyInDegrees, float aspectRatio, float znear, float zfar, float* m16, float x_shift, float y_shift)
    {
       float ymax, xmax;
       ymax = znear * tanf(fovyInDegrees * DEG2RAD);
       xmax = ymax * aspectRatio;
-      Frustum(-xmax, xmax, -ymax, ymax, znear, zfar, m16);
+      Frustum(-xmax + x_shift, xmax + x_shift, -ymax + y_shift, ymax + y_shift, znear, zfar, m16);
    }
 
    void Cross(const float* a, const float* b, float* r)

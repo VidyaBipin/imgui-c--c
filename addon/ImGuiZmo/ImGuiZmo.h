@@ -96,7 +96,7 @@ namespace IMGUIZMO_NAMESPACE
 
     // Utils
     IMGUI_API void Frustum(float left, float right, float bottom, float top, float znear, float zfar, float* m16);
-    IMGUI_API void Perspective(float fovyInDegrees, float aspectRatio, float znear, float zfar, float* m16);
+    IMGUI_API void Perspective(float fovyInDegrees, float aspectRatio, float znear, float zfar, float* m16, float x_shift = 0.f, float y_shift = 0.f);
     IMGUI_API void Cross(const float* a, const float* b, float* r);
     IMGUI_API float Dot(const float* a, const float* b);
     IMGUI_API void Normalize(const float* a, float* r);
