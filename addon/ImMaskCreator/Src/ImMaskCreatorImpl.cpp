@@ -65,11 +65,17 @@ public:
             m_bRouteChanged = true;
 
         // reactions
-        const auto mousePosAbs = GetMousePos();
+        const auto v2MousePosAbs = GetMousePos();
         const auto& origin = m_rWorkArea.Min;
-        const auto temp = mousePosAbs-origin;
-        const ImVec2 mousePos(temp.x/m_v2UiScale.x, temp.y/m_v2UiScale.y);
-        const bool bMouseInWorkArea = m_rWorkArea.Contains(mousePosAbs);
+        const auto temp = v2MousePosAbs-origin;
+        const ImVec2 v2MousePos(temp.x/m_v2UiScale.x, temp.y/m_v2UiScale.y);
+        const bool bMouseInWorkArea = m_rWorkArea.Contains(v2MousePosAbs);
+        const bool bRemoveKeyDown = IsKeyDown(m_eRemoveVertexKey);
+        const bool bInsertKeyDown = IsKeyDown(m_eInsertVertexKey);
+        const bool bScaleKeyDown = IsKeyDown(m_eScaleContourKey);
+        const bool bIsMouseClicked = IsMouseClicked(ImGuiMouseButton_Left);
+        const bool bIsMouseDown = IsMouseDown(ImGuiMouseButton_Left);
+        const bool bIsMouseDragging = IsMouseDragging(ImGuiMouseButton_Left);
         bool bMorphChanged = false;
         if (bEditable)
         {
@@ -80,7 +86,7 @@ public:
                 while (iter != m_aRoutePointsForUi.end())
                 {
                     auto& v = *iter;
-                    if (v.CheckGrabberHovering(mousePos))
+                    if (v.CheckGrabberHovering(v2MousePos))
                         break;
                     iter++;
                 }
@@ -94,7 +100,7 @@ public:
                 }
                 if ((!HasHoveredVertex() || HasHoveredContour()) && IsMorphCtrlShown())
                 {
-                    if (m_tMorphCtrl.CheckHovering(mousePos))
+                    if (m_tMorphCtrl.CheckHovering(v2MousePos))
                     {
                         if (HasHoveredContour())
                         {
@@ -109,7 +115,7 @@ public:
                     while (iter != m_aRoutePointsForUi.end())
                     {
                         auto& v = *iter;
-                        if (v.CheckContourHovering(mousePos))
+                        if (v.CheckContourHovering(v2MousePos))
                             break;
                         iter++;
                     }
@@ -118,17 +124,51 @@ public:
                 }
             }
 
-            const bool bRemoveKeyDown = IsKeyDown(m_eRemoveVertexKey);
-            if (bRemoveKeyDown && bMouseInWorkArea)
-                SetMouseCursor(ImGuiMouseCursor_Minus);
+            // set mouse cursor
+            if (bMouseInWorkArea)
+            {
+                if (m_bInScaleMode && !bScaleKeyDown)
+                    m_bInScaleMode = false;
+
+                if (m_bInScaleMode)
+                    SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+                else if (!bIsMouseDragging && bRemoveKeyDown)
+                    SetMouseCursor(ImGuiMouseCursor_Minus);
+                else if (HasHoveredVertex() && m_itHoveredVertex->m_iHoverType == 4)
+                {
+                    if (!bIsMouseDragging && bInsertKeyDown)
+                        SetMouseCursor(ImGuiMouseCursor_Add);
+                    else if (!bIsMouseDown && bScaleKeyDown)
+                    {
+                        m_bInScaleMode = true;
+                        SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+                    }
+                    else
+                        SetMouseCursor(ImGuiMouseCursor_ResizeAll);
+                }
+            }
 
             lock_guard<mutex> _lk(m_mtxRouteLock);
-            if (bMouseInWorkArea && IsMouseClicked(ImGuiMouseButton_Left))
+            if (m_bInScaleMode)
+            {
+                const auto fMouseWheel = GetIO().MouseWheel;
+                if (fMouseWheel < -FLT_EPSILON)
+                {
+                    ScaleRoute(0.95);
+                    m_bRouteChanged = true;
+                }
+                else if (fMouseWheel > FLT_EPSILON)
+                {
+                    ScaleRoute(1.05);
+                    m_bRouteChanged = true;
+                }
+            }
+            else if (bMouseInWorkArea && bIsMouseClicked)
             {
                 if (!bRemoveKeyDown && !HasHoveredVertex() && !m_bRouteCompleted)
                 {
                     // add new vertex to the end of vertex list
-                    m_aRoutePointsForUi.push_back({this, mousePos});
+                    m_aRoutePointsForUi.push_back({this, v2MousePos});
                     auto iter = m_aRoutePointsForUi.end();
                     iter--;
                     m_itHoveredVertex = iter;
@@ -187,14 +227,21 @@ public:
                     }
                     else if (m_itHoveredVertex->m_iHoverType == 4)
                     {
-                        // insert new vertex on the contour
-                        bool bNeedUpdateMorphCtrlIter = m_itHoveredVertex == m_itMorphCtrlVt;
-                        m_itHoveredVertex = m_aRoutePointsForUi.insert(m_itHoveredVertex, {this, m_itHoveredVertex->m_v2HoverPointOnContour});
-                        if (bNeedUpdateMorphCtrlIter) m_itMorphCtrlVt = m_itHoveredVertex;
-                        m_itHoveredVertex->UpdateGrabberContainBox();
-                        SelectVertex(m_itHoveredVertex);
-                        UpdateEdgeVertices(m_aRoutePointsForUi, m_itHoveredVertex);
-                        m_bRouteChanged = true;
+                        if (bInsertKeyDown)
+                        {
+                            // insert new vertex on the contour
+                            bool bNeedUpdateMorphCtrlIter = m_itHoveredVertex == m_itMorphCtrlVt;
+                            m_itHoveredVertex = m_aRoutePointsForUi.insert(m_itHoveredVertex, {this, m_itHoveredVertex->m_v2HoverPointOnContour});
+                            if (bNeedUpdateMorphCtrlIter) m_itMorphCtrlVt = m_itHoveredVertex;
+                            m_itHoveredVertex->UpdateGrabberContainBox();
+                            SelectVertex(m_itHoveredVertex);
+                            UpdateEdgeVertices(m_aRoutePointsForUi, m_itHoveredVertex);
+                            m_bRouteChanged = true;
+                        }
+                        else
+                        {
+                            m_itHoveredVertex->m_v2MoveOriginMousePos = v2MousePos;
+                        }
                     }
                     else
                     {
@@ -202,143 +249,156 @@ public:
                     }
                 }
             }
-            if (IsMouseDragging(ImGuiMouseButton_Left))
+            if (bIsMouseDragging)
             {
                 if (HasHoveredVertex())
                 {
                     ImGui::SetNextFrameWantCaptureMouse(true);
-                    if (m_itHoveredVertex->m_bJustAdded || !m_itHoveredVertex->m_bEnableBezier && IsKeyDown(m_eEnableBezierKey))
+                    if (m_itHoveredVertex->m_iHoverType < 4)
                     {
-                        // enable bezier curve
-                        m_itHoveredVertex->m_bEnableBezier = true;
-                        m_itHoveredVertex->m_iHoverType = 2;
-                    }
-                    bool bNeedUpdateContour = false;
-                    const auto v2CpPos = m_bKeyFrameEnabled ? MatUtils::ToImVec2(m_itHoveredVertex->m_ptCurrPos) : m_itHoveredVertex->m_v2Pos;
-                    const auto v2Grabber0Offset = m_bKeyFrameEnabled ? MatUtils::ToImVec2(m_itHoveredVertex->m_ptCurrGrabber0Offset) : m_itHoveredVertex->m_v2Grabber0Offset;
-                    const auto v2Grabber1Offset = m_bKeyFrameEnabled ? MatUtils::ToImVec2(m_itHoveredVertex->m_ptCurrGrabber1Offset) : m_itHoveredVertex->m_v2Grabber1Offset;
-                    const auto coordOff = mousePos-v2CpPos;
-                    // cout << "---> iHoverType = " << m_itHoveredVertex->m_iHoverType << endl;
-                    if (m_itHoveredVertex->m_bFirstDrag && m_itHoveredVertex->m_bEnableBezier && m_itHoveredVertex->m_v2Grabber1Offset != coordOff)
-                    {
-                        // 1st-time dragging bezier grabber, change both the grabbers
-                        m_itHoveredVertex->m_v2Grabber0Offset = -coordOff;
-                        m_itHoveredVertex->m_v2Grabber1Offset = coordOff;
-                        if (m_bKeyFrameEnabled)
+                        if (m_itHoveredVertex->m_bJustAdded || !m_itHoveredVertex->m_bEnableBezier && IsKeyDown(m_eEnableBezierKey))
                         {
-                            m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::FromImVec2<float>(-coordOff);
-                            m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::FromImVec2<float>(coordOff);
-                            ImNewCurve::KeyPoint::ValType tKpVal(-coordOff.x, -coordOff.y, 0, 0);
-                            auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                            m_itHoveredVertex->AddKeyPoint(1, hKp, false);
-                            if (i64Tick > 0)
+                            // enable bezier curve
+                            m_itHoveredVertex->m_bEnableBezier = true;
+                            m_itHoveredVertex->m_iHoverType = 2;
+                        }
+                        bool bNeedUpdateContour = false;
+                        const auto v2CpPos = m_bKeyFrameEnabled ? MatUtils::ToImVec2(m_itHoveredVertex->m_ptCurrPos) : m_itHoveredVertex->m_v2Pos;
+                        const auto v2Grabber0Offset = m_bKeyFrameEnabled ? MatUtils::ToImVec2(m_itHoveredVertex->m_ptCurrGrabber0Offset) : m_itHoveredVertex->m_v2Grabber0Offset;
+                        const auto v2Grabber1Offset = m_bKeyFrameEnabled ? MatUtils::ToImVec2(m_itHoveredVertex->m_ptCurrGrabber1Offset) : m_itHoveredVertex->m_v2Grabber1Offset;
+                        const auto coordOff = v2MousePos-v2CpPos;
+                        // cout << "---> iHoverType = " << m_itHoveredVertex->m_iHoverType << endl;
+                        if (m_itHoveredVertex->m_bFirstDrag && m_itHoveredVertex->m_bEnableBezier && m_itHoveredVertex->m_v2Grabber1Offset != coordOff)
+                        {
+                            // 1st-time dragging bezier grabber, change both the grabbers
+                            m_itHoveredVertex->m_v2Grabber0Offset = -coordOff;
+                            m_itHoveredVertex->m_v2Grabber1Offset = coordOff;
+                            if (m_bKeyFrameEnabled)
                             {
-                                tKpVal.w = i64Tick;
+                                m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::FromImVec2<float>(-coordOff);
+                                m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::FromImVec2<float>(coordOff);
+                                ImNewCurve::KeyPoint::ValType tKpVal(-coordOff.x, -coordOff.y, 0, 0);
                                 auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
                                 m_itHoveredVertex->AddKeyPoint(1, hKp, false);
+                                if (i64Tick > 0)
+                                {
+                                    tKpVal.w = i64Tick;
+                                    auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                    m_itHoveredVertex->AddKeyPoint(1, hKp, false);
+                                }
+                                tKpVal.x = coordOff.x; tKpVal.y = coordOff.y; tKpVal.w = 0;
+                                hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                m_itHoveredVertex->AddKeyPoint(2, hKp, false);
+                                if (i64Tick > 0)
+                                {
+                                    tKpVal.w = i64Tick;
+                                    auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                    m_itHoveredVertex->AddKeyPoint(2, hKp, false);
+                                }
                             }
-                            tKpVal.x = coordOff.x; tKpVal.y = coordOff.y; tKpVal.w = 0;
-                            hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                            m_itHoveredVertex->AddKeyPoint(2, hKp, false);
-                            if (i64Tick > 0)
+                            bNeedUpdateContour = true;
+                        }
+                        else if (m_itHoveredVertex->m_iHoverType == 0 && bMouseInWorkArea && m_itHoveredVertex->m_v2Pos != v2MousePos)
+                        {
+                            // moving the vertex
+                            if (!m_bKeyFrameEnabled || i64Tick <= 0)
+                                m_itHoveredVertex->m_v2Pos = v2MousePos;
+                            if (m_bKeyFrameEnabled)
                             {
-                                tKpVal.w = i64Tick;
+                                const ImNewCurve::KeyPoint::ValType tKpVal(v2MousePos.x, v2MousePos.y, 0, i64Tick);
+                                auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                m_itHoveredVertex->AddKeyPoint(0, hKp, false);
+                                m_itHoveredVertex->m_ptCurrPos = MatUtils::FromImVec2<float>(v2MousePos);
+                                // const auto log1 = m_itHoveredVertex->m_ahCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
+                                // const auto log2 = m_itHoveredVertex->m_ahCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                                // cout << "Pos X:" << log1 << ", Y:" << log2 << endl;
+                            }
+                            bNeedUpdateContour = true;
+                        }
+                        else if (m_itHoveredVertex->m_iHoverType == 1 && m_itHoveredVertex->m_v2Grabber0Offset != coordOff)
+                        {
+                            // moving bezier grabber0
+                            if (!m_bKeyFrameEnabled || i64Tick <= 0)
+                            {
+                                m_itHoveredVertex->m_v2Grabber0Offset = coordOff;
+                                auto c0sqr = coordOff.x*coordOff.x+coordOff.y*coordOff.y;
+                                auto& coordOff1 = m_itHoveredVertex->m_v2Grabber1Offset;
+                                auto c1sqr = coordOff1.x*coordOff1.x+coordOff1.y*coordOff1.y;
+                                auto ratio = sqrt(c1sqr/c0sqr);
+                                coordOff1.x = -coordOff.x*ratio;
+                                coordOff1.y = -coordOff.y*ratio;
+                            }
+                            if (m_bKeyFrameEnabled)
+                            {
+                                ImNewCurve::KeyPoint::ValType tKpVal(coordOff.x, coordOff.y, 0, i64Tick);
+                                auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                m_itHoveredVertex->AddKeyPoint(1, hKp, false);
+                                m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::FromImVec2<float>(coordOff);
+                                auto c0sqr = coordOff.x*coordOff.x+coordOff.y*coordOff.y;
+                                const auto& coordOff1 = m_itHoveredVertex->m_ptCurrGrabber1Offset;
+                                auto c1sqr = coordOff1.x*coordOff1.x+coordOff1.y*coordOff1.y;
+                                auto ratio = sqrt(c1sqr/c0sqr);
+                                tKpVal.x = -coordOff.x*ratio;
+                                tKpVal.y = -coordOff.y*ratio;
+                                hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                m_itHoveredVertex->AddKeyPoint(2, hKp, false);
+                                m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::Point2f(tKpVal.x, tKpVal.y);
+                                // const auto log1 = m_itHoveredVertex->m_ahCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
+                                // const auto log2 = m_itHoveredVertex->m_ahCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                                // cout << "G0 X:" << log1 << ", Y:" << log2 << endl;
+                            }
+                            bNeedUpdateContour = true;
+                        }
+                        else if (m_itHoveredVertex->m_iHoverType == 2 && m_itHoveredVertex->m_v2Grabber1Offset != coordOff)
+                        {
+                            // moving bezier grabber1
+                            if (!m_bKeyFrameEnabled || i64Tick <= 0)
+                            {
+                                m_itHoveredVertex->m_v2Grabber1Offset = coordOff;
+                                auto c1sqr = coordOff.x*coordOff.x+coordOff.y*coordOff.y;
+                                auto& coordOff0 = m_itHoveredVertex->m_v2Grabber0Offset;
+                                auto c0sqr = coordOff0.x*coordOff0.x+coordOff0.y*coordOff0.y;
+                                auto ratio = sqrt(c0sqr/c1sqr);
+                                coordOff0.x = -coordOff.x*ratio;
+                                coordOff0.y = -coordOff.y*ratio;
+                            }
+                            if (m_bKeyFrameEnabled)
+                            {
+                                ImNewCurve::KeyPoint::ValType tKpVal(coordOff.x, coordOff.y, 0, i64Tick);
                                 auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
                                 m_itHoveredVertex->AddKeyPoint(2, hKp, false);
+                                m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::FromImVec2<float>(coordOff);
+                                auto c1sqr = coordOff.x*coordOff.x+coordOff.y*coordOff.y;
+                                const auto& coordOff0 = m_itHoveredVertex->m_ptCurrGrabber0Offset;
+                                auto c0sqr = coordOff0.x*coordOff0.x+coordOff0.y*coordOff0.y;
+                                auto ratio = sqrt(c0sqr/c1sqr);
+                                tKpVal.x = -coordOff.x*ratio;
+                                tKpVal.y = -coordOff.y*ratio;
+                                hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                m_itHoveredVertex->AddKeyPoint(1, hKp, false);
+                                m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::Point2f(tKpVal.x, tKpVal.y);
+                                // const auto log1 = m_itHoveredVertex->m_ahCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
+                                // const auto log2 = m_itHoveredVertex->m_ahCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                                // cout << "G1 X:" << log1 << ", Y:" << log2 << endl;
                             }
+                            bNeedUpdateContour = true;
                         }
-                        bNeedUpdateContour = true;
+                        if (bNeedUpdateContour)
+                        {
+                            m_itHoveredVertex->UpdateGrabberContainBox();
+                            UpdateEdgeVertices(m_aRoutePointsForUi, m_itHoveredVertex);
+                            m_bRouteChanged = true;
+                        }
                     }
-                    else if (m_itHoveredVertex->m_iHoverType == 0 && bMouseInWorkArea && m_itHoveredVertex->m_v2Pos != mousePos)
+                    else if (m_itHoveredVertex->m_iHoverType == 4)
                     {
-                        // moving the vertex
-                        if (!m_bKeyFrameEnabled || i64Tick <= 0)
-                            m_itHoveredVertex->m_v2Pos = mousePos;
-                        if (m_bKeyFrameEnabled)
+                        if (v2MousePos != m_itHoveredVertex->m_v2MoveOriginMousePos)
                         {
-                            const ImNewCurve::KeyPoint::ValType tKpVal(mousePos.x, mousePos.y, 0, i64Tick);
-                            auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                            m_itHoveredVertex->AddKeyPoint(0, hKp, false);
-                            m_itHoveredVertex->m_ptCurrPos = MatUtils::FromImVec2<float>(mousePos);
-                            // const auto log1 = m_itHoveredVertex->m_ahCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
-                            // const auto log2 = m_itHoveredVertex->m_ahCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
-                            // cout << "Pos X:" << log1 << ", Y:" << log2 << endl;
+                            const auto v2MoveOffset = v2MousePos-m_itHoveredVertex->m_v2MoveOriginMousePos;
+                            MoveRoute(v2MoveOffset);
+                            m_bRouteChanged = true;
+                            m_itHoveredVertex->m_v2MoveOriginMousePos = v2MousePos;
                         }
-                        bNeedUpdateContour = true;
-                    }
-                    else if (m_itHoveredVertex->m_iHoverType == 1 && m_itHoveredVertex->m_v2Grabber0Offset != coordOff)
-                    {
-                        // moving bezier grabber0
-                        if (!m_bKeyFrameEnabled || i64Tick <= 0)
-                        {
-                            m_itHoveredVertex->m_v2Grabber0Offset = coordOff;
-                            auto c0sqr = coordOff.x*coordOff.x+coordOff.y*coordOff.y;
-                            auto& coordOff1 = m_itHoveredVertex->m_v2Grabber1Offset;
-                            auto c1sqr = coordOff1.x*coordOff1.x+coordOff1.y*coordOff1.y;
-                            auto ratio = sqrt(c1sqr/c0sqr);
-                            coordOff1.x = -coordOff.x*ratio;
-                            coordOff1.y = -coordOff.y*ratio;
-                        }
-                        if (m_bKeyFrameEnabled)
-                        {
-                            ImNewCurve::KeyPoint::ValType tKpVal(coordOff.x, coordOff.y, 0, i64Tick);
-                            auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                            m_itHoveredVertex->AddKeyPoint(1, hKp, false);
-                            m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::FromImVec2<float>(coordOff);
-                            auto c0sqr = coordOff.x*coordOff.x+coordOff.y*coordOff.y;
-                            const auto& coordOff1 = m_itHoveredVertex->m_ptCurrGrabber1Offset;
-                            auto c1sqr = coordOff1.x*coordOff1.x+coordOff1.y*coordOff1.y;
-                            auto ratio = sqrt(c1sqr/c0sqr);
-                            tKpVal.x = -coordOff.x*ratio;
-                            tKpVal.y = -coordOff.y*ratio;
-                            hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                            m_itHoveredVertex->AddKeyPoint(2, hKp, false);
-                            m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::Point2f(tKpVal.x, tKpVal.y);
-                            // const auto log1 = m_itHoveredVertex->m_ahCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
-                            // const auto log2 = m_itHoveredVertex->m_ahCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
-                            // cout << "G0 X:" << log1 << ", Y:" << log2 << endl;
-                        }
-                        bNeedUpdateContour = true;
-                    }
-                    else if (m_itHoveredVertex->m_iHoverType == 2 && m_itHoveredVertex->m_v2Grabber1Offset != coordOff)
-                    {
-                        // moving bezier grabber1
-                        if (!m_bKeyFrameEnabled || i64Tick <= 0)
-                        {
-                            m_itHoveredVertex->m_v2Grabber1Offset = coordOff;
-                            auto c1sqr = coordOff.x*coordOff.x+coordOff.y*coordOff.y;
-                            auto& coordOff0 = m_itHoveredVertex->m_v2Grabber0Offset;
-                            auto c0sqr = coordOff0.x*coordOff0.x+coordOff0.y*coordOff0.y;
-                            auto ratio = sqrt(c0sqr/c1sqr);
-                            coordOff0.x = -coordOff.x*ratio;
-                            coordOff0.y = -coordOff.y*ratio;
-                        }
-                        if (m_bKeyFrameEnabled)
-                        {
-                            ImNewCurve::KeyPoint::ValType tKpVal(coordOff.x, coordOff.y, 0, i64Tick);
-                            auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                            m_itHoveredVertex->AddKeyPoint(2, hKp, false);
-                            m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::FromImVec2<float>(coordOff);
-                            auto c1sqr = coordOff.x*coordOff.x+coordOff.y*coordOff.y;
-                            const auto& coordOff0 = m_itHoveredVertex->m_ptCurrGrabber0Offset;
-                            auto c0sqr = coordOff0.x*coordOff0.x+coordOff0.y*coordOff0.y;
-                            auto ratio = sqrt(c0sqr/c1sqr);
-                            tKpVal.x = -coordOff.x*ratio;
-                            tKpVal.y = -coordOff.y*ratio;
-                            hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
-                            m_itHoveredVertex->AddKeyPoint(1, hKp, false);
-                            m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::Point2f(tKpVal.x, tKpVal.y);
-                            // const auto log1 = m_itHoveredVertex->m_ahCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
-                            // const auto log2 = m_itHoveredVertex->m_ahCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
-                            // cout << "G1 X:" << log1 << ", Y:" << log2 << endl;
-                        }
-                        bNeedUpdateContour = true;
-                    }
-                    if (bNeedUpdateContour)
-                    {
-                        m_itHoveredVertex->UpdateGrabberContainBox();
-                        UpdateEdgeVertices(m_aRoutePointsForUi, m_itHoveredVertex);
-                        m_bRouteChanged = true;
                     }
                 }
                 else if (HasHoveredMorphCtrl())
@@ -348,14 +408,14 @@ public:
                     {
                         ImVec2 v2VertSlope;
                         int iLineIdx = 0;
-                        auto ptRootPos = MatUtils::CalcNearestPointOnPloygon(mousePos, m_aContourVerticesForUi, &v2VertSlope, &iLineIdx);
+                        auto ptRootPos = MatUtils::CalcNearestPointOnPloygon(v2MousePos, m_aContourVerticesForUi, &v2VertSlope, &iLineIdx);
                         const auto fCtrlSlope = v2VertSlope.y == 0 ? numeric_limits<float>::infinity() : v2VertSlope.x/v2VertSlope.y;
                         m_itMorphCtrlVt = m_tMorphCtrl.SetPosAndSlope(ptRootPos, fCtrlSlope, iLineIdx);
                     }
                     else if (m_tMorphCtrl.m_iHoverType == 1)
                     {
-                        const auto dx = mousePos.x-m_tMorphCtrl.m_ptRootPos.x;
-                        const auto dy = mousePos.y-m_tMorphCtrl.m_ptRootPos.y;
+                        const auto dx = v2MousePos.x-m_tMorphCtrl.m_ptRootPos.x;
+                        const auto dy = v2MousePos.y-m_tMorphCtrl.m_ptRootPos.y;
                         float l = sqrt(dx*dx+dy*dy);
                         if (l < MorphController::MIN_CTRL_LENGTH) l = MorphController::MIN_CTRL_LENGTH;
                         if (m_tMorphCtrl.m_fMorphCtrlLength != l)
@@ -372,7 +432,7 @@ public:
                             const auto& ptOrgGrabberPos = m_tMorphCtrl.m_ptGrabberPos;
                             const auto& fVertSlope = isinf(m_tMorphCtrl.m_fCtrlSlope) ? 0 : m_tMorphCtrl.m_fCtrlSlope == 0 ? numeric_limits<float>::infinity() : -1/m_tMorphCtrl.m_fCtrlSlope;
                             bool bGrabberSide = isinf(fVertSlope) ? ptOrgGrabberPos.x > ptOrgRootPos.x : ptOrgGrabberPos.y > fVertSlope*(ptOrgGrabberPos.x-ptOrgRootPos.x)+ptOrgRootPos.y;
-                            bool bMousePosSide = isinf(fVertSlope) ? mousePos.x > ptOrgRootPos.x : mousePos.y > fVertSlope*(mousePos.x-ptOrgRootPos.x)+ptOrgRootPos.y;
+                            bool bMousePosSide = isinf(fVertSlope) ? v2MousePos.x > ptOrgRootPos.x : v2MousePos.y > fVertSlope*(v2MousePos.x-ptOrgRootPos.x)+ptOrgRootPos.y;
                             if (bGrabberSide != bMousePosSide)
                             {
                                 m_tMorphCtrl.m_bInsidePoly = !m_tMorphCtrl.m_bInsidePoly;
@@ -383,8 +443,8 @@ public:
                     }
                     else if (m_tMorphCtrl.m_iHoverType == 2)
                     {
-                        const auto dx = mousePos.x-m_tMorphCtrl.m_ptRootPos.x;
-                        const auto dy = mousePos.y-m_tMorphCtrl.m_ptRootPos.y;
+                        const auto dx = v2MousePos.x-m_tMorphCtrl.m_ptRootPos.x;
+                        const auto dy = v2MousePos.y-m_tMorphCtrl.m_ptRootPos.y;
                         float l = sqrt(dx*dx+dy*dy);
                         const auto fMinFeatherGrabberLength = m_tMorphCtrl.m_fMorphCtrlLength+m_fGrabberRadius*2+m_fHoverDetectExRadius;
                         float fFeatherGrabberLength = l-fMinFeatherGrabberLength;
@@ -403,7 +463,7 @@ public:
             {
                 if (HasHoveredVertex())
                 {
-                    if (!m_itHoveredVertex->CheckHovering(mousePos))
+                    if (!m_itHoveredVertex->CheckHovering(v2MousePos))
                     {
                         // quit hovering state
                         m_itHoveredVertex->QuitHover();
@@ -412,7 +472,7 @@ public:
                 }
                 else if (HasHoveredMorphCtrl())
                 {
-                    if (!m_tMorphCtrl.CheckHovering(mousePos))
+                    if (!m_tMorphCtrl.CheckHovering(v2MousePos))
                     {
                         m_tMorphCtrl.m_bIsHovered = false;
                     }
@@ -510,7 +570,7 @@ public:
                     DrawMorphController(pDrawList);
             }
             // draw hovering point on contour
-            if (HasHoveredVertex() && m_itHoveredVertex->m_iHoverType == 4)
+            if (!bIsMouseDragging && HasHoveredVertex() && m_itHoveredVertex->m_iHoverType == 4 && bInsertKeyDown)
             {
                 const auto pointPos = origin+m_itHoveredVertex->m_v2HoverPointOnContour*m_v2UiScale;
                 const auto& offsetSize1 = m_v2PointSizeHalf;
@@ -1166,6 +1226,7 @@ private:
         bool m_bSelected{false};
         list<ImVec2> m_aEdgeVertices;
         ImVec2 m_v2HoverPointOnContour;
+        ImVec2 m_v2MoveOriginMousePos;
         int m_iHoverPointOnContourIdx;
         ImRect m_rGrabberContBox;
         ImRect m_rEdgeContBox;
@@ -1715,7 +1776,7 @@ private:
             const auto& aRoutePoints = m_owner->m_aRoutePointsForUi;
             const auto& aContourVertices = m_owner->m_aContourVerticesForUi;
             auto itCv = aContourVertices.begin();
-            auto itCp = aRoutePoints.begin(); itCp++;
+            auto itCp = aRoutePoints.begin();
             auto itCpSub1 = itCp->m_aEdgeVertices.begin();
             auto itCpSub2 = itCpSub1; itCpSub2++;
             int idx = 0;
@@ -2378,8 +2439,8 @@ private:
             if (r.Max.y > m_rContianBox.Max.y)
                 m_rContianBox.Max.y = r.Max.y;
         }
-        m_ptCenter.x = (m_rContianBox.Min.x+m_rContianBox.Max.x)/2;
-        m_ptCenter.y = (m_rContianBox.Min.y+m_rContianBox.Max.y)/2;
+        m_v2Center.x = (m_rContianBox.Min.x+m_rContianBox.Max.x)/2;
+        m_v2Center.y = (m_rContianBox.Min.y+m_rContianBox.Max.y)/2;
     }
 
     void UpdateEdgeVertices(list<RoutePointImpl>& aRoutePoints, list<RoutePointImpl>::iterator itCurrVt, bool bUpdateNextVt = true)
@@ -2408,6 +2469,23 @@ private:
                 itNextVt->CalcEdgeVertices(*itCurrVt);
             }
         }
+    }
+
+    void MoveRoute(const ImVec2& v2MoveOffset)
+    {
+        for (auto& rp : m_aRoutePointsForUi)
+            rp.m_v2Pos += v2MoveOffset;
+        RefreshAllEdgeVertices(m_aRoutePointsForUi);
+    }
+
+    void ScaleRoute(float fScale)
+    {
+        for (auto& rp : m_aRoutePointsForUi)
+        {
+            const auto off = rp.m_v2Pos-m_v2Center;
+            rp.m_v2Pos = m_v2Center+off*fScale;
+        }
+        RefreshAllEdgeVertices(m_aRoutePointsForUi);
     }
 
     void CalcMorphCtrlPos()
@@ -3030,15 +3108,18 @@ private:
     ImU32 m_u32ContourColor{IM_COL32(40, 40, 170, 255)};
     ImU32 m_u32FeatherGrabberColor{IM_COL32(200, 150, 80, 255)};
     ImRect m_rContianBox{{-1, -1}, {-1, -1}};
-    ImVec2 m_ptCenter;
+    ImVec2 m_v2Center;
     float m_fContourHoverDetectExRadius{4.f}, m_fHoverDetectExRadius{5.f};
     list<RoutePointImpl>::iterator m_itHoveredVertex;
     list<RoutePointImpl>::iterator m_itSelectedVertex;
     MorphController m_tMorphCtrl;
     list<RoutePointImpl>::const_iterator m_itMorphCtrlVt;
     ImGuiKey m_eRemoveVertexKey{ImGuiKey_LeftAlt};
+    ImGuiKey m_eInsertVertexKey{ImGuiKey_LeftCtrl};
+    ImGuiKey m_eScaleContourKey{ImGuiKey_LeftShift};
     string m_strRemoveVertexCursorIcon{u8"\ue15d"};
     ImGuiKey m_eEnableBezierKey{ImGuiKey_LeftCtrl};
+    bool m_bInScaleMode{false};
     bool m_bRouteCompleted{false};
     bool m_bRouteChanged{false};
     bool m_bLastMaskFilled{false};
