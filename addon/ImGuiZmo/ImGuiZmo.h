@@ -94,16 +94,24 @@ namespace IMGUIZMO_NAMESPACE
         WORLD
     };
 
+    // Utils
+    IMGUI_API void Frustum(float left, float right, float bottom, float top, float znear, float zfar, float* m16);
+    IMGUI_API void Perspective(float fovyInDegrees, float aspectRatio, float znear, float zfar, float* m16);
+    IMGUI_API void Cross(const float* a, const float* b, float* r);
+    IMGUI_API float Dot(const float* a, const float* b);
+    IMGUI_API void Normalize(const float* a, float* r);
+    IMGUI_API void LookAt(const float* eye, const float* at, const float* up, float* m16);
+
     IMGUI_API bool Manipulate(const float *view, const float *projection, OPERATION operation, MODE mode, float *matrix, float *deltaMatrix = NULL, const float *snap = NULL, const float *localBounds = NULL, const float *boundsSnap = NULL);
     //
     // Please note that this cubeview is patented by Autodesk : https://patents.google.com/patent/US7782319B2/en
     // It seems to be a defensive patent in the US. I don't think it will bring troubles using it as
     // other software are using the same mechanics. But just in case, you are now warned!
     //
-    IMGUI_API void ViewManipulate(float *view, float length, ImVec2 position, ImVec2 size, ImU32 backgroundColor);
+    IMGUI_API bool ViewManipulate(float *view, float length, ImVec2 position, ImVec2 size, ImU32 backgroundColor, float* xAngle = nullptr, float* yAngle = nullptr);
 
     // use this version if you did not call Manipulate before and you are just using ViewManipulate
-    IMGUI_API void ViewManipulate(float *view, const float *projection, OPERATION operation, MODE mode, float *matrix, float length, ImVec2 position, ImVec2 size, ImU32 backgroundColor);
+    IMGUI_API bool ViewManipulate(float *view, const float *projection, OPERATION operation, MODE mode, float *matrix, float length, ImVec2 position, ImVec2 size, ImU32 backgroundColor);
 
     IMGUI_API void SetID(int id);
 
@@ -117,9 +125,9 @@ namespace IMGUIZMO_NAMESPACE
     IMGUI_API void AllowAxisFlip(bool value);
 
    	// Configure the limit where axis are hidden
-   	IMGUI_API void SetAxisLimit(float value);
+    IMGUI_API void SetAxisLimit(float value);
    	// Configure the limit where planes are hiden
-   	IMGUI_API void SetPlaneLimit(float value);
+    IMGUI_API void SetPlaneLimit(float value);
 
     IMGUI_API void DrawBoundingBox(
         const float* _View,
