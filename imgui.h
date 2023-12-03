@@ -274,6 +274,7 @@ struct ImVec2
 };
 
 // add by Dicky
+struct ImMat4x4;
 // A Vec3, Matrix 3x3, Dot & Cross products, A Quaternion.  Some helper functions, bare minimum
 struct ImVec3
 {
@@ -299,7 +300,8 @@ struct ImVec4
 {
     float                                                     x, y, z, w;
     constexpr ImVec4()                                        : x(0.0f), y(0.0f), z(0.0f), w(0.0f) { }
-    constexpr ImVec4(float _x, float _y, float _z = 0, float _w = 0)  : x(_x), y(_y), z(_z), w(_w) { } // modify by Dicky
+    constexpr ImVec4(ImVec2 v)                                : x(v.x), y(v.y), z(0.0f), w(0.0f) { }    // add by Dicky
+    constexpr ImVec4(float _x, float _y, float _z = 0, float _w = 0)  : x(_x), y(_y), z(_z), w(_w) { }  // modify by Dicky
 #ifdef IM_VEC4_CLASS_EXTRA
     IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec4.
 #endif
