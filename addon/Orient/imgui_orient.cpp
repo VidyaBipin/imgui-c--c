@@ -7,13 +7,16 @@
 #include <cassert>
 ImVector<ImVec3> ImOrient::s_SphTri;
 ImVector<ImU32> ImOrient::s_SphCol;
-ImVector<ImVec2>   ImOrient::s_SphTriProj;
+ImVector<ImVec2> ImOrient::s_SphTriProj;
 ImVector<ImU32> ImOrient::s_SphColLight;
 ImVector<ImVec3> ImOrient::s_ArrowTri[4];
-ImVector<ImVec2>   ImOrient::s_ArrowTriProj[4];
+ImVector<ImVec2> ImOrient::s_ArrowTriProj[4];
 ImVector<ImVec3> ImOrient::s_ArrowNorm[4];
 ImVector<ImU32> ImOrient::s_ArrowColLight[4];
- 
+ImVector<ImVec3> ImOrient::s_CubeTri;
+ImVector<ImVec2> ImOrient::s_CubeTriProj;
+ImVector<ImU32> ImOrient::s_CubeColLight;
+
 namespace ImGui
 {
 IMGUI_API bool QuaternionGizmo(const char* label, ImVec4& quat)
@@ -26,6 +29,7 @@ IMGUI_API bool QuaternionGizmo(const char* label, ImVec4& quat)
 
     orient.m_AAMode = false; // Axis & angle mode hidden
     orient.m_IsDir = false;
+    orient.m_IsCube = false;
     orient.m_ShowDir = ImVec3(0.0f, 0.0f, 0.0f);
     orient.m_DirColor = 0xff00ffff;
     orient.ConvertToAxisAngle();
@@ -48,6 +52,7 @@ IMGUI_API bool AxisAngleGizmo(const char* label, ImVec3& axis, float& angle)
 
     orient.m_AAMode = true; // Axis & angle mode hidden
     orient.m_IsDir = true;
+    orient.m_IsCube = false;
     orient.m_ShowDir = ImVec3(0.0f, 0.0f, 0.0f);
     orient.m_DirColor = 0xff00ffff;
     orient.ConvertFromAxisAngle();
@@ -72,6 +77,7 @@ IMGUI_API bool DirectionGizmo(const char* label, ImVec3& dir)
 
     orient.m_AAMode = false; // Axis & angle mode hidden
     orient.m_IsDir = true;
+    orient.m_IsCube = false;
     orient.m_ShowDir = ImVec3(1.0f, 0.0f, 0.0f);
     orient.m_DirColor = 0xffff0000;
     orient.QuatFromDir(orient.Qt, dir);
@@ -88,6 +94,29 @@ IMGUI_API bool DirectionGizmo(const char* label, ImVec3& dir)
     return ret;
 }
 
+IMGUI_API bool CubeGizmo(const char* label, ImVec4& quat)
+{
+    ImOrient orient;
+    orient.Qt = quat;
+    orient.Axis = ImVec3(1.0f, 0.0f, 0.0f);
+    orient.Angle = 0;
+    orient.Dir.x = orient.Dir.y = orient.Dir.z = 0;
+
+    orient.m_AAMode = false; // Axis & angle mode hidden
+    orient.m_IsDir = false;
+    orient.m_IsCube = true;
+    orient.m_ShowDir = ImVec3(0.0f, 0.0f, 0.0f);
+    orient.m_DirColor = 0xff00ffff;
+    orient.ConvertToAxisAngle();
+
+    bool ret = orient.Draw(label);
+    if (ret)
+    {
+        quat = orient.Qt;
+    }
+    return ret;
+}
+
 } // ImGui namespace
 
 bool ImOrient::Draw(const char* label)
@@ -100,6 +129,7 @@ bool ImOrient::Draw(const char* label)
     {
         ImOrient::CreateArrow();
         ImOrient::CreateSphere();
+        ImOrient::CreateCube();
     }
 
     ImGui::PushID(label);
@@ -295,6 +325,35 @@ bool ImOrient::Draw(const char* label)
             DrawTriangles(draw_list, inner_pos, s_ArrowTriProj[j], s_ArrowColLight[j], ntri, cullDir);
         }
     }
+    else if (m_IsCube)
+    {
+        const int ntri = (int)ImOrient::s_CubeTri.size();
+        for (int i = 0; i < ntri / 4; ++i)
+        {
+            ImVec3 coord1 = s_CubeTri[i * 4 + 0].Mult(0.75);
+            ImVec3 coord2 = s_CubeTri[i * 4 + 1].Mult(0.75);
+            ImVec3 coord3 = s_CubeTri[i * 4 + 2].Mult(0.75);
+            ImVec3 coord4 = s_CubeTri[i * 4 + 3].Mult(0.75);
+            coord1 = quat.rotate(coord1);
+            coord2 = quat.rotate(coord2);
+            coord3 = quat.rotate(coord3);
+            coord4 = quat.rotate(coord4);
+            coord1 = AxisTransform.Transform(coord1);
+            coord2 = AxisTransform.Transform(coord2);
+            coord3 = AxisTransform.Transform(coord3);
+            coord4 = AxisTransform.Transform(coord4);
+            s_CubeTriProj[i * 4 + 0] = ImVec2(QuatPX(coord1.x, inner_size, inner_size), QuatPY(coord1.y, inner_size, inner_size));
+            s_CubeTriProj[i * 4 + 1] = ImVec2(QuatPX(coord2.x, inner_size, inner_size), QuatPY(coord2.y, inner_size, inner_size));
+            s_CubeTriProj[i * 4 + 2] = ImVec2(QuatPX(coord3.x, inner_size, inner_size), QuatPY(coord3.y, inner_size, inner_size));
+            s_CubeTriProj[i * 4 + 3] = ImVec2(QuatPX(coord4.x, inner_size, inner_size), QuatPY(coord4.y, inner_size, inner_size));
+            float depth = (coord1.z + coord2.z + coord3.z + coord4.z) / 4;
+            s_CubeColLight[i * 4 + 0] = 
+            s_CubeColLight[i * 4 + 1] = 
+            s_CubeColLight[i * 4 + 2] = 
+            s_CubeColLight[i * 4 + 3] = ColorBlend(0xff000000, alpha, fabsf(ImClamp(depth, -1.0f, 1.0f)));
+        }
+        DrawFaces(draw_list, inner_pos, s_CubeTriProj, s_CubeColLight, ntri, cullDir);
+    }
     else
     {
         // draw arrows & sphere
@@ -398,6 +457,64 @@ bool ImOrient::Draw(const char* label)
     return value_changed;
 }
 
+void ImOrient::DrawFaces(ImDrawList* draw_list, const ImVec2& offset, const ImVector<ImVec2>& triProj, const ImVector<ImU32>& colLight, int numVertices, float cullDir)
+{
+    assert(numVertices % 4 == 0);
+    const ImVec2 uv = ImGui::GetFontTexUvWhitePixel();
+    for (int ii = 0; ii < numVertices / 4; ii++)
+    {
+        ImVec2 v1 = offset + triProj[ii * 4];
+        ImVec2 v2 = offset + triProj[ii * 4 + 1];
+        ImVec2 v3 = offset + triProj[ii * 4 + 2];
+        ImVec2 v4 = offset + triProj[ii * 4 + 3];
+
+        ImU32 c1 = colLight[ii * 4];
+        ImU32 c2 = colLight[ii * 4 + 1];
+        ImU32 c3 = colLight[ii * 4 + 2];
+        ImU32 c4 = colLight[ii * 4 + 3];
+
+        ImVec2 vt, vg, vl;
+        // first triangle v2 v3 v1
+        // 2D cross product to do culling
+        ImVec2 d1 = v3 - v2;
+        ImVec2 d2 = v1 - v2;
+        vt = v2;
+        vg = v3;
+        vl = v1;
+        if (d1.cross(d2) * cullDir > 0.0f)
+        {
+            vg = v2;
+            vl = v2;
+        }
+        draw_list->PrimReserve(3, 3);
+        draw_list->PrimWriteIdx(ImDrawIdx(draw_list->_VtxCurrentIdx + 0));
+        draw_list->PrimWriteIdx(ImDrawIdx(draw_list->_VtxCurrentIdx + 1));
+        draw_list->PrimWriteIdx(ImDrawIdx(draw_list->_VtxCurrentIdx + 2));
+        draw_list->PrimWriteVtx(vt, uv, c2);
+        draw_list->PrimWriteVtx(vg, uv, c3);
+        draw_list->PrimWriteVtx(vl, uv, c1);
+
+        // second triangle v1 v3 v4
+        // 2D cross product to do culling
+        ImVec2 d3 = v3 - v1;
+        ImVec2 d4 = v4 - v1;
+        vt = v1;
+        vg = v3;
+        vl = v4;
+        if (d3.cross(d4) * cullDir > 0.0f)
+        {
+            vg = v1;
+            vl = v1;
+        }
+        draw_list->PrimReserve(3, 3);
+        draw_list->PrimWriteIdx(ImDrawIdx(draw_list->_VtxCurrentIdx + 0));
+        draw_list->PrimWriteIdx(ImDrawIdx(draw_list->_VtxCurrentIdx + 1));
+        draw_list->PrimWriteIdx(ImDrawIdx(draw_list->_VtxCurrentIdx + 2));
+        draw_list->PrimWriteVtx(vt, uv, c1);
+        draw_list->PrimWriteVtx(vg, uv, c3);
+        draw_list->PrimWriteVtx(vl, uv, c4);
+    }
+}
 
 void ImOrient::DrawTriangles(ImDrawList* draw_list, const ImVec2& offset, const ImVector<ImVec2>& triProj, const ImVector<ImU32>& colLight, int numVertices, float cullDir)
 {
@@ -503,7 +620,7 @@ void ImOrient::CreateArrow()
     const float ARROW_BGN = -1.1f;
     const float ARROW_END = 1.15f;
     int i;
-     
+
     for (i = 0; i < 4; ++i)
     {
         s_ArrowTri[i].clear();
@@ -572,7 +689,38 @@ void ImOrient::CreateArrow()
     }
 }
 
-
+void ImOrient::CreateCube()
+{
+    s_CubeTri.clear();
+    s_CubeTri.push_back(ImVec3(-1.0f, -1.0f,  1.0f));
+    s_CubeTri.push_back(ImVec3( 1.0f, -1.0f,  1.0f));
+    s_CubeTri.push_back(ImVec3( 1.0f,  1.0f,  1.0f));
+    s_CubeTri.push_back(ImVec3(-1.0f,  1.0f,  1.0f));
+    s_CubeTri.push_back(ImVec3( 1.0f,  1.0f,  1.0f));
+    s_CubeTri.push_back(ImVec3( 1.0f,  1.0f, -1.0f));
+    s_CubeTri.push_back(ImVec3(-1.0f,  1.0f, -1.0f));
+    s_CubeTri.push_back(ImVec3(-1.0f,  1.0f,  1.0f));
+    s_CubeTri.push_back(ImVec3( 1.0f, -1.0f,  1.0f));
+    s_CubeTri.push_back(ImVec3( 1.0f, -1.0f, -1.0f));
+    s_CubeTri.push_back(ImVec3( 1.0f,  1.0f, -1.0f));
+    s_CubeTri.push_back(ImVec3( 1.0f,  1.0f,  1.0f));
+    s_CubeTri.push_back(ImVec3(-1.0f, -1.0f,  1.0f));
+    s_CubeTri.push_back(ImVec3(-1.0f,  1.0f,  1.0f));
+    s_CubeTri.push_back(ImVec3(-1.0f,  1.0f, -1.0f));
+    s_CubeTri.push_back(ImVec3(-1.0f, -1.0f, -1.0f));
+    s_CubeTri.push_back(ImVec3(-1.0f, -1.0f,  1.0f));
+    s_CubeTri.push_back(ImVec3(-1.0f, -1.0f, -1.0f));
+    s_CubeTri.push_back(ImVec3( 1.0f, -1.0f, -1.0f));
+    s_CubeTri.push_back(ImVec3( 1.0f, -1.0f,  1.0f));
+    s_CubeTri.push_back(ImVec3(-1.0f, -1.0f, -1.0f));
+    s_CubeTri.push_back(ImVec3(-1.0f,  1.0f, -1.0f));
+    s_CubeTri.push_back(ImVec3( 1.0f,  1.0f, -1.0f));
+    s_CubeTri.push_back(ImVec3( 1.0f, -1.0f, -1.0f));
+    s_CubeTriProj.clear();
+    s_CubeTriProj.resize(s_CubeTri.size());
+    s_CubeColLight.clear();
+    s_CubeColLight.resize(s_CubeTri.size());
+}
 
 void ImOrient::ConvertToAxisAngle()
 {

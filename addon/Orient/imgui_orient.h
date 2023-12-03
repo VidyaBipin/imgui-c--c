@@ -34,6 +34,7 @@ struct ImOrient
     ImVec3 Dir;           // Dir value set when used as a direction
     bool m_AAMode;        // Axis & angle mode
     bool m_IsDir;         // Mapped to a dir vector instead of a quat
+    bool m_IsCube;      
     ImVec3 m_ShowDir;     // CM: Not sure what this is all about? 
     ImU32 m_DirColor;        // Direction vector color
 
@@ -49,11 +50,16 @@ struct ImOrient
     static ImVector<ImVec2> s_ArrowTriProj[4];
     static ImVector<ImVec3> s_ArrowNorm[4];
     static ImVector<ImU32> s_ArrowColLight[4];
+    static ImVector<ImVec3> s_CubeTri;
+    static ImVector<ImVec2>  s_CubeTriProj;
+    static ImVector<ImU32> s_CubeColLight;
     static void CreateSphere();
     static void CreateArrow();
+    static void CreateCube();
 
     IMGUI_API bool Draw(const char* label);
     IMGUI_API void DrawTriangles(ImDrawList* draw_list, const ImVec2& offset, const ImVector<ImVec2>& triProj, const ImVector<ImU32>& colLight, int numVertices, float cullDir);
+    IMGUI_API void DrawFaces(ImDrawList* draw_list, const ImVec2& offset, const ImVector<ImVec2>& triProj, const ImVector<ImU32>& colLight, int numVertices, float cullDir);
     IMGUI_API void ConvertToAxisAngle();
     IMGUI_API void ConvertFromAxisAngle();
 
@@ -87,6 +93,6 @@ namespace ImGui
 IMGUI_API bool QuaternionGizmo(const char* label, ImVec4& quat);
 IMGUI_API bool AxisAngleGizmo(const char* label, ImVec3& axis, float& angle);
 IMGUI_API bool DirectionGizmo(const char* label, ImVec3& dir);
-
+IMGUI_API bool CubeGizmo(const char* label, ImVec4& quat);
 };
 
