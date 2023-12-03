@@ -53,23 +53,23 @@ namespace IMGUIZMO_NAMESPACE
 
    static OPERATION operator&(OPERATION lhs, OPERATION rhs)
    {
-     return static_cast<OPERATION>(static_cast<int>(lhs) & static_cast<int>(rhs));
+      return static_cast<OPERATION>(static_cast<int>(lhs) & static_cast<int>(rhs));
    }
 
    static bool operator!=(OPERATION lhs, int rhs)
    {
-     return static_cast<int>(lhs) != rhs;
+      return static_cast<int>(lhs) != rhs;
    }
 
    static bool Intersects(OPERATION lhs, OPERATION rhs)
    {
-     return (lhs & rhs) != 0;
+      return (lhs & rhs) != 0;
    }
 
    // True if lhs contains rhs
    static bool Contains(OPERATION lhs, OPERATION rhs)
    {
-     return (lhs & rhs) == rhs;
+      return (lhs & rhs) == rhs;
    }
 
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -618,17 +618,17 @@ namespace IMGUIZMO_NAMESPACE
 
    static bool IsTranslateType(int type)
    {
-     return type >= MT_MOVE_X && type <= MT_MOVE_SCREEN;
+      return type >= MT_MOVE_X && type <= MT_MOVE_SCREEN;
    }
 
    static bool IsRotateType(int type)
    {
-     return type >= MT_ROTATE_X && type <= MT_ROTATE_SCREEN;
+      return type >= MT_ROTATE_X && type <= MT_ROTATE_SCREEN;
    }
 
    static bool IsScaleType(int type)
    {
-     return type >= MT_SCALE_X && type <= MT_SCALE_XYZ;
+      return type >= MT_SCALE_X && type <= MT_SCALE_XYZ;
    }
 
    // Matches MT_MOVE_AB order
@@ -1069,11 +1069,11 @@ namespace IMGUIZMO_NAMESPACE
       gContext.mCameraUp = viewInverse.v.up;
 
       // projection reverse
-       vec_t nearPos, farPos;
-       nearPos.Transform(makeVect(0, 0, 1.f, 1.f), gContext.mProjectionMat);
-       farPos.Transform(makeVect(0, 0, 2.f, 1.f), gContext.mProjectionMat);
+      vec_t nearPos, farPos;
+      nearPos.Transform(makeVect(0, 0, 1.f, 1.f), gContext.mProjectionMat);
+      farPos.Transform(makeVect(0, 0, 2.f, 1.f), gContext.mProjectionMat);
 
-       gContext.mReversed = (nearPos.z/nearPos.w) > (farPos.z / farPos.w);
+      gContext.mReversed = (nearPos.z/nearPos.w) > (farPos.z / farPos.w);
 
       // compute scale from the size of camera right vector projected on screen at the matrix position
       vec_t pointRight = viewInverse.v.right;
@@ -1345,7 +1345,7 @@ namespace IMGUIZMO_NAMESPACE
 
       if(!Intersects(op, SCALE))
       {
-        return;
+         return;
       }
 
       // colors
@@ -2029,7 +2029,7 @@ namespace IMGUIZMO_NAMESPACE
    {
       if(!Intersects(op, TRANSLATE) || gContext.mbUsing || !gContext.mbMouseOver)
       {
-        return MT_NONE;
+         return MT_NONE;
       }
       ImGuiIO& io = ImGui::GetIO();
       int type = MT_NONE;
@@ -2085,7 +2085,7 @@ namespace IMGUIZMO_NAMESPACE
    {
       if(!Intersects(op, TRANSLATE) || type != MT_NONE)
       {
-        return false;
+         return false;
       }
       const ImGuiIO& io = ImGui::GetIO();
       const bool applyRotationLocaly = gContext.mMode == LOCAL || type == MT_MOVE_SCREEN;
@@ -2328,7 +2328,7 @@ namespace IMGUIZMO_NAMESPACE
    {
       if(!Intersects(op, ROTATE) || type != MT_NONE || !gContext.mbMouseOver)
       {
-        return false;
+         return false;
       }
       ImGuiIO& io = ImGui::GetIO();
       bool applyRotationLocaly = gContext.mMode == LOCAL;
@@ -2489,17 +2489,17 @@ namespace IMGUIZMO_NAMESPACE
 
    void AllowAxisFlip(bool value)
    {
-     gContext.mAllowAxisFlip = value;
+      gContext.mAllowAxisFlip = value;
    }
 
    void SetAxisLimit(float value)
    {
-     gContext.mAxisLimit=value;
+      gContext.mAxisLimit=value;
    }
 
    void SetPlaneLimit(float value)
    {
-     gContext.mPlaneLimit = value;
+      gContext.mPlaneLimit = value;
    }
 
    bool Manipulate(const float* view, const float* projection, OPERATION operation, MODE mode, float* matrix, float* deltaMatrix, const float* snap, const float* localBounds, const float* boundsSnap)
@@ -2529,8 +2529,8 @@ namespace IMGUIZMO_NAMESPACE
          if (!gContext.mbUsingBounds)
          {
             manipulated = HandleTranslation(matrix, deltaMatrix, operation, type, snap) ||
-                          HandleScale(matrix, deltaMatrix, operation, type, snap) ||
-                          HandleRotation(matrix, deltaMatrix, operation, type, snap);
+                           HandleScale(matrix, deltaMatrix, operation, type, snap) ||
+                           HandleRotation(matrix, deltaMatrix, operation, type, snap);
          }
       }
 

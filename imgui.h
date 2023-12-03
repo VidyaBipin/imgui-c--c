@@ -277,9 +277,9 @@ struct ImVec2
 // A Vec3, Matrix 3x3, Dot & Cross products, A Quaternion.  Some helper functions, bare minimum
 struct ImVec3
 {
-    float x, y, z;
-    ImVec3() { x = y = z = 0.0f; }
-    ImVec3(float _x, float _y, float _z) { x = _x; y = _y; z = _z; }
+    float                                   x, y, z;
+    ImVec3()                                : x(0.0f), y(0.0f), z(0.0f) { }
+    ImVec3(float _x, float _y, float _z)    : x(_x), y(_y), z(_z) { }
 
     ImVec3 RotY() const { return ImVec3(-z, y, x); }
     ImVec3 RotZ() const { return ImVec3(-y, x, z); }
@@ -288,7 +288,7 @@ struct ImVec3
     ImVec3 Mult(float val) const { return ImVec3(x * val, y * val, z * val); }
     ImVec3 Div(float val) const { return ImVec3(x / val, y / val, z / val); }
     float Length() const { return (float)sqrt(x * x + y * y + z * z); }
-#ifdef IM_VEC3_CLASS_EXTRA          // Define constructor and implicit cast operators in imconfig.h to convert back<>forth from your math types and ImVec2.
+#ifdef IM_VEC3_CLASS_EXTRA          // Define constructor and implicit cast operators in imconfig.h to convert back<>forth from your math types and ImVec3.
     IM_VEC3_CLASS_EXTRA
 #endif
 };
@@ -299,7 +299,7 @@ struct ImVec4
 {
     float                                                     x, y, z, w;
     constexpr ImVec4()                                        : x(0.0f), y(0.0f), z(0.0f), w(0.0f) { }
-    constexpr ImVec4(float _x, float _y, float _z, float _w)  : x(_x), y(_y), z(_z), w(_w) { }
+    constexpr ImVec4(float _x, float _y, float _z = 0, float _w = 0)  : x(_x), y(_y), z(_z), w(_w) { } // modify by Dicky
 #ifdef IM_VEC4_CLASS_EXTRA
     IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec4.
 #endif
@@ -339,6 +339,139 @@ struct ImMat3x3
         out.z = m[2][0] * vec.x + m[2][1] * vec.y + m[2][2] * vec.z;
         return out;
     }
+};
+
+struct ImMat4x4
+{
+    union
+    {
+        float m[4][4];
+        float m16[16];
+        struct
+        {
+            ImVec4 right, up, dir, position;
+        } v;
+        ImVec4 component[4];
+    };
+    ImMat4x4() {}
+    operator float* () { return m16; }
+    operator const float* () const { return m16; }
+    void Translation(float _x, float _y, float _z) { this->Translation(ImVec4(_x, _y, _z)); }
+
+    void Translation(const ImVec4& vt)
+    {
+        v.right = ImVec4(1.f, 0.f, 0.f, 0.f);
+        v.up = ImVec4(0.f, 1.f, 0.f, 0.f);
+        v.dir = ImVec4(0.f, 0.f, 1.f, 0.f);
+        v.position = ImVec4(vt.x, vt.y, vt.z, 1.f);
+    }
+
+    void Scale(float _x, float _y, float _z)
+    {
+        v.right = ImVec4(_x, 0.f, 0.f, 0.f);
+        v.up = ImVec4(0.f, _y, 0.f, 0.f);
+        v.dir = ImVec4(0.f, 0.f, _z, 0.f);
+        v.position = ImVec4(0.f, 0.f, 0.f, 1.f);
+    }
+    void Scale(const ImVec4& s) { Scale(s.x, s.y, s.z); }
+
+    ImMat4x4& operator *= (const ImMat4x4& mat)
+    {
+        ImMat4x4 tmpMat;
+        tmpMat = *this;
+        tmpMat.Multiply(mat);
+        *this = tmpMat;
+        return *this;
+    }
+    ImMat4x4 operator * (const ImMat4x4& mat) const
+    {
+        ImMat4x4 matT;
+        matT.Multiply(*this, mat);
+        return matT;
+    }
+
+    void FPU_MatrixF_x_MatrixF(const float* a, const float* b, float* r)
+    {
+        r[0] = a[0] * b[0] + a[1] * b[4] + a[2] * b[8] + a[3] * b[12];
+        r[1] = a[0] * b[1] + a[1] * b[5] + a[2] * b[9] + a[3] * b[13];
+        r[2] = a[0] * b[2] + a[1] * b[6] + a[2] * b[10] + a[3] * b[14];
+        r[3] = a[0] * b[3] + a[1] * b[7] + a[2] * b[11] + a[3] * b[15];
+
+        r[4] = a[4] * b[0] + a[5] * b[4] + a[6] * b[8] + a[7] * b[12];
+        r[5] = a[4] * b[1] + a[5] * b[5] + a[6] * b[9] + a[7] * b[13];
+        r[6] = a[4] * b[2] + a[5] * b[6] + a[6] * b[10] + a[7] * b[14];
+        r[7] = a[4] * b[3] + a[5] * b[7] + a[6] * b[11] + a[7] * b[15];
+
+        r[8] = a[8] * b[0] + a[9] * b[4] + a[10] * b[8] + a[11] * b[12];
+        r[9] = a[8] * b[1] + a[9] * b[5] + a[10] * b[9] + a[11] * b[13];
+        r[10] = a[8] * b[2] + a[9] * b[6] + a[10] * b[10] + a[11] * b[14];
+        r[11] = a[8] * b[3] + a[9] * b[7] + a[10] * b[11] + a[11] * b[15];
+
+        r[12] = a[12] * b[0] + a[13] * b[4] + a[14] * b[8] + a[15] * b[12];
+        r[13] = a[12] * b[1] + a[13] * b[5] + a[14] * b[9] + a[15] * b[13];
+        r[14] = a[12] * b[2] + a[13] * b[6] + a[14] * b[10] + a[15] * b[14];
+        r[15] = a[12] * b[3] + a[13] * b[7] + a[14] * b[11] + a[15] * b[15];
+    }
+    void Multiply(const ImMat4x4& matrix)
+    {
+        ImMat4x4 tmp;
+        tmp = *this;
+
+        FPU_MatrixF_x_MatrixF((float*)&tmp, (float*)&matrix, (float*)this);
+    }
+
+    void Multiply(const ImMat4x4& m1, const ImMat4x4& m2)
+    {
+        FPU_MatrixF_x_MatrixF((float*)&m1, (float*)&m2, (float*)this);
+    }
+
+    float GetDeterminant() const
+    {
+        return m[0][0] * m[1][1] * m[2][2] + m[0][1] * m[1][2] * m[2][0] + m[0][2] * m[1][0] * m[2][1] -
+            m[0][2] * m[1][1] * m[2][0] - m[0][1] * m[1][0] * m[2][2] - m[0][0] * m[1][2] * m[2][1];
+    }
+
+    float Inverse(const ImMat4x4& srcMatrix, bool affine = false);
+    void SetToIdentity()
+    {
+        v.right = ImVec4(1.f, 0.f, 0.f, 0.f);
+        v.up = ImVec4(0.f, 1.f, 0.f, 0.f);
+        v.dir = ImVec4(0.f, 0.f, 1.f, 0.f);
+        v.position = ImVec4(0.f, 0.f, 0.f, 1.f);
+    }
+    void Transpose()
+    {
+        ImMat4x4 tmpm;
+        for (int l = 0; l < 4; l++)
+        {
+            for (int c = 0; c < 4; c++)
+            {
+                tmpm.m[l][c] = m[c][l];
+            }
+        }
+        (*this) = tmpm;
+    }
+
+    void RotationAxis(const ImVec4& axis, float angle);
+
+    void OrthoNormalize()
+    {
+        v.right.Normalize();
+        v.up.Normalize();
+        v.dir.Normalize();
+    }
+};
+
+struct Vertex {
+    // Attributes
+    /** Vertex position */
+    ImVec3 position {0.f, 0.f, 0.f};
+    /** Texture coordinate */
+    ImVec2 uv_coord {0.f, 0.f};
+    /** Normal vector */
+    ImVec3 normal {0.f, 0.f, 0.f};
+    /** Tangent vector */
+    ImVec3 tangent {0.f, 0.f, 0.f};
 };
 // add by Dicky end
 IM_MSVC_RUNTIME_CHECKS_RESTORE
