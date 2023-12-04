@@ -850,6 +850,8 @@ public:
                     m_tMorphCtrl.SetPosAndSlope(m_itMorphCtrlVt, m_tMorphCtrl.m_fDistant);
                 }
             }
+            m_i64PrevUiTick = INT64_MIN;
+            m_i64PrevMaskTick = INT64_MIN;
         }
         return true;
     }
