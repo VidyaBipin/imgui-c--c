@@ -153,6 +153,36 @@
     bool operator!=(const ImVec2& d)                { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; } \
     float cross(const ImVec2& d)                    { return (x * d.y) - (y * d.x); }
 
+#define IM_VEC3_CLASS_EXTRA \
+    ImVec3 operator+(const float rhs)               { return ImVec3(x + rhs, y + rhs, z + rhs); } \
+    ImVec3 operator-(const float rhs)               { return ImVec3(x - rhs, y - rhs, z - rhs); } \
+    ImVec3 operator*(const float rhs)               { return ImVec3(x * rhs, y * rhs, z * rhs); } \
+    ImVec3 operator/(const float rhs)               { return ImVec3(x / rhs, y / rhs, z / rhs); } \
+    ImVec3 operator+(ImVec3& rhs)                   { return ImVec3(x + rhs.x, y + rhs.y, z + rhs.z); } \
+    ImVec3 operator-(ImVec3& rhs)                   { return ImVec3(x - rhs.x, y - rhs.y, z - rhs.z); } \
+    ImVec3 operator*(ImVec3& rhs)                   { return ImVec3(x * rhs.x, y * rhs.y, z * rhs.z); } \
+    ImVec3 operator/(ImVec3& rhs)                   { return ImVec3(x / rhs.x, y / rhs.y, z / rhs.z); } \
+    ImVec3& operator*=(const float rhs)             { x *= rhs; y *= rhs; z *= rhs; return *this; } \
+    ImVec3& operator/=(const float rhs)             { x /= rhs; y /= rhs; z /= rhs; return *this; } \
+    ImVec3& operator+=(const float rhs)             { x += rhs; y += rhs; z += rhs; return *this; } \
+    ImVec3& operator-=(const float rhs)             { x -= rhs; y -= rhs; z -= rhs; return *this; } \
+    ImVec3& operator+=(const ImVec3& rhs)           { x += rhs.x; y += rhs.y; z += rhs.z; return *this; } \
+    ImVec3& operator-=(const ImVec3& rhs)           { x -= rhs.x; y -= rhs.y; z -= rhs.z; return *this; } \
+    ImVec3& operator*=(const ImVec3& rhs)           { x *= rhs.x; y *= rhs.y; z *= rhs.z; return *this; } \
+    ImVec3& operator/=(const ImVec3& rhs)           { x /= rhs.x; y /= rhs.y; z /= rhs.z; return *this; } \
+    bool operator==(const ImVec3& d) const          { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8; } \
+    bool operator==(const ImVec3& d)                { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8; } \
+    bool operator!=(const ImVec3& d) const          { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8; } \
+    bool operator!=(const ImVec3& d)                { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8; } \
+    ImVec3 RotY() const                             { return ImVec3(-z, y, x); } \
+    ImVec3 RotZ() const                             { return ImVec3(-y, x, z); } \
+    ImVec3 Cross(const ImVec3& b) const             { return ImVec3(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x); } \
+    float Dot(const ImVec3& b) const                { return x * b.x + y * b.y + z * b.z; } \
+    ImVec3 Mult(float val) const                    { return ImVec3(x * val, y * val, z * val); } \
+    ImVec3 Div(float val) const                     { return ImVec3(x / val, y / val, z / val); } \
+    float Length() const                            { return (float)sqrt(x * x + y * y + z * z); } \
+    ImVec3 Normalize()                              { (*this) *= (1.f / ( Length() > FLT_EPSILON ? Length() : FLT_EPSILON ) ); return (*this); } \
+
 #define IM_VEC4_CLASS_EXTRA \
     bool operator==(const ImVec4& d) const          { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8 && fabs(w - d.w) < 10e-8; } \
     bool operator==(const ImVec4& d)                { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8 && fabs(w - d.w) < 10e-8; } \
@@ -224,6 +254,14 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 
 #define IMGUI_DEFINE_MATH_EXTRA \
+    static inline ImVec3 operator+(const ImVec3& lhs, const float rhs)      { return ImVec3(lhs.x + rhs, lhs.y + rhs, lhs.z + rhs); } \
+    static inline ImVec3 operator-(const ImVec3& lhs, const float rhs)      { return ImVec3(lhs.x - rhs, lhs.y - rhs, lhs.z - rhs); } \
+    static inline ImVec3 operator*(const ImVec3& lhs, const float rhs)      { return ImVec3(lhs.x * rhs, lhs.y * rhs, lhs.z * rhs); } \
+    static inline ImVec3 operator/(const ImVec3& lhs, const float rhs)      { return ImVec3(lhs.x / rhs, lhs.y / rhs, lhs.z / rhs); } \
+    static inline ImVec3 operator+(const ImVec3& lhs, const ImVec3& rhs)    { return ImVec3(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z); } \
+    static inline ImVec3 operator-(const ImVec3& lhs, const ImVec3& rhs)    { return ImVec3(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z); } \
+    static inline ImVec3 operator*(const ImVec3& lhs, const ImVec3& rhs)    { return ImVec3(lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z); } \
+    static inline ImVec3 operator/(const ImVec3& lhs, const ImVec3& rhs)    { return ImVec3(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z); } \
     static inline ImVec4 operator-(ImVec4 v)                                { return { -v.x, -v.y, -v.z, -v.w }; } \
     static inline ImVec4 operator+(const ImVec4& lhs, const float rhs)      { return ImVec4(lhs.x + rhs, lhs.y + rhs, lhs.z + rhs, lhs.w + rhs); } \
     static inline ImVec4 operator-(const ImVec4& lhs, const float rhs)      { return ImVec4(lhs.x - rhs, lhs.y - rhs, lhs.z - rhs, lhs.w - rhs); } \

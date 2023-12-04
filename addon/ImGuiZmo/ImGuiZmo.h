@@ -10,9 +10,6 @@ namespace IMGUIZMO_NAMESPACE
     // Or pass a specific ImDrawList to draw to (e.g. ImGui::GetForegroundDrawList()).
     IMGUI_API void SetDrawlist(ImDrawList *drawlist = nullptr);
 
-    // call BeginFrame right after ImGui_XXXX_NewFrame();
-    IMGUI_API void BeginFrame();
-
     // this is necessary because when imguizmo is compiled into a dll, and imgui into another
     // globals are not shared between them.
     // More details at https://stackoverflow.com/questions/19373061/what-happens-to-global-and-static-variables-in-a-shared-library-when-it-is-dynam
@@ -51,10 +48,17 @@ namespace IMGUIZMO_NAMESPACE
     // default is false
     IMGUI_API void SetOrthographic(bool isOrthographic);
 
-    // Render a cube with face color corresponding to face normal. Usefull for debug/tests
-    IMGUI_API void DrawCubes(const float *view, const float *projection, const float *matrices, int matrixCount);
     IMGUI_API void DrawGrid(const float *view, const float *projection, const float *matrix, const float gridSize);
 
+    IMGUI_API void DrawTriangle(ImDrawList* draw_list, const ImVec2& offset, const std::vector<ImVec2>& triProj, const std::vector<ImU32>& colLight);
+    IMGUI_API void DrawQuat(ImDrawList* draw_list, const ImVec2& offset, const std::vector<ImVec2>& triProj, const std::vector<ImU32>& colLight);
+    
+    // Render a cube with DrawQuat. Usefull for debug/tests
+    IMGUI_API void DrawCubeQuat(const float *view, const float *projection, float* matrix);
+    // Render a cube with DrawQuat. Usefull for debug/tests
+    IMGUI_API void DrawCubeTriangle(const float *view, const float *projection, float* matrix);
+    // Render a cube with face color corresponding to face normal. Usefull for debug/tests
+    IMGUI_API void DrawCubes(const float *view, const float *projection, const float *matrices, int matrixCount);
     // call it when you want a gizmo
     // Needs view and projection matrices.
     // matrix parameter is the source matrix (where will be gizmo be drawn) and might be transformed by the function. Return deltaMatrix is optional

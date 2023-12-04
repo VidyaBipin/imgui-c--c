@@ -280,15 +280,9 @@ struct ImVec3
 {
     float                                   x, y, z;
     ImVec3()                                : x(0.0f), y(0.0f), z(0.0f) { }
+    ImVec3(float _v)                        : x(_v), y(_v), z(_v) { }
     ImVec3(float _x, float _y, float _z)    : x(_x), y(_y), z(_z) { }
 
-    ImVec3 RotY() const { return ImVec3(-z, y, x); }
-    ImVec3 RotZ() const { return ImVec3(-y, x, z); }
-    ImVec3 Cross(const ImVec3& b) const { return ImVec3(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x); }
-    float Dot(const ImVec3& b) const { return x * b.x + y * b.y + z * b.z; }
-    ImVec3 Mult(float val) const { return ImVec3(x * val, y * val, z * val); }
-    ImVec3 Div(float val) const { return ImVec3(x / val, y / val, z / val); }
-    float Length() const { return (float)sqrt(x * x + y * y + z * z); }
 #ifdef IM_VEC3_CLASS_EXTRA          // Define constructor and implicit cast operators in imconfig.h to convert back<>forth from your math types and ImVec3.
     IM_VEC3_CLASS_EXTRA
 #endif
@@ -301,6 +295,7 @@ struct ImVec4
     float                                                     x, y, z, w;
     constexpr ImVec4()                                        : x(0.0f), y(0.0f), z(0.0f), w(0.0f) { }
     constexpr ImVec4(ImVec2 v)                                : x(v.x), y(v.y), z(0.0f), w(0.0f) { }    // add by Dicky
+    constexpr ImVec4(ImVec3& v)                               : x(v.x), y(v.y), z(v.z), w(0.0f) { }    // add by Dicky
     constexpr ImVec4(float _x, float _y, float _z = 0, float _w = 0)  : x(_x), y(_y), z(_z), w(_w) { }  // modify by Dicky
 #ifdef IM_VEC4_CLASS_EXTRA
     IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec4.
@@ -356,6 +351,13 @@ struct ImMat4x4
         ImVec4 component[4];
     };
     ImMat4x4() {}
+    ImMat4x4(const float s)
+    {
+        v.right     = ImVec4(  s, 0.f, 0.f, 0.f);
+        v.up        = ImVec4(0.f,   s, 0.f, 0.f);
+        v.dir       = ImVec4(0.f, 0.f,   s, 0.f);
+        v.position  = ImVec4(0.f, 0.f, 0.f,   s);
+    }
     operator float* () { return m16; }
     operator const float* () const { return m16; }
     void Translation(float _x, float _y, float _z) { this->Translation(ImVec4(_x, _y, _z)); }
