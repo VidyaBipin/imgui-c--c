@@ -192,7 +192,8 @@ namespace ImNewCurve
         virtual KeyPoint::Holder RemovePoint(float t);
         virtual float MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint, bool bNormalize);
         virtual bool SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds);
-        virtual bool ScaleKeyPoints(const KeyPoint::ValType& tScale);
+        virtual bool ScaleKeyPoints(const KeyPoint::ValType& tScale, const KeyPoint::ValType& tOrigin = KeyPoint::ValType(0, 0, 0, 0));
+        virtual bool PanKeyPoints(const KeyPoint::ValType& tOffset);
 
         std::string PrintKeyPointsByDim(ValueDimension eDim) const;
         virtual imgui_json::value SaveAsJson() const;

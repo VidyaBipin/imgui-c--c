@@ -602,10 +602,29 @@ bool Curve::SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds)
     return true;
 }
 
-bool Curve::ScaleKeyPoints(const KeyPoint::ValType& tScale)
+bool Curve::ScaleKeyPoints(const KeyPoint::ValType& tScale, const KeyPoint::ValType& tOrigin)
+{
+    const bool bUseOrigin = tOrigin != KeyPoint::ValType(0, 0, 0, 0);
+    if (bUseOrigin)
+    {
+        for (auto& hKp : m_aKeyPoints)
+        {
+            const auto tOff = hKp->val-tOrigin;
+            hKp->val = tOrigin+tOff*tScale;
+        }
+    }
+    else
+    {
+        for (auto& hKp : m_aKeyPoints)
+            hKp->val *= tScale;
+    }
+    return true;
+}
+
+bool Curve::PanKeyPoints(const KeyPoint::ValType& tOffset)
 {
     for (auto& hKp : m_aKeyPoints)
-        hKp->val *= tScale;
+        hKp->val += tOffset;
     return true;
 }
 

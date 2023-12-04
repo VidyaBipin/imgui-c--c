@@ -2473,19 +2473,36 @@ private:
 
     void MoveRoute(const ImVec2& v2MoveOffset)
     {
+        if (fabs(v2MoveOffset.x) < FLT_EPSILON && fabs(v2MoveOffset.y) < FLT_EPSILON)
+            return;
+        const bool bKeyFrameEnabled = m_bKeyFrameEnabled;
+        const ImNewCurve::KeyPoint::ValType tPanOffset(v2MoveOffset.x, v2MoveOffset.y, 0, 0);
         for (auto& rp : m_aRoutePointsForUi)
+        {
             rp.m_v2Pos += v2MoveOffset;
+            if (bKeyFrameEnabled)
+                rp.m_ahCurves[0]->PanKeyPoints(tPanOffset);
+        }
         RefreshAllEdgeVertices(m_aRoutePointsForUi);
+        if (bKeyFrameEnabled)
+            m_i64PrevUiTick = INT64_MIN;
     }
 
     void ScaleRoute(float fScale)
     {
+        const bool bKeyFrameEnabled = m_bKeyFrameEnabled;
+        const ImNewCurve::KeyPoint::ValType tScale(fScale, fScale, 1, 1);
+        const ImNewCurve::KeyPoint::ValType tOrigin(m_v2Center.x, m_v2Center.y, 0, 0);
         for (auto& rp : m_aRoutePointsForUi)
         {
             const auto off = rp.m_v2Pos-m_v2Center;
             rp.m_v2Pos = m_v2Center+off*fScale;
+            if (bKeyFrameEnabled)
+                rp.m_ahCurves[0]->ScaleKeyPoints(tScale, tOrigin);
         }
         RefreshAllEdgeVertices(m_aRoutePointsForUi);
+        if (bKeyFrameEnabled)
+            m_i64PrevUiTick = INT64_MIN;
     }
 
     void CalcMorphCtrlPos()
