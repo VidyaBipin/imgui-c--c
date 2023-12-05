@@ -21,8 +21,10 @@
 #include "Morph.h"
 #include "MatUtilsImguiHelper.h"
 #include "SysUtils.h"
+#include "Logger.h"
 
 using namespace std;
+using namespace Logger;
 namespace json = imgui_json;
 
 namespace ImGui
@@ -32,6 +34,7 @@ class MaskCreatorImpl : public MaskCreator
 public:
     MaskCreatorImpl(const MatUtils::Size2i& size, const string& name) : m_szMaskSize(size), m_strMaskName(name), m_tMorphCtrl(this)
     {
+        m_pLogger = GetLogger("MaskCreator");
         m_v2PointSizeHalf = m_v2PointSize/2;
         m_itMorphCtrlVt = m_itHoveredVertex = m_itSelectedVertex = m_aRoutePointsForUi.end();
         m_mMorphKernel = MatUtils::GetStructuringElement(MatUtils::MORPH_ELLIPSE, {5, 5});
@@ -63,6 +66,10 @@ public:
 
         if (m_bKeyFrameEnabled && UpdateContourByKeyFrame(i64Tick, true))
             m_bRouteChanged = true;
+
+        // save hovering state for log
+        int iPrevHoverType = HasHoveredVertex() ? m_itHoveredVertex->m_iHoverType : -1;
+        auto itPrevHoveredVertex = m_itHoveredVertex;
 
         // reactions
         const auto v2MousePosAbs = GetMousePos();
@@ -267,7 +274,6 @@ public:
                         const auto v2Grabber0Offset = m_bKeyFrameEnabled ? MatUtils::ToImVec2(m_itHoveredVertex->m_ptCurrGrabber0Offset) : m_itHoveredVertex->m_v2Grabber0Offset;
                         const auto v2Grabber1Offset = m_bKeyFrameEnabled ? MatUtils::ToImVec2(m_itHoveredVertex->m_ptCurrGrabber1Offset) : m_itHoveredVertex->m_v2Grabber1Offset;
                         const auto coordOff = v2MousePos-v2CpPos;
-                        // cout << "---> iHoverType = " << m_itHoveredVertex->m_iHoverType << endl;
                         if (m_itHoveredVertex->m_bFirstDrag && m_itHoveredVertex->m_bEnableBezier && m_itHoveredVertex->m_v2Grabber1Offset != coordOff)
                         {
                             // 1st-time dragging bezier grabber, change both the grabbers
@@ -309,9 +315,9 @@ public:
                                 auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
                                 m_itHoveredVertex->AddKeyPoint(0, hKp, false);
                                 m_itHoveredVertex->m_ptCurrPos = MatUtils::FromImVec2<float>(v2MousePos);
-                                // const auto log1 = m_itHoveredVertex->m_ahCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
-                                // const auto log2 = m_itHoveredVertex->m_ahCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
-                                // cout << "Pos X:" << log1 << ", Y:" << log2 << endl;
+                                // const auto strKpPosX = m_itHoveredVertex->m_ahCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
+                                // const auto strKpPosY = m_itHoveredVertex->m_ahCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                                // m_pLogger->Log(DEBUG) << "Pos X:" << strKpPosX << ", Y:" << strKpPosY << endl;
                             }
                             bNeedUpdateContour = true;
                         }
@@ -343,9 +349,9 @@ public:
                                 hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
                                 m_itHoveredVertex->AddKeyPoint(2, hKp, false);
                                 m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::Point2f(tKpVal.x, tKpVal.y);
-                                // const auto log1 = m_itHoveredVertex->m_ahCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
-                                // const auto log2 = m_itHoveredVertex->m_ahCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
-                                // cout << "G0 X:" << log1 << ", Y:" << log2 << endl;
+                                // const auto strKpPosX = m_itHoveredVertex->m_ahCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
+                                // const auto strKpPosY = m_itHoveredVertex->m_ahCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                                // m_pLogger->Log(DEBUG) << "G0 X:" << strKpPosX << ", Y:" << strKpPosY << endl;
                             }
                             bNeedUpdateContour = true;
                         }
@@ -377,9 +383,9 @@ public:
                                 hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
                                 m_itHoveredVertex->AddKeyPoint(1, hKp, false);
                                 m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::Point2f(tKpVal.x, tKpVal.y);
-                                // const auto log1 = m_itHoveredVertex->m_ahCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
-                                // const auto log2 = m_itHoveredVertex->m_ahCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
-                                // cout << "G1 X:" << log1 << ", Y:" << log2 << endl;
+                                // const auto strKpPosX = m_itHoveredVertex->m_ahCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
+                                // const auto strKpPosY = m_itHoveredVertex->m_ahCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                                // m_pLogger->Log(DEBUG) << "G1 X:" << strKpPosX << ", Y:" << strKpPosY << endl;
                             }
                             bNeedUpdateContour = true;
                         }
@@ -497,6 +503,37 @@ public:
             {
                 m_tMorphCtrl.QuitHover();
                 m_itMorphCtrlVt = m_aRoutePointsForUi.end();
+            }
+        }
+
+        // log hovering state change
+        int iCurrHoverType = HasHoveredVertex() ? m_itHoveredVertex->m_iHoverType : -1;
+        bool bHoverStateChanged = iPrevHoverType != iCurrHoverType || itPrevHoveredVertex != m_itHoveredVertex;
+        if (bHoverStateChanged)
+        {
+            m_pLogger->Log(DEBUG) << "Hover state changed: ";
+            if (HasHoveredVertex())
+            {
+                if (m_bKeyFrameEnabled)
+                {
+                    const auto& rpPos = m_itHoveredVertex->m_ptCurrPos;
+                    const auto& rpG0Off = m_itHoveredVertex->m_ptCurrGrabber0Offset;
+                    const auto& rpG1Off = m_itHoveredVertex->m_ptCurrGrabber1Offset;
+                    m_pLogger->Log(DEBUG) << "RoutePoint(" << rpPos.x << ", " << rpPos.y << "):G0Off(" << rpG0Off.x << ", " << rpG0Off.y
+                            << "):G1Off(" << rpG1Off.x << ", " << rpG1Off.y << "), HoverType=" << m_itHoveredVertex->m_iHoverType << "." << endl;
+                }
+                else
+                {
+                    const auto& rpPos = m_itHoveredVertex->m_v2Pos;
+                    const auto& rpG0Off = m_itHoveredVertex->m_v2Grabber0Offset;
+                    const auto& rpG1Off = m_itHoveredVertex->m_v2Grabber1Offset;
+                    m_pLogger->Log(DEBUG) << "RoutePoint(" << rpPos.x << ", " << rpPos.y << "):G0Off(" << rpG0Off.x << ", " << rpG0Off.y
+                            << "):G1Off(" << rpG1Off.x << ", " << rpG1Off.y << "), HoverType=" << m_itHoveredVertex->m_iHoverType << "." << endl;
+                }
+            }
+            else
+            {
+                m_pLogger->Log(DEBUG) << "NO hovered object." << endl;
             }
         }
 
@@ -1202,6 +1239,11 @@ public:
         return m_sErrMsg;
     }
 
+    void SetLoggerLevel(Logger::Level l) override
+    {
+        m_pLogger->SetShowLevels(l);
+    }
+
 private:
     struct RoutePointImpl : public RoutePoint
     {
@@ -1517,7 +1559,6 @@ private:
                 const ImRect grabber0Rect(grabber0Center-radiusSize-szDetectExRadius, grabber0Center+radiusSize+szDetectExRadius);
                 if (grabber0Rect.Contains(mousePos))
                 {
-                    // cout << "--> Grabber-0 hovered" << endl;
                     m_bHovered = true;
                     m_iHoverType = 1;
                     return true;
@@ -1526,7 +1567,6 @@ private:
                 const ImRect grabber1Rect(grabber1Center-radiusSize-szDetectExRadius, grabber1Center+radiusSize+szDetectExRadius);
                 if (grabber1Rect.Contains(mousePos))
                 {
-                    // cout << "--> Grabber-1 hovered" << endl;
                     m_bHovered = true;
                     m_iHoverType = 2;
                     return true;
@@ -1569,13 +1609,13 @@ private:
                             m_bHovered = true;
                             m_iHoverType = 4;
                             m_v2HoverPointOnContour = {mousePos.x, crossY};
-                            // cout << "--> mousePos(" << mousePos.x << ", " << mousePos.y << "), crossY-hoverPoint(" << mousePos.x << ", " << crossY << ")" << endl;
+                            // m_owner->m_pLogger->Log(DEBUG) << "--> mousePos(" << mousePos.x << ", " << mousePos.y << "), crossY-hoverPoint(" << mousePos.x << ", " << crossY << ")" << endl;
                             m_iHoverPointOnContourIdx = idx;
                             return true;
                         }
                         // else
                         // {
-                        //     cout << "[" << i << "] mousePos(" << mousePos.x << ", " << mousePos.y << "), crossY=" << crossY << ", v0(" << v0.x << ", " << v0.y << "), v1(" << v1.x << ", " << v1.y << ")"
+                        //     m_owner->m_pLogger->Log(DEBUG) << "[" << i << "] mousePos(" << mousePos.x << ", " << mousePos.y << "), crossY=" << crossY << ", v0(" << v0.x << ", " << v0.y << "), v1(" << v1.x << ", " << v1.y << ")"
                         //             << ", abs(crossY-mousePos.y)=" << abs(crossY-mousePos.y) << endl;
                         // }
                     }
@@ -1587,13 +1627,13 @@ private:
                             m_bHovered = true;
                             m_iHoverType = 4;
                             m_v2HoverPointOnContour = {crossX, mousePos.y};
-                            // cout << "--> mousePos(" << mousePos.x << ", " << mousePos.y << "), crossX-hoverPoint(" << crossX << ", " << mousePos.y << ")" << endl;
+                            // m_owner->m_pLogger->Log(DEBUG) << "--> mousePos(" << mousePos.x << ", " << mousePos.y << "), crossX-hoverPoint(" << crossX << ", " << mousePos.y << ")" << endl;
                             m_iHoverPointOnContourIdx = idx;
                             return true;
                         }
                         // else
                         // {
-                        //     cout << "[" << i << "] mousePos(" << mousePos.x << ", " << mousePos.y << "), crossX=" << crossX << ", v0(" << v0.x << ", " << v0.y << "), v1(" << v1.x << ", " << v1.y << ")"
+                        //     m_owner->m_pLogger->Log(DEBUG) << "[" << i << "] mousePos(" << mousePos.x << ", " << mousePos.y << "), crossX=" << crossX << ", v0(" << v0.x << ", " << v0.y << "), v1(" << v1.x << ", " << v1.y << ")"
                         //             << ", abs(crossX-mousePos.x)=" << abs(crossX-mousePos.x) << endl;
                         // }
                     }
@@ -2695,7 +2735,7 @@ private:
             const auto v2VertLeft = CalcEdgeVerticalPoint(v1, v2, fTestLen, true);
             const bool bV2VertLeftInside = MatUtils::CheckPointInsidePolygon(v2VertLeft, m_aContourVerticesForMask);
             if (bV1VertLeftInside^bV2VertLeftInside)
-                cout << "Edge two ends have different inside-bility! v1(" << v1.x << "," << v1.y << ") inside(" << bV1VertLeftInside
+                m_pLogger->Log(DEBUG) << "Edge two ends have different inside-bility! v1(" << v1.x << "," << v1.y << ") inside(" << bV1VertLeftInside
                     << "), v2(" << v2.x << "," << v2.y << ") inside(" << bV2VertLeftInside << ")." << endl;
             bPreV2Inside = bV2VertLeftInside;
 #else
@@ -3155,6 +3195,7 @@ private:
     int64_t m_i64PrevUiTick{0}, m_i64PrevMaskTick{0};
     pair<int64_t, int64_t> m_prTickRange{0, 0};
     string m_sErrMsg;
+    ALogger* m_pLogger;
 };
 
 unordered_map<int, MaskCreatorImpl::BezierTable::Holder> MaskCreatorImpl::s_mapBezierTables;

@@ -30,6 +30,7 @@ static const float g_fTimeMax = 30.f;
 static void _AppInitialize(void** handle)
 {
     g_hMaskCreator = MaskCreator::CreateInstance({1920, 1080});
+    g_hMaskCreator->SetLoggerLevel(Logger::DEBUG);
     g_hMaskCreator->SetTickRange(0, 30000);
     strncpy(g_acMaskSavePath, "./mask.png", sizeof(g_acMaskSavePath));
 }

@@ -5,6 +5,7 @@
 #include <immat.h>
 #include <imgui_json.h>
 #include "MatUtilsCommDef.h"
+#include "Logger.h"
 
 namespace ImGui
 {
@@ -51,5 +52,6 @@ struct MaskCreator
     IMGUI_API static Holder LoadFromJson(const std::string& filePath);
 
     virtual std::string GetError() const = 0;
+    virtual void SetLoggerLevel(Logger::Level l) = 0;
 };
 }
