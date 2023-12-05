@@ -310,13 +310,7 @@ struct ImMat3x3
     ImMat3x3()
     {
         // init eye
-        for (int x = 0; x < 3; x++)
-        {
-            for (int y = 0; y < 3; y++)
-            {
-                m[y][x] = (x == y) ? 1.0f : 0.0f;
-            }
-        }
+        for (int x = 0; x < 3; x++) for (int y = 0; y < 3; y++) m[y][x] = (x == y) ? 1.0f : 0.0f;
     }
 
     ImVec3 Transform(const ImVec3& vec)
@@ -350,7 +344,10 @@ struct ImMat4x4
         } v;
         ImVec4 component[4];
     };
-    ImMat4x4() {}
+    ImMat4x4() {
+        // init eye
+        for (int x = 0; x < 4; x++) for (int y = 0; y < 4; y++) m[y][x] = (x == y) ? 1.0f : 0.0f;
+    }
     ImMat4x4(const float s)
     {
         v.right     = ImVec4(  s, 0.f, 0.f, 0.f);

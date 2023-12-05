@@ -3,6 +3,9 @@
 #define IMGUIZMO_NAMESPACE ImGuizmo
 #endif
 #include <imgui.h>
+#include "model.h"
+
+struct Model;
 
 namespace IMGUIZMO_NAMESPACE
 {
@@ -33,16 +36,16 @@ namespace IMGUIZMO_NAMESPACE
     // translation, rotation and scale float points to 3 floats each
     // Angles are in degrees (more suitable for human editing)
     // example:
-    // float matrixTranslation[3], matrixRotation[3], matrixScale[3];
+    // ImVec3 matrixTranslation, matrixRotation, matrixScale;
     // ImGuizmo::DecomposeMatrixToComponents(gizmoMatrix.m16, matrixTranslation, matrixRotation, matrixScale);
-    // ImGui::InputFloat3("Tr", matrixTranslation, 3);
-    // ImGui::InputFloat3("Rt", matrixRotation, 3);
-    // ImGui::InputFloat3("Sc", matrixScale, 3);
+    // ImGui::InputFloat3("Tr", (float *)&matrixTranslation, 3);
+    // ImGui::InputFloat3("Rt", (float *)&matrixRotation, 3);
+    // ImGui::InputFloat3("Sc", (float *)&matrixScale, 3);
     // ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, gizmoMatrix.m16);
     //
     // These functions have some numerical stability issues for now. Use with caution.
-    IMGUI_API void DecomposeMatrixToComponents(const float *matrix, float *translation, float *rotation, float *scale);
-    IMGUI_API void RecomposeMatrixFromComponents(const float *translation, const float *rotation, const float *scale, float *matrix);
+    IMGUI_API void DecomposeMatrixToComponents(const float *matrix, ImVec3& translation, ImVec3& rotation, ImVec3& scale);
+    IMGUI_API void RecomposeMatrixFromComponents(const ImVec3& translation, const ImVec3& rotation, const ImVec3& scale, float *matrix);
 
     IMGUI_API void SetRect(float x, float y, float width, float height);
     // default is false
@@ -50,8 +53,11 @@ namespace IMGUIZMO_NAMESPACE
 
     IMGUI_API void DrawGrid(const float *view, const float *projection, const float *matrix, const float gridSize);
 
-    IMGUI_API void DrawTriangle(ImDrawList* draw_list, const ImVec2& offset, const std::vector<ImVec2>& triProj, const std::vector<ImU32>& colLight);
-    IMGUI_API void DrawQuat(ImDrawList* draw_list, const ImVec2& offset, const std::vector<ImVec2>& triProj, const std::vector<ImU32>& colLight);
+    IMGUI_API void DrawTriangles(ImDrawList* draw_list, const std::vector<ImVec2>& triProj, const std::vector<ImU32>& colLight);
+    IMGUI_API void DrawQuats(ImDrawList* draw_list, const std::vector<ImVec2>& triProj, const std::vector<ImU32>& colLight);
+    
+    IMGUI_API void DrawModel(const float *view, const float *projection, Model* model);
+    IMGUI_API void DrawModelMesh(const float *view, const float *projection, Model* model, ImU32 col = 0xFFFFFFFF, float thickness = 1.f);
     
     // Render a cube with DrawQuat. Usefull for debug/tests
     IMGUI_API void DrawCubeQuat(const float *view, const float *projection, float* matrix);
@@ -183,3 +189,24 @@ namespace IMGUIZMO_NAMESPACE
     IMGUI_API void ShowImGuiZmoDemo();
 #endif
 }
+
+struct Model
+{
+    Model() {}
+    ~Model() { if (model_data) delete model_data; }
+    int64_t model_id {0};
+    ModelData * model_data {nullptr};
+    bool useSnap {false};
+    bool boundSizing {false};
+    bool boundSizingSnap {false};
+    bool showManipulate {true};
+    ImVec3 snap {1.f, 1.f, 1.f};
+    ImVec3 boundsSnap {0.1f, 0.1f, 0.1f};
+    ImVec3 bounds[2] {{-0.5f, -0.5f, -0.5f},{0.5f, 0.5f, 0.5f}};
+    ImGuizmo::MODE currentGizmoMode {ImGuizmo::LOCAL};
+    ImGuizmo::OPERATION currentGizmoOperation {ImGuizmo::UNIVERSAL};
+    ImVec3 matrixTranslation;
+    ImVec3 matrixRotation;
+    ImVec3 matrixScale;
+    ImMat4x4 identity_matrix;
+};

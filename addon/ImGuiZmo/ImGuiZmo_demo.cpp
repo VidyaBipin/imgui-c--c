@@ -122,11 +122,11 @@ static void EditTransform(float* cameraView, float* cameraProjection, float* mat
             mCurrentGizmoOperation = ImGuizmo::SCALE;
         if (ImGui::RadioButton("Universal", mCurrentGizmoOperation == ImGuizmo::UNIVERSAL))
             mCurrentGizmoOperation = ImGuizmo::UNIVERSAL;
-        float matrixTranslation[3], matrixRotation[3], matrixScale[3];
+        ImVec3 matrixTranslation, matrixRotation, matrixScale;
         ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
-        ImGui::InputFloat3("Tr", matrixTranslation);
-        ImGui::InputFloat3("Rt", matrixRotation);
-        ImGui::InputFloat3("Sc", matrixScale);
+        ImGui::InputFloat3("Tr", (float *)&matrixTranslation);
+        ImGui::InputFloat3("Rt", (float *)&matrixRotation);
+        ImGui::InputFloat3("Sc", (float *)&matrixScale);
         ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix);
 
         if (mCurrentGizmoOperation != ImGuizmo::SCALE)
