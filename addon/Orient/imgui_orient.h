@@ -59,7 +59,7 @@ struct ImOrient
 
     IMGUI_API bool Draw(const char* label);
     IMGUI_API void DrawTriangles(ImDrawList* draw_list, const ImVec2& offset, const ImVector<ImVec2>& triProj, const ImVector<ImU32>& colLight, int numVertices, float cullDir);
-    IMGUI_API void DrawFaces(ImDrawList* draw_list, const ImVec2& offset, const ImVector<ImVec2>& triProj, const ImVector<ImU32>& colLight, int numVertices, float cullDir);
+    IMGUI_API void DrawQuats(ImDrawList* draw_list, const ImVec2& offset, const ImVector<ImVec2>& triProj, const ImVector<ImU32>& colLight, int numVertices, float cullDir);
     IMGUI_API void ConvertToAxisAngle();
     IMGUI_API void ConvertFromAxisAngle();
 

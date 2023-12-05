@@ -1202,10 +1202,12 @@ endif(IMGUI_BUILD_EXAMPLE)
 set(IMGUI_SRC
     ${IMGUI_SRC}
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiZmo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/model.cpp
 )
 set(IMGUI_INCS
     ${IMGUI_INCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiZmo.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/model.h
 )
 
 set(IMGUI_INC_DIRS

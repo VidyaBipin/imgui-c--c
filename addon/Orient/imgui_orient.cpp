@@ -141,7 +141,7 @@ bool ImOrient::Draw(const char* label)
     // Summary 
     if (m_AAMode)
     {
-        ImGui::Text("Axis={%.2f,%.2f,%.2f} Angle=%.0f%c", Axis.x, Axis.y, Axis.z, Angle, 176);
+        ImGui::Text("Axis={%.2f,%.2f,%.2f} Angle=%.0f", Axis.x, Axis.y, Axis.z, Angle);
     }
     else if (m_IsDir)
     {
@@ -352,7 +352,7 @@ bool ImOrient::Draw(const char* label)
             s_CubeColLight[i * 4 + 2] = 
             s_CubeColLight[i * 4 + 3] = ColorBlend(0xff000000, alpha, fabsf(ImClamp(depth, -1.0f, 1.0f)));
         }
-        DrawFaces(draw_list, inner_pos, s_CubeTriProj, s_CubeColLight, ntri, cullDir);
+        DrawQuats(draw_list, inner_pos, s_CubeTriProj, s_CubeColLight, ntri, cullDir);
     }
     else
     {
@@ -457,7 +457,7 @@ bool ImOrient::Draw(const char* label)
     return value_changed;
 }
 
-void ImOrient::DrawFaces(ImDrawList* draw_list, const ImVec2& offset, const ImVector<ImVec2>& triProj, const ImVector<ImU32>& colLight, int numVertices, float cullDir)
+void ImOrient::DrawQuats(ImDrawList* draw_list, const ImVec2& offset, const ImVector<ImVec2>& triProj, const ImVector<ImU32>& colLight, int numVertices, float cullDir)
 {
     assert(numVertices % 4 == 0);
     const ImVec2 uv = ImGui::GetFontTexUvWhitePixel();
