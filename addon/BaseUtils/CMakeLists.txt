@@ -26,10 +26,10 @@ add_definitions(-DBaseUtils_VERSION_BUILD=${BaseUtils_VERSION_BUILD})
 
 set(LIB_SRC_DIR ${PROJECT_SOURCE_DIR}/Src)
 add_library(BaseUtils ${LIBRARY_TYPE}
+    ${LIB_SRC_DIR}/CpuUtils.cpp
     ${LIB_SRC_DIR}/FileSystemUtils.cpp
     ${LIB_SRC_DIR}/Logger.cpp
     ${LIB_SRC_DIR}/SimdOpt.cpp
-    ${LIB_SRC_DIR}/SysUtils.cpp
     ${LIB_SRC_DIR}/ThreadUtils.cpp
 )
 target_include_directories(BaseUtils PRIVATE

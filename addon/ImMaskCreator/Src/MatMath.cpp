@@ -1,7 +1,7 @@
 #include <cassert>
 #include <sstream>
+#include "CpuUtils.h"
 #include "MathUtils.h"
-#include "SysUtils.h"
 #include "MatMath.h"
 
 #include "SimdOpt.h"

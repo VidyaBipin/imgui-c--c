@@ -5,7 +5,7 @@
 #if SIMD_ARCH_X86
 #include <immintrin.h>
 #endif
-#include "SysUtils.h"
+#include "CpuUtils.h"
 
 namespace SimdOpt
 {

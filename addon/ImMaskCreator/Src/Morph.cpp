@@ -9,7 +9,7 @@
 #include <functional>
 #include <cmath>
 #include "MathUtils.h"
-#include "SysUtils.h"
+#include "ThreadUtils.h"
 #include "Morph.h"
 #include "MatFilter.h"
 

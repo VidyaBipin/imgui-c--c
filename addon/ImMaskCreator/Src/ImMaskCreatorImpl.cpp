@@ -20,7 +20,7 @@
 #include "MatMath.h"
 #include "Morph.h"
 #include "MatUtilsImguiHelper.h"
-#include "SysUtils.h"
+#include "CpuUtils.h"
 #include "Logger.h"
 
 using namespace std;
