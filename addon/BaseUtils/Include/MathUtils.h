@@ -1,9 +1,9 @@
 #pragma once
+#include <cstdint>
 #include <cmath>
 
-namespace MatUtils
+namespace MathUtils
 {
-
 template<typename T> inline T SaturateCast(int8_t v) { return T(v); }
 template<typename T> inline T SaturateCast(uint8_t v) { return T(v); }
 template<typename T> inline T SaturateCast(int16_t v) { return T(v); }
@@ -185,5 +185,4 @@ template<> struct ColDepPackU16<float>
     typedef uint16_t stype2;
     stype2 operator()(const stype1& a) const { return (stype2)(a>=1.f ? 65535 : a<=0 ? 0 : std::round(a*65535.f)); }
 };
-
 } // ~namespace MatUtils

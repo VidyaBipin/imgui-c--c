@@ -38,8 +38,6 @@ add_library(ImMaskCreator ${LIBRARY_TYPE}
     ${LIB_SRC_DIR}/MatIo.cpp
     ${LIB_SRC_DIR}/MatMath.cpp
     ${LIB_SRC_DIR}/Morph.cpp
-    ${LIB_SRC_DIR}/SimdOpt.cpp
-    ${LIB_SRC_DIR}/SysUtils.cpp
 )
 target_include_directories(ImMaskCreator PRIVATE
     ${LIB_SRC_DIR}
@@ -113,5 +111,6 @@ set_target_properties(ImMaskCreator PROPERTIES VERSION ${ImMaskCreator_VERSION_S
 endif()
 
 target_link_libraries(ImMaskCreator PUBLIC
+    BaseUtils
     imgui
 )

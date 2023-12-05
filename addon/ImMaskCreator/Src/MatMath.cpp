@@ -1,8 +1,8 @@
 #include <cassert>
 #include <sstream>
-#include "MatMath.h"
-#include "MatMath.Internal.h"
+#include "MathUtils.h"
 #include "SysUtils.h"
+#include "MatMath.h"
 
 #include "SimdOpt.h"
 #if SIMD_ARCH_X86
@@ -50,6 +50,7 @@
 #undef INTRIN_MODE
 
 using namespace std;
+using namespace MathUtils;
 using namespace SysUtils;
 
 namespace MatUtils

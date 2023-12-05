@@ -8,10 +8,10 @@
 #include <memory>
 #include <functional>
 #include <cmath>
-#include "Morph.h"
-#include "MatMath.Internal.h"
-#include "MatFilter.h"
+#include "MathUtils.h"
 #include "SysUtils.h"
+#include "Morph.h"
+#include "MatFilter.h"
 
 #include "SimdOpt.h"
 #if SIMD_ARCH_X86
@@ -59,25 +59,8 @@
 #undef INTRIN_MODE
 
 using namespace std;
+using namespace MathUtils;
 using namespace SysUtils;
-using namespace MatUtils;
-
-template<typename T> struct MinOp
-{
-    typedef T type1;
-    typedef T type2;
-    typedef T rtype;
-    T operator ()(const T a, const T b) const { return std::min(a, b); }
-};
-
-template<typename T> struct MaxOp
-{
-    typedef T type1;
-    typedef T type2;
-    typedef T rtype;
-    T operator ()(const T a, const T b) const { return std::max(a, b); }
-};
-
 
 namespace MatUtils
 {

@@ -1046,6 +1046,14 @@ if (IMGUI_BUILD_EXAMPLE)
     )
 endif(IMGUI_BUILD_EXAMPLE)
 
+# BaseUtils
+set(BaseUtils_STATIC OFF)
+add_subdirectory(addon/BaseUtils)
+set(IMGUI_INC_DIRS
+    ${IMGUI_INC_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/BaseUtils/Include
+)
+
 # New Curve
 set(IMGUI_SRC
     ${IMGUI_SRC}

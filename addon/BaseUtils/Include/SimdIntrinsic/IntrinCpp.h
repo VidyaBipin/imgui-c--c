@@ -1,26 +1,7 @@
 #include <limits>
 #include <cstring>
 #include <algorithm>
-#include "MatMath.Internal.h"
-
-// //! @cond IGNORED
-// #define CV_SIMD128_CPP 1
-// #if defined(CV_FORCE_SIMD128_CPP)
-// #define CV_SIMD128 1
-// #define CV_SIMD128_64F 1
-// #endif
-// #if defined(CV_DOXYGEN)
-// #define CV_SIMD128 1
-// #define CV_SIMD128_64F 1
-// #define CV_SIMD256 1
-// #define CV_SIMD256_64F 1
-// #define CV_SIMD512 1
-// #define CV_SIMD512_64F 1
-// #else
-// #define CV_SIMD256 0 // Explicitly disable SIMD256 and SIMD512 support for scalar intrinsic implementation
-// #define CV_SIMD512 0 // to avoid warnings during compilation
-// #endif
-// //! @endcond
+#include "MathUtils.h"
 
 namespace SimdOpt
 {
@@ -250,14 +231,14 @@ v_reg<_Tp, n> operator bin_op (const v_reg<_Tp, n>& a, const v_reg<_Tp, n>& b) \
 {                                                           \
     v_reg<_Tp, n> c;                                        \
     for (int32_t i = 0; i < n; i++)                         \
-        c.s[i] = MatUtils::SaturateCast<_Tp>(a.s[i] bin_op b.s[i]); \
+        c.s[i] = MathUtils::SaturateCast<_Tp>(a.s[i] bin_op b.s[i]); \
     return c;                                               \
 }                                                           \
 template<int32_t n> inline                                  \
 v_reg<_Tp, n>& operator bin_op##= (v_reg<_Tp, n>& a, const v_reg<_Tp, n>& b) \
 {                                                           \
     for (int32_t i = 0; i < n; i++)                         \
-        a.s[i] = MatUtils::SaturateCast<_Tp>(a.s[i] bin_op b.s[i]); \
+        a.s[i] = MathUtils::SaturateCast<_Tp>(a.s[i] bin_op b.s[i]); \
     return a;                                               \
 }
 
@@ -484,7 +465,7 @@ inline v_reg<_Tp, n> v_absdiffs(const v_reg<_Tp, n>& a, const v_reg<_Tp, n>& b)
 {
     v_reg<_Tp, n> c;
     for( int32_t i = 0; i < n; i++)
-        c.s[i] = MatUtils::SaturateCast<_Tp>(std::abs(a.s[i] - b.s[i]));
+        c.s[i] = MathUtils::SaturateCast<_Tp>(std::abs(a.s[i] - b.s[i]));
     return c;
 }
 
@@ -1477,14 +1458,14 @@ template<int32_t n> inline v_reg<_Tpn, 2*n> v_##pack_suffix(const v_reg<_Tp, n>&
     return c; \
 }
 
-SIMD_PACK(uint16_t, uint8_t,  pack,   MatUtils::SaturateCast)
-SIMD_PACK(int16_t,  int8_t,   pack,   MatUtils::SaturateCast)
-SIMD_PACK(uint32_t, uint16_t, pack,   MatUtils::SaturateCast)
-SIMD_PACK(int32_t,  int16_t,  pack,   MatUtils::SaturateCast)
+SIMD_PACK(uint16_t, uint8_t,  pack,   MathUtils::SaturateCast)
+SIMD_PACK(int16_t,  int8_t,   pack,   MathUtils::SaturateCast)
+SIMD_PACK(uint32_t, uint16_t, pack,   MathUtils::SaturateCast)
+SIMD_PACK(int32_t,  int16_t,  pack,   MathUtils::SaturateCast)
 SIMD_PACK(uint64_t, uint32_t, pack,   static_cast)
 SIMD_PACK(int64_t,  int32_t,  pack,   static_cast)
-SIMD_PACK(int16_t,  uint8_t,  pack_u, MatUtils::SaturateCast)
-SIMD_PACK(int32_t,  uint16_t, pack_u, MatUtils::SaturateCast)
+SIMD_PACK(int16_t,  uint8_t,  pack_u, MathUtils::SaturateCast)
+SIMD_PACK(int32_t,  uint16_t, pack_u, MathUtils::SaturateCast)
 
 #define SIMD_RSHR_PACK(_Tp, _Tpn, pack_suffix, cast) \
 template<int32_t shift, int32_t n> inline v_reg<_Tpn, 2*n> v_rshr_##pack_suffix(const v_reg<_Tp, n>& a, const v_reg<_Tp, n>& b) \
@@ -1498,14 +1479,14 @@ template<int32_t shift, int32_t n> inline v_reg<_Tpn, 2*n> v_rshr_##pack_suffix(
     return c; \
 }
 
-SIMD_RSHR_PACK(uint16_t, uint8_t,  pack,   MatUtils::SaturateCast)
-SIMD_RSHR_PACK(int16_t,  int8_t,   pack,   MatUtils::SaturateCast)
-SIMD_RSHR_PACK(uint32_t, uint16_t, pack,   MatUtils::SaturateCast)
-SIMD_RSHR_PACK(int32_t,  int16_t,  pack,   MatUtils::SaturateCast)
+SIMD_RSHR_PACK(uint16_t, uint8_t,  pack,   MathUtils::SaturateCast)
+SIMD_RSHR_PACK(int16_t,  int8_t,   pack,   MathUtils::SaturateCast)
+SIMD_RSHR_PACK(uint32_t, uint16_t, pack,   MathUtils::SaturateCast)
+SIMD_RSHR_PACK(int32_t,  int16_t,  pack,   MathUtils::SaturateCast)
 SIMD_RSHR_PACK(uint64_t, uint32_t, pack,   static_cast)
 SIMD_RSHR_PACK(int64_t,  int32_t,  pack,   static_cast)
-SIMD_RSHR_PACK(int16_t,  uint8_t,  pack_u, MatUtils::SaturateCast)
-SIMD_RSHR_PACK(int32_t,  uint16_t, pack_u, MatUtils::SaturateCast)
+SIMD_RSHR_PACK(int16_t,  uint8_t,  pack_u, MathUtils::SaturateCast)
+SIMD_RSHR_PACK(int32_t,  uint16_t, pack_u, MathUtils::SaturateCast)
 
 #define SIMD_PACK_STORE(_Tp, _Tpn, pack_suffix, cast) \
 template<int32_t n> inline void v_##pack_suffix##_store(_Tpn* ptr, const v_reg<_Tp, n>& a) \
@@ -1514,14 +1495,14 @@ template<int32_t n> inline void v_##pack_suffix##_store(_Tpn* ptr, const v_reg<_
         ptr[i] = cast<_Tpn>(a.s[i]); \
 }
 
-SIMD_PACK_STORE(uint16_t, uint8_t,  pack,   MatUtils::SaturateCast)
-SIMD_PACK_STORE(int16_t,  int8_t,   pack,   MatUtils::SaturateCast)
-SIMD_PACK_STORE(uint32_t, uint16_t, pack,   MatUtils::SaturateCast)
-SIMD_PACK_STORE(int32_t,  int16_t,  pack,   MatUtils::SaturateCast)
+SIMD_PACK_STORE(uint16_t, uint8_t,  pack,   MathUtils::SaturateCast)
+SIMD_PACK_STORE(int16_t,  int8_t,   pack,   MathUtils::SaturateCast)
+SIMD_PACK_STORE(uint32_t, uint16_t, pack,   MathUtils::SaturateCast)
+SIMD_PACK_STORE(int32_t,  int16_t,  pack,   MathUtils::SaturateCast)
 SIMD_PACK_STORE(uint64_t, uint32_t, pack,   static_cast)
 SIMD_PACK_STORE(int64_t,  int32_t,  pack,   static_cast)
-SIMD_PACK_STORE(int16_t,  uint8_t,  pack_u, MatUtils::SaturateCast)
-SIMD_PACK_STORE(int32_t,  uint16_t, pack_u, MatUtils::SaturateCast)
+SIMD_PACK_STORE(int16_t,  uint8_t,  pack_u, MathUtils::SaturateCast)
+SIMD_PACK_STORE(int32_t,  uint16_t, pack_u, MathUtils::SaturateCast)
 
 #define SIMD_RSHR_PACK_STORE(_Tp, _Tpn, pack_suffix, cast) \
 template<int32_t shift, int32_t n> inline void v_rshr_##pack_suffix##_store(_Tpn* ptr, const v_reg<_Tp, n>& a) \
@@ -1530,14 +1511,14 @@ template<int32_t shift, int32_t n> inline void v_rshr_##pack_suffix##_store(_Tpn
         ptr[i] = cast<_Tpn>((a.s[i] + ((_Tp)1 << (shift - 1))) >> shift); \
 }
 
-SIMD_RSHR_PACK_STORE(uint16_t, uint8_t,  pack,   MatUtils::SaturateCast)
-SIMD_RSHR_PACK_STORE(int16_t,  int8_t,   pack,   MatUtils::SaturateCast)
-SIMD_RSHR_PACK_STORE(uint32_t, uint16_t, pack,   MatUtils::SaturateCast)
-SIMD_RSHR_PACK_STORE(int32_t,  int16_t,  pack,   MatUtils::SaturateCast)
+SIMD_RSHR_PACK_STORE(uint16_t, uint8_t,  pack,   MathUtils::SaturateCast)
+SIMD_RSHR_PACK_STORE(int16_t,  int8_t,   pack,   MathUtils::SaturateCast)
+SIMD_RSHR_PACK_STORE(uint32_t, uint16_t, pack,   MathUtils::SaturateCast)
+SIMD_RSHR_PACK_STORE(int32_t,  int16_t,  pack,   MathUtils::SaturateCast)
 SIMD_RSHR_PACK_STORE(uint64_t, uint32_t, pack,   static_cast)
 SIMD_RSHR_PACK_STORE(int64_t,  int32_t,  pack,   static_cast)
-SIMD_RSHR_PACK_STORE(int16_t,  uint8_t,  pack_u, MatUtils::SaturateCast)
-SIMD_RSHR_PACK_STORE(int32_t,  uint16_t, pack_u, MatUtils::SaturateCast)
+SIMD_RSHR_PACK_STORE(int16_t,  uint8_t,  pack_u, MathUtils::SaturateCast)
+SIMD_RSHR_PACK_STORE(int32_t,  uint16_t, pack_u, MathUtils::SaturateCast)
 
 template<typename _Tpm, typename _Tp, int32_t n>
 inline void _pack_b(_Tpm* mptr, const v_reg<_Tp, n>& a, const v_reg<_Tp, n>& b)
