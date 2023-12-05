@@ -3,6 +3,7 @@
 #include "imgui_internal.h"
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 /** Set the platform-specific directory path separator */
 #if defined(_WIN32)
