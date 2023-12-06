@@ -485,6 +485,14 @@ namespace IMGUIZMO_NAMESPACE
       return ImVec2(trans.x, trans.y);
    }
 
+   static ImVec3 worldToVec(const vec_t& worldPos, const matrix_t& mat)
+   {
+      vec_t trans;
+      trans.TransformVector(worldPos, mat);
+      trans *= 4;
+      return ImVec3(trans.x, trans.y, trans.z);
+   }
+
    static void ComputeCameraRay(vec_t& rayOrigin, vec_t& rayDir, ImVec2 position = ImVec2(gContext.mX, gContext.mY), ImVec2 size = ImVec2(gContext.mWidth, gContext.mHeight))
    {
       ImGuiIO& io = ImGui::GetIO();
@@ -2745,13 +2753,23 @@ namespace IMGUIZMO_NAMESPACE
       const ImVec2 uv = ImGui::GetFontTexUvWhitePixel();
       for (int ii = 0; ii < numVertices / 3; ii++)
       {
+         ImVec2 v1 = triProj[ii * 3];
+         ImVec2 v2 = triProj[ii * 3 + 1];
+         ImVec2 v3 = triProj[ii * 3 + 2];
+         ImVec2 d1 = v2 - v1;
+         ImVec2 d2 = v3 - v1;
+         // 2D cross product to do culling
+         if (d1.cross(d2) > 0.0f)
+         {
+            continue;
+         }
          draw_list->PrimReserve(3, 3);
          draw_list->PrimWriteIdx(ImDrawIdx(draw_list->_VtxCurrentIdx));
          draw_list->PrimWriteIdx(ImDrawIdx(draw_list->_VtxCurrentIdx + 1));
          draw_list->PrimWriteIdx(ImDrawIdx(draw_list->_VtxCurrentIdx + 2));
-         draw_list->PrimWriteVtx(triProj[ii * 3 + 0], uv, colLight[ii * 3 + 0]);
-         draw_list->PrimWriteVtx(triProj[ii * 3 + 1], uv, colLight[ii * 3 + 1]);
-         draw_list->PrimWriteVtx(triProj[ii * 3 + 2], uv, colLight[ii * 3 + 2]);
+         draw_list->PrimWriteVtx(v1, uv, colLight[ii * 3 + 0]);
+         draw_list->PrimWriteVtx(v2, uv, colLight[ii * 3 + 1]);
+         draw_list->PrimWriteVtx(v3, uv, colLight[ii * 3 + 2]);
       }
    }
 
@@ -2815,14 +2833,16 @@ namespace IMGUIZMO_NAMESPACE
       }
    }
 
-   void DrawModel(const float *view, const float *projection, Model* model)
+   void DrawModel(const float *view, const float *projection, Model* model, bool draw_normal)
    {
       assert(model && model->model_data);
       matrix_t res = model->identity_matrix * *(matrix_t*)view * *(matrix_t*)projection;
       std::vector<ImVec2> s_CubeTriProj;
       std::vector<ImU32> s_CubeColLight;
+      std::vector<ImVec2> s_CubeNormProj;
       s_CubeTriProj.resize(model->model_data->triangles * 3);
       s_CubeColLight.resize(model->model_data->triangles * 3);
+      s_CubeNormProj.resize(model->model_data->triangles * 3);
       #pragma omp parallel for num_threads(4)
       for (size_t i = 0; i < model->model_data->triangles; ++i)
       {
@@ -2835,35 +2855,41 @@ namespace IMGUIZMO_NAMESPACE
          ImVec3 norm1 = model->model_data->vertex_stock[i1].normal;
          ImVec3 norm2 = model->model_data->vertex_stock[i2].normal;
          ImVec3 norm3 = model->model_data->vertex_stock[i3].normal;
-         ImVec2 v1 = worldToPos(ImVec4(coord1), res);
-         ImVec2 v2 = worldToPos(ImVec4(coord2), res);
-         ImVec2 v3 = worldToPos(ImVec4(coord3), res);
-
-         // 2D cross product to do culling
-         ImVec2 d1 = v2 - v1;
-         ImVec2 d2 = v3 - v1;
-         if (d1.cross(d2) > 0.0f)
-         {
-            continue;
-         }
-         s_CubeTriProj[i * 3 + 0] = v1;
-         s_CubeTriProj[i * 3 + 1] = v2;
-         s_CubeTriProj[i * 3 + 2] = v3;
-         s_CubeColLight[i * 3 + 0] = ColorBlend(0xff000000, 0xFFFFFFFF, fabsf(ImClamp(norm1.z * 0.5f + 0.5f, -1.0f, 1.0f)));
-         s_CubeColLight[i * 3 + 1] = ColorBlend(0xff000000, 0xFFFFFFFF, fabsf(ImClamp(norm2.z * 0.5f + 0.5f, -1.0f, 1.0f)));
-         s_CubeColLight[i * 3 + 2] = ColorBlend(0xff000000, 0xFFFFFFFF, fabsf(ImClamp(norm3.z * 0.5f + 0.5f, -1.0f, 1.0f)));
+         s_CubeTriProj[i * 3 + 0] = worldToPos(ImVec4(coord1), res);
+         s_CubeTriProj[i * 3 + 1] = worldToPos(ImVec4(coord2), res);
+         s_CubeTriProj[i * 3 + 2] = worldToPos(ImVec4(coord3), res);
+         ImVec3 nv1 = worldToVec(ImVec4(norm1), res);
+         ImVec3 nv2 = worldToVec(ImVec4(norm2), res);
+         ImVec3 nv3 = worldToVec(ImVec4(norm3), res);
+         s_CubeNormProj[i * 3 + 0] = worldToPos(ImVec4(norm1), res);
+         s_CubeNormProj[i * 3 + 1] = worldToPos(ImVec4(norm2), res);
+         s_CubeNormProj[i * 3 + 2] = worldToPos(ImVec4(norm3), res);
+         s_CubeColLight[i * 3 + 0] = ColorBlend(0xff000000, 0xFFFFFFFF, fabsf(ImClamp(nv1.z, -1.0f, 1.0f)));
+         s_CubeColLight[i * 3 + 1] = ColorBlend(0xff000000, 0xFFFFFFFF, fabsf(ImClamp(nv2.z, -1.0f, 1.0f)));
+         s_CubeColLight[i * 3 + 2] = ColorBlend(0xff000000, 0xFFFFFFFF, fabsf(ImClamp(nv3.z, -1.0f, 1.0f)));
       }
       DrawTriangles(gContext.mDrawList, s_CubeTriProj, s_CubeColLight);
+      if (draw_normal)
+      {
+         for (size_t i = 0; i < model->model_data->triangles; ++i)
+         {
+            gContext.mDrawList->AddLine(s_CubeTriProj[i * 3 + 0], s_CubeNormProj[i * 3 + 0], 0xFF0000FF, 1.f);
+            gContext.mDrawList->AddLine(s_CubeTriProj[i * 3 + 1], s_CubeNormProj[i * 3 + 1], 0xFF0000FF, 1.f);
+            gContext.mDrawList->AddLine(s_CubeTriProj[i * 3 + 2], s_CubeNormProj[i * 3 + 2], 0xFF0000FF, 1.f);
+         }
+      }
    }
 
-   void DrawModelMesh(const float *view, const float *projection, Model* model, ImU32 col, float thickness)
+   void DrawModelMesh(const float *view, const float *projection, Model* model, ImU32 col, float thickness, bool draw_normal)
    {
       assert(model && model->model_data);
       matrix_t res = model->identity_matrix * *(matrix_t*)view * *(matrix_t*)projection;
       std::vector<ImVec2> s_CubeTriProj;
       std::vector<ImU32> s_CubeColLight;
+      std::vector<ImVec2> s_CubeNormProj;
       s_CubeTriProj.resize(model->model_data->triangles * 3);
       s_CubeColLight.resize(model->model_data->triangles * 3);
+      s_CubeNormProj.resize(model->model_data->triangles * 3);
       #pragma omp parallel for num_threads(4)
       for (size_t i = 0; i < model->model_data->triangles; ++i)
       {
@@ -2873,24 +2899,33 @@ namespace IMGUIZMO_NAMESPACE
          ImVec3 coord1 = model->model_data->vertex_stock[i1].position;
          ImVec3 coord2 = model->model_data->vertex_stock[i2].position;
          ImVec3 coord3 = model->model_data->vertex_stock[i3].position;
-         ImVec2 v1 = worldToPos(ImVec4(coord1), res);
-         ImVec2 v2 = worldToPos(ImVec4(coord2), res);
-         ImVec2 v3 = worldToPos(ImVec4(coord3), res);
          ImVec3 norm1 = model->model_data->vertex_stock[i1].normal;
          ImVec3 norm2 = model->model_data->vertex_stock[i2].normal;
          ImVec3 norm3 = model->model_data->vertex_stock[i3].normal;
-         s_CubeTriProj[i * 3 + 0] = v1;
-         s_CubeTriProj[i * 3 + 1] = v2;
-         s_CubeTriProj[i * 3 + 2] = v3;
-         s_CubeColLight[i * 3 + 0] = ColorBlend(0xff000000, col, fabsf(ImClamp(norm1.z * 0.5f + 0.5f, -1.0f, 1.0f)));
-         s_CubeColLight[i * 3 + 1] = ColorBlend(0xff000000, col, fabsf(ImClamp(norm2.z * 0.5f + 0.5f, -1.0f, 1.0f)));
-         s_CubeColLight[i * 3 + 2] = ColorBlend(0xff000000, col, fabsf(ImClamp(norm3.z * 0.5f + 0.5f, -1.0f, 1.0f)));
+         s_CubeTriProj[i * 3 + 0] = worldToPos(ImVec4(coord1), res);
+         s_CubeTriProj[i * 3 + 1] = worldToPos(ImVec4(coord2), res);
+         s_CubeTriProj[i * 3 + 2] = worldToPos(ImVec4(coord3), res);
+         ImVec3 nv1 = worldToVec(ImVec4(norm1), res);
+         ImVec3 nv2 = worldToVec(ImVec4(norm2), res);
+         ImVec3 nv3 = worldToVec(ImVec4(norm3), res);
+         s_CubeNormProj[i * 3 + 0] = worldToPos(ImVec4(norm1), res);
+         s_CubeNormProj[i * 3 + 1] = worldToPos(ImVec4(norm2), res);
+         s_CubeNormProj[i * 3 + 2] = worldToPos(ImVec4(norm3), res);
+         s_CubeColLight[i * 3 + 0] = ColorBlend(0xff000000, col, fabsf(ImClamp(nv1.z, -1.0f, 1.0f)));
+         s_CubeColLight[i * 3 + 1] = ColorBlend(0xff000000, col, fabsf(ImClamp(nv2.z, -1.0f, 1.0f)));
+         s_CubeColLight[i * 3 + 2] = ColorBlend(0xff000000, col, fabsf(ImClamp(nv3.z, -1.0f, 1.0f)));
       }
       for (size_t i = 0; i < model->model_data->triangles; ++i)
       {
          gContext.mDrawList->AddLine(s_CubeTriProj[i * 3 + 0], s_CubeTriProj[i * 3 + 1], s_CubeColLight[i * 3 + 0], thickness);
          gContext.mDrawList->AddLine(s_CubeTriProj[i * 3 + 1], s_CubeTriProj[i * 3 + 2], s_CubeColLight[i * 3 + 1], thickness);
          gContext.mDrawList->AddLine(s_CubeTriProj[i * 3 + 2], s_CubeTriProj[i * 3 + 0], s_CubeColLight[i * 3 + 2], thickness);
+         if (draw_normal)
+         {
+            gContext.mDrawList->AddLine(s_CubeTriProj[i * 3 + 0], s_CubeNormProj[i * 3 + 0], 0xFF0000FF, thickness);
+            gContext.mDrawList->AddLine(s_CubeTriProj[i * 3 + 1], s_CubeNormProj[i * 3 + 1], 0xFF0000FF, thickness);
+            gContext.mDrawList->AddLine(s_CubeTriProj[i * 3 + 2], s_CubeNormProj[i * 3 + 2], 0xFF0000FF, thickness);
+         }
       }
    }
 
@@ -3004,14 +3039,6 @@ namespace IMGUIZMO_NAMESPACE
          ImVec2 v1 = worldToPos(p1, res);
          ImVec2 v2 = worldToPos(p2, res);
          ImVec2 v3 = worldToPos(p3, res);
-         // 2D cross product to do culling
-         ImVec2 d1 = v2 - v1;
-         ImVec2 d2 = v3 - v1;
-         if (d1.cross(d2) > 0.0f)
-         {
-            v2 = v1;
-            v3 = v1;
-         }
          s_CubeTriProj.push_back(v1);
          s_CubeTriProj.push_back(v2);
          s_CubeTriProj.push_back(v3);

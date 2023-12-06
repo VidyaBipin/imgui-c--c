@@ -182,6 +182,7 @@
     ImVec3 Div(float val) const                     { return ImVec3(x / val, y / val, z / val); } \
     float Length() const                            { return (float)sqrt(x * x + y * y + z * z); } \
     ImVec3 Normalize()                              { (*this) *= (1.f / ( Length() > FLT_EPSILON ? Length() : FLT_EPSILON ) ); return (*this); } \
+    ImVec2 Vec2()                                   { return ImVec2{x, y}; }
 
 #define IM_VEC4_CLASS_EXTRA \
     bool operator==(const ImVec4& d) const          { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8 && fabs(w - d.w) < 10e-8; } \

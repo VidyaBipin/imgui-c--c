@@ -56,8 +56,8 @@ namespace IMGUIZMO_NAMESPACE
     IMGUI_API void DrawTriangles(ImDrawList* draw_list, const std::vector<ImVec2>& triProj, const std::vector<ImU32>& colLight);
     IMGUI_API void DrawQuats(ImDrawList* draw_list, const std::vector<ImVec2>& triProj, const std::vector<ImU32>& colLight);
     
-    IMGUI_API void DrawModel(const float *view, const float *projection, Model* model);
-    IMGUI_API void DrawModelMesh(const float *view, const float *projection, Model* model, ImU32 col = 0xFFFFFFFF, float thickness = 1.f);
+    IMGUI_API void DrawModel(const float *view, const float *projection, Model* model, bool draw_normal = false);
+    IMGUI_API void DrawModelMesh(const float *view, const float *projection, Model* model, ImU32 col = 0xFFFFFFFF, float thickness = 1.f, bool draw_normal = false);
     
     // Render a cube with DrawQuat. Usefull for debug/tests
     IMGUI_API void DrawCubeQuat(const float *view, const float *projection, float* matrix);
