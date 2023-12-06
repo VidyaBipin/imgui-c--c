@@ -154,6 +154,8 @@ public:
     std::vector<ImVec2> uv_coord_stock;
     /** Normal stock */
     std::vector<ImVec3> normal_stock;
+    /** Barycentric stock */
+    std::vector<ImVec3> barycentric_stock;
     /** Number of vertices */
     std::size_t vertices;
     /** Number of elements */
@@ -183,6 +185,7 @@ public:
         position_stock.clear();
         uv_coord_stock.clear();
         normal_stock.clear();
+        barycentric_stock.clear();
     }
 };
 

@@ -56,8 +56,7 @@ namespace IMGUIZMO_NAMESPACE
     IMGUI_API void DrawTriangles(ImDrawList* draw_list, const std::vector<ImVec2>& triProj, const std::vector<ImU32>& colLight);
     IMGUI_API void DrawQuats(ImDrawList* draw_list, const std::vector<ImVec2>& triProj, const std::vector<ImU32>& colLight);
     
-    IMGUI_API void DrawModel(const float *view, const float *projection, Model* model, bool draw_normal = false);
-    IMGUI_API void DrawModelMesh(const float *view, const float *projection, Model* model, ImU32 col = 0xFFFFFFFF, float thickness = 1.f, bool draw_normal = false);
+    IMGUI_API void DrawModel(const float *view, const float *projection, Model* model, bool bFace = true,  bool bMesh = false, bool draw_normal = false, ImU32 col = 0xFFFFFFFF, float thickness = 1.f);
     
     // Render a cube with DrawQuat. Usefull for debug/tests
     IMGUI_API void DrawCubeQuat(const float *view, const float *projection, float* matrix);
@@ -199,7 +198,7 @@ struct Model
     bool useSnap {false};
     bool boundSizing {false};
     bool boundSizingSnap {false};
-    bool showManipulate {true};
+    bool showManipulate {false};
     ImVec3 snap {1.f, 1.f, 1.f};
     ImVec3 boundsSnap {0.1f, 0.1f, 0.1f};
     ImVec3 bounds[2] {{-0.5f, -0.5f, -0.5f},{0.5f, 0.5f, 0.5f}};

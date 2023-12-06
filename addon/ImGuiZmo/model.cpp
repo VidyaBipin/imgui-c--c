@@ -653,6 +653,16 @@ ModelData *LoadObj(const std::string path)
         vertex_1.tangent += tangent;
         vertex_2.tangent += tangent;
     };
+    
+    auto TriArea2D = [](float x1,float y1,float x2,float y2,float x3,float y3 )
+    {
+        return (x1-x2)*(y2-y3)-(x2-x3)*(y1-y2);
+    };
+    auto calcBarycentric = [&](const ImVec3& a, const ImVec3& b, const ImVec3& c)
+    {
+        ImVec3 centric = (a + b + c) / 3;
+        return centric;
+    };
 
     // Read the file
     while (!file.eof())
@@ -814,6 +824,18 @@ ModelData *LoadObj(const std::string path)
     model_data->vertices = model_data->position_stock.size();
     model_data->elements = model_data->vertex_stock.size();
     model_data->triangles = model_data->index_stock.size() / 3U;
+    // Calculate triangle barycentric
+    for (size_t ii = 0; ii < model_data->triangles; ii++ )
+    {
+        size_t i1 = model_data->index_stock[ii * 3 + 0];
+        size_t i2 = model_data->index_stock[ii * 3 + 1];
+        size_t i3 = model_data->index_stock[ii * 3 + 2];
+        ImVec3 coord1 = model_data->vertex_stock[i1].position;
+        ImVec3 coord2 = model_data->vertex_stock[i2].position;
+        ImVec3 coord3 = model_data->vertex_stock[i3].position;
+        auto cent = calcBarycentric(coord1, coord2, coord3);
+        model_data->barycentric_stock.emplace_back(cent);
+    }
 
     // Return true if not error has been found
     model_data->model_open = true;
