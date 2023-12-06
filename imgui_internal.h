@@ -2230,6 +2230,7 @@ struct ImGuiContext
     bool                    DebugShowGroupRects;
 
     // Shared stacks
+    ImGuiCol                    DebugFlashStyleColorIdx;        // (Keep close to ColorStack to share cache line)
     ImVector<ImGuiColorMod>     ColorStack;                     // Stack for PushStyleColor()/PopStyleColor() - inherited by Begin()
     ImVector<ImGuiStyleMod>     StyleVarStack;                  // Stack for PushStyleVar()/PopStyleVar() - inherited by Begin()
     ImVector<ImFont*>           FontStack;                      // Stack for PushFont()/PopFont() - inherited by Begin()
@@ -2453,6 +2454,8 @@ struct ImGuiContext
     bool                    DebugItemPickerActive;              // Item picker is active (started with DebugStartItemPicker())
     ImU8                    DebugItemPickerMouseButton;
     ImGuiID                 DebugItemPickerBreakId;             // Will call IM_DEBUG_BREAK() when encountering this ID
+    float                   DebugFlashStyleColorTime;
+    ImVec4                  DebugFlashStyleColorBackup;
     ImGuiMetricsConfig      DebugMetricsConfig;
     ImGuiIDStackTool        DebugIDStackTool;
     ImGuiDebugAllocInfo     DebugAllocInfo;
@@ -2657,6 +2660,8 @@ struct ImGuiContext
         DebugItemPickerActive = false;
         DebugItemPickerMouseButton = ImGuiMouseButton_Left;
         DebugItemPickerBreakId = 0;
+        DebugFlashStyleColorTime = 0.0f;
+        DebugFlashStyleColorIdx = ImGuiCol_COUNT;
         DebugHoveredDockNode = NULL;
 
         memset(FramerateSecPerFrame, 0, sizeof(FramerateSecPerFrame));
