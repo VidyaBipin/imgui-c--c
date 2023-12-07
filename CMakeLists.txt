@@ -1748,6 +1748,16 @@ if (IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
         ImMaskCreator
     )
     
+    add_executable(
+        obj_viewer
+        test/example_obj_viewer.cpp
+        ${IMGUI_APP_SRC}
+    )
+    target_link_libraries(
+        obj_viewer
+        imgui
+        ${LINK_LIBS}
+    )
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     set(IMGUI_SHELL_FILE ${PROJECT_SOURCE_DIR}/test/shell_minimal.html)
     set(IMGUI_WEB_DIR ${PROJECT_BINARY_DIR}/web/)
