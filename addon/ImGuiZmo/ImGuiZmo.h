@@ -5,8 +5,8 @@
 #include <imgui.h>
 #include "model.h"
 
+struct Model_Triangle;
 struct Model;
-
 namespace IMGUIZMO_NAMESPACE
 {
     // call inside your own window and before Manipulate() in order to draw gizmo to that window.
@@ -53,16 +53,12 @@ namespace IMGUIZMO_NAMESPACE
 
     IMGUI_API void DrawGrid(const float *view, const float *projection, const float *matrix, const float gridSize);
 
-    IMGUI_API void DrawTriangles(ImDrawList* draw_list, const std::vector<ImVec2>& triProj, const std::vector<ImU32>& colLight);
+    IMGUI_API void DrawTriangles(ImDrawList* draw_list, const std::vector<Model_Triangle>& triangles);
     IMGUI_API void DrawQuats(ImDrawList* draw_list, const std::vector<ImVec2>& triProj, const std::vector<ImU32>& colLight);
     
     IMGUI_API void UpdateModel(const float *view, const float *projection, Model* model);
     IMGUI_API void DrawModel(const float *view, const float *projection, Model* model, bool bFace = true,  bool bMesh = false, bool draw_normal = false, ImU32 col = 0xFFFFFFFF, float thickness = 1.f);
     
-    // Render a cube with DrawQuat. Usefull for debug/tests
-    IMGUI_API void DrawCubeQuat(const float *view, const float *projection, float* matrix);
-    // Render a cube with DrawQuat. Usefull for debug/tests
-    IMGUI_API void DrawCubeTriangle(const float *view, const float *projection, float* matrix);
     // Render a cube with face color corresponding to face normal. Usefull for debug/tests
     IMGUI_API void DrawCubes(const float *view, const float *projection, const float *matrices, int matrixCount);
     // call it when you want a gizmo
@@ -190,6 +186,15 @@ namespace IMGUIZMO_NAMESPACE
 #endif
 }
 
+struct IMGUI_API Model_Triangle
+{
+    bool skipped {false};
+    ImVec2 s_TriProj[3];
+    ImU32  s_ColLight[3];
+    ImVec2 s_NormProj;
+    ImVec3 s_BarProj;
+};
+
 struct IMGUI_API Model
 {
     Model() {}
@@ -211,9 +216,5 @@ struct IMGUI_API Model
     ImMat4x4 identity_matrix;
     // proj stocks
     std::mutex m_updating;
-    std::vector<ImVec2> s_TriProj;
-    std::vector<ImU32> s_ColLight;
-    std::vector<ImVec2> s_NormProj;
-    std::vector<ImVec2> s_BarProj;
-    std::vector<float> s_Depth;
+    std::vector<Model_Triangle> triangles;
 };

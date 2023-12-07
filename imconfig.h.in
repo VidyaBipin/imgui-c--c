@@ -149,7 +149,8 @@
 //---- Define constructor and implicit cast operators to convert back<>forth between your math types and ImVec2/ImVec4.
 // This will be inlined as part of ImVec2 and ImVec4 class declarations.
 #define IM_VEC2_CLASS_EXTRA \
-    float cross(const ImVec2& d)                    { return (x * d.y) - (y * d.x); }
+    float cross(const ImVec2& d)                    { return (x * d.y) - (y * d.x); } \
+    float dot(const ImVec2& d)                      { return (x * d.x) + (y * d.y); } \
 
 #define IM_VEC3_CLASS_EXTRA \
     ImVec3 operator+(const float rhs)               { return ImVec3(x + rhs, y + rhs, z + rhs); } \
@@ -180,7 +181,7 @@
     ImVec3 Div(float val) const                     { return ImVec3(x / val, y / val, z / val); } \
     float Length() const                            { return (float)sqrt(x * x + y * y + z * z); } \
     ImVec3 Normalize()                              { (*this) *= (1.f / ( Length() > FLT_EPSILON ? Length() : FLT_EPSILON ) ); return (*this); } \
-    ImVec2 Vec2()                                   { return ImVec2{x, y}; }
+    ImVec2 Vec2()                                   { return ImVec2{x, y}; } \
 
 #define IM_VEC4_CLASS_EXTRA \
     ImVec4 operator+(const float rhs)               { return ImVec4(x + rhs, y + rhs, z + rhs, w + rhs); } \

@@ -2754,8 +2754,6 @@ namespace IMGUIZMO_NAMESPACE
       if (d1.cross(d2) > 0.0f)
          skipped = true;
 
-      // TODO::Occlusion Culling
-
       // Pixel Culling
       if (v1.x > gContext.mXMax * 1.5 || v1.y > gContext.mYMax * 1.5 ||
           v2.x > gContext.mXMax * 1.5 || v2.y > gContext.mYMax * 1.5 ||
@@ -2767,7 +2765,7 @@ namespace IMGUIZMO_NAMESPACE
          skipped = true;
       return skipped;
    }
-   static bool IsSkipped(ImVec2 v)
+   static bool IsSkipped(ImVec3 v)
    {
       // 2D Pixel Culling
       bool skipped = false;
@@ -2777,40 +2775,29 @@ namespace IMGUIZMO_NAMESPACE
          skipped = true;
       return skipped;
    }
-   static bool IsSkipped(ImU32 c1, ImU32 c2, ImU32 c3)
-   {
-      // Skipped Face Culling
-      bool skipped = false;
-      skipped =((c1 & 0xFF000000) == 0) &&
-               ((c2 & 0xFF000000) == 0) &&
-               ((c3 & 0xFF000000) == 0);
-      return skipped;
-   }
 
-   void DrawTriangles(ImDrawList *draw_list, const std::vector<ImVec2> &triProj, const std::vector<ImU32> &colLight)
+   void DrawTriangles(ImDrawList *draw_list, const std::vector<Model_Triangle>& triangles)
    {
-      size_t numVertices = triProj.size();
-      assert(numVertices % 3 == 0 && triProj.size() == colLight.size());
+      size_t numVertices = triangles.size();
       const ImVec2 uv = ImGui::GetFontTexUvWhitePixel();
-      for (int ii = 0; ii < numVertices / 3; ii++)
+      for (int ii = 0; ii < numVertices; ii++)
       {
-         ImVec2 v1 = triProj[ii * 3];
-         ImVec2 v2 = triProj[ii * 3 + 1];
-         ImVec2 v3 = triProj[ii * 3 + 2];
-         bool skipped = IsSkipped(v1, v2, v3);
-         skipped |= IsSkipped(colLight[ii * 3 + 0], colLight[ii * 3 + 1], colLight[ii * 3 + 2]);
-         if (skipped)
+         ImVec2 v1 = triangles[ii].s_TriProj[0];
+         ImVec2 v2 = triangles[ii].s_TriProj[1];
+         ImVec2 v3 = triangles[ii].s_TriProj[2];
+         if (triangles[ii].skipped)
             continue;
          draw_list->PrimReserve(3, 3);
          draw_list->PrimWriteIdx(ImDrawIdx(draw_list->_VtxCurrentIdx));
          draw_list->PrimWriteIdx(ImDrawIdx(draw_list->_VtxCurrentIdx + 1));
          draw_list->PrimWriteIdx(ImDrawIdx(draw_list->_VtxCurrentIdx + 2));
-         draw_list->PrimWriteVtx(v1, uv, colLight[ii * 3 + 0]);
-         draw_list->PrimWriteVtx(v2, uv, colLight[ii * 3 + 1]);
-         draw_list->PrimWriteVtx(v3, uv, colLight[ii * 3 + 2]);
+         draw_list->PrimWriteVtx(v1, uv, triangles[ii].s_ColLight[0]);
+         draw_list->PrimWriteVtx(v2, uv, triangles[ii].s_ColLight[1]);
+         draw_list->PrimWriteVtx(v3, uv, triangles[ii].s_ColLight[2]);
       }
    }
 
+/** 
    void DrawQuats(ImDrawList *draw_list, const std::vector<ImVec2> &triProj, const std::vector<ImU32> &colLight)
    {
       size_t numVertices = triProj.size();
@@ -2870,23 +2857,16 @@ namespace IMGUIZMO_NAMESPACE
          draw_list->PrimWriteVtx(vl, uv, c4);
       }
    }
+*/
 
    void UpdateModel(const float *view, const float *projection, Model* model)
    {
       assert(model && model->model_data);
       model->m_updating.lock();
       matrix_t res = model->identity_matrix * *(matrix_t*)view * *(matrix_t*)projection;
-      model->s_TriProj.clear();
-      model->s_ColLight.clear();
-      model->s_NormProj.clear();
-      model->s_BarProj.clear();
-      model->s_Depth.clear();
-      model->s_TriProj.resize(model->model_data->triangles * 3);
-      model->s_ColLight.resize(model->model_data->triangles * 3);
-      model->s_NormProj.resize(model->model_data->triangles);
-      model->s_BarProj.resize(model->model_data->triangles);
-      model->s_Depth.resize(model->model_data->triangles);
-      #pragma omp parallel for num_threads(4)
+      model->triangles.clear();
+      model->triangles.resize(model->model_data->triangles);
+      #pragma omp parallel for num_threads(OMP_THREADS)
       for (size_t i = 0; i < model->model_data->triangles; ++i)
       {
          size_t i1 = model->model_data->index_stock[i * 3 + 0];
@@ -2898,27 +2878,31 @@ namespace IMGUIZMO_NAMESPACE
          ImVec3 norm1 = model->model_data->vertex_stock[i1].normal;
          ImVec3 norm2 = model->model_data->vertex_stock[i2].normal;
          ImVec3 norm3 = model->model_data->vertex_stock[i3].normal;
-         bool skipFace = IsSkipped(coord1, coord2, coord3, res);
+         model->triangles[i].skipped = IsSkipped(coord1, coord2, coord3, res);
          ImVec2 v1 = worldToPos(ImVec4(coord1), res);
          ImVec2 v2 = worldToPos(ImVec4(coord2), res);
          ImVec2 v3 = worldToPos(ImVec4(coord3), res);
-         model->s_TriProj[i * 3 + 0] = worldToPos(ImVec4(coord1), res);
-         model->s_TriProj[i * 3 + 1] = worldToPos(ImVec4(coord2), res);
-         model->s_TriProj[i * 3 + 2] = worldToPos(ImVec4(coord3), res);
+         model->triangles[i].s_TriProj[0] = worldToPos(ImVec4(coord1), res);
+         model->triangles[i].s_TriProj[1] = worldToPos(ImVec4(coord2), res);
+         model->triangles[i].s_TriProj[2] = worldToPos(ImVec4(coord3), res);
          ImVec3 nv1 = worldToVec(ImVec4(norm1), res);
          ImVec3 nv2 = worldToVec(ImVec4(norm2), res);
          ImVec3 nv3 = worldToVec(ImVec4(norm3), res);
-         ImU32 color = skipFace ? 0x00000000 : 0xFFFFFFFF;
-         model->s_ColLight[i * 3 + 0] = ColorBlend(0xff000000, color, fabsf(ImClamp(nv1.z, -1.0f, 1.0f)));
-         model->s_ColLight[i * 3 + 1] = ColorBlend(0xff000000, color, fabsf(ImClamp(nv2.z, -1.0f, 1.0f)));
-         model->s_ColLight[i * 3 + 2] = ColorBlend(0xff000000, color, fabsf(ImClamp(nv3.z, -1.0f, 1.0f)));
-         ImVec3 centric = model->model_data->barycentric_stock[i];
-         model->s_BarProj[i] = worldToPos(ImVec4(centric), res);
+         model->triangles[i].s_ColLight[0] = ColorBlend(0xff000000, IM_COL32_WHITE, fabsf(ImClamp(nv1.z, -1.0f, 1.0f)));
+         model->triangles[i].s_ColLight[1] = ColorBlend(0xff000000, IM_COL32_WHITE, fabsf(ImClamp(nv2.z, -1.0f, 1.0f)));
+         model->triangles[i].s_ColLight[2] = ColorBlend(0xff000000, IM_COL32_WHITE, fabsf(ImClamp(nv3.z, -1.0f, 1.0f)));
+         ImVec2 centric = worldToPos(model->model_data->barycentric_stock[i], res);
          ImVec3 vv1 = worldToVec(ImVec4(coord1), res);
          ImVec3 vv2 = worldToVec(ImVec4(coord2), res);
          ImVec3 vv3 = worldToVec(ImVec4(coord3), res);
-         model->s_Depth[i] =  - (vv1.z + vv2.z + vv3.z) / 3.f / 10.f;
+         model->triangles[i].s_BarProj = ImVec3(centric.x, centric.y, -(vv1.z + vv2.z + vv3.z) / 3.f / 10.f);
+         model->triangles[i].skipped |= IsSkipped(model->triangles[i].s_TriProj[0], model->triangles[i].s_TriProj[1], model->triangles[i].s_TriProj[2]);
+         model->triangles[i].skipped |= IsSkipped(model->triangles[i].s_BarProj);
       }
+      std::sort(model->triangles.begin(), model->triangles.end(), [](Model_Triangle& a, Model_Triangle& b)
+      {
+         return a.s_BarProj.z < b.s_BarProj.z;
+      });
       model->m_updating.unlock();
    }
 
@@ -2927,10 +2911,10 @@ namespace IMGUIZMO_NAMESPACE
       assert(model && model->model_data);
       ImU32 mesh_color = 0x80FF0000;
       ImU32 norm_color = 0x800000FF;
-      if (model->s_TriProj.empty())
+      if (model->triangles.empty())
          return;
       model->m_updating.lock();
-      if (bFace) DrawTriangles(gContext.mDrawList, model->s_TriProj, model->s_ColLight);
+      if (bFace) DrawTriangles(gContext.mDrawList, model->triangles);
 
       if (!bFace && !bMesh && !draw_normal)
       {
@@ -2939,151 +2923,23 @@ namespace IMGUIZMO_NAMESPACE
       }
       for (size_t i = 0; i < model->model_data->triangles; ++i)
       {
-         ImVec2 v1 = model->s_TriProj[i * 3 + 0];
-         ImVec2 v2 = model->s_TriProj[i * 3 + 1];
-         ImVec2 v3 = model->s_TriProj[i * 3 + 2];
-         if (IsSkipped(v1, v2, v3))
-            continue;
-         if (IsSkipped(model->s_ColLight[i * 3 + 0], model->s_ColLight[i * 3 + 1], model->s_ColLight[i * 3 + 2]))
-            continue;
-         if (IsSkipped(model->s_BarProj[i]))
-            continue;
+         ImVec2 v1 = model->triangles[i].s_TriProj[0];
+         ImVec2 v2 = model->triangles[i].s_TriProj[1];
+         ImVec2 v3 = model->triangles[i].s_TriProj[2];
+         if (model->triangles[i].skipped) continue;
          if (bMesh)
          {
             
-            gContext.mDrawList->AddLine(v1, v2, model->s_ColLight[i * 3 + 0] & mesh_color, thickness);
-            gContext.mDrawList->AddLine(v2, v3, model->s_ColLight[i * 3 + 1] & mesh_color, thickness);
-            gContext.mDrawList->AddLine(v3, v1, model->s_ColLight[i * 3 + 2] & mesh_color, thickness);
+            gContext.mDrawList->AddLine(v1, v2, model->triangles[i].s_ColLight[0] & mesh_color, thickness);
+            gContext.mDrawList->AddLine(v2, v3, model->triangles[i].s_ColLight[1] & mesh_color, thickness);
+            gContext.mDrawList->AddLine(v3, v1, model->triangles[i].s_ColLight[2] & mesh_color, thickness);
          }
          if (draw_normal)
          {
             //gContext.mDrawList->AddCircle(s_BarProj[i], 1, s_ColLight[i * 3 + 0] & norm_color, 0, 0.5f);
-            gContext.mDrawList->AddCircle(model->s_BarProj[i], 1, ColorBlend(0xff000000, norm_color, model->s_Depth[i]), 0, 0.5f);
+            gContext.mDrawList->AddCircle(model->triangles[i].s_BarProj.Vec2(), 1, ColorBlend(0xff000000, norm_color, model->triangles[i].s_BarProj.z), 0, 0.5f);
          }
       }
       model->m_updating.unlock();
-   }
-
-   void DrawCubeQuat(const float *view, const float *projection, float* matrix)
-   {
-      std::vector<ImVec3> s_CubeTri;
-      s_CubeTri.push_back(ImVec3(-1.0f, -1.0f,  1.0f));
-      s_CubeTri.push_back(ImVec3( 1.0f, -1.0f,  1.0f));
-      s_CubeTri.push_back(ImVec3( 1.0f,  1.0f,  1.0f));
-      s_CubeTri.push_back(ImVec3(-1.0f,  1.0f,  1.0f));
-      s_CubeTri.push_back(ImVec3( 1.0f,  1.0f,  1.0f));
-      s_CubeTri.push_back(ImVec3( 1.0f,  1.0f, -1.0f));
-      s_CubeTri.push_back(ImVec3(-1.0f,  1.0f, -1.0f));
-      s_CubeTri.push_back(ImVec3(-1.0f,  1.0f,  1.0f));
-      s_CubeTri.push_back(ImVec3( 1.0f, -1.0f,  1.0f));
-      s_CubeTri.push_back(ImVec3( 1.0f, -1.0f, -1.0f));
-      s_CubeTri.push_back(ImVec3( 1.0f,  1.0f, -1.0f));
-      s_CubeTri.push_back(ImVec3( 1.0f,  1.0f,  1.0f));
-      s_CubeTri.push_back(ImVec3(-1.0f, -1.0f,  1.0f));
-      s_CubeTri.push_back(ImVec3(-1.0f,  1.0f,  1.0f));
-      s_CubeTri.push_back(ImVec3(-1.0f,  1.0f, -1.0f));
-      s_CubeTri.push_back(ImVec3(-1.0f, -1.0f, -1.0f));
-      s_CubeTri.push_back(ImVec3(-1.0f, -1.0f,  1.0f));
-      s_CubeTri.push_back(ImVec3(-1.0f, -1.0f, -1.0f));
-      s_CubeTri.push_back(ImVec3( 1.0f, -1.0f, -1.0f));
-      s_CubeTri.push_back(ImVec3( 1.0f, -1.0f,  1.0f));
-      s_CubeTri.push_back(ImVec3(-1.0f, -1.0f, -1.0f));
-      s_CubeTri.push_back(ImVec3(-1.0f,  1.0f, -1.0f));
-      s_CubeTri.push_back(ImVec3( 1.0f,  1.0f, -1.0f));
-      s_CubeTri.push_back(ImVec3( 1.0f, -1.0f, -1.0f));
-
-      matrix_t res = *(matrix_t*)matrix * *(matrix_t*)view * *(matrix_t*)projection;
-
-      const int ntri = (int)s_CubeTri.size();
-      for (int i = 0; i < ntri / 4; ++i)
-      {
-         std::vector<ImVec2> s_CubeTriProj;
-         std::vector<ImU32> s_CubeColLight;
-         ImVec3 coord1 = s_CubeTri[i * 4 + 0];
-         ImVec3 coord2 = s_CubeTri[i * 4 + 1];
-         ImVec3 coord3 = s_CubeTri[i * 4 + 2];
-         ImVec3 coord4 = s_CubeTri[i * 4 + 3];
-         ImVec2 point1 = worldToPos(ImVec4(coord1), res);
-         ImVec2 point2 = worldToPos(ImVec4(coord2), res);
-         ImVec2 point3 = worldToPos(ImVec4(coord3), res);
-         ImVec2 point4 = worldToPos(ImVec4(coord4), res);
-         s_CubeTriProj.push_back(point1);
-         s_CubeTriProj.push_back(point2);
-         s_CubeTriProj.push_back(point3);
-         s_CubeTriProj.push_back(point4);
-         float depth = ((coord1.z * 0.2 + 0.5) + (coord2.z * 0.2 + 0.5) + (coord3.z * 0.2 + 0.5) + (coord4.z * 0.2 + 0.5)) / 4;
-         auto color = ColorBlend(0xff000000, 0xFFFFFFFF, fabsf(ImClamp(depth, -1.0f, 1.0f)));
-         s_CubeColLight.push_back(color);
-         s_CubeColLight.push_back(color);
-         s_CubeColLight.push_back(color);
-         s_CubeColLight.push_back(color);
-         DrawQuats(gContext.mDrawList, s_CubeTriProj, s_CubeColLight);
-      }
-   }
-   
-   void DrawCubeTriangle(const float *view, const float *projection, float* matrix)
-   {
-      std::vector<ImVec3> s_CubeTri;
-      s_CubeTri.push_back({-1.0, -1.0, -1.0});
-      s_CubeTri.push_back({-1.0, -1.0,  1.0});
-      s_CubeTri.push_back({-1.0,  1.0,  1.0});
-      s_CubeTri.push_back({ 1.0,  1.0, -1.0});
-      s_CubeTri.push_back({-1.0, -1.0, -1.0});
-      s_CubeTri.push_back({-1.0,  1.0, -1.0});
-      s_CubeTri.push_back({ 1.0, -1.0,  1.0});
-      s_CubeTri.push_back({-1.0, -1.0, -1.0});
-      s_CubeTri.push_back({ 1.0, -1.0, -1.0});
-      s_CubeTri.push_back({ 1.0,  1.0, -1.0});
-      s_CubeTri.push_back({ 1.0, -1.0, -1.0});
-      s_CubeTri.push_back({-1.0, -1.0, -1.0});
-      s_CubeTri.push_back({-1.0, -1.0, -1.0});
-      s_CubeTri.push_back({-1.0,  1.0,  1.0});
-      s_CubeTri.push_back({-1.0,  1.0, -1.0});
-      s_CubeTri.push_back({ 1.0, -1.0,  1.0});
-      s_CubeTri.push_back({-1.0, -1.0,  1.0});
-      s_CubeTri.push_back({-1.0, -1.0, -1.0});
-      s_CubeTri.push_back({-1.0,  1.0,  1.0});
-      s_CubeTri.push_back({-1.0, -1.0,  1.0});
-      s_CubeTri.push_back({ 1.0, -1.0,  1.0});
-      s_CubeTri.push_back({ 1.0,  1.0,  1.0});
-      s_CubeTri.push_back({ 1.0, -1.0, -1.0});
-      s_CubeTri.push_back({ 1.0,  1.0, -1.0});
-      s_CubeTri.push_back({ 1.0, -1.0, -1.0});
-      s_CubeTri.push_back({ 1.0,  1.0,  1.0});
-      s_CubeTri.push_back({ 1.0, -1.0,  1.0});
-      s_CubeTri.push_back({ 1.0,  1.0,  1.0});
-      s_CubeTri.push_back({ 1.0,  1.0, -1.0});
-      s_CubeTri.push_back({-1.0,  1.0, -1.0});
-      s_CubeTri.push_back({ 1.0,  1.0,  1.0});
-      s_CubeTri.push_back({-1.0,  1.0, -1.0});
-      s_CubeTri.push_back({-1.0,  1.0,  1.0});
-      s_CubeTri.push_back({ 1.0,  1.0,  1.0});
-      s_CubeTri.push_back({-1.0,  1.0,  1.0});
-      s_CubeTri.push_back({ 1.0, -1.0,  1.0});
-
-      matrix_t res = *(matrix_t*)matrix * *(matrix_t*)view * *(matrix_t*)projection;
-
-      const int ntri = (int)s_CubeTri.size();
-      std::vector<ImVec2> s_CubeTriProj;
-      std::vector<ImU32> s_CubeColLight;
-      for (int i = 0; i < ntri / 3; ++i)
-      {
-         ImVec4 p1 = ImVec4(s_CubeTri[i * 3 + 0]);
-         ImVec4 p2 = ImVec4(s_CubeTri[i * 3 + 1]);
-         ImVec4 p3 = ImVec4(s_CubeTri[i * 3 + 2]);
-         ImVec2 v1 = worldToPos(p1, res);
-         ImVec2 v2 = worldToPos(p2, res);
-         ImVec2 v3 = worldToPos(p3, res);
-         s_CubeTriProj.push_back(v1);
-         s_CubeTriProj.push_back(v2);
-         s_CubeTriProj.push_back(v3);
-         auto color1 = ColorBlend(0xff000000, 0xFFFFFFFF, fabsf(ImClamp(p1.z * 0.2f + 0.5f, -1.0f, 1.0f)));
-         auto color2 = ColorBlend(0xff000000, 0xFFFFFFFF, fabsf(ImClamp(p2.z * 0.2f + 0.5f, -1.0f, 1.0f)));
-         auto color3 = ColorBlend(0xff000000, 0xFFFFFFFF, fabsf(ImClamp(p3.z * 0.2f + 0.5f, -1.0f, 1.0f)));
-         s_CubeColLight.push_back(color1);
-         s_CubeColLight.push_back(color2);
-         s_CubeColLight.push_back(color3);
-      }
-      DrawTriangles(gContext.mDrawList, s_CubeTriProj, s_CubeColLight);
    }
 };
