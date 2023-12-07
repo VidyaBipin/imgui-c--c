@@ -2292,24 +2292,6 @@ namespace IMGUIZMO_NAMESPACE
                directionUnary[normalIndex] - directionUnary[perpXIndex] + directionUnary[perpYIndex],
             };
 
-            // clipping
-            /*
-            bool skipFace = false;
-            for (unsigned int iCoord = 0; iCoord < 4; iCoord++)
-            {
-               vec_t camSpacePosition;
-               camSpacePosition.TransformPoint(faceCoords[iCoord] * 0.5f * invert, res);
-               if (camSpacePosition.z < 0.001f)
-               {
-                  skipFace = true;
-                  break;
-               }
-            }
-            if (skipFace)
-            {
-               continue;
-            }
-            */
             vec_t centerPosition, centerPositionVP;
             centerPosition.TransformPoint(directionUnary[normalIndex] * 0.5f * invert, *(matrix_t*)matrix);
             centerPositionVP.TransformPoint(directionUnary[normalIndex] * 0.5f * invert, res);
@@ -2746,14 +2728,35 @@ namespace IMGUIZMO_NAMESPACE
       }
    }
 
+   static bool IsSkipped(ImVec3 v1, ImVec3 v2, ImVec3 v3, const ImMat4x4& res)
+   {
+      // Face Culling
+      bool skipped = false;
+      ImVec4 coord1 = ImVec4(v1);
+      ImVec4 coord2 = ImVec4(v2);
+      ImVec4 coord3 = ImVec4(v3);
+      ImVec4 camSpacePosition;
+      camSpacePosition.TransformPoint(coord1 * 0.5f, res);
+      skipped |= camSpacePosition.z < 0.01f;
+      camSpacePosition.TransformPoint(coord2 * 0.5f, res);
+      skipped |= camSpacePosition.z < 0.01f;
+      camSpacePosition.TransformPoint(coord3 * 0.5f, res);
+      skipped |= camSpacePosition.z < 0.01f;
+      return skipped;
+   }
+
    static bool IsSkipped(ImVec2 v1, ImVec2 v2, ImVec2 v3)
    {
       bool skipped = false;
       ImVec2 d1 = v2 - v1;
       ImVec2 d2 = v3 - v1;
-      // 2D cross product to do culling
+      // Backface Culling : 2D cross product to do culling
       if (d1.cross(d2) > 0.0f)
          skipped = true;
+
+      // TODO::Occlusion Culling
+
+      // Pixel Culling
       if (v1.x > gContext.mXMax * 1.5 || v1.y > gContext.mYMax * 1.5 ||
           v2.x > gContext.mXMax * 1.5 || v2.y > gContext.mYMax * 1.5 ||
           v3.x > gContext.mXMax * 1.5 || v3.y > gContext.mYMax * 1.5)
@@ -2766,11 +2769,21 @@ namespace IMGUIZMO_NAMESPACE
    }
    static bool IsSkipped(ImVec2 v)
    {
+      // 2D Pixel Culling
       bool skipped = false;
       if (v.x > gContext.mXMax * 1.5 || v.y > gContext.mYMax * 1.5)
          skipped = true;
       if (v.x < -gContext.mXMax || v.y < -gContext.mYMax)
          skipped = true;
+      return skipped;
+   }
+   static bool IsSkipped(ImU32 c1, ImU32 c2, ImU32 c3)
+   {
+      // Skipped Face Culling
+      bool skipped = false;
+      skipped =((c1 & 0xFF000000) == 0) &&
+               ((c2 & 0xFF000000) == 0) &&
+               ((c3 & 0xFF000000) == 0);
       return skipped;
    }
 
@@ -2785,6 +2798,7 @@ namespace IMGUIZMO_NAMESPACE
          ImVec2 v2 = triProj[ii * 3 + 1];
          ImVec2 v3 = triProj[ii * 3 + 2];
          bool skipped = IsSkipped(v1, v2, v3);
+         skipped |= IsSkipped(colLight[ii * 3 + 0], colLight[ii * 3 + 1], colLight[ii * 3 + 2]);
          if (skipped)
             continue;
          draw_list->PrimReserve(3, 3);
@@ -2857,18 +2871,21 @@ namespace IMGUIZMO_NAMESPACE
       }
    }
 
-   void DrawModel(const float *view, const float *projection, Model* model, bool bFace, bool bMesh, bool draw_normal, ImU32 col, float thickness)
+   void UpdateModel(const float *view, const float *projection, Model* model)
    {
       assert(model && model->model_data);
+      model->m_updating.lock();
       matrix_t res = model->identity_matrix * *(matrix_t*)view * *(matrix_t*)projection;
-      std::vector<ImVec2> s_TriProj;
-      std::vector<ImU32> s_ColLight;
-      std::vector<ImVec2> s_NormProj;
-      std::vector<ImVec2> s_BarProj;
-      s_TriProj.resize(model->model_data->triangles * 3);
-      s_ColLight.resize(model->model_data->triangles * 3);
-      s_NormProj.resize(model->model_data->triangles);
-      s_BarProj.resize(model->model_data->triangles);
+      model->s_TriProj.clear();
+      model->s_ColLight.clear();
+      model->s_NormProj.clear();
+      model->s_BarProj.clear();
+      model->s_Depth.clear();
+      model->s_TriProj.resize(model->model_data->triangles * 3);
+      model->s_ColLight.resize(model->model_data->triangles * 3);
+      model->s_NormProj.resize(model->model_data->triangles);
+      model->s_BarProj.resize(model->model_data->triangles);
+      model->s_Depth.resize(model->model_data->triangles);
       #pragma omp parallel for num_threads(4)
       for (size_t i = 0; i < model->model_data->triangles; ++i)
       {
@@ -2881,44 +2898,70 @@ namespace IMGUIZMO_NAMESPACE
          ImVec3 norm1 = model->model_data->vertex_stock[i1].normal;
          ImVec3 norm2 = model->model_data->vertex_stock[i2].normal;
          ImVec3 norm3 = model->model_data->vertex_stock[i3].normal;
+         bool skipFace = IsSkipped(coord1, coord2, coord3, res);
          ImVec2 v1 = worldToPos(ImVec4(coord1), res);
          ImVec2 v2 = worldToPos(ImVec4(coord2), res);
          ImVec2 v3 = worldToPos(ImVec4(coord3), res);
-         s_TriProj[i * 3 + 0] = worldToPos(ImVec4(coord1), res);
-         s_TriProj[i * 3 + 1] = worldToPos(ImVec4(coord2), res);
-         s_TriProj[i * 3 + 2] = worldToPos(ImVec4(coord3), res);
+         model->s_TriProj[i * 3 + 0] = worldToPos(ImVec4(coord1), res);
+         model->s_TriProj[i * 3 + 1] = worldToPos(ImVec4(coord2), res);
+         model->s_TriProj[i * 3 + 2] = worldToPos(ImVec4(coord3), res);
          ImVec3 nv1 = worldToVec(ImVec4(norm1), res);
          ImVec3 nv2 = worldToVec(ImVec4(norm2), res);
          ImVec3 nv3 = worldToVec(ImVec4(norm3), res);
-         s_ColLight[i * 3 + 0] = ColorBlend(0xff000000, 0xFFFFFFFF, fabsf(ImClamp(nv1.z, -1.0f, 1.0f)));
-         s_ColLight[i * 3 + 1] = ColorBlend(0xff000000, 0xFFFFFFFF, fabsf(ImClamp(nv2.z, -1.0f, 1.0f)));
-         s_ColLight[i * 3 + 2] = ColorBlend(0xff000000, 0xFFFFFFFF, fabsf(ImClamp(nv3.z, -1.0f, 1.0f)));
+         ImU32 color = skipFace ? 0x00000000 : 0xFFFFFFFF;
+         model->s_ColLight[i * 3 + 0] = ColorBlend(0xff000000, color, fabsf(ImClamp(nv1.z, -1.0f, 1.0f)));
+         model->s_ColLight[i * 3 + 1] = ColorBlend(0xff000000, color, fabsf(ImClamp(nv2.z, -1.0f, 1.0f)));
+         model->s_ColLight[i * 3 + 2] = ColorBlend(0xff000000, color, fabsf(ImClamp(nv3.z, -1.0f, 1.0f)));
          ImVec3 centric = model->model_data->barycentric_stock[i];
-         s_BarProj[i] = worldToPos(ImVec4(centric), res);
+         model->s_BarProj[i] = worldToPos(ImVec4(centric), res);
+         ImVec3 vv1 = worldToVec(ImVec4(coord1), res);
+         ImVec3 vv2 = worldToVec(ImVec4(coord2), res);
+         ImVec3 vv3 = worldToVec(ImVec4(coord3), res);
+         model->s_Depth[i] =  - (vv1.z + vv2.z + vv3.z) / 3.f / 10.f;
       }
+      model->m_updating.unlock();
+   }
 
-      if (bFace) DrawTriangles(gContext.mDrawList, s_TriProj, s_ColLight);
+   void DrawModel(const float *view, const float *projection, Model* model, bool bFace, bool bMesh, bool draw_normal, ImU32 col, float thickness)
+   {
+      assert(model && model->model_data);
+      ImU32 mesh_color = 0x80FF0000;
+      ImU32 norm_color = 0x800000FF;
+      if (model->s_TriProj.empty())
+         return;
+      model->m_updating.lock();
+      if (bFace) DrawTriangles(gContext.mDrawList, model->s_TriProj, model->s_ColLight);
 
+      if (!bFace && !bMesh && !draw_normal)
+      {
+         mesh_color = 0x10808080;
+         bMesh = true;
+      }
       for (size_t i = 0; i < model->model_data->triangles; ++i)
       {
+         ImVec2 v1 = model->s_TriProj[i * 3 + 0];
+         ImVec2 v2 = model->s_TriProj[i * 3 + 1];
+         ImVec2 v3 = model->s_TriProj[i * 3 + 2];
+         if (IsSkipped(v1, v2, v3))
+            continue;
+         if (IsSkipped(model->s_ColLight[i * 3 + 0], model->s_ColLight[i * 3 + 1], model->s_ColLight[i * 3 + 2]))
+            continue;
+         if (IsSkipped(model->s_BarProj[i]))
+            continue;
          if (bMesh)
          {
-            ImVec2 v1 = s_TriProj[i * 3 + 0];
-            ImVec2 v2 = s_TriProj[i * 3 + 1];
-            ImVec2 v3 = s_TriProj[i * 3 + 2];
-            if (IsSkipped(v1, v2, v3))
-               continue;
-            gContext.mDrawList->AddLine(v1, v2, s_ColLight[i * 3 + 0] & 0x80FF0000, thickness);
-            gContext.mDrawList->AddLine(v2, v3, s_ColLight[i * 3 + 1] & 0x80FF0000, thickness);
-            gContext.mDrawList->AddLine(v3, v1, s_ColLight[i * 3 + 2] & 0x80FF0000, thickness);
+            
+            gContext.mDrawList->AddLine(v1, v2, model->s_ColLight[i * 3 + 0] & mesh_color, thickness);
+            gContext.mDrawList->AddLine(v2, v3, model->s_ColLight[i * 3 + 1] & mesh_color, thickness);
+            gContext.mDrawList->AddLine(v3, v1, model->s_ColLight[i * 3 + 2] & mesh_color, thickness);
          }
          if (draw_normal)
          {
-            if (IsSkipped(s_BarProj[i]))
-               continue;
-            gContext.mDrawList->AddCircle(s_BarProj[i], 1, 0x800000FF);
+            //gContext.mDrawList->AddCircle(s_BarProj[i], 1, s_ColLight[i * 3 + 0] & norm_color, 0, 0.5f);
+            gContext.mDrawList->AddCircle(model->s_BarProj[i], 1, ColorBlend(0xff000000, norm_color, model->s_Depth[i]), 0, 0.5f);
          }
       }
+      model->m_updating.unlock();
    }
 
    void DrawCubeQuat(const float *view, const float *projection, float* matrix)

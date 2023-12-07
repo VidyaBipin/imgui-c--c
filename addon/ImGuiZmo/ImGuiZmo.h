@@ -56,6 +56,7 @@ namespace IMGUIZMO_NAMESPACE
     IMGUI_API void DrawTriangles(ImDrawList* draw_list, const std::vector<ImVec2>& triProj, const std::vector<ImU32>& colLight);
     IMGUI_API void DrawQuats(ImDrawList* draw_list, const std::vector<ImVec2>& triProj, const std::vector<ImU32>& colLight);
     
+    IMGUI_API void UpdateModel(const float *view, const float *projection, Model* model);
     IMGUI_API void DrawModel(const float *view, const float *projection, Model* model, bool bFace = true,  bool bMesh = false, bool draw_normal = false, ImU32 col = 0xFFFFFFFF, float thickness = 1.f);
     
     // Render a cube with DrawQuat. Usefull for debug/tests
@@ -189,7 +190,7 @@ namespace IMGUIZMO_NAMESPACE
 #endif
 }
 
-struct Model
+struct IMGUI_API Model
 {
     Model() {}
     ~Model() { if (model_data) delete model_data; }
@@ -208,4 +209,11 @@ struct Model
     ImVec3 matrixRotation;
     ImVec3 matrixScale;
     ImMat4x4 identity_matrix;
+    // proj stocks
+    std::mutex m_updating;
+    std::vector<ImVec2> s_TriProj;
+    std::vector<ImU32> s_ColLight;
+    std::vector<ImVec2> s_NormProj;
+    std::vector<ImVec2> s_BarProj;
+    std::vector<float> s_Depth;
 };
