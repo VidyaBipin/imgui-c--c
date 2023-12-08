@@ -30,6 +30,7 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "ImGuiZmo.h"
+#include <algorithm>
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
