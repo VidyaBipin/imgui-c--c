@@ -110,7 +110,24 @@ int page_mem(void *out, potrace_path_t *plist, imginfo_t *imginfo)
         return 1;
     }
 
-    gm_clear(gm, 255); /* white */
+    
+    if (imginfo->invert)
+    {
+        gm_clear(gm, 0); /* black */
+        for (int y = gm->h - 1; y >= 0; y--)
+        {
+            for (int x = 0; x < gm->w; x++)
+            {
+                if (x > imginfo->lmar && x < w - imginfo->rmar &&
+                    y > imginfo->tmar && y < h - imginfo->bmar)
+                    GM_UPUT(gm, x, y, 255);
+            }
+        }
+    }
+    else
+    {
+        gm_clear(gm, 255); /* white */
+    }
     list_forall(p, plist)
     {
         if (info.draw_dot)

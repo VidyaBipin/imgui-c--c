@@ -80,6 +80,7 @@ struct info_s
   int some_infiles;                     /* do we process a list of input filenames? */
   double blacklevel;                    /* 0 to 1: black/white cutoff in input file */
   int invert;                           /* invert bitmap? */
+  bool invert_background;               /* default is white */
   int opaque;                           /* paint white shapes opaquely? */
   int grouping;                         /* 0=flat; 1=connected components; 2=hierarchical */
   // mkimg
@@ -105,6 +106,7 @@ struct imginfo_s
   double height;                 /* desired height of image (in pt or pixels) */
   int channels;                  /* desired channels of image(1 = gray, 3 = rgb, 4 = rgba) */
   double lmar, rmar, tmar, bmar; /* requested margins (in pt) */
+  bool invert;                   /* invert background */
   trans_t trans;                 /* specify relative position of a tilted rectangle */
 };
 typedef struct imginfo_s imginfo_t;

@@ -151,7 +151,9 @@ void calc_dimensions(imginfo_t *imginfo, potrace_path_t *plist, int* width, int*
   }
   else
   {
-    dim_def = DEFAULT_DIM;
+    dim_def = DIM_MM;
+    info.width_d.x = imginfo->pixwidth;
+    info.height_d.x = imginfo->pixheight;
   }
 
   /* apply default dimension to width, height, margins */
