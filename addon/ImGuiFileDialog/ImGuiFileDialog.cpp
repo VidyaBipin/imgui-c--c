@@ -2121,8 +2121,9 @@ void IGFD::FileManager::m_ApplyFilteringOnFileList(const FileDialogInternal& vFi
         bool show = true;
         if (!file->SearchForTag(vFileDialogInternal.searchManager.searchTag))  // if search tag
             show = false;
-        if (dLGDirectoryMode && !file->fileType.isDir())
-            show = false;
+        // disabled by Dicky, allow filter display even Directory
+        //if (dLGDirectoryMode && !file->fileType.isDir())
+        //    show = false;
         if (show)
             vFileInfosFilteredList.push_back(file);
     }
@@ -2643,7 +2644,7 @@ std::string IGFD::FileManager::GetResultingPath() {
 
 std::string IGFD::FileManager::GetResultingFileName(FileDialogInternal& vFileDialogInternal, IGFD_ResultMode vFlag) {
     // Modify By Dicky
-	if (!dLGDirectoryMode) // if not directory mode
+	if (dLGDirectoryMode) // if directory mode
 	{
 		return std::string(fileNameBuffer);
 	}
@@ -2658,7 +2659,7 @@ std::string IGFD::FileManager::GetResultingFileName(FileDialogInternal& vFileDia
 }
 
 std::string IGFD::FileManager::GetResultingFilePathName(FileDialogInternal& vFileDialogInternal, IGFD_ResultMode vFlag) {
-    if (!dLGDirectoryMode) {  // if not directory mode
+    if (!dLGDirectoryMode) {  // if file mode
         auto result = GetResultingPath();
         const auto& filename = GetResultingFileName(vFileDialogInternal, vFlag);
         if (!filename.empty()) {
@@ -2673,7 +2674,7 @@ std::string IGFD::FileManager::GetResultingFilePathName(FileDialogInternal& vFil
 
         return result;
     }
-    return "";  // file mode
+    return GetResultingPath();  // modify by Dicky directory mode
 }
 
 std::map<std::string, std::string> IGFD::FileManager::GetResultingSelection(FileDialogInternal& vFileDialogInternal, IGFD_ResultMode vFlag) {
@@ -3722,7 +3723,7 @@ void IGFD::FileDialog::OpenDialog(const std::string& vKey,
     m_FileDialogInternal.filterManager.dLGdefaultExt.clear();
     m_FileDialogInternal.filterManager.ParseFilters(vFilters);
 
-    m_FileDialogInternal.fileManager.dLGDirectoryMode = (vFilters == nullptr);
+    m_FileDialogInternal.fileManager.dLGDirectoryMode = vFlags & ImGuiFileDialogFlags_AllowDirectorySelect; // modify by Dicky, org is (vFilters == nullptr);
     if (vPath.empty())
         m_FileDialogInternal.fileManager.dLGpath = m_FileDialogInternal.fileManager.GetCurrentPath();
     else
@@ -3777,7 +3778,7 @@ void IGFD::FileDialog::OpenDialog(const std::string& vKey,
 
     m_FileDialogInternal.fileManager.SetCurrentPath(m_FileDialogInternal.fileManager.dLGpath);
 
-    m_FileDialogInternal.fileManager.dLGDirectoryMode = (vFilters == nullptr);
+    m_FileDialogInternal.fileManager.dLGDirectoryMode = vFlags & ImGuiFileDialogFlags_AllowDirectorySelect; // modify by Dicky, org is (vFilters == nullptr);
     m_FileDialogInternal.fileManager.dLGcountSelectionMax = vCountSelectionMax;  //-V101
 
     m_FileDialogInternal.fileManager.ClearAll();
@@ -3823,7 +3824,7 @@ void IGFD::FileDialog::OpenDialogWithPane(const std::string& vKey,
     m_FileDialogInternal.filterManager.ParseFilters(vFilters);
 
     m_FileDialogInternal.fileManager.dLGcountSelectionMax = (size_t)vCountSelectionMax;
-    m_FileDialogInternal.fileManager.dLGDirectoryMode = (vFilters == nullptr);
+    m_FileDialogInternal.fileManager.dLGDirectoryMode = vFlags & ImGuiFileDialogFlags_AllowDirectorySelect; // modify by Dicky, org is (vFilters == nullptr);
     if (vPath.empty())
         m_FileDialogInternal.fileManager.dLGpath = m_FileDialogInternal.fileManager.GetCurrentPath();
     else
@@ -3885,7 +3886,7 @@ void IGFD::FileDialog::OpenDialogWithPane(const std::string& vKey,
     m_FileDialogInternal.fileManager.SetCurrentPath(m_FileDialogInternal.fileManager.dLGpath);
 
     m_FileDialogInternal.fileManager.dLGcountSelectionMax = vCountSelectionMax;  //-V101
-    m_FileDialogInternal.fileManager.dLGDirectoryMode = (vFilters == nullptr);
+    m_FileDialogInternal.fileManager.dLGDirectoryMode = vFlags & ImGuiFileDialogFlags_AllowDirectorySelect; // modify by Dicky, org is (vFilters == nullptr);
     m_FileDialogInternal.filterManager.ParseFilters(vFilters);
     m_FileDialogInternal.filterManager.SetSelectedFilterWithExt(m_FileDialogInternal.filterManager.dLGdefaultExt);
 
@@ -4274,10 +4275,10 @@ bool IGFD::FileDialog::m_DrawFooter() {
 
     // Input file fields
     float width = ImGui::GetContentRegionAvail().x;
-    if (!fdFile.dLGDirectoryMode) {
+    //if (!fdFile.dLGDirectoryMode) {
         ImGuiContext& g = *GImGui;
         width -= m_FileDialogInternal.filterManager.GetFilterComboBoxWidth() + g.Style.ItemSpacing.x;
-    }
+    //}
 
     ImGui::PushItemWidth(width);
     ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue;
