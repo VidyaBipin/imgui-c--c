@@ -30,8 +30,9 @@ static std::vector<std::string> split(std::string str, std::string pattern)
     return result;
 }
 
-int DIR_Iterate(std::string directory, std::vector<std::string>& filesAbsolutePath, std::vector<std::string>& filesname, std::vector<std::string>& suffix_filter, bool suffix, bool recurrence, bool sort)
+int DIR_Iterate(std::string directory, std::vector<std::string>& filesAbsolutePath, std::vector<std::string>& filesname, std::vector<std::string>& suffix_filter, bool suffix, bool recurrence, bool sort, bool found_break)
 {
+    int ret = 0;
 	DIR* dir = opendir(directory.c_str());
 	if ( dir == NULL )
 	{
@@ -44,6 +45,7 @@ int DIR_Iterate(std::string directory, std::vector<std::string>& filesAbsolutePa
 	
 	while ( (d_ent = readdir(dir)) != NULL )
 	{
+        bool need_add = false;
 		if ( (strcmp(d_ent->d_name, dot) != 0)
 			&& (strcmp(d_ent->d_name, dotdot) != 0) )
 		{
@@ -56,9 +58,14 @@ int DIR_Iterate(std::string directory, std::vector<std::string>& filesAbsolutePa
                     {
                         newDirectory = directory + std::string(d_ent->d_name);
                     }
-                    if ( -1 == DIR_Iterate(newDirectory, filesAbsolutePath, filesname, suffix_filter, suffix) )
+                    int _ret = DIR_Iterate(newDirectory, filesAbsolutePath, filesname, suffix_filter, suffix, recurrence, sort, found_break);
+                    if ( _ret == -1)
                     {
                         return -1;
+                    }
+                    else if (_ret == -2)
+                    {
+                        need_add = true;
                     }
                 }
 			}
@@ -66,7 +73,6 @@ int DIR_Iterate(std::string directory, std::vector<std::string>& filesAbsolutePa
 			{
 				if (d_ent->d_name[0] == '.')
 					continue;
-                bool need_add = false;
                 std::string suffix_str;
 				std::string absolutePath = directory + std::string("/") + std::string(d_ent->d_name);
 				if( directory[directory.length()-1] == '/')
@@ -103,6 +109,11 @@ int DIR_Iterate(std::string directory, std::vector<std::string>& filesAbsolutePa
 				if (need_add) filesname.push_back(d_ent->d_name);
 			}
 		}
+        if (need_add && found_break)
+        {
+            ret = -2;
+            break;
+        }
 	}
 	closedir(dir);
     if (sort)
@@ -110,5 +121,5 @@ int DIR_Iterate(std::string directory, std::vector<std::string>& filesAbsolutePa
         std::sort(filesAbsolutePath.begin(), filesAbsolutePath.end());
         std::sort(filesname.begin(), filesname.end());
     }
-	return 0;
+	return ret;
 }

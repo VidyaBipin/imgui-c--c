@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-    EXPORT_API int DIR_Iterate(std::string directory, std::vector<std::string>& filesAbsolutePath, std::vector<std::string>& filesname, std::vector<std::string>& suffix_filter,  bool suffix = true, bool recurrence = true, bool sort = true);
+    EXPORT_API int DIR_Iterate(std::string directory, std::vector<std::string>& filesAbsolutePath, std::vector<std::string>& filesname, std::vector<std::string>& suffix_filter,  bool suffix = true, bool recurrence = true, bool sort = true, bool found_break = false);
 
 #ifdef __cplusplus
 }
