@@ -4833,8 +4833,11 @@ void IGFD::FileDialog::m_DrawSidePane(float vHeight) {
 
     ImGui::BeginChild("##FileTypes", ImVec2(0, vHeight));
 
+	// modify by Dicky
     m_FileDialogInternal.dLGoptionsPane(m_FileDialogInternal.filterManager.GetSelectedFilter().getFirstFilter().c_str(),
-        m_FileDialogInternal.dLGuserDatas, &m_FileDialogInternal.canWeContinue);
+                                        GetFilePathName().c_str(),
+                                        m_FileDialogInternal.dLGuserDatas, &m_FileDialogInternal.canWeContinue);
+    // modify by Dicky end
     ImGui::EndChild();
 }
 

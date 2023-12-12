@@ -1817,7 +1817,7 @@ struct IGFD_API DropInfos {
 #pragma region FileDialogInternal
 
 typedef void* UserDatas;
-typedef std::function<void(const char*, UserDatas, bool*)> PaneFun;  // side pane function binding
+typedef std::function<void(const char*, const char*, UserDatas, bool*)> PaneFun;  // modify by Dicky, add current path, side pane function binding
 class IGFD_API FileDialogInternal {
 public:
     FileManager fileManager;      // the file manager
@@ -2249,7 +2249,7 @@ IGFD_C_API void IGFD_Selection_DestroyContent(IGFD_Selection* vSelection);  // d
 IGFD_C_API ImGuiFileDialog* IGFD_Create(void);               // create the filedialog context
 IGFD_C_API void IGFD_Destroy(ImGuiFileDialog* vContextPtr);  // destroy the filedialog context
 
-typedef void (*IGFD_PaneFun)(const char*, void*, bool*);  // callback fucntion for display the pane
+typedef void (*IGFD_PaneFun)(const char*, const char*, void*, bool*);  // modify by Dicky add current path, callback fucntion for display the pane
 
 #ifdef USE_THUMBNAILS
 typedef void (*IGFD_CreateThumbnailFun)(IGFD_Thumbnail_Info*);   // callback function for create thumbnail texture

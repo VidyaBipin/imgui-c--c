@@ -6,7 +6,7 @@
 
 static bool canValidateDialog = false;
 
-inline void InfosPane(const char* vFilter, IGFDUserDatas vUserDatas, bool* vCantContinue) // if vCantContinue is false, the user cant validate the dialog
+inline void InfosPane(const char* vFilter, const char* currentPath, IGFDUserDatas vUserDatas, bool* vCantContinue) // if vCantContinue is false, the user cant validate the dialog
 {
 	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Infos Pane");
 
@@ -249,7 +249,7 @@ void show_file_dialog_demo_window(ImGuiFileDialog * dlg, bool * open)
 		if (ImGui::Button(ICON_IGFD_SAVE " Save File Dialog with a custom pane"))
 		{
 			dlg->OpenDialogWithPane("ChooseFileDlgKey", "Choose File", ".cpp,.h,.hpp",
-				".", "", std::bind(&InfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 350, 1, IGFDUserDatas("InfosPane"));
+				".", "", std::bind(&InfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), 350, 1, IGFDUserDatas("InfosPane"));
 		}
 		if (ImGui::Button(ICON_IGFD_SAVE " Save File Dialog with Confirm Dialog For Overwrite File if exist"))
 		{
