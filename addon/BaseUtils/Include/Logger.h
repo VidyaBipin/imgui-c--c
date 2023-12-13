@@ -18,6 +18,7 @@
 #pragma once
 #include <string>
 #include <ostream>
+#include <stdint.h>
 #include "BaseUtilsCommon.h"
 
 namespace Logger
