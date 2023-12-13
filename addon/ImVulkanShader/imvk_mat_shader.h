@@ -1298,7 +1298,7 @@ sfp load_float32_gray_"#src"(int x, int y, int w, int h, int cstep, int format) 
 } \n\
 "
 
-#define SHADER_DEFAULT_PARAM \
+#define SHADER_DEFAULT_PARAM_HEADER \
 " \n\
 layout (push_constant) uniform parameter \n\
 { \n\
@@ -1314,12 +1314,13 @@ layout (push_constant) uniform parameter \n\
     int out_format; \n\
     int out_type; \n\
     \n\
-    float param_x; \n\
-    float param_y; \n\
-    float param_z; \n\
-    float param_w; \n\
+"
+
+#define SHADER_DEFAULT_PARAM_TAIL \
+" \n\
 } p; \n\
 "
+
 #define SHADER_RGBA_TO_HSL \
 " \n\
 sfpvec4 rgb_to_hsl(sfpvec4 rgba) \n\

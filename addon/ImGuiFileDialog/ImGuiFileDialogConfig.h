@@ -59,7 +59,7 @@
 // when auto resized, FILTER_COMBO_MIN_WIDTH will be considered has minimum width
 // FILTER_COMBO_AUTO_SIZE is enabled by default now to 1
 // uncomment if you want disable
-//#define FILTER_COMBO_AUTO_SIZE 0
+#define FILTER_COMBO_AUTO_SIZE 0
 // filter combobox width
 //#define FILTER_COMBO_MIN_WIDTH 120.0f
 // button widget use for compose path
@@ -85,8 +85,8 @@
 #define OverWriteDialogConfirmButtonString ICON_IGFD_OK " Confirm"
 #define OverWriteDialogCancelButtonString ICON_IGFD_CANCEL " Cancel"
 #endif
-//#define fileNameString "File Name : "
-//#define dirNameString "Directory Path :"
+#define fileNameString "Select Name :"
+#define dirNameString "Select Path :"
 //#define buttonResetSearchString "Reset search"
 //#define buttonDriveString "Drives"
 //#define buttonEditPathString "Edit path\nYou can also right click on path buttons"
