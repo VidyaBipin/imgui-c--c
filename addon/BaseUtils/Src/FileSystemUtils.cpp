@@ -24,6 +24,7 @@
 #include <thread>
 #include <chrono>
 #if (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#define USE_CPP_FS
 #include <filesystem>
 namespace fs = std::filesystem;
 #elif defined(_WIN32) && !defined(__MINGW64__)
@@ -32,6 +33,7 @@ namespace fs = std::filesystem;
 #include <sys/stat.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <unistd.h>
 #endif
 
 #include "FileSystemUtils.h"
@@ -131,9 +133,22 @@ string ExtractDirectoryPath(const string& path)
     }
 }
 
+string JoinPath(const string& path1, const string& path2)
+{
+#ifdef USE_CPP_FS
+    const auto result = fs::path(path1)/fs::path(path2);
+    return result.string();
+#else
+    const auto path1_ = !path1.empty() && path1.back() == _PATH_SEPARATOR ? path1.substr(0, path1.size()-1) : path1;
+    const auto path2_ = !path2.empty() && path2.front() == _PATH_SEPARATOR ? path2.substr(1) : path2;
+    ostringstream oss; oss << path1_ << _PATH_SEPARATOR << path2_;
+    return oss.str();
+#endif
+}
+
 bool IsDirectory(const string& path)
 {
-#if (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#ifdef USE_CPP_FS
     return fs::is_directory(path);
 #else
     bool isDir = false;
@@ -144,6 +159,22 @@ bool IsDirectory(const string& path)
         closedir(pDir);
     }
     return isDir;
+#endif
+}
+
+bool IsFile(const string& path)
+{
+#ifdef USE_CPP_FS
+    return fs::is_regular_file(path);
+#else
+    bool isFile = false;
+    auto fd = open(path.c_str(), O_RDONLY);
+    if (fd >= 0)
+    {
+        isFile = true;
+        close(fd);
+    }
+    return isFile;
 #endif
 }
 
@@ -338,7 +369,7 @@ public:
         return m_errMsg;
     }
 
-#if (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#ifdef USE_CPP_FS
     bool IsCorrectFileType(const fs::directory_entry& dirEntry)
     {
         if (dirEntry.is_regular_file())
@@ -447,7 +478,7 @@ public:
     bool ParseOneDir(const string& subDirPath, list<string>& pathList)
     {
         bool ret = true;
-#if (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#ifdef USE_CPP_FS
         fs::path dirFullPath = fs::path(m_baseDirPath)/fs::path(subDirPath);
         fs::directory_iterator dirIter(dirFullPath);
         for (auto const& dirEntry : dirIter)

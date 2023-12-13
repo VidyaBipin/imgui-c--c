@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(BaseUtils VERSION 0.1.0)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 if(NOT DEFINED BaseUtils_STATIC)
 option(BaseUtils_STATIC             "Build BaseUtils as static library" OFF)
@@ -31,6 +31,7 @@ add_library(BaseUtils ${LIBRARY_TYPE}
     ${LIB_SRC_DIR}/Logger.cpp
     ${LIB_SRC_DIR}/SimdOpt.cpp
     ${LIB_SRC_DIR}/ThreadUtils.cpp
+    ${LIB_SRC_DIR}/TimeUtils.cpp
 )
 target_include_directories(BaseUtils PRIVATE
     ${LIB_SRC_DIR}
