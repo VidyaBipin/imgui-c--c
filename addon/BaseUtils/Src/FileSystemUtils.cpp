@@ -146,6 +146,15 @@ string JoinPath(const string& path1, const string& path2)
 #endif
 }
 
+bool Exists(const std::string& path)
+{
+#ifdef USE_CPP_FS
+    return fs::exists(path);
+#else
+    return access(path.c_str(), F_OK) == 0;
+#endif
+}
+
 bool IsDirectory(const string& path)
 {
 #ifdef USE_CPP_FS
@@ -175,6 +184,37 @@ bool IsFile(const string& path)
         close(fd);
     }
     return isFile;
+#endif
+}
+
+bool CreateDirectory(const std::string& _path, bool createParentIfNotExists)
+{
+    if (_path.empty())
+        return false;
+#ifdef USE_CPP_FS
+    return createParentIfNotExists ? fs::create_directories(_path) : fs::create_directory(_path);
+#else
+    const auto path = _path.back() == _PATH_SEPARATOR ? _path.substr(0, _path.size()-1) : _path;
+    if (createParentIfNotExists)
+    {
+        const auto parentDir = ExtractDirectoryPath(path);
+        if (!parentDir.empty())
+        {
+            if (!Exists(parentDir))
+            {
+                if (!CreateDirectory(parentDir, true))
+                    return false;
+            }
+            else if (!IsDirectory(parentDir))
+                return false;
+        }
+    }
+#ifdef _WIN32
+    auto err = mkdir(path.c_str());
+#else
+    auto err = mkdir(path.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH);
+#endif
+    return err == 0 || err == EEXIST; 
 #endif
 }
 

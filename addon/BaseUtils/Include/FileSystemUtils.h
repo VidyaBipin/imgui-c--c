@@ -29,8 +29,11 @@ BASEUTILS_API std::string ExtractFileExtName(const std::string& path);
 BASEUTILS_API std::string ExtractFileName(const std::string& path);
 BASEUTILS_API std::string ExtractDirectoryPath(const std::string& path);
 BASEUTILS_API std::string JoinPath(const std::string& path1, const std::string& path2);
+BASEUTILS_API bool Exists(const std::string& path);
 BASEUTILS_API bool IsDirectory(const std::string& path);
 BASEUTILS_API bool IsFile(const std::string& path);
+BASEUTILS_API bool CreateDirectory(const std::string& path, bool createParentIfNotExists);
+
 
 struct FileIterator
 {
