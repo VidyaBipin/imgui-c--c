@@ -2550,7 +2550,7 @@ bool ImGui::DragTimeMS(const char* label, float* p_data, float v_speed, float p_
     if (!temp_input_is_active)
     {
         // Tabbing or CTRL-clicking on Drag turns it into an InputText
-        const bool input_requested_by_tabbing = temp_input_allowed && (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
+        const bool input_requested_by_tabbing = temp_input_allowed && (g.NavActivateFlags & ImGuiActivateFlags_FromTabbing) != 0;
         const bool clicked = (hovered && g.IO.MouseClicked[0]);
         const bool double_clicked = (hovered && g.IO.MouseClickedCount[0] == 2);
         const bool make_active = (input_requested_by_tabbing || clicked || double_clicked || g.NavActivateId == id);

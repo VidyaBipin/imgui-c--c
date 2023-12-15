@@ -182,13 +182,7 @@ static void ImGui_ImplSDL2_SetPlatformImeData(ImGuiViewport* viewport, ImGuiPlat
         r.w = 1;
         r.h = (int)data->InputLineHeight;
         SDL_SetTextInputRect(&r);
-        SDL_StartTextInput();
     }
-    else
-    {
-        SDL_StopTextInput();
-    }
- // modify by Dicky end
 }
 
 static ImGuiKey ImGui_ImplSDL2_KeycodeToImGuiKey(int keycode)
