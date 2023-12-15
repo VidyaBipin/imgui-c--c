@@ -2522,8 +2522,9 @@ void TextEditor::EnsureCursorVisible()
 	float scrollX = ImGui::GetScrollX();
 	float scrollY = ImGui::GetScrollY();
 
-	auto height = ImGui::GetWindowHeight();
-	auto width = ImGui::GetWindowWidth();
+	auto window_size = ImGui::GetContentRegionAvail();
+	auto height = window_size.y;
+	auto width = window_size.x;
 
 	auto top = 1 + (int)ceil(scrollY / mCharAdvance.y);
 	auto bottom = (int)ceil((scrollY + height) / mCharAdvance.y);
@@ -2538,9 +2539,9 @@ void TextEditor::EnsureCursorVisible()
 		ImGui::SetScrollY(ImMax(0.0f, (pos.mLine - 1) * mCharAdvance.y));
 	if (pos.mLine > bottom - 4)
 		ImGui::SetScrollY(ImMax(0.0f, (pos.mLine + 4) * mCharAdvance.y - height));
-	if (len + mTextStart < left + 4)
+	if (len + mTextStart < left * mCharAdvance.x + 4)
 		ImGui::SetScrollX(ImMax(0.0f, len + mTextStart - 4));
-	if (len + mTextStart > right - 4)
+	if (len + mTextStart > right * mCharAdvance.x - 4)
 		ImGui::SetScrollX(ImMax(0.0f, len + mTextStart + 4 - width));
 }
 
