@@ -355,7 +355,7 @@ TextEditor::Coordinates TextEditor::ScreenPosToCoordinates(const ImVec2& aPositi
 		{
 			//columnCoord += delta;
             float columnWidth = 0.0f;
- 			int delta = 0;
+			int delta = 0;
 			if (line[columnIndex].mChar == '\t')
 			{
 				float oldX = columnX;
@@ -691,6 +691,21 @@ std::string TextEditor::GetWordAt(const Coordinates & aCoords) const
 	return r;
 }
 
+ImRect TextEditor::GetWordRectAt(const ImVec2& mpos) const
+{
+	auto spaceSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, " ");
+	auto pos = ScreenPosToCoordinates(mpos);
+	ImVec2 origin = ImGui::GetCursorScreenPos();
+	auto start = FindWordStart(pos);
+	auto end = FindWordEnd(pos);
+	auto x_offset = pos.mColumn - start.mColumn;
+	ImVec2 str_pos_min = ImVec2(floor((mpos.x - origin.x) / spaceSize.x) * spaceSize.x + origin.x + 1, floor((mpos.y - origin.y) / spaceSize.y) * spaceSize.y + origin.y);
+	str_pos_min -= ImVec2(x_offset * spaceSize.x, 0);
+	ImVec2 str_pos_max = str_pos_min + ImVec2((end.mColumn - start.mColumn) * spaceSize.x, spaceSize.y);
+	str_pos_max += ImVec2(2, 0);
+	return ImRect(str_pos_min, str_pos_max);
+}
+
 ImU32 TextEditor::GetGlyphColor(const Glyph & aGlyph) const
 {
 	if (!mColorizerEnabled)
@@ -861,7 +876,7 @@ void TextEditor::HandleMouseInputs()
 			*/
 			else if (click)
 			{
-				mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = SanitizeCoordinates(ScreenPosToCoordinates(ImGui::GetMousePos(), !mOverwrite));
+				mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = SanitizeCoordinates(ScreenPosToCoordinates(ImGui::GetMousePos() - ImVec2(6, 0), !mOverwrite));
 				if (ctrl)
 					mSelectionMode = SelectionMode::Word;
 				else
@@ -1169,19 +1184,25 @@ void TextEditor::Render()
 				auto id = GetWordAt(pos);
 				if (!id.empty())
 				{
-					auto it = mLanguageDefinition.mIdentifiers.find(id);
-					if (it != mLanguageDefinition.mIdentifiers.end() && ImGui::BeginTooltip())
+					auto str_rect = GetWordRectAt(mpos);
+					ImGui::ItemSize(str_rect.GetSize());
+					ImGui::ItemAdd(str_rect, ImGui::GetID(id.c_str()));
+					if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay))
 					{
-						ImGui::TextUnformatted(it->second.mDeclaration.c_str());
-						ImGui::EndTooltip();
-					}
-					else
-					{
-						auto pi = mLanguageDefinition.mPreprocIdentifiers.find(id);
-						if (pi != mLanguageDefinition.mPreprocIdentifiers.end() && ImGui::BeginTooltip())
+						auto it = mLanguageDefinition.mIdentifiers.find(id);
+						if (it != mLanguageDefinition.mIdentifiers.end() && ImGui::BeginTooltip())
 						{
-							ImGui::TextUnformatted(pi->second.mDeclaration.c_str());
+							ImGui::TextUnformatted(it->second.mDeclaration.c_str());
 							ImGui::EndTooltip();
+						}
+						else
+						{
+							auto pi = mLanguageDefinition.mPreprocIdentifiers.find(id);
+							if (pi != mLanguageDefinition.mPreprocIdentifiers.end() && ImGui::BeginTooltip())
+							{
+								ImGui::TextUnformatted(pi->second.mDeclaration.c_str());
+								ImGui::EndTooltip();
+							}
 						}
 					}
 				}
@@ -3147,6 +3168,21 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::GLSL()
 	static LanguageDefinition langDef;
 	if (!inited)
 	{
+		auto functions_descriptions = [](const std::vector<std::string>& Syntax, const std::vector<std::string>& Description)
+		{
+			std::string result = "Syntax:\n\t";
+			for (auto syn : Syntax)
+			{
+				result += syn + "\n\t";
+			}
+			result += "\nDescription:\n\t";
+			for (auto desc : Description)
+			{
+				result += desc + "\n\t";
+			}
+			result += "\n";
+			return result;
+		};
 		static const char* const keywords[] = {
 			"auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long", "register", "restrict", "return", "short",
 			"signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "_Alignas", "_Alignof", "_Atomic", "_Bool", "_Complex", "_Generic", "_Imaginary",
@@ -3154,15 +3190,247 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::GLSL()
 		};
 		for (auto& k : keywords)
 			langDef.mKeywords.insert(k);
+	
+		{
+			static std::map<std::string, std::string> buildin_functions_identifiers;
+			// Angle and Trigonometry Functions
+			buildin_functions_identifiers.insert(std::make_pair("radians", functions_descriptions({"genType radians(genType degrees)"}, {"Converts degrees to radians, i.e., π/180 * degrees"})));
+			buildin_functions_identifiers.insert(std::make_pair("degrees", functions_descriptions({"genType degrees(genType radians)"}, {"Converts radians to degrees, i.e., 180/π * radians"})));
+			buildin_functions_identifiers.insert(std::make_pair("sin", functions_descriptions({"genType sin(genType angle)"}, {"The standard trigonometric sine function."})));
+			buildin_functions_identifiers.insert(std::make_pair("cos", functions_descriptions({"genType cos(genType angle)"}, {"The standard trigonometric cosine function."})));
+			buildin_functions_identifiers.insert(std::make_pair("tan", functions_descriptions({"genType tan(genType angle)"}, {"The standard trigonometric tangent."})));
+			buildin_functions_identifiers.insert(std::make_pair("asin", functions_descriptions({"genType asin(genType x)"}, {"Arc sine. Returns an angle whose sine is x.\n\tThe range of values returned by this function is [ -π/2,π/2],\n\tResults are undefined if |x|>1."})));
+			buildin_functions_identifiers.insert(std::make_pair("acos", functions_descriptions({"genType acos(genType x)"}, {"Arc cosine. Returns an angle whose cosine is x.\n\tThe range of values returned by this function is [0, π].\n\tResults are undefined if |x|>1."})));
+			buildin_functions_identifiers.insert(std::make_pair("atan", functions_descriptions({"genType atan(genType y, genType x)", "genType atan(genType y_over_x)"}, {"Arc tangent. Returns an angle whose tangent is y/x.\n\tThe signs of x and y are used to determine what quadrant the angle is in The range of values returned by this function is [−π,π].\n\tResults are undefined if x and y are both 0.", "Arc tangent. Returns an angle whose tangent is y_over_x.\n\tThe range of values returned by this function is [-π/2,π/2]."})));
+			buildin_functions_identifiers.insert(std::make_pair("sinh", functions_descriptions({"genType sinh(genType x)"}, {"Returns the hyperbolic sine function (e^x - e^-x)/2"})));
+			buildin_functions_identifiers.insert(std::make_pair("cosh", functions_descriptions({"genType cosh(genType x)"}, {"Returns the hyperbolic cosine function (e^x + e^-x)/2"})));
+			buildin_functions_identifiers.insert(std::make_pair("tanh", functions_descriptions({"genType tanh(genType x)"}, {"Returns the hyperbolic tangent function sinh(x)/cosh(x)"})));
+			buildin_functions_identifiers.insert(std::make_pair("asinh", functions_descriptions({"genType asinh(genType x)"}, {"Arc hyperbolic sine; returns the inverse of sinh."})));
+			buildin_functions_identifiers.insert(std::make_pair("acosh", functions_descriptions({"genType acosh(genType x)"}, {"Arc hyperbolic cosine; returns the non-negative inverse\n\tof cosh. Results are undefined if x < 1."})));
+			buildin_functions_identifiers.insert(std::make_pair("atanh", functions_descriptions({"genType atanh(genType x)"}, {"Arc hyperbolic tangent; returns the inverse of tanh.\n\tResults are undefined if |x|≥1."})));
+			// Exponential Functions
+			buildin_functions_identifiers.insert(std::make_pair("pow", functions_descriptions({"genType pow(genType x, genType y)"}, {"Returns x raised to the y power, i.e., x^y\n\tResults are undefined if x < 0.\n\tResults are undefined if x = 0 and y <= 0."})));
+			buildin_functions_identifiers.insert(std::make_pair("exp", functions_descriptions({"genType exp(genType x)"}, {"Returns the natural exponentiation of x, i.e., e^x."})));
+			buildin_functions_identifiers.insert(std::make_pair("log", functions_descriptions({"genType log(genType x)"}, {"Returns the natural logarithm of x, i.e., returns the value\n\ty which satisfies the equation x = e^y.\n\tResults are undefined if x <= 0."})));
+			buildin_functions_identifiers.insert(std::make_pair("exp2", functions_descriptions({"genType exp2(genType x)"}, {"Returns 2 raised to the x power, i.e., 2^x"})));
+			buildin_functions_identifiers.insert(std::make_pair("log2", functions_descriptions({"genType log2(genType x)"}, {"Returns the base 2 logarithm of x, i.e., returns the value\n\ty which satisfies the equation x=2^y\n\tResults are undefined if x <= 0."})));
+			buildin_functions_identifiers.insert(std::make_pair("sqrt", functions_descriptions({"genType sqrt(genType x)", "genDType sqrt(genDType x)"}, {"Returns √x .\n\tResults are undefined if x < 0."})));
+			buildin_functions_identifiers.insert(std::make_pair("inversesqrt", functions_descriptions({"genType inversesqrt(genType x)", "genDType inversesqrt(genDType x)"}, {"Returns 1 / √x .\n\tResults are undefined if x <= 0."})));
+			// Common Functions
+			buildin_functions_identifiers.insert(std::make_pair("abs", functions_descriptions({"genType abs(genType x)", "genIType abs(genIType x)", "genDType abs(genDType x)"}, {"Returns x if x >= 0; otherwise it returns –x."})));
+			buildin_functions_identifiers.insert(std::make_pair("sign", functions_descriptions({"genType sign(genType x)", "genIType sign(genIType x)", "genDType sign(genDType x)"}, {"Returns 1.0 if x > 0, 0.0 if x = 0, or –1.0 if x < 0."})));
+			buildin_functions_identifiers.insert(std::make_pair("floor", functions_descriptions({"genType floor(genType x)", "genDType floor(genDType x)"}, {"Returns a value equal to the nearest integer that is less than or equal to x."})));
+			buildin_functions_identifiers.insert(std::make_pair("trunc", functions_descriptions({"genType trunc(genType x)", "genDType trunc(genDType x)"}, {"Returns a value equal to the nearest integer to x whose\n\tabsolute value is not larger than the absolute value of x."})));
+			buildin_functions_identifiers.insert(std::make_pair("round", functions_descriptions({"genType round(genType x)", "genDType round(genDType x)"}, {"Returns a value equal to the nearest integer to x.\n\tThe fraction 0.5 will round in a direction chosen by the implementation, presumably the direction that is fastest.\n\tThis includes the possibility that round(x) returns the same value as roundEven(x) for all values of x."})));
+			buildin_functions_identifiers.insert(std::make_pair("roundEven", functions_descriptions({"genType roundEven(genType x)", "genDType roundEven(genDType x)"}, {"Returns a value equal to the nearest integer to x.\n\tA fractional part of 0.5 will round toward the nearest even integer.\n\t(Both 3.5 and 4.5 for x will return 4.0.)"})));
+			buildin_functions_identifiers.insert(std::make_pair("ceil", functions_descriptions({"genType ceil(genType x)", "genDType ceil(genDType x)"}, {"Returns a value equal to the nearest integer that is greater than or equal to x."})));
+			buildin_functions_identifiers.insert(std::make_pair("fract", functions_descriptions({"genType fract(genType x)", "genDType fract(genDType x)"}, {"Returns x - floor (x)."})));
+			buildin_functions_identifiers.insert(std::make_pair("mod", functions_descriptions({"genType mod(genType x, float y)", "genType mod(genType x, genType y)", "genDType mod(genDType x, double y)", "genDType mod(genDType x, genDType y)"}, {"Modulus. Returns x - y * floor (x/y)."})));
+			buildin_functions_identifiers.insert(std::make_pair("modf", functions_descriptions({"genType modf(genType x, out genType i)", "genDType modf (genDType x, out genDType i)"}, {"Returns the fractional part of x and sets i to the integer part (as a whole number floating-point value).\n\tBoth the return value and the output parameter will have the same sign as x."})));
+			buildin_functions_identifiers.insert(std::make_pair("min", functions_descriptions({"genType min(genType x, genType y)", "genType min(genType x, float y)", "genDType min(genDType x, genDType y)", "genDType min(genDType x, double y)", "genIType min(genIType x, genIType y)", "genIType min(genIType x, int y)", "genUType min(genUType x, genUType y)", "genUType min(genUType x, uint y)"}, {"Returns y if y < x; otherwise it returns x."})));
+			buildin_functions_identifiers.insert(std::make_pair("max", functions_descriptions({"genType max(genType x, genType y)", "genType max(genType x, float y)", "genDType max(genDType x, genDType y)", "genDType max(genDType x, double y)", "genIType max(genIType x, genIType y)", "genIType max(genIType x, int y)", "genUType max(genUType x, genUType y)", "genUType max(genUType x, uint y)"}, {"Returns y if x < y; otherwise it returns x."})));
+			buildin_functions_identifiers.insert(std::make_pair("clamp", functions_descriptions({"genType clamp(genType x, genType minVal, genType maxVal)", "genType clamp(genType x, float minVal, float maxVal)", "genDType clamp(genDType x, genDType minVal, genDType maxVal)", "genDType clamp(genDType x, double minVal, double maxVal)", "genIType clamp(genIType x, genIType minVal, genIType maxVal)", "genIType clamp(genIType x, int minVal, int maxVal)", "genUType clamp(genUType x, genUType minVal, genUType maxVal)", "genUType clamp (genUType x, uint minVal, uint maxVal)"}, {"Returns min (max (x, minVal), maxVal).\n\tResults are undefined if minVal > maxVal."})));
+			buildin_functions_identifiers.insert(std::make_pair("mix", functions_descriptions({"genType mix(genType x, genType y, genType a)", "genType mix(genType x, genType y, float a)", "genDType mix(genDType x, genDType y, genDType a)", "genDType mix(genDType x, genDType y, double a)", "genType mix(genType x, genType y, genBType a)", "genDType mix(genDType x, genDType y, genBType a)"}, {"Returns the linear blend of x and y, i.e., x⋅(1-a)+ y⋅a\n\tSelects which vector each returned component comes from.\n\tFor a component of a that is false, the corresponding component of x is returned.\n\tFor a component of a that is true, the corresponding component of y is returned.\n\tComponents of x and y that are not selected are allowed to be invalid floating-point values and will have no effect on the results.\n\tThus, this provides different functionality than, for example,\n\tgenType mix(genType x, genType y, genType(a)) where a is a Boolean vector."})));
+			buildin_functions_identifiers.insert(std::make_pair("step", functions_descriptions({"genType step(genType edge, genType x)", "genType step(float edge, genType x)", "genDType step(genDType edge, genDType x)", "genDType step(double edge, genDType x)"}, {"Returns 0.0 if x < edge; otherwise it returns 1.0."})));
+			buildin_functions_identifiers.insert(std::make_pair("smoothstep", functions_descriptions({"genType smoothstep(genType edge0, genType edge1, genType x)", "genType smoothstep(float edge0, float edge1, genType x)", "genDType smoothstep(genDType edge0, genDType edge1, genDType x)", "genDType smoothstep(double edge0, double edge1, genDType x)"}, {"Returns 0.0 if x <= edge0 and 1.0 if x >= edge1 and performs smooth Hermite interpolation between 0 and 1 when edge0 < x < edge1.\n\tThis is useful in cases where you would want a threshold function with a smooth transition. This is equivalent to: \n\t\tgenType t;\n\t\tt = clamp ((x - edge0) / (edge1 - edge0), 0, 1);\n\t\treturn t * t * (3 - 2 * t);\n\t(And similarly for doubles.) Results are undefined if edge0 >= edge1."})));
+			buildin_functions_identifiers.insert(std::make_pair("isnan", functions_descriptions({"genBType isnan(genType x)", "genBType isnan(genDType x)"}, {"Returns true if x holds a NaN.\n\tReturns false otherwise.\n\tAlways returns false if NaNs are not implemented."})));
+			buildin_functions_identifiers.insert(std::make_pair("isinf", functions_descriptions({"genBType isinf(genType x)", "genBType isinf(genDType x)"}, {"Returns true if x holds a positive infinity or negative infinity.\n\tReturns false otherwise."})));
+			buildin_functions_identifiers.insert(std::make_pair("floatBitsToInt", functions_descriptions({"genIType floatBitsToInt(genType value)"}, {"Returns a signed or unsigned integer value representing the encoding of a float.\n\tThe float value's bit-level representation is preserved."})));
+			buildin_functions_identifiers.insert(std::make_pair("floatBitsToUint", functions_descriptions({"genUType floatBitsToUint(genType value)"}, {"Returns a signed or unsigned integer value representing the encoding of a float.\n\tThe float value's bit-level representation is preserved."})));
+			buildin_functions_identifiers.insert(std::make_pair("intBitsToFloat", functions_descriptions({"genType intBitsToFloat(genIType value)"}, {"Returns a float value corresponding to a signed or unsigned integer encoding of a float.\n\tIf a NaN is passed in, it will not signal, and the resulting value is unspecified.\n\tIf an Inf is passed in, the resulting value is the corresponding Inf."})));
+			buildin_functions_identifiers.insert(std::make_pair("uintBitsToFloat", functions_descriptions({"genType uintBitsToFloat(genUType value)"}, {"Returns a float value corresponding to a signed or unsigned integer encoding of a float.\n\tIf a NaN is passed in, it will not signal, and the resulting value is unspecified.\n\tIf an Inf is passed in, the resulting value is the corresponding Inf."})));
+			buildin_functions_identifiers.insert(std::make_pair("fma", functions_descriptions({"genType fma(genType a, genType b, genType c)", "genDType fma(genDType a, genDType b, genDType c)"}, {"Computes and returns a*b + c.\n\tIn uses where the return value is eventually consumed by a variable declared as precise:\n\t\tfma() is considered a single operation, whereas the expression “a*b + c” consumed by a variable declared precise is considered two operations.\n\t\tThe precision of fma() can differ from the precision of the expression “a*b + c”.\n\t\tfma() will be computed with the same precision as any other fma() consumed by a precise variable, giving invariant results for the same input values of a, b, and c.\n\tOtherwise, in the absence of precise consumption, there are no special constraints on the number of operations or difference in precision between fma() and the expression “a*b + c”."})));
+			buildin_functions_identifiers.insert(std::make_pair("frexp", functions_descriptions({"genType frexp(genType x, out genIType exp)", "genDType frexp(genDType x, out genIType exp)"}, {"Splits x into a floating-point significand in the range [0.5, 1.0) and an integral exponent of two, such that:\n\t\tx= significand⋅2^exponent\n\tThe significand is returned by the function and the exponent is returned in the parameter exp.\n\tFor a floating-point value of zero, the significand and exponent are both zero.\n\tFor a floating-point value that is an infinity or is not a number, the results are undefined.\n\tIf an implementation supports negative 0, frexp(-0) should return -0; otherwise it will return 0."})));
+			buildin_functions_identifiers.insert(std::make_pair("ldexp", functions_descriptions({"genType ldexp(genType x, in genIType exp)", "genDType ldexp(genDType x, in genIType exp)"}, {"Builds a floating-point number from x and the corresponding integral exponent of two in exp, returning:\n\t\tsignificand⋅2^exponent\n\tIf this product is too large to be represented in the floating-point type, the result is undefined.\n\tIf exp is greater than +128 (single-precision) or +1024 (double-precision), the value returned is undefined.\n\tIf exp is less than -126 (single-precision) or -1022 (double- precision), the value returned may be flushed to zero.\n\tAdditionally, splitting the value into a significand and exponent using frexp() and then reconstructing a floating-point\n\tvalue using ldexp() should yield the original input for zero and all finite non-denormized values."})));
+			// Floating-Point Pack and Unpack Functions
+			buildin_functions_identifiers.insert(std::make_pair("packUnorm2x16", functions_descriptions({"uint packUnorm2x16(vec2 v)"}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("packSnorm2x16", functions_descriptions({"uint packSnorm2x16(vec2 v)"}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("packUnorm4x8", functions_descriptions({"uint packUnorm4x8(vec4 v)"}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("packSnorm4x8", functions_descriptions({"uint packSnorm4x8(vec4 v)"}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("unpackUnorm2x16", functions_descriptions({"vec2 unpackUnorm2x16(uint p)"}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("unpackSnorm2x16", functions_descriptions({"vec2 unpackSnorm2x16(uint p)"}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("unpackUnorm4x8", functions_descriptions({"vec4 unpackUnorm4x8(uint p)"}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("unpackSnorm4x8", functions_descriptions({"vec4 unpackSnorm4x8(uint p)"}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("packDouble2x32", functions_descriptions({"double packDouble2x32(uvec2 v)"}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("unpackDouble2x32", functions_descriptions({"uvec2 unpackDouble2x32(double v)"}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("packHalf2x16", functions_descriptions({"uint packHalf2x16(vec2 v)"}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("unpackHalf2x16", functions_descriptions({"vec2 unpackHalf2x16(uint v)"}, {"Built-in Function"})));
+			// Geometric Functions
+			buildin_functions_identifiers.insert(std::make_pair("length", functions_descriptions({"float length(genType x)", "double length(genDType x)"}, {"Returns the length of vector x, i.e.,\n\t\t√x[0]2+x[1]2+..."})));
+			buildin_functions_identifiers.insert(std::make_pair("distance", functions_descriptions({"float distance(genType p0, genType p1)", "double distance(genDType p0, genDType p1)"}, {"Returns the distance between p0 and p1, i.e.,\n\t\tlength (p0 - p1)"})));
+			buildin_functions_identifiers.insert(std::make_pair("dot", functions_descriptions({"float dot(genType x, genType y)", "double dot(genDType x, genDType y)"}, {"Returns the dot product of x and y, i.e.,\n\t\tx[0]⋅y[0]+x[1]⋅y[1]+..."})));
+			buildin_functions_identifiers.insert(std::make_pair("cross", functions_descriptions({"vec3 cross(vec3 x, vec3 y)", "dvec3 cross(dvec3 x, dvec3 y)"}, {"Returns the cross product of x and y, i.e.,\n\t\t[x[1]⋅y[2]-y[1]⋅x[2]]\n\t\t[x[2]⋅y[0]-y[2]⋅x[0]]\n\t\t[x[0]⋅y[1]-y[0]⋅x[1]]"})));
+			buildin_functions_identifiers.insert(std::make_pair("normalize", functions_descriptions({"genType normalize(genType x)", "genDType normalize(genDType x)"}, {"Returns a vector in the same direction as x but with a length of 1."})));
+			buildin_functions_identifiers.insert(std::make_pair("ftransform", functions_descriptions({"vec4 ftransform()"}, {"Available only when using the compatibility profile. For core OpenGL, use invariant.\n\tFor vertex shaders only. This function will ensure that the incoming vertex value will be transformed in a way that produces exactly the same result as would be\n\tproduced by OpenGL’s fixed functionality transform. It is intended to be used to compute gl_Position, e.g.,\n\t\tgl_Position = ftransform()\n\tThis function should be used, for example, when an application is rendering the same geometry in separate passes,\n\tand one pass uses the fixed functionality path to render and another pass uses programmable shaders."})));
+			buildin_functions_identifiers.insert(std::make_pair("faceforward", functions_descriptions({"genType faceforward(genType N, genType I, genType Nref)", "genDType faceforward(genDType N, genDType I, genDType Nref)"}, {"If dot(Nref, I) < 0 return N, otherwise return –N."})));
+			buildin_functions_identifiers.insert(std::make_pair("reflect", functions_descriptions({"genType reflect(genType I, genType N)", "genDType reflect(genDType I, genDType N)"}, {"For the incident vector I and surface orientation N, returns the reflection direction:\n\t\tI - 2 * dot(N, I) * N\n\tN must already be normalized in order to achieve the desired result."})));
+			buildin_functions_identifiers.insert(std::make_pair("refract", functions_descriptions({"genType refract(genType I, genType N, float eta)", "genDType refract(genDType I, genDType N, float eta)"}, {"For the incident vector I and surface normal N, and the ratio of indices of refraction eta, return the refraction vector. The result is computed by \n\t\tk = 1.0 - eta * eta * (1.0 - dot(N, I) * dot(N, I))\n\t\tif (k < 0.0)\n\t\t\treturn genType(0.0) // or genDType(0.0)\n\t\telse\n\t\t\treturn eta * I - (eta * dot(N, I) + sqrt(k)) * N\n\tThe input parameters for the incident vector I and the surface normal N must already be normalized to get the desired results."})));
+			// Matrix Functions
+			buildin_functions_identifiers.insert(std::make_pair("matrixCompMult", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("outerProduct", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("transpose", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("determinant", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("inverse", functions_descriptions({""}, {"Built-in Function"})));
+			// Vector Relational Functions
+			buildin_functions_identifiers.insert(std::make_pair("lessThan", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("lessThanEqual", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("greaterThan", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("greaterThanEqual", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("equal", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("notEqual", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("any", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("all", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("not", functions_descriptions({""}, {"Built-in Function"})));
+			// Integer Functions
+			buildin_functions_identifiers.insert(std::make_pair("uaddCarry", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("usubBorrow", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("umulExtended", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("imulExtended", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("bitfieldExtract", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("bitfieldInsert", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("bitfieldReverse", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("bitCount", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("findLSB", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("findMSB", functions_descriptions({""}, {"Built-in Function"})));
+			// Texture Query Functions
+			buildin_functions_identifiers.insert(std::make_pair("textureSize", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureQueryLod", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureQueryLevels", functions_descriptions({""}, {"Built-in Function"})));
+			// Texel Lookup Functions
+			buildin_functions_identifiers.insert(std::make_pair("texture", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureProj", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureLod", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureOffset", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("texelFetch", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("texelFetchOffset", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureProjOffset", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureLodOffset", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureProjLod", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureProjLodOffset", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureGrad", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureGradOffset", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureProjGrad", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureProjGradOffset", functions_descriptions({""}, {"Built-in Function"})));
+			// Texture Gather Functions
+			buildin_functions_identifiers.insert(std::make_pair("textureGather", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureGatherOffset", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureGatherOffsets", functions_descriptions({""}, {"Built-in Function"})));
+			// Compatibility Profile Texture Functions
+			buildin_functions_identifiers.insert(std::make_pair("texture1D", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("texture1DProj", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("texture1DLod", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("texture1DProjLod", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("texture2D", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("texture2DProj", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("texture2DLod", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("texture2DProjLod", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("texture3D", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("texture3DProj", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("texture3DLod", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("texture3DProjLod", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureCube", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("textureCubeLod", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("shadow1D", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("shadow2D", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("shadow1DProj", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("shadow2DProj", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("shadow1DLod", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("shadow2DLod", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("shadow1DProjLod", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("shadow2DProjLod", functions_descriptions({""}, {"Built-in Function"})));
+			// Atomic-Counter Functions
+			buildin_functions_identifiers.insert(std::make_pair("atomicCounterIncrement", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("atomicCounterDecrement", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("atomicCounter", functions_descriptions({""}, {"Built-in Function"})));
+			// Atomic Memory Functions
+			buildin_functions_identifiers.insert(std::make_pair("atomicAdd", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("atomicMin", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("atomicMax", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("atomicAnd", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("atomicOr", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("atomicXor", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("atomicExchange", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("atomicCompSwap", functions_descriptions({""}, {"Built-in Function"})));
+			// Image Functions
+			buildin_functions_identifiers.insert(std::make_pair("imageSize", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("imageLoad", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("imageStore", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("imageAtomicAdd", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("imageAtomicMin", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("imageAtomicMax", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("imageAtomicAnd", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("imageAtomicOr", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("imageAtomicXor", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("imageAtomicExchange", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("imageAtomicCompSwap", functions_descriptions({""}, {"Built-in Function"})));
+			// Fragment Processing Functions
+			buildin_functions_identifiers.insert(std::make_pair("dFdx", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("dFdy", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("fwidth", functions_descriptions({""}, {"Built-in Function"})));
+			// Interpolation Functions
+			buildin_functions_identifiers.insert(std::make_pair("interpolateAtCentroid", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("interpolateAtSample", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("interpolateAtOffset", functions_descriptions({""}, {"Built-in Function"})));
+			// Noise Functions
+			buildin_functions_identifiers.insert(std::make_pair("noise1", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("noise2", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("noise3", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("noise4", functions_descriptions({""}, {"Built-in Function"})));
+			// Geometry Shader Functions
+			buildin_functions_identifiers.insert(std::make_pair("EmitStreamVertex", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("EndStreamPrimitive", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("EmitVertex", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("EndPrimitive", functions_descriptions({""}, {"Built-in Function"})));
+			// Shader Invocation Control Functions
+			buildin_functions_identifiers.insert(std::make_pair("barrier", functions_descriptions({""}, {"Built-in Function"})));
+			// Shader Memory Control Functions
+			buildin_functions_identifiers.insert(std::make_pair("memoryBarrier", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("memoryBarrierAtomicCounter", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("memoryBarrierBuffer", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("memoryBarrierShared", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("memoryBarrierImage", functions_descriptions({""}, {"Built-in Function"})));
+			buildin_functions_identifiers.insert(std::make_pair("groupMemoryBarrier", functions_descriptions({""}, {"Built-in Function"})));
+			for (const auto& k : buildin_functions_identifiers)
+			{
+				Identifier id;
+				id.mDeclaration = k.second;
+				langDef.mIdentifiers.insert(std::make_pair(k.first, id));
+			}
+		}
 
-		static const char* const identifiers[] = {
-			"abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", "ceil", "clock", "cosh", "ctime", "div", "exit", "fabs", "floor", "fmod", "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
-			"ispunct", "isspace", "isupper", "kbhit", "log10", "log2", "log", "memcmp", "modf", "pow", "putchar", "putenv", "puts", "rand", "remove", "rename", "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "time", "tolower", "toupper"
+		static const char* const buildin_variables[] = {
+			"gl_NumWorkGroups", "gl_WorkGroupSize", "gl_WorkGroupID", "gl_LocalInvocationID", "gl_GlobalInvocationID", "gl_LocalInvocationIndex", "gl_VertexID", "gl_InstanceID", "gl_PerVertex",
+			"gl_PrimitiveIDIn", "gl_InvocationID", "gl_PrimitiveID", "gl_Layer", "gl_ViewportIndex", "gl_PatchVerticesIn", "gl_TessLevelOuter", "gl_TessLevelInner", "gl_TessCoord", 
+			"gl_FragCoord", "gl_FrontFacing", "gl_ClipDistance", "gl_PointCoord", "gl_SampleID", "gl_SamplePosition", "gl_SampleMaskIn", "gl_FragDepth", "gl_SampleMask",
+			"gl_Color", "gl_SecondaryColor", "gl_Normal", "gl_Vertex", "gl_MultiTexCoord0", "gl_MultiTexCoord1", "gl_MultiTexCoord2", "gl_MultiTexCoord3", "gl_MultiTexCoord4",
+			"gl_MultiTexCoord5", "gl_MultiTexCoord6", "gl_MultiTexCoord7", "gl_FogCoord"
 		};
-		for (auto& k : identifiers)
+
+		for (auto& k : buildin_variables)
 		{
 			Identifier id;
-			id.mDeclaration = "Built-in function";
+			id.mDeclaration = "Built-in Variables";
+			langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
+		}
+
+		static const char* const buildin_constants[] = {
+			"gl_MaxComputeWorkGroupCount", "gl_MaxComputeWorkGroupSize", "gl_MaxComputeUniformComponents", "gl_MaxComputeTextureImageUnits", "gl_MaxComputeImageUniforms", "gl_MaxComputeAtomicCounters", "gl_MaxComputeAtomicCounterBuffers",
+			"gl_MaxVertexAttribs", "gl_MaxVertexUniformComponents", "gl_MaxVaryingComponents", "gl_MaxVertexOutputComponents", "gl_MaxGeometryInputComponents", "gl_MaxGeometryOutputComponents", "gl_MaxFragmentInputComponents",
+			"gl_MaxVertexTextureImageUnits", "gl_MaxCombinedTextureImageUnits", "gl_MaxTextureImageUnits", "gl_MaxImageUnits", "gl_MaxCombinedImageUnitsAndFragmentOutputs", "gl_MaxCombinedShaderOutputResources",
+			"gl_MaxImageSamples", "gl_MaxVertexImageUniforms", "gl_MaxTessControlImageUniforms", "gl_MaxTessEvaluationImageUniforms", "gl_MaxGeometryImageUniforms", "gl_MaxFragmentImageUniforms", "gl_MaxCombinedImageUniforms",
+			"gl_MaxFragmentUniformComponents", "gl_MaxDrawBuffers", "gl_MaxClipDistances", "gl_MaxGeometryTextureImageUnits", "gl_MaxGeometryOutputVertices", "gl_MaxGeometryTotalOutputComponents", "gl_MaxGeometryUniformComponents", "gl_MaxGeometryVaryingComponents",
+			"gl_MaxTessControlInputComponents", "gl_MaxTessControlOutputComponents", "gl_MaxTessControlTextureImageUnits", "gl_MaxTessControlUniformComponents", "gl_MaxTessControlTotalOutputComponents", 
+			"gl_MaxTessEvaluationInputComponents", "gl_MaxTessEvaluationOutputComponents", "gl_MaxTessEvaluationTextureImageUnits", "gl_MaxTessEvaluationUniformComponents", "gl_MaxTessPatchComponents", "gl_MaxPatchVertices", "gl_MaxTessGenLevel",
+			"gl_MaxViewports", "gl_MaxVertexUniformVectors", "gl_MaxFragmentUniformVectors", "gl_MaxVaryingVectors", "gl_MaxVertexAtomicCounters", "gl_MaxTessControlAtomicCounters", "gl_MaxTessEvaluationAtomicCounters", "gl_MaxGeometryAtomicCounters",
+			"gl_MaxFragmentAtomicCounters", "gl_MaxCombinedAtomicCounters", "gl_MaxAtomicCounterBindings", "gl_MaxVertexAtomicCounterBuffers", "gl_MaxTessControlAtomicCounterBuffers", "gl_MaxTessEvaluationAtomicCounterBuffers",
+			"gl_MaxGeometryAtomicCounterBuffers", "gl_MaxFragmentAtomicCounterBuffers", "gl_MaxCombinedAtomicCounterBuffers", "gl_MaxAtomicCounterBufferSize", "gl_MinProgramTexelOffset", "gl_MaxProgramTexelOffset",
+			"gl_MaxTransformFeedbackBuffers", "gl_MaxTransformFeedbackInterleavedComponents", "gl_MaxTextureUnits", "gl_MaxTextureCoords", "gl_MaxClipPlanes", "gl_MaxVaryingFloats"
+		};
+
+		for (auto& k : buildin_constants)
+		{
+			Identifier id;
+			id.mDeclaration = "Built-in Constants";
 			langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
 		}
 
