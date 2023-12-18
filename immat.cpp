@@ -2344,7 +2344,7 @@ void DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, const ImPixel
             {
                 for (int y = 0; y < size.y; y++)
                 {
-                    const unsigned char alpha = out_data[y * output_stride + x];
+                    const unsigned char alpha = out_data[y * output_stride + x] > 32 ? out_data[y * output_stride + x] : 0;
                     char_mat.draw_dot(ImPoint(x + x1, y + y1), ImPixel(color.r, color.g, color.b, alpha / 255.0));
                 }
             }
