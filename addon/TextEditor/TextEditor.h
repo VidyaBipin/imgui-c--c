@@ -161,6 +161,7 @@ public:
 		std::string mCommentStart, mCommentEnd, mSingleLineComment;
 		char mPreprocChar;
 		bool mAutoIndentation;
+		bool mAutoComplete;
 
 		TokenizeCallback mTokenize;
 
@@ -169,7 +170,7 @@ public:
 		bool mCaseSensitive;
 
 		LanguageDefinition()
-			: mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
+			: mPreprocChar('#'), mAutoIndentation(true), mAutoComplete(true), mTokenize(nullptr), mCaseSensitive(true)
 		{
 		}
 
@@ -346,6 +347,7 @@ private:
 	void DeleteSelection();
 	std::string GetWordUnderCursor() const;
 	std::string GetWordAt(const Coordinates& aCoords) const;
+	ImRect GetWordRectAt(const ImVec2& mpos) const;
 	ImU32 GetGlyphColor(const Glyph& aGlyph) const;
 
 	void HandleKeyboardInputs();
