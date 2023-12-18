@@ -611,6 +611,8 @@ public:
     IMGUI_API void draw_circle(ImPoint p, float r, ImPixel color);
     IMGUI_API void draw_circle(float x, float y, float r, float t, ImPixel color);
     IMGUI_API void draw_circle(ImPoint p, float r, float t, ImPixel color);
+    IMGUI_API void draw_circle(float x, float y, float r, float t, std::function<ImPixel(float)> const &color);
+    IMGUI_API void draw_circle(ImPoint p, float r, float t, std::function<ImPixel(float)> const &color);
 
     // simple filters for gray
     IMGUI_API ImMat lowpass(float lambda);
@@ -4711,8 +4713,9 @@ IMGUI_API ImMat getPerspectiveTransform(const ImPoint src[], const ImPoint dst[]
 IMGUI_API ImMat getAffineTransform(const ImPoint src[], const ImPoint dst[]);
 // draw utils
 IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);
+IMGUI_API ImMat MatRotate(const ImMat& mat, float angle);
 IMGUI_API ImMat GrayToImage(const ImMat& mat);
-IMGUI_API ImMat CreateTextMat(const char* str, const ImPixel& color, float scale);
+IMGUI_API ImMat CreateTextMat(const char* str, const ImPixel& color, float scale, bool square = false);
 IMGUI_API void  DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, const ImPixel& color, float scale);
 IMGUI_API void  ImageMatCopyTo(const ImMat& src, ImMat& dst, ImPoint pos);
 } // namespace ImGui

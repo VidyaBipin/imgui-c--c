@@ -272,6 +272,7 @@ public:
         end_file_dialog_demo_window(&filedialog, bookmark_path.c_str());
         if (ImageTexture) { ImGui::ImDestroyTexture(ImageTexture); ImageTexture = 0; }
         if (DrawMatTexture) { ImGui::ImDestroyTexture(DrawMatTexture); DrawMatTexture = 0; }
+        if (CustomDrawTexture) { ImGui::ImDestroyTexture(CustomDrawTexture); CustomDrawTexture = 0; }
 #if IMGUI_VULKAN_SHADER
         if (vkdev)
         {
@@ -314,6 +315,8 @@ public:
     bool show_markdown_window = false;
     bool show_widget_window = false;
     bool show_mat_draw_window = false;
+    bool show_mat_fish_circle_draw = false;
+    bool show_mat_rotate_window = false;
     bool show_mat_warp_matrix = false;
     bool show_kalman_window = false;
     bool show_fft_window = false;
@@ -333,6 +336,8 @@ public:
     bool show_orient_widget = false;
 public:
     void DrawLineDemo();
+    void DrawFishCircleDemo();
+    void DrawRotateDemo();
     void WarpMatrixDemo();
     void ImVulkanTestWindow(const char* name, bool* p_open, ImGuiWindowFlags flags);
     std::string get_file_contents(const char *filename);
@@ -358,8 +363,10 @@ public:
     ImGui::ImMat image {ImGui::ImMat(256, 256, 4, 1u, 4)};
     ImGui::ImMat draw_mat {ImGui::ImMat(512, 512, 4, 1u, 4)};
     ImGui::ImMat small_mat {ImGui::ImMat(128, 128, 4, 4u, 4)};
+    ImGui::ImMat custom_mat {ImGui::ImMat(2048, 2048, 4, 1u, 4)};
     ImTextureID ImageTexture = 0;
     ImTextureID DrawMatTexture = 0;
+    ImTextureID CustomDrawTexture = 0;
 };
 
 std::string Example::get_file_contents(const char *filename)
@@ -548,6 +555,164 @@ void Example::DrawLineDemo()
     if (offset_y < 0 || offset_y + small_mat.h >= draw_mat.h) { step_y = -step_y; offset_y += step_y; }
     
     ImGui::Image(DrawMatTexture, ImVec2(draw_mat.w, draw_mat.h));
+}
+
+void Example::DrawRotateDemo()
+{
+    static float angle = 360.0;
+    angle--; if (angle < 0) angle = 360;
+    draw_mat.clean(ImPixel(0.f, 0.f, 0.f, 0.f));
+    float cx = draw_mat.w * 0.5f, cy = draw_mat.h * 0.5f;
+    for (int j = 0; j < 5; j++)
+    {
+        float r = fminf(draw_mat.w, draw_mat.h) * (j + 1.5f) * 0.085f + 1;
+        float t = (j + 1) * 0.5f;
+        draw_mat.draw_circle(cx, cy, r, t, ImPixel(1, 0, 0, 1));
+    }
+    // draw rotate text test
+    auto tmat = ImGui::CreateTextMat("Mat", ImPixel(1,1,0,1), 1.0, true);
+    auto trmat = ImGui::MatRotate(tmat, angle);
+    ImGui::ImageMatCopyTo(trmat, draw_mat, ImPoint(cx - trmat.w / 2, cy - trmat.h / 2));
+    ImGui::ImMatToTexture(draw_mat, DrawMatTexture);
+    ImGui::Image(DrawMatTexture, ImVec2(draw_mat.w, draw_mat.h));
+}
+
+void Example::DrawFishCircleDemo()
+{
+    //static bool orthographic = false;
+    static int graphic_type = 0;
+    bool change = false;
+    change |= ImGui::RadioButton("Orthographic",  &graphic_type, 0); ImGui::SameLine();
+    change |= ImGui::RadioButton("Equidistance",  &graphic_type, 1); ImGui::SameLine();
+    change |= ImGui::RadioButton("Equisolid",  &graphic_type, 2); ImGui::SameLine();
+    change |= ImGui::RadioButton("Stereographic",  &graphic_type, 3);
+    if (change && CustomDrawTexture) { ImGui::ImDestroyTexture(CustomDrawTexture); CustomDrawTexture = nullptr; }
+    auto HSVtoRGB = [](float t)
+    {
+        float r, g, b;
+		ImGui::ColorConvertHSVtoRGB(t, 1.0f, 1.0f, r, g, b);
+        return ImPixel(r, g, b, 1.0);
+    };
+    if (!CustomDrawTexture)
+    {
+        float rtc[10];
+        custom_mat.clean(ImPixel(0.f, 0.f, 0.f, 1.f));
+        float r = custom_mat.w / 2 - 0.5;
+        for (int i = 0; i <= 90; i+=10)
+        {
+            float rd;
+            switch (graphic_type)
+            {
+                case 0: rd = r * sin(i * M_PI / 180.0); break;
+                case 1: rd = r * i / 90.0; break;
+                case 2: rd = sqrt(2) * r * sin(i * M_PI / 360.0); break;
+                case 3: rd = r * tan(i * M_PI / 360.0); break;
+                default: rd = r * i / 90.0; break;
+            }
+            rtc[i / 10] = rd;
+            custom_mat.draw_circle(custom_mat.w / 2 - 0.5, custom_mat.h / 2 - 0.5, rd, 1.0f, HSVtoRGB);
+        }
+        float t = 0;
+        float cx = custom_mat.w * 0.5f - 0.5, cy = custom_mat.h * 0.5f - 0.5;
+        for (int i = 0; i < 36; i++, t += 2.0f * M_PI / 36.0f)
+        {
+            float const t0 = fmodf(((float)(i)) / ((float)36), 1.0f);
+            float ct = cosf(t), st = sinf(t);
+            custom_mat.draw_line(ImPoint(cx + rtc[1] * ct, cy - rtc[1] * st), ImPoint(cx + r * ct, cy - r * st), 1.0, HSVtoRGB(t0));
+            switch (i)
+            {
+                case 0:
+                {
+                    for (int tc = 1; tc <= 9; tc++)
+                    {
+                        auto tmat = ImGui::CreateTextMat(std::to_string(tc * 10).c_str(), ImPixel(1,1,1,1), 1.0, true);
+                        auto trmat = ImGui::MatRotate(tmat, 270);
+                        ImGui::ImageMatCopyTo(trmat, custom_mat, ImPoint(cx + rtc[tc] * ct - 32, cy - rtc[tc] * st - 16));
+                    }
+                }
+                break;
+                case 9 :
+                {
+                    for (int tc = 1; tc <= 9; tc++)
+                    {
+                        auto tmat = ImGui::CreateTextMat(std::to_string(tc * 10).c_str(), ImPixel(1,1,1,1), 1.0);
+                        auto trmat = ImGui::MatRotate(tmat, 180);
+                        ImGui::ImageMatCopyTo(trmat, custom_mat, ImPoint(cx + rtc[tc] * ct - 16, cy - rtc[tc] * st + 8));
+                    }
+                }
+                break;
+                case 18:
+                {
+                    for (int tc = 1; tc <= 9; tc++)
+                    {
+                        auto tmat = ImGui::CreateTextMat(std::to_string(tc * 10).c_str(), ImPixel(1,1,1,1), 1.0, true);
+                        auto trmat = ImGui::MatRotate(tmat, 90);
+                        ImGui::ImageMatCopyTo(trmat, custom_mat, ImPoint(cx + rtc[tc] * ct, cy - rtc[tc] * st - 16));
+                    }
+                }
+                break;
+                case 27 : 
+                {
+                    for (int tc = 1; tc <= 9; tc++)
+                    {
+                        auto tmat = ImGui::CreateTextMat(std::to_string(tc * 10).c_str(), ImPixel(1,1,1,1), 1.0);
+                        ImGui::ImageMatCopyTo(tmat, custom_mat, ImPoint(cx + rtc[tc] * ct - 16, cy - rtc[tc] * st - 24));
+                    }
+                }
+                break;
+                default : break;
+            }
+
+            int degree = (i + 9) % 36 * 10;
+            char degree_str[4];
+            snprintf(degree_str, 4, "%03d", degree);
+            auto tmat = ImGui::CreateTextMat(degree_str, ImPixel(1,1,1,1), 1.0);
+            ImGui::ImMat dmat(tmat.w, tmat.h * 3, 4, 1u, 4);
+            ImGui::ImageMatCopyTo(tmat, dmat, ImPoint(0, tmat.h * 1.5));
+            auto trmat = ImGui::MatRotate(dmat, 360 - degree);
+            
+            // draw in circle degree (Orthographic 30°， others 40°)
+            int tc_in = graphic_type == 0 ? 3 : 4;
+            ImGui::ImageMatCopyTo(trmat, custom_mat, ImPoint(cx + rtc[tc_in] * ct - 24, cy - rtc[tc_in] * st - 24));
+            // draw out circle degree (Orthographic 70°， others 80°)
+            int tc_out = graphic_type == 0 ? 7 : 8;
+            ImGui::ImageMatCopyTo(trmat, custom_mat, ImPoint(cx + rtc[tc_out] * ct - 24, cy - rtc[tc_out] * st - 24));
+        }
+        
+        ImGui::ImMatToTexture(custom_mat, CustomDrawTexture);
+    }
+    if (CustomDrawTexture)
+    {
+        ImGui::ImShowVideoWindow(ImGui::GetWindowDrawList(), CustomDrawTexture, ImGui::GetCursorScreenPos(), ImVec2(1024, 1024));
+        std::string dialog_id = "##TextureFileDlgKey" + std::to_string((long long)CustomDrawTexture);
+        if (ImGui::BeginPopupContextItem())
+        {
+            if (ImGui::MenuItem((std::string(ICON_FA_IMAGE) + " Save Texture to File").c_str()))
+            {
+                ImGuiFileDialog::Instance()->OpenDialog(dialog_id.c_str(), ICON_IGFD_FOLDER_OPEN " Choose File", 
+                                                        "Image files (*.png *.gif *.jpg *.jpeg *.tiff *.webp){.png,.gif,.jpg,.jpeg,.tiff,.webp}",
+                                                        ".",
+                                                        1, 
+                                                        nullptr, 
+                                                        ImGuiFileDialogFlags_ShowBookmark |
+                                                        ImGuiFileDialogFlags_CaseInsensitiveExtention |
+                                                        ImGuiFileDialogFlags_ConfirmOverwrite |
+                                                        ImGuiFileDialogFlags_Modal);
+            }
+            ImGui::EndPopup();
+        }
+        ImVec2 minSize = ImVec2(600, 300);
+        ImVec2 maxSize = ImVec2(FLT_MAX, FLT_MAX);
+        if (ImGuiFileDialog::Instance()->Display(dialog_id.c_str(), ImGuiWindowFlags_NoCollapse, minSize, maxSize))
+        {
+            if (ImGuiFileDialog::Instance()->IsOk() == true)
+            {
+                std::string file_path = ImGuiFileDialog::Instance()->GetFilePathName();
+                ImGui::ImTextureToFile(CustomDrawTexture, file_path);
+            }
+            ImGuiFileDialog::Instance()->Close();
+        }
+    }
 }
 
 void Example::WarpMatrixDemo()
@@ -803,6 +968,8 @@ bool Example_Frame(void* handle, bool app_will_quit)
         ImGui::Checkbox("FFT Window", &example->show_fft_window);
         ImGui::Checkbox("STFT Window", &example->show_stft_window);
         ImGui::Checkbox("ImMat Draw Window", &example->show_mat_draw_window);
+        ImGui::Checkbox("ImMat Rotate Window", &example->show_mat_rotate_window);
+        ImGui::Checkbox("ImMat Draw Fish circle Window", &example->show_mat_fish_circle_draw);
         ImGui::Checkbox("ImMat Warp Matrix", &example->show_mat_warp_matrix);
         ImGui::Checkbox("Text Edit Window", &example->show_text_editor_window);
         ImGui::Checkbox("Tab Window", &example->show_tab_window);
@@ -1052,12 +1219,29 @@ bool Example_Frame(void* handle, bool app_will_quit)
         ImGui::End();
     }
 
-    // Show ImMat line demo
+    // Show ImMat line/circle demo
     if (example->show_mat_draw_window)
     {
         ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
         ImGui::Begin("ImMat draw Demo", &example->show_mat_draw_window);
         example->DrawLineDemo();
+        ImGui::End();
+    }
+
+    // Show ImMat Rotate demo
+    if (example->show_mat_rotate_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
+        ImGui::Begin("ImMat Rotate Demo", &example->show_mat_rotate_window);
+        example->DrawRotateDemo();
+        ImGui::End();
+    }
+    // Show ImMat draw fish circle demo
+    if (example->show_mat_fish_circle_draw)
+    {
+        ImGui::SetNextWindowSize(ImVec2(1024, 1024), ImGuiCond_FirstUseEver);
+        ImGui::Begin("ImMat Draw Fish circle Demo", &example->show_mat_fish_circle_draw);
+        example->DrawFishCircleDemo();
         ImGui::End();
     }
 
