@@ -116,6 +116,8 @@ struct ThreadPoolExecutor
 {
     using Holder = std::shared_ptr<ThreadPoolExecutor>;
     static Holder GetDefaultInstance();
+    static void ReleaseDefaultInstance();
+    static Holder CreateInstance(const std::string& name);
 
     virtual bool EnqueueTask(AsyncTask::Holder hTask, bool bNonblock = false) = 0;
     virtual void SetMaxWaitingTaskCount(uint32_t cnt) = 0;

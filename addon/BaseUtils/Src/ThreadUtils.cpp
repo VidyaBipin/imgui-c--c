@@ -381,7 +381,6 @@ private:
 
 ThreadPoolExecutor::Holder _DEFAULT_THREAD_POOL_EXECUTOR_HOLDER;
 mutex _DEFAULT_THREAD_POOL_EXECUTOR_HOLDER_LOCK;
-//DefaultThreadPoolExecutorImpl _DEFAULT_THREAD_POOL_EXECUTOR_INSTANCE("DefaultThdPlExtor");
 
 ThreadPoolExecutor::Holder ThreadPoolExecutor::GetDefaultInstance()
 {
@@ -392,17 +391,29 @@ ThreadPoolExecutor::Holder ThreadPoolExecutor::GetDefaultInstance()
     {
         _DEFAULT_THREAD_POOL_EXECUTOR_HOLDER = ThreadPoolExecutor::Holder(new DefaultThreadPoolExecutorImpl("DefaultThdPlExtor"), [] (ThreadPoolExecutor* p) {
             p->Terminate(false);
+            DefaultThreadPoolExecutorImpl* ptr = dynamic_cast<DefaultThreadPoolExecutorImpl*>(p);
+            delete ptr;
         });
-#if 1
         _DEFAULT_THREAD_POOL_EXECUTOR_HOLDER->SetMinThreadCount(8);
         _DEFAULT_THREAD_POOL_EXECUTOR_HOLDER->SetMaxThreadCount(12);
         _DEFAULT_THREAD_POOL_EXECUTOR_HOLDER->SetMaxWaitingTaskCount(12);
-#else
-        _DEFAULT_THREAD_POOL_EXECUTOR_HOLDER->SetMinThreadCount(1);
-        _DEFAULT_THREAD_POOL_EXECUTOR_HOLDER->SetMaxThreadCount(1);
-        _DEFAULT_THREAD_POOL_EXECUTOR_HOLDER->SetMaxWaitingTaskCount(20);
-#endif
     }
     return _DEFAULT_THREAD_POOL_EXECUTOR_HOLDER;
+}
+
+void ThreadPoolExecutor::ReleaseDefaultInstance()
+{
+    lock_guard<mutex> lk(_DEFAULT_THREAD_POOL_EXECUTOR_HOLDER_LOCK);
+    if (_DEFAULT_THREAD_POOL_EXECUTOR_HOLDER)
+        _DEFAULT_THREAD_POOL_EXECUTOR_HOLDER = nullptr;
+}
+
+ThreadPoolExecutor::Holder ThreadPoolExecutor::CreateInstance(const string& name)
+{
+    return ThreadPoolExecutor::Holder(new DefaultThreadPoolExecutorImpl(name), [] (ThreadPoolExecutor* p) {
+        p->Terminate(false);
+        DefaultThreadPoolExecutorImpl* ptr = dynamic_cast<DefaultThreadPoolExecutorImpl*>(p);
+        delete ptr;
+    });
 }
 }
