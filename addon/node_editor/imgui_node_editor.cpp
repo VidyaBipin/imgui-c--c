@@ -105,6 +105,7 @@ const char* ax::NodeEditor::ToString(TransactionAction action)
         case TransactionAction::Unknown:        return "Unknown";
         case TransactionAction::Navigation:     return "Navigation";
         case TransactionAction::DragStart:      return "DragStart";
+        case TransactionAction::Dragging:       return "Dragging";
         case TransactionAction::DragEnd:        return "DragEnd";
         case TransactionAction::Resize:         return "Resize";
         case TransactionAction::ClearSelection: return "ClearSelection";
@@ -678,6 +679,11 @@ void ed::Node::Draw(ImDrawList* drawList, DrawFlags flags)
         drawList->ChannelsSetCurrent(m_Channel + c_NodeBaseChannel);
 
         DrawBorder(drawList, borderColor, editorStyle.HoveredNodeBorderWidth, editorStyle.HoverNodeBorderOffset);
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        {
+            ClearSelection();
+            SelectNode(m_ID);
+        }
     }
 }
 
@@ -4200,6 +4206,7 @@ bool ed::DragAction::Process(const Control& control)
 
     if (m_DraggedObject && control.ActiveObject == m_DraggedObject)
     {
+        auto transaction = Editor->MakeTransaction("DragAction");
         auto dragOffset = ImGui::GetMouseDragDelta(Editor->GetConfig().DragButtonIndex, 0.0f);
 
         auto draggedOrigin  = m_DraggedObject->DragStartLocation();
@@ -4244,7 +4251,10 @@ bool ed::DragAction::Process(const Control& control)
             dragOffset = alignedOffset;
 
         for (auto object : m_Objects)
+        {
             object->UpdateDrag(dragOffset);
+            transaction.AddAction(TransactionAction::Dragging, object->AsNode()->m_ID, ("Dragging " + Serialization::ToString(object->ID())).c_str());
+        }
     }
     else if (!control.ActiveObject)
     {

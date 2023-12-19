@@ -53,6 +53,7 @@ enum class TransactionAction: int32_t
     Unknown,
     Navigation,
     DragStart,
+    Dragging,
     DragEnd,
     Resize,
     ClearSelection,
