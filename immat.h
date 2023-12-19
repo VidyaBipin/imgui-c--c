@@ -11,6 +11,7 @@
 #include <memory>
 #include <mutex>
 #include <random>
+#include <functional>
 // the alignment of all the allocated buffers
 #if __AVX__
 #define IM_MALLOC_ALIGN 32
