@@ -1,5 +1,6 @@
 #include "imvk_gpu.h"
 #include <math.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "glslang/SPIRV/GlslangToSpv.h"
@@ -1957,6 +1958,17 @@ int create_gpu_instance()
     g_default_gpu_index = find_default_vulkan_device_index();
 
     glslang::InitializeProcess();
+
+    // the global __ncnn_vulkan_instance_holder destructor will call destroy_gpu_instance() on exit
+    // but it seems to be too late for nvidia driver :(
+    // driver's internal data structure has been destroyed when called, causing segfault
+    // atexit() seems to be helpful for calling it earlier
+    static int destroy_gpu_instance_atexit_registered = 0;
+    if (!destroy_gpu_instance_atexit_registered)
+    {
+        atexit(destroy_gpu_instance);
+        destroy_gpu_instance_atexit_registered = 1;
+    }
 
     return 0;
 }
