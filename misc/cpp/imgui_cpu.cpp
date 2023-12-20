@@ -235,7 +235,7 @@ static int detectisa(void (*some_inst)())
 {
     g_sigill_caught = 0;
 
-    struct sigaction sa = {};
+    struct sigaction sa = {0};
     struct sigaction old_sa;
     sa.sa_flags = SA_ONSTACK | SA_RESTART | SA_SIGINFO;
     sa.sa_sigaction = catch_sigill;
@@ -297,7 +297,7 @@ DEFINE_INSTCODE(some_avx, 0xc5, 0xfc, 0x54, 0xc0)                     // vandps 
 DEFINE_INSTCODE(some_f16c, 0xc4, 0xe2, 0x7d, 0x13, 0xc0)              // vcvtph2ps ymm0,xmm0
 DEFINE_INSTCODE(some_fma, 0xc4, 0xe2, 0x7d, 0x98, 0xc0)               // vfmadd132ps ymm0,ymm0,ymm0
 DEFINE_INSTCODE(some_avx2, 0xc5, 0xfd, 0xfe, 0xc0)                    // vpaddd ymm0,ymm0,ymm0
-#if defined(__APPLE__)
+#if defined(IM_AVX512)
 DEFINE_INSTCODE(some_avx512f, 0x62, 0xf1, 0x7c, 0x48, 0x58, 0xc0)     // vaddps zmm0,zmm0,zmm0
 DEFINE_INSTCODE(some_avx512bw, 0x62, 0xf1, 0x7d, 0x48, 0xfd, 0xc0)    // vpaddw zmm0,zmm0,zmm0
 DEFINE_INSTCODE(some_avx512cd, 0x62, 0xf2, 0xfd, 0x48, 0x44, 0xc0)    // vplzcntq zmm0,zmm0
@@ -743,7 +743,7 @@ static int get_cpu_support_x86_avx2()
     return cpu_info[1] & (1u << 5);
 }
 
-#if defined(__APPLE__)
+#if defined(IM_AVX512)
 static int get_cpu_support_x86_avx_vnni()
 {
 #if __APPLE__
@@ -1580,6 +1580,10 @@ static int set_sched_affinity(const ImGui::CpuSet& thread_affinity_mask)
 static void initialize_cpu_thread_affinity_mask(ImGui::CpuSet& mask_all, ImGui::CpuSet& mask_little, ImGui::CpuSet& mask_big)
 {
     mask_all.disable_all();
+    for (int i = 0; i < g_cpucount; i++)
+    {
+        mask_all.enable(i);
+    }
 
 #if (defined _WIN32 && !(defined __MINGW32__))
     // get max freq mhz for all cores
@@ -2055,7 +2059,7 @@ static void initialize_global_cpu_info()
     g_cpu_support_x86_xop = get_cpu_support_x86_xop();
     g_cpu_support_x86_f16c = get_cpu_support_x86_f16c();
     g_cpu_support_x86_avx2 = get_cpu_support_x86_avx2();
-#if defined(__APPLE__)
+#if defined(IM_AVX512)
     g_cpu_support_x86_avx_vnni = get_cpu_support_x86_avx_vnni();
     g_cpu_support_x86_avx512 = get_cpu_support_x86_avx512();
     g_cpu_support_x86_avx512_vnni = get_cpu_support_x86_avx512_vnni();
