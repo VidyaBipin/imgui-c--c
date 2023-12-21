@@ -404,6 +404,22 @@ public:
         return oss.str();
     }
 
+    string GetFilterPattern(bool& bIsRegexPattern) const override
+    {
+        bIsRegexPattern = m_isRegexPattern;
+        return m_filterPattern;
+    }
+
+    bool IsCaseSensitive() const override
+    {
+        return m_caseSensitive;
+    }
+
+    bool IsRecursive() const override
+    {
+        return m_isRecursive;
+    }
+
     string GetError() const override
     {
         return m_errMsg;

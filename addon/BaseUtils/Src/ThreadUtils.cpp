@@ -6,6 +6,7 @@
 #endif
 #include <sstream>
 #include <list>
+#include <chrono>
 #include "ThreadUtils.h"
 
 using namespace std;
@@ -47,12 +48,32 @@ void SetThreadName(thread& t, const string& name)
 }
 
 
-#define THREAD_IDLE_SLEEP_MILLISEC  1
+#define THREAD_IDLE_SLEEP_MILLISEC  2
 
 void BaseAsyncTask::WaitDone()
 {
     while (m_eState != DONE)
         this_thread::sleep_for(chrono::milliseconds(THREAD_IDLE_SLEEP_MILLISEC));
+}
+
+void BaseAsyncTask::WaitState(State eState, int64_t u64TimeOut)
+{
+    if (u64TimeOut > 0)
+    {
+        const auto startWaitTime = chrono::steady_clock::now();
+        while (m_eState != eState)
+        {
+            const auto elapsedTime = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now()-startWaitTime).count();
+            if (elapsedTime >= u64TimeOut)
+                break;
+            this_thread::sleep_for(chrono::milliseconds(THREAD_IDLE_SLEEP_MILLISEC));
+        }
+    }
+    else
+    {
+        while (m_eState != eState)
+            this_thread::sleep_for(chrono::milliseconds(THREAD_IDLE_SLEEP_MILLISEC));
+    }
 }
 
 struct ThreadExecutor

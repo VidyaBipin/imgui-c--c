@@ -461,7 +461,7 @@ public:
         : m_pCoords(pCoords), m_src(src), m_dst(dst), m_dststep(dststep), m_nz(nz), m_width(width), m_height(height), m_cn(cn)
     {}
 
-    void operator() () override
+    void _TaskProc() override
     {
         const std::vector<MatUtils::Point2i>& coords = *m_pCoords;
         std::vector<uint8_t*> sptrs(coords.size());

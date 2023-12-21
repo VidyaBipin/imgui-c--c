@@ -54,6 +54,9 @@ struct FileIterator
     virtual uint32_t GetValidFileCount(bool refresh = false) = 0;
     virtual bool SeekToValidFile(uint32_t index) = 0;
     virtual std::string JoinBaseDirPath(const std::string& relativeFilePath) const = 0;
+    virtual std::string GetFilterPattern(bool& bIsRegexPattern) const = 0;
+    virtual bool IsCaseSensitive() const = 0;
+    virtual bool IsRecursive() const = 0;
 
     virtual std::string GetError() const = 0;
 };

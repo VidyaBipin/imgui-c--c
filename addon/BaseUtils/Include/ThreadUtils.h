@@ -48,11 +48,18 @@ struct AsyncTask
     virtual bool IsCancelled() const = 0;
     virtual void Cancel() = 0;
     virtual void WaitDone() = 0;
+    virtual void WaitState(State eState, int64_t u64TimeOut = 0) = 0;
 };
 
 class BaseAsyncTask : public AsyncTask
 {
 public:
+    void operator() () override
+    {
+        _TaskProc();
+        SetState(DONE);
+    }
+
     bool SetState(State eState) override
     {
         std::lock_guard<std::mutex> lk(m_mtxLock);
@@ -64,7 +71,7 @@ public:
         {
             if (m_eState == DONE)
             {
-                m_bCannel = false;
+                m_bCancel = false;
                 m_eState = eState;
                 return true;
             }
@@ -90,8 +97,7 @@ public:
         std::lock_guard<std::mutex> lk(m_mtxLock);
         if (m_eState == DONE)
             return;
-        m_eState = DONE;
-        m_bCannel = true;
+        m_bCancel = true;
     }
 
     State GetState() const override
@@ -103,13 +109,17 @@ public:
     bool IsDone() const override
     { return m_eState == DONE; }
     bool IsCancelled() const override
-    { return m_bCannel; }
+    { return m_bCancel; }
     void WaitDone() override;
+    void WaitState(State eState, int64_t i64TimeOut = 0) override;
+
+protected:
+    virtual void _TaskProc() = 0;
 
 protected:
     std::mutex m_mtxLock;
     State m_eState{WAITING};
-    bool m_bCannel{false};
+    bool m_bCancel{false};
 };
 
 struct ThreadPoolExecutor
