@@ -859,6 +859,7 @@ void Example::ImVulkanTestWindow(const char* name, bool* p_open, ImGuiWindowFlag
             cmd_image.record_pipeline(vkimage_copy, bindings_image, constants_image, image_result);
             cmd_image.submit_and_wait();
             time += GetSysCurrentTime() - t0;
+            cmd.reset();
         }
         avg_copy_time = time / 100;
     }
@@ -884,6 +885,7 @@ void Example::ImVulkanTestWindow(const char* name, bool* p_open, ImGuiWindowFlag
             cmd.record_pipeline(vk_copy, bindings, constants, result);
             cmd.submit_and_wait();
             time += GetSysCurrentTime() - t0;
+            cmd.reset();
         }
         avg_copy_time = time / 100;
     }
