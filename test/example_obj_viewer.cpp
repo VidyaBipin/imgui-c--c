@@ -31,7 +31,7 @@ static void App_Splash_Finalize(void** handle)
 }
 */
 
-static void App_SetupContext(ImGuiContext* ctx, bool in_splash)
+static void App_SetupContext(ImGuiContext* ctx, void* handle, bool in_splash)
 {
     if (!ctx)
         return;

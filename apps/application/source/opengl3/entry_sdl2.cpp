@@ -79,7 +79,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
 
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     if (property.application.Application_SetupContext)
-        property.application.Application_SetupContext(ctx, true);
+        property.application.Application_SetupContext(ctx, property.handle, true);
 
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
@@ -334,7 +334,7 @@ int main(int argc, char** argv)
     if (property.viewport)io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
     if (!property.auto_merge) io.ConfigViewportsNoAutoMerge = true;
     if (!splash_done && property.application.Application_SetupContext)
-        property.application.Application_SetupContext(ctx, false);
+        property.application.Application_SetupContext(ctx, property.handle, false);
     ImGuiStyle& style = ImGui::GetStyle();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {

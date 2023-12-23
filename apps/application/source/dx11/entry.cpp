@@ -190,7 +190,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     IMGUI_CHECKVERSION();
     auto ctx = ImGui::CreateContext();
     if (property.application.Application_SetupContext)
-        property.application.Application_SetupContext(ctx, false);
+        property.application.Application_SetupContext(ctx, property.handle, false);
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGuiContext& g = *GImGui;
     io.ApplicationName = property.name.c_str();

@@ -91,7 +91,7 @@ int main(int argc, char** argv)
     IMGUI_CHECKVERSION();
     auto ctx = ImGui::CreateContext();
     if (property.application.Application_SetupContext)
-        property.application.Application_SetupContext(ctx, false);
+        property.application.Application_SetupContext(ctx, property.handle, false);
     
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGuiContext& g = *GImGui;
