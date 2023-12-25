@@ -1494,9 +1494,10 @@ void ed::EditorContext::End()
         m_DrawList->ChannelsSetCurrent(c_UserChannel_Grid);
 
         ImVec2 offset    = m_Canvas.ViewOrigin() * (1.0f / m_Canvas.ViewScale());
-        ImU32 GRID_COLOR = GetColor(StyleColor_Grid, ImClamp(m_Canvas.ViewScale() * m_Canvas.ViewScale(), 0.0f, 1.0f));
-        float GRID_SX    = 32.0f;// * m_Canvas.ViewScale();
-        float GRID_SY    = 32.0f;// * m_Canvas.ViewScale();
+        ImU32 GRID_COLOR = GetColor(StyleColor_Grid);
+        float GRID_SCALE = m_Canvas.ViewScale() >= 1 ? 1.0 / floor(m_Canvas.ViewScale()) : floor(1.0 / m_Canvas.ViewScale());
+        float GRID_SX    = 16.0f * GRID_SCALE;
+        float GRID_SY    = 16.0f * GRID_SCALE;
         ImVec2 VIEW_POS  = m_Canvas.ViewRect().Min;
         ImVec2 VIEW_SIZE = m_Canvas.ViewRect().GetSize();
 

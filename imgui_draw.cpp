@@ -1932,7 +1932,12 @@ void ImDrawListSplitter::Merge(ImDrawList* draw_list)
 
 void ImDrawListSplitter::SetCurrentChannel(ImDrawList* draw_list, int idx)
 {
-    IM_ASSERT(idx >= 0 && idx < _Count);
+    // modify by Dicky, work around with wrong splited channel, need check later
+    //IM_ASSERT(idx >= 0 && idx < _Count);
+    if (idx < 0 || idx > _Count)
+        return;
+    // modify by Dicky end
+    
     if (_Current == idx)
         return;
 

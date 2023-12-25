@@ -554,7 +554,7 @@ void MostRecentlyUsedList::Install(ImGuiContext* context)
     {
         for (auto& entry : storage)
         {
-            out_buf->appendf("[%s][%s]\n", "MostRecentlyUsedList", entry.first.c_str());
+            out_buf->appendf("[%s][##%s]\n", "MostRecentlyUsedList", entry.first.c_str());
             int index = 0;
             for (auto& value : entry.second->m_List)
                 out_buf->appendf("%d=%s\n", index++, value.c_str());
