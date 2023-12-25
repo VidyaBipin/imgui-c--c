@@ -86,7 +86,7 @@ bool BaseAsyncTask::Cancel()
     lock_guard<mutex> _lk(m_mtxLock);
     if (m_eState == CANCELLED)
         return true;
-    if (!m_eState == WAITING && !m_eState == PROCESSING)
+    if (m_eState != WAITING && m_eState != PROCESSING)
         return false;
     m_eState = CANCELLED;
     return true;
