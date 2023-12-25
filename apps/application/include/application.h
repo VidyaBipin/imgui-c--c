@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-typedef void (*APP_SETUPCONTEXT)(ImGuiContext* ctx, bool in_splash);
+typedef void (*APP_SETUPCONTEXT)(ImGuiContext* ctx, void* handle, bool in_splash);
 typedef void (*APP_INITIALIZE)(void** handle);
 typedef void (*APP_FINALIZE)(void** handle);
 typedef bool (*APP_SPLASHSCREEN)(void* handle, bool app_will_quit);

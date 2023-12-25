@@ -225,7 +225,7 @@ static int detectisa(const void* some_inst)
 static int g_sigill_caught = 0;
 static sigjmp_buf g_jmpbuf;
 
-static void catch_sigill(int signo, siginfo_t* si, void* data)
+static void catch_sigill(int /*signo*/, siginfo_t* /*si*/, void* /*data*/)
 {
     g_sigill_caught = 1;
     siglongjmp(g_jmpbuf, -1);
@@ -235,10 +235,11 @@ static int detectisa(void (*some_inst)())
 {
     g_sigill_caught = 0;
 
-    struct sigaction sa = {0};
+    struct sigaction sa;
     struct sigaction old_sa;
-    sa.sa_flags = SA_ONSTACK | SA_RESTART | SA_SIGINFO;
+    memset(&sa, 0, sizeof(sa));
     sa.sa_sigaction = catch_sigill;
+    sa.sa_flags = SA_ONSTACK | SA_RESTART | SA_SIGINFO;
     sigaction(SIGILL, &sa, &old_sa);
 
     if (sigsetjmp(g_jmpbuf, 1) == 0)
@@ -2099,12 +2100,12 @@ CpuSet::CpuSet()
 
 void CpuSet::enable(int cpu)
 {
-    mask |= (1 << cpu);
+    mask |= ((ULONG_PTR)1 << cpu);
 }
 
 void CpuSet::disable(int cpu)
 {
-    mask &= ~(1 << cpu);
+    mask &= ~((ULONG_PTR)1 << cpu);
 }
 
 void CpuSet::disable_all()
@@ -2114,7 +2115,7 @@ void CpuSet::disable_all()
 
 bool CpuSet::is_enabled(int cpu) const
 {
-    return mask & (1 << cpu);
+    return mask & ((ULONG_PTR)1 << cpu);
 }
 
 int CpuSet::num_enabled() const
@@ -2173,12 +2174,12 @@ CpuSet::CpuSet()
 
 void CpuSet::enable(int cpu)
 {
-    policy |= (1 << cpu);
+    policy |= ((unsigned int)1 << cpu);
 }
 
 void CpuSet::disable(int cpu)
 {
-    policy &= ~(1 << cpu);
+    policy &= ~((unsigned int)1 << cpu);
 }
 
 void CpuSet::disable_all()
@@ -2188,7 +2189,7 @@ void CpuSet::disable_all()
 
 bool CpuSet::is_enabled(int cpu) const
 {
-    return policy & (1 << cpu);
+    return policy & ((unsigned int)1 << cpu);
 }
 
 int CpuSet::num_enabled() const

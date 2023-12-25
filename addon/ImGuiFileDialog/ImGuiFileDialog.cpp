@@ -4992,10 +4992,10 @@ bool IGFD::FileDialog::m_Confirm_Or_OpenOverWriteFileDialog_IfNeeded(bool vLastA
         ImGuiIO& io = ImGui::GetIO(); (void)io;
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
-            const ImGuiViewportP* viewport = (ImGuiViewportP*) ImGui::GetMainViewport();
+            const ImGuiViewportP* viewport = (ImGuiViewportP*) ImGui::GetWindowViewport();
             ImGui::SetNextWindowViewport(viewport->ID);
         }
-        // modify by dicky end        
+        // modify by dicky end
         if (ImGui::BeginPopupModal(
                 name.c_str(), (bool*)0, vFlags | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
             ImGui::SetWindowPos(m_FileDialogInternal.dialogCenterPos - ImGui::GetWindowSize() * 0.5f);  // next frame needed for GetWindowSize to work

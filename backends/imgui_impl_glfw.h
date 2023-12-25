@@ -40,6 +40,11 @@ IMGUI_IMPL_API void     ImGui_ImplGlfw_FullScreen(ImGuiViewport* viewport, bool 
 IMGUI_IMPL_API void     ImGui_ImplGlfw_SetWindowIcon(GLFWwindow* window, const char * icon_path);
 // Add By Dicky end
 
+// Emscripten related initialization phase methods
+#ifdef __EMSCRIPTEN__
+IMGUI_IMPL_API void     ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback(const char* canvas_selector);
+#endif
+
 // GLFW callbacks install
 // - When calling Init with 'install_callbacks=true': ImGui_ImplGlfw_InstallCallbacks() is called. GLFW callbacks will be installed for you. They will chain-call user's previously installed callbacks, if any.
 // - When calling Init with 'install_callbacks=false': GLFW callbacks won't be installed. You will need to call individual function yourself from your own GLFW callbacks.
