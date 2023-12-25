@@ -37,69 +37,55 @@ struct AsyncTask
         WAITING = 0,
         PROCESSING = 1,
         DONE = 2,
+        FAILED = 3,
+        CANCELLED = 4,
     };
 
-    virtual void operator() () = 0;
+    virtual bool operator() () = 0;
     virtual bool SetState(State eState) = 0;
     virtual State GetState() const = 0;
     virtual bool IsWaiting() const = 0;
     virtual bool IsProcessing() const = 0;
     virtual bool IsDone() const = 0;
+    virtual bool IsFailed() const = 0;
     virtual bool IsCancelled() const = 0;
-    virtual void Cancel() = 0;
+    virtual bool IsStopped() const = 0;
+    virtual bool Cancel() = 0;
     virtual void WaitDone() = 0;
-    virtual void WaitState(State eState, int64_t u64TimeOut = 0) = 0;
+    virtual bool WaitState(State eState, int64_t u64TimeOut = 0) = 0;
 };
 
 class BaseAsyncTask : public AsyncTask
 {
 public:
-    void operator() () override
+    bool operator() () override
     {
-        _TaskProc();
+        m_bRunning = true;
+        if (!_BeforeTaskProc())
+        {
+            SetState(FAILED);
+            m_bRunning = false;
+            return false;
+        }
+        if (!_TaskProc())
+        {
+            SetState(FAILED);
+            m_bRunning = false;
+            return false;
+        }
+        if (!_AfterTaskProc())
+        {
+            SetState(FAILED);
+            m_bRunning = false;
+            return false;
+        }
         SetState(DONE);
+        m_bRunning = false;
+        return true;
     }
 
-    bool SetState(State eState) override
-    {
-        std::lock_guard<std::mutex> lk(m_mtxLock);
-        if (m_eState == eState)
-        {
-            return true;
-        }
-        else if (eState == WAITING)
-        {
-            if (m_eState == DONE)
-            {
-                m_bCancel = false;
-                m_eState = eState;
-                return true;
-            }
-        }
-        else if (eState == PROCESSING)
-        {
-            if (m_eState == WAITING)
-            {
-                m_eState = eState;
-                return true;
-            }
-        }
-        else
-        {
-            m_eState = eState;
-            return true;
-        }
-        return false;
-    }
-
-    void Cancel() override
-    {
-        std::lock_guard<std::mutex> lk(m_mtxLock);
-        if (m_eState == DONE)
-            return;
-        m_bCancel = true;
-    }
-
+    bool SetState(State eState) override;
+    bool Cancel() override;
     State GetState() const override
     { return m_eState; }
     bool IsWaiting() const override
@@ -108,18 +94,24 @@ public:
     { return m_eState == PROCESSING; }
     bool IsDone() const override
     { return m_eState == DONE; }
+    bool IsFailed() const override
+    { return m_eState == FAILED; }
     bool IsCancelled() const override
-    { return m_bCancel; }
+    { return m_eState == CANCELLED; }
+    bool IsStopped() const override
+    { return IsDone() || IsFailed() || IsCancelled(); }
     void WaitDone() override;
-    void WaitState(State eState, int64_t i64TimeOut = 0) override;
+    bool WaitState(State eState, int64_t i64TimeOut = 0) override;
 
 protected:
-    virtual void _TaskProc() = 0;
+    virtual bool _BeforeTaskProc() { return true; }
+    virtual bool _TaskProc() = 0;
+    virtual bool _AfterTaskProc() { return true; }
 
 protected:
     std::mutex m_mtxLock;
     State m_eState{WAITING};
-    bool m_bCancel{false};
+    bool m_bRunning{false};
 };
 
 struct ThreadPoolExecutor

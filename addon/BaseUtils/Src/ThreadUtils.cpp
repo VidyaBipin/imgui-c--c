@@ -47,6 +47,50 @@ void SetThreadName(thread& t, const string& name)
 #endif
 }
 
+bool BaseAsyncTask::SetState(State eState)
+{
+    lock_guard<mutex> _lk(m_mtxLock);
+    if (m_eState == eState)
+        return true;
+
+    bool bStateTransAllowed = false;
+    if (m_eState == WAITING)
+    {
+        // allowed state transition:
+        //   1. WAITING -> PROCESSING
+        //   2. WAITING -> CANCELLED
+        if (eState == PROCESSING || eState == CANCELLED)
+            bStateTransAllowed = true;
+    }
+    else if (m_eState == PROCESSING)
+    {
+        // allowed state transition:
+        //   1. PROCESSING -> DONE
+        //   1. PROCESSING -> FAILED
+        //   3. PROCESSING -> CANCELLED
+        if (eState == DONE || eState == FAILED || eState == CANCELLED)
+            bStateTransAllowed = true;
+    }
+
+    if (bStateTransAllowed)
+    {
+        m_eState = eState;
+        return true;
+    }
+    Log(Error) << "FAILED to set task state from " << (int)m_eState << " to " << (int)eState << "." << endl;
+    return false;
+}
+
+bool BaseAsyncTask::Cancel()
+{
+    lock_guard<mutex> _lk(m_mtxLock);
+    if (m_eState == CANCELLED)
+        return true;
+    if (!m_eState == WAITING && !m_eState == PROCESSING)
+        return false;
+    m_eState = CANCELLED;
+    return true;
+}
 
 #define THREAD_IDLE_SLEEP_MILLISEC  2
 
@@ -56,7 +100,7 @@ void BaseAsyncTask::WaitDone()
         this_thread::sleep_for(chrono::milliseconds(THREAD_IDLE_SLEEP_MILLISEC));
 }
 
-void BaseAsyncTask::WaitState(State eState, int64_t u64TimeOut)
+bool BaseAsyncTask::WaitState(State eState, int64_t u64TimeOut)
 {
     if (u64TimeOut > 0)
     {
@@ -74,6 +118,7 @@ void BaseAsyncTask::WaitState(State eState, int64_t u64TimeOut)
         while (m_eState != eState)
             this_thread::sleep_for(chrono::milliseconds(THREAD_IDLE_SLEEP_MILLISEC));
     }
+    return m_eState == eState;
 }
 
 struct ThreadExecutor
@@ -160,8 +205,11 @@ private:
                 // cout << "ThreadExecutor: Processing task " << hTask.get() << endl;
                 (*hTask)();
                 // cout << "ThreadExecutor: Done task " << hTask.get() << endl;
-                if (!hTask->SetState(AsyncTask::DONE))
-                    m_pLogger->Log(WARN) << "FAILED to set task state as 'DONE' after it's been processed." << endl;
+                if (hTask->IsProcessing())
+                {
+                    if (!hTask->SetState(AsyncTask::DONE))
+                        m_pLogger->Log(WARN) << "FAILED to set task state as 'DONE' after it's been processed." << endl;
+                }
                 bIdleLoop = false;
             }
             else if (m_aTasks.empty())
@@ -280,7 +328,7 @@ public:
         m_aExecutors.clear();
     }
 
-    void SetLoggerLevel(Logger::Level l) override
+    void SetLoggerLevel(Level l) override
     {
         m_pLogger->SetShowLevels(l);
     }
