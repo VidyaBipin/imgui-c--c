@@ -6251,7 +6251,7 @@ static void ShowDemoWindowInputs()
         if (ImGui::TreeNode("Mouse Cursors"))
         {
             // modify By Dicky
-            const char* mouse_cursors_names[] = { "Arrow", "TextInput", "ResizeAll", "ResizeNS", "ResizeEW", "ResizeNESW", "ResizeNWSE", "Hand", "NotAllowed", "Waiting", "Minus", "Plus", "Cross", "Question", "Straw" };
+            const char* mouse_cursors_names[] = { "Arrow", "TextInput", "ResizeAll", "ResizeNS", "ResizeEW", "ResizeNESW", "ResizeNWSE", "Hand", "NotAllowed", "Waiting", "Minus", "Plus", "Cross", "Question", "Straw", "Rotate Left", "Rotate Right", "Rotate Top", "Rotate Bottom", "Rotate Center" };
             // modify By Dicky end
             IM_ASSERT(IM_ARRAYSIZE(mouse_cursors_names) == ImGuiMouseCursor_COUNT);
 
