@@ -4712,6 +4712,7 @@ public:
 // warpAffine helper
 IMGUI_API ImMat getPerspectiveTransform(const ImPoint src[], const ImPoint dst[]);
 IMGUI_API ImMat getAffineTransform(const ImPoint src[], const ImPoint dst[]);
+IMGUI_API ImMat getAffineTransform(int sw, int sh, int dw, int dh, float x_offset, float y_offset, float x_scale, float y_scale, float angle);
 // draw utils
 IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);
 IMGUI_API ImMat MatRotate(const ImMat& mat, float angle);
