@@ -2020,6 +2020,11 @@ enum ImGuiMouseCursor_
     ImGuiMouseCursor_Cross,             // add By Dicky for mouse with cross
     ImGuiMouseCursor_Question,          // add By Dicky for mouse with question mark
     ImGuiMouseCursor_Straw,             // add By Dicky for straw mouse 
+    ImGuiMouseCursor_Rotate_Left,       // add By Dicky for rotate cursor
+    ImGuiMouseCursor_Rotate_Right,      // add By Dicky for rotate cursor
+    ImGuiMouseCursor_Rotate_Top,        // add By Dicky for rotate cursor
+    ImGuiMouseCursor_Rotate_Bottom,     // add By Dicky for rotate cursor
+    ImGuiMouseCursor_Rotate_Center,     // add By Dicky for rotate cursor
     ImGuiMouseCursor_COUNT
 };
 

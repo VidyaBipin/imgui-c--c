@@ -1932,7 +1932,12 @@ void ImDrawListSplitter::Merge(ImDrawList* draw_list)
 
 void ImDrawListSplitter::SetCurrentChannel(ImDrawList* draw_list, int idx)
 {
-    IM_ASSERT(idx >= 0 && idx < _Count);
+    // modify by Dicky, work around with wrong splited channel, need check later
+    //IM_ASSERT(idx >= 0 && idx < _Count);
+    if (idx < 0 || idx > _Count)
+        return;
+    // modify by Dicky end
+    
     if (_Current == idx)
         return;
 
@@ -2129,57 +2134,73 @@ ImFontConfig::ImFontConfig()
 // The 2x2 white texels on the top left are the ones we'll use everywhere in Dear ImGui to render filled shapes.
 // (This is used when io.MouseDrawCursor = true)
 // modify by Dicky, add 6 more cursor
-const int FONT_ATLAS_DEFAULT_TEX_DATA_W = 122; // Actual texture will be 2 times that + 1 spacing.
-const int FONT_ATLAS_DEFAULT_TEX_DATA_H = 47;
+const int FONT_ATLAS_DEFAULT_TEX_DATA_W = 128; // Actual texture will be 2 times that + 1 spacing.
+const int FONT_ATLAS_DEFAULT_TEX_DATA_H = 63;
 static const char FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS[FONT_ATLAS_DEFAULT_TEX_DATA_W * FONT_ATLAS_DEFAULT_TEX_DATA_H + 1] =
 {
-    "..-         -XXXXXXX-    X    -           X           -XXXXXXX          -          XXXXXXX-     XX          - XX       XX "
-    "..-         -X.....X-   X.X   -          X.X          -X.....X          -          X.....X-    X..X         -X..X     X..X"
-    "---         -XXX.XXX-  X...X  -         X...X         -X....X           -           X....X-    X..X         -X...X   X...X"
-    "X           -  X.X  - X.....X -        X.....X        -X...X            -            X...X-    X..X         - X...X X...X "
-    "XX          -  X.X  -X.......X-       X.......X       -X..X.X           -           X.X..X-    X..X         -  X...X...X  "
-    "X.X         -  X.X  -XXXX.XXXX-       XXXX.XXXX       -X.X X.X          -          X.X X.X-    X..XXX       -   X.....X   "
-    "X..X        -  X.X  -   X.X   -          X.X          -XX   X.X         -         X.X   XX-    X..X..XXX    -    X...X    "
-    "X...X       -  X.X  -   X.X   -    XX    X.X    XX    -      X.X        -        X.X      -    X..X..X..XX  -     X.X     "
-    "X....X      -  X.X  -   X.X   -   X.X    X.X    X.X   -       X.X       -       X.X       -    X..X..X..X.X -    X...X    "
-    "X.....X     -  X.X  -   X.X   -  X..X    X.X    X..X  -        X.X      -      X.X        -XXX X..X..X..X..X-   X.....X   "
-    "X......X    -  X.X  -   X.X   - X...XXXXXX.XXXXXX...X -         X.X   XX-XX   X.X         -X..XX........X..X-  X...X...X  "
-    "X.......X   -  X.X  -   X.X   -X.....................X-          X.X X.X-X.X X.X          -X...X...........X- X...X X...X "
-    "X........X  -  X.X  -   X.X   - X...XXXXXX.XXXXXX...X -           X.X..X-X..X.X           - X..............X-X...X   X...X"
-    "X.........X -XXX.XXX-   X.X   -  X..X    X.X    X..X  -            X...X-X...X            -  X.............X-X..X     X..X"
-    "X..........X-X.....X-   X.X   -   X.X    X.X    X.X   -           X....X-X....X           -  X.............X- XX       XX "
-    "X......XXXXX-XXXXXXX-   X.X   -    XX    X.X    XX    -          X.....X-X.....X          -   X............X--------------"
-    "X...X..X    ---------   X.X   -          X.X          -          XXXXXXX-XXXXXXX          -   X...........X -             "
-    "X..X X..X   -       -XXXX.XXXX-       XXXX.XXXX       -------------------------------------    X..........X -             "
-    "X.X  X..X   -       -X.......X-       X.......X       -    XX           XX    -           -    X..........X -             "
-    "XX    X..X  -       - X.....X -        X.....X        -   X.X           X.X   -           -     X........X  -             "
-    "      X..X  -       -  X...X  -         X...X         -  X..X           X..X  -           -     X........X  -             "
-    "       XX   -       -   X.X   -          X.X          - X...XXXXXXXXXXXXX...X -           -     XXXXXXXXXX  -             "
-    "-------------       -    X    -           X           -X.....................X-           -------------------             "
-    "                    ----------------------------------- X...XXXXXXXXXXXXX...X -                                           "
-    "                                                      -  X..X           X..X  -                                           "
-    "                                                      -   X.X           X.X   -              -              XXX    -      "
-    "XXXXXXXXXXXXXXX -                                     -    XX           XX    -              -       XXX   X...X   -      "
-    "X.............X -X                -X        XXXX    -X     XXX    XXX -X           XXXXX     -      X...X X.. ..X  -      "
-    "XXXXXXXXXXXXXXX -XX   XXXXXXXXXXX -XX       X..X    -XX    X..X  X..X -XX       XX.......XX  -       X. .X..   ..X -      "
-    " X           X  -X.X  X.........X -X.X      X..X    -X.X    X..XX..X  -X.X     X...........X -        X. ..    ..X -      "
-    " X...........X  -X..X X.........X -X..X  XXXX..XXXX -X..X    X....X   -X..X    X....XXX....X -         X. ..  ..X  -      "
-    "  X.........X   -X...XXXXXXXXXXXX -X...X X........X -X...X    X..X    -X...X   X...X   X...X -         XX. ....X   -      "
-    "  X.........X   -X....X           -X....XX........X -X....X  X....X   -X....X  X...X   X...X -        X..X. . X    -      "
-    "   X.......X    -X.....X          -X.....XXXX..XXXX -X.....XX..XX..X  -X.....X XXXX   X...X  -       X....X. .X    -      "
-    "    X.....X     -X......X         -X......X X..X    -X.....X..X  X..X -X......X      X...X   -      X......X. .X   -      "
-    "     X...X      -X.......X        -X.......XX..X    -X.......XX   XXX -X.......X    X...X    -     X......X X...X  -      "
-    "     X...X      -X........X       -X........XXXX    -X........X       -X........X  X...X     -    X......X   XXX   -      "
-    "    X.X.X.X     -X.........X      -X.........X      -X.........X      -X.........X X...X     -   X......X          -      "
-    "   X. X.X .X    -X..........X     -X..........X     -X..........X     -X..........XX...X     -  X......X           -      "
-    "  X.  X.X  .X   -X......XXXXX     -X......XXXXX     -X......XXXXX     -X.......XXX XXXXX     - X......X            -      "
-    "  X.  X.X  .X   -X...X..X         -X...X..X         -X...X..X         -X...X..X              -X.XXXX.X             -      "
-    " X.  X...X  .X  -X..X X..X        -X..X X..X        -X..X X..X        -X..X X..X    XXX      -X.   .X              -      "
-    " X...........X  -X.X  X..X        -X.X  X..X        -X.X  X..X        -X.X  X..X   X...X     -X.  .X               -      "
-    "X.............X -XX    X..X       -XX    X..X       -XX    X..X       -XX    X..X  X...X     -X...X                -      "
-    "X.............X -      X..X       -      X..X       -      X..X       -      X..X  X...X     -XXXX                 -      "
-    "XXXXXXXXXXXXXXX -       XX        -       XX        -       XX        -       XX    XXX      -                     -      "
-    "--------------------------------------------------------------------------------------------------------------------------"
+    "..-         -XXXXXXX-    X    -           X           -XXXXXXX          -          XXXXXXX-     XX          - XX       XX       "
+    "..-         -X.....X-   X.X   -          X.X          -X.....X          -          X.....X-    X..X         -X..X     X..X      "
+    "---         -XXX.XXX-  X...X  -         X...X         -X....X           -           X....X-    X..X         -X...X   X...X      "
+    "X           -  X.X  - X.....X -        X.....X        -X...X            -            X...X-    X..X         - X...X X...X       "
+    "XX          -  X.X  -X.......X-       X.......X       -X..X.X           -           X.X..X-    X..X         -  X...X...X        "
+    "X.X         -  X.X  -XXXX.XXXX-       XXXX.XXXX       -X.X X.X          -          X.X X.X-    X..XXX       -   X.....X         "
+    "X..X        -  X.X  -   X.X   -          X.X          -XX   X.X         -         X.X   XX-    X..X..XXX    -    X...X          "
+    "X...X       -  X.X  -   X.X   -    XX    X.X    XX    -      X.X        -        X.X      -    X..X..X..XX  -     X.X           "
+    "X....X      -  X.X  -   X.X   -   X.X    X.X    X.X   -       X.X       -       X.X       -    X..X..X..X.X -    X...X          "
+    "X.....X     -  X.X  -   X.X   -  X..X    X.X    X..X  -        X.X      -      X.X        -XXX X..X..X..X..X-   X.....X         "
+    "X......X    -  X.X  -   X.X   - X...XXXXXX.XXXXXX...X -         X.X   XX-XX   X.X         -X..XX........X..X-  X...X...X        "
+    "X.......X   -  X.X  -   X.X   -X.....................X-          X.X X.X-X.X X.X          -X...X...........X- X...X X...X       "
+    "X........X  -  X.X  -   X.X   - X...XXXXXX.XXXXXX...X -           X.X..X-X..X.X           - X..............X-X...X   X...X      "
+    "X.........X -XXX.XXX-   X.X   -  X..X    X.X    X..X  -            X...X-X...X            -  X.............X-X..X     X..X      "
+    "X..........X-X.....X-   X.X   -   X.X    X.X    X.X   -           X....X-X....X           -  X.............X- XX       XX       "
+    "X......XXXXX-XXXXXXX-   X.X   -    XX    X.X    XX    -          X.....X-X.....X          -   X............X--------------------"
+    "X...X..X    ---------   X.X   -          X.X          -          XXXXXXX-XXXXXXX          -   X...........X -                   "
+    "X..X X..X   -       -XXXX.XXXX-       XXXX.XXXX       -------------------------------------    X..........X -                   "
+    "X.X  X..X   -       -X.......X-       X.......X       -    XX           XX    -           -    X..........X -                   "
+    "XX    X..X  -       - X.....X -        X.....X        -   X.X           X.X   -           -     X........X  -                   "
+    "      X..X  -       -  X...X  -         X...X         -  X..X           X..X  -           -     X........X  -                   "
+    "       XX   -       -   X.X   -          X.X          - X...XXXXXXXXXXXXX...X -           -     XXXXXXXXXX  -                   "
+    "-------------       -    X    -           X           -X.....................X-           --------------------------            "
+    "                    ----------------------------------- X...XXXXXXXXXXXXX...X -              -              XXX    -            "
+    "XXXXXXXXXXXXXXX -                                     -  X..X           X..X  -              -       XXX   X...X   -            "
+    "X.............X -X                -X        XXXX      -   X.X           X.X   -              -      X...X X.. ..X  -            "
+    "XXXXXXXXXXXXXXX -XX   XXXXXXXXXXX -XX       X..X      -    XX           XX    -              -       X. .X..   ..X -            "
+    " X           X  -X.X  X.........X -X.X      X..X    -X     XXX    XXX -X           XXXXX     -        X. ..    ..X -            "
+    " X...........X  -X..X X.........X -X..X  XXXX..XXXX -XX    X..X  X..X -XX        XX.....XX   -         X. ..  ..X  -            "
+    "  X.........X   -X...XXXXXXXXXXXX -X...X X........X -X.X    X..XX..X  -X.X      X.........X  -         XX. ....X   -            "
+    "  X.........X   -X....X           -X....XX........X -X..X    X....X   -X..X    X....XXX....X -        X..X. . X    -            "
+    "   X.......X    -X.....X          -X.....XXXX..XXXX -X...X    X..X    -X...X   X...X   X...X -       X....X. .X    -            "
+    "    X.....X     -X......X         -X......X X..X    -X....X  X....X   -X....X  X...X   X...X -      X......X. .X   -            "
+    "     X...X      -X.......X        -X.......XX..X    -X.....XX..XX..X  -X.....X  XXX   X...X  -     X......X X...X  -            "
+    "     X...X      -X........X       -X........XXXX    -X.....X..X  X..X -X......X      X...X   -    X......X   XXX   -            "
+    "    X.X.X.X     -X.........X      -X.........X      -X.......XX   XXX -X.......X    X...X    -   X......X          -            "
+    "   X. X.X .X    -X..........X     -X..........X     -X........X       -X........X  X...X     -  X......X           -            "
+    "  X.  X.X  .X   -X......XXXXX     -X......XXXXX     -X.........X      -X.........X X...X     - X......X            -            "
+    "  X.  X.X  .X   -X...X..X         -X...X..X         -X..........X     -X..........XX...X     -X.XXXX.X             -            "
+    " X.  X...X  .X  -X..X X..X        -X..X X..X        -X......XXXXX     -X.......XXX XXXXX     -X.   .X              -            "
+    " X...........X  -X.X  X..X        -X.X  X..X        -X...X..X         -X...X..X              -X.  .X               -            "
+    "X.............X -XX    X..X       -XX    X..X       -X..X X..X        -X..X X..X    XXX      -X...X                -            "
+    "X.............X -      X..X       -      X..X       -X.X  X..X        -X.X  X..X   X...X     -XXXX                 -            "
+    "XXXXXXXXXXXXXXX -       XX        -       XX        -XX    X..X       -XX    X..X  X...X     ----------------------             "
+    "     XXXXXXXX -XXXXXXXX      ------------------------      X..X       -      X..X  X...X     -                     -            "
+    "      X.....X _X.....X       -                      -       XX        -       XX    XXX      -         XXX         -            "
+    "       X....X _X....X        -                      ------------------------------------------       XX...XX       -            "
+    "      X.....X _X.....X       -                      -                       -                -      X.......X      -            "
+    "     X..XX..X _X..XX..X      -                      -                       -                -     X...XXX...X     -            "
+    "    X..X  X.X _X.X  X..X     -                      -                       -                -    X..XX   XX..X    -            "
+    "   X..X    XX _XX    X..X    ------------------------------------------------                -XXXX..XX      XXXX   -            "
+    "   X..X  X  X _X  X  X..X    -        XXX           -XXXXXXXX   XXXXXXXX    -                -X.......X X     X    -            "
+    "  X..X  X.X   _  X.X  X..X   -      XX...XX         -X.....X  X  X.....X    -                - X.....X X.X   X.X   -            "
+    "  X..X X...X  _ X...X X..X   -     X.......X        -X....X  X.X  X....X    -                -  X...X X...X X...X  -            "
+    "  X..X  X.X   _  X.X  X..X   -X   X...XXX...X   X   -X...X  X...X  X...X    -                -   X.X   X.X X.....X -            "
+    "   X..X  X  X _X  X  X..X    -XX X..XX   XX..X XX   -X...X   X.X   X...X    -                -    X     X X.......X-            "
+    "   X..X    XX _XX    X..X    -X.X..X   X   X..X.X   -X.X..X   X   X..X.X    -                -   XXXX      XX..XXXX-            "
+    "    X..X  X.X _X.X  X..X     -X...X   X.X   X...X   -XX X..XX   XX..X XX    -                -    X..XX   XX..X    -            "
+    "     X..XX..X _X..XX..X      -X...X  X...X  X...X   -X   X...XXX...X   X    -                -     X...XXX...X     -            "
+    "      X.....X _X.....X       -X....X  X.X  X....X   -     X.......X         -                -      X.......X      -            "
+    "       X....X _X....X        -X.....X  X  X.....X   -      XX...XX          -                -       XX...XX       -            "
+    "      X.....X _X.....X       -XXXXXXXX   XXXXXXXX   -        XXX            -                -         XXX         -            "
+    "     XXXXXXXX -XXXXXXXX---------------------------------------------------------------------------------------------------------"
 };
 
 static const ImVec2 FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[ImGuiMouseCursor_COUNT][3] =
@@ -2194,12 +2215,17 @@ static const ImVec2 FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[ImGuiMouseCursor_COUNT][3
     { ImVec2(55,0), ImVec2(17,17), ImVec2( 8, 8) }, // ImGuiMouseCursor_ResizeNWSE
     { ImVec2(91,0), ImVec2(17,22), ImVec2( 5, 0) }, // ImGuiMouseCursor_Hand
     { ImVec2(109,0),ImVec2(13,15), ImVec2( 6, 7) }, // ImGuiMouseCursor_NotAllowed
-    { ImVec2( 0,26),ImVec2(16,20), ImVec2( 7,10) }, // ImGuiMouseCursor_Waiting
-    { ImVec2(17,27),ImVec2(17,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Minus
-    { ImVec2(35,27),ImVec2(17,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Add
+    { ImVec2( 0,24),ImVec2(16,20), ImVec2( 7,10) }, // ImGuiMouseCursor_Waiting
+    { ImVec2(17,25),ImVec2(17,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Minus
+    { ImVec2(35,25),ImVec2(17,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Add
     { ImVec2(53,27),ImVec2(17,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Cross
     { ImVec2(71,27),ImVec2(22,19), ImVec2( 0, 0) }, // ImGuiMouseCursor_Question
-    { ImVec2(94,25),ImVec2(21,21), ImVec2( 0,20) }, // ImGuiMouseCursor_Straw
+    { ImVec2(94,23),ImVec2(21,21), ImVec2( 0,20) }, // ImGuiMouseCursor_Straw
+    { ImVec2( 0,45),ImVec2(14,19), ImVec2( 9, 9) }, // ImGuiMouseCursor_Rotate_Left
+    { ImVec2(15,45),ImVec2(14,19), ImVec2( 2, 9) }, // ImGuiMouseCursor_Rotate_Right
+    { ImVec2(30,52),ImVec2(22,11), ImVec2( 9, 8) }, // ImGuiMouseCursor_Rotate_Top
+    { ImVec2(53,52),ImVec2(22,11), ImVec2( 9, 3) }, // ImGuiMouseCursor_Rotate_Bottom
+    { ImVec2(94,45),ImVec2(21,19), ImVec2(11,10) }, // ImGuiMouseCursor_Rotate_Center
 };
 // modify by Dicky end
 

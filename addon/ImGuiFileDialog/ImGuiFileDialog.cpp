@@ -215,10 +215,10 @@ SOFTWARE.
 #define fileEntryString "[File]"
 #endif  // fileEntryString
 #ifndef fileNameString
-#define fileNameString "File Name :"
+#define fileNameString "File Name:"
 #endif  // fileNameString
 #ifndef dirNameString
-#define dirNameString "Directory Path :"
+#define dirNameString "Directory Path:"
 #endif  // dirNameString
 #ifndef buttonResetSearchString
 #define buttonResetSearchString "Reset search"
@@ -269,10 +269,10 @@ SOFTWARE.
 #define fileSizeTeraBytes "TB"  // Add By Dicky
 #endif // fileSizeTeraBytes     // Add By Dicky
 #ifndef OverWriteDialogTitleString
-#define OverWriteDialogTitleString "The file Already Exist !"
+#define OverWriteDialogTitleString "The selected file already exists!"
 #endif  // OverWriteDialogTitleString
 #ifndef OverWriteDialogMessageString
-#define OverWriteDialogMessageString "Would you like to OverWrite it ?"
+#define OverWriteDialogMessageString "Are you sure you want to overwrite it?"
 #endif  // OverWriteDialogMessageString
 #ifndef OverWriteDialogConfirmButtonString
 #define OverWriteDialogConfirmButtonString "Confirm"
@@ -2534,9 +2534,11 @@ void IGFD::FileManager::DrawPathComposer(const FileDialogInternal& vFileDialogIn
     if (IMGUI_BUTTON(editPathButtonString)) {
         inputPathActivated = !inputPathActivated;
         if (inputPathActivated) {
-            auto endIt = m_CurrentPathDecomposition.end();
-            m_CurrentPath = ComposeNewPath(--endIt);
-            IGFD::Utils::SetBuffer(inputPathBuffer, MAX_PATH_BUFFER_SIZE, m_CurrentPath);
+            if (!m_CurrentPathDecomposition.empty()) {
+                auto endIt = m_CurrentPathDecomposition.end();
+                m_CurrentPath = ComposeNewPath(--endIt);
+                IGFD::Utils::SetBuffer(inputPathBuffer, MAX_PATH_BUFFER_SIZE, m_CurrentPath);
+            }
         }
     }
     if (ImGui::IsItemHovered())
@@ -4275,10 +4277,10 @@ bool IGFD::FileDialog::m_DrawFooter() {
 
     // Input file fields
     float width = ImGui::GetContentRegionAvail().x;
-    //if (!fdFile.dLGDirectoryMode) {
+    //if (!fdFile.dLGDirectoryMode) { // modify by Dicky
         ImGuiContext& g = *GImGui;
         width -= m_FileDialogInternal.filterManager.GetFilterComboBoxWidth() + g.Style.ItemSpacing.x;
-    //}
+    //} // modify by Dicky end
 
     ImGui::PushItemWidth(width);
     ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue;

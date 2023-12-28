@@ -956,6 +956,28 @@ ImMat getAffineTransform(const ImPoint src[], const ImPoint dst[])
     return M;
 }
 
+ImMat getAffineTransform(int sw, int sh, int dw, int dh, float x_offset, float y_offset, float x_scale, float y_scale, float angle)
+{
+    ImMat mat;
+    mat.create_type(3, 2, IM_DT_FLOAT32);
+    float _angle = angle / 180.f * M_PI;
+    float _x_scale = 1.f / (x_scale + FLT_EPSILON);
+    float _y_scale = 1.f / (y_scale + FLT_EPSILON);
+    float alpha_00 = std::cos(_angle) * _x_scale;
+    float alpha_11 = std::cos(_angle) * _y_scale;
+    float beta_01 = std::sin(_angle) * _x_scale;
+    float beta_10 = std::sin(_angle) * _y_scale;
+    float x_diff = dw - sw;
+    float y_diff = dh - sh;
+    float _x_offset = x_offset * (dw + sw * x_scale) / 2 + x_diff / 2;
+    float _y_offset = y_offset * (dh + sh * y_scale) / 2 + y_diff / 2;
+    int center_x = sw / 2 + _x_offset;
+    int center_y = sh / 2 + _y_offset;
+    mat.at<float>(0, 0) =  alpha_00;    mat.at<float>(1, 0) = beta_01;      mat.at<float>(2, 0) = (1 - alpha_00) * center_x - beta_01 * center_y - _x_offset;
+    mat.at<float>(0, 1) = -beta_10;     mat.at<float>(1, 1) = alpha_11;     mat.at<float>(2, 1) = beta_10 * center_x + (1 - alpha_11) * center_y - _y_offset;
+    return mat;
+}
+
 // mat resize
 static void resize_bilinear_c1(const unsigned char* src, int srcw, int srch, int srcstride, unsigned char* dst, int w, int h, int stride)
 {

@@ -1494,9 +1494,10 @@ void ed::EditorContext::End()
         m_DrawList->ChannelsSetCurrent(c_UserChannel_Grid);
 
         ImVec2 offset    = m_Canvas.ViewOrigin() * (1.0f / m_Canvas.ViewScale());
-        ImU32 GRID_COLOR = GetColor(StyleColor_Grid, ImClamp(m_Canvas.ViewScale() * m_Canvas.ViewScale(), 0.0f, 1.0f));
-        float GRID_SX    = 32.0f;// * m_Canvas.ViewScale();
-        float GRID_SY    = 32.0f;// * m_Canvas.ViewScale();
+        ImU32 GRID_COLOR = GetColor(StyleColor_Grid);
+        float GRID_SCALE = m_Canvas.ViewScale() >= 1 ? 1.0 / floor(m_Canvas.ViewScale()) : floor(1.0 / m_Canvas.ViewScale());
+        float GRID_SX    = 16.0f * GRID_SCALE;
+        float GRID_SY    = 16.0f * GRID_SCALE;
         ImVec2 VIEW_POS  = m_Canvas.ViewRect().Min;
         ImVec2 VIEW_SIZE = m_Canvas.ViewRect().GetSize();
 
@@ -3571,6 +3572,8 @@ bool ed::NavigateAction::Process(const Control& control)
     if (!m_IsActive)
         return false;
     auto& io = ImGui::GetIO();
+    if (!io.KeyShift)
+        m_Scroll = m_ScrollStart;
 
     bool emulate_middle_button = false;
     if (Editor->GetConfig().NavigateButtonIndex == 2 && Editor->GetConfig().EmulateMiddleButton)
@@ -4307,10 +4310,16 @@ ed::SelectAction::SelectAction(EditorContext* editor):
 ed::EditorAction::AcceptResult ed::SelectAction::Accept(const Control& control)
 {
     //IM_ASSERT(!m_IsActive);
-
-    if (m_IsActive)
-        return False;
     auto& io = ImGui::GetIO();
+    if (m_IsActive)
+    {
+        if (!ImGui::IsMouseDragging(Editor->GetConfig().SelectButtonIndex, 1) || io.KeyShift || control.BackgroundHot)
+        {
+            m_StartPoint = m_EndPoint = ImGui::GetMousePos();
+            m_IsActive = false;
+        }
+        return False;
+    }
     m_SelectGroups   = io.KeySuper;
     m_SelectLinkMode = io.KeyAlt;
 
@@ -4339,6 +4348,8 @@ ed::EditorAction::AcceptResult ed::SelectAction::Accept(const Control& control)
             transaction.AddAction(TransactionAction::ClearSelection, "Clear Selection");
 
         Editor->ClearSelection();
+        m_StartPoint = m_EndPoint = ImGui::GetMousePos();
+        m_IsActive = false;
     }
     else
     {
@@ -4363,7 +4374,9 @@ ed::EditorAction::AcceptResult ed::SelectAction::Accept(const Control& control)
     }
 
     if (m_IsActive)
+    {
         m_Animation.Stop();
+    }
 
     return m_IsActive ? True : False;
 }
@@ -4371,7 +4384,7 @@ ed::EditorAction::AcceptResult ed::SelectAction::Accept(const Control& control)
 bool ed::SelectAction::Process(const Control& control)
 {
     IM_UNUSED(control);
-
+    auto& io = ImGui::GetIO();
     if (m_CommitSelection)
     {
         Editor->ClearSelection();
@@ -4384,7 +4397,9 @@ bool ed::SelectAction::Process(const Control& control)
     }
 
     if (!m_IsActive)
+    {
         return false;
+    }
 
     if (ImGui::IsMouseDragging(Editor->GetConfig().SelectButtonIndex, 0))
     {
