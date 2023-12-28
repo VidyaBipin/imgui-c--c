@@ -99,7 +99,7 @@ public:
     bool IsCancelled() const override
     { return m_eState == CANCELLED; }
     bool IsStopped() const override
-    { return IsDone() || IsFailed() || IsCancelled(); }
+    { return (IsDone() || IsFailed() || IsCancelled()) && !m_bRunning; }
     void WaitDone() override;
     bool WaitState(State eState, int64_t i64TimeOut = 0) override;
 

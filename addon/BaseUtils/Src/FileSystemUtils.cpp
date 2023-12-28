@@ -28,12 +28,14 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 #elif defined(_WIN32) && !defined(__MINGW64__)
+#error "Not supported yet!"
 #else
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <ftw.h>
 #endif
 
 #include "FileSystemUtils.h"
@@ -146,6 +148,87 @@ string JoinPath(const string& path1, const string& path2)
 #endif
 }
 
+#ifndef USE_CPP_FS
+static string GetErrnoStr()
+{
+    switch (errno)
+    {
+    case EPERM:
+        return "EPERM";
+    case ENOENT:
+        return "ENOENT";
+    case ESRCH:
+        return "ESRCH";
+    case EINTR:
+        return "EINTR";
+    case EIO:
+        return "EIO";
+    case ENXIO:
+        return "ENXIO";
+    case E2BIG:
+        return "E2BIG";
+    case ENOEXEC:
+        return "ENOEXEC";
+    case EBADF:
+        return "EBADF";
+    case ECHILD:
+        return "ECHILD";
+    case EAGAIN:
+        return "EAGAIN";
+    case ENOMEM:
+        return "ENOMEM";
+    case EACCES:
+        return "EACCESS";
+    case EFAULT:
+        return "EFAULT";
+    case ENOTBLK:
+        return "ENOTBLK";
+    case EBUSY:
+        return "EBUSY";
+    case EEXIST:
+        return "EEXIST";
+    case EXDEV:
+        return "EXDEV";
+    case ENODEV:
+        return "ENODEV";
+    case ENOTDIR:
+        return "ENOTDIR";
+    case EISDIR:
+        return "EISDIR";
+    case EINVAL:
+        return "EINVAL";
+    case ENFILE:
+        return "ENFILE";
+    case EMFILE:
+        return "EMFILE";
+    case ENOTTY:
+        return "ENOTTY";
+    case ETXTBSY:
+        return "ETXTBSY";
+    case EFBIG:
+        return "EFBIG";
+    case ENOSPC:
+        return "ENOSPC";
+    case ESPIPE:
+        return "ESPIPE";
+    case EROFS:
+        return "EROFS";
+    case EMLINK:
+        return "EMLINK";
+    case EPIPE:
+        return "EPIPE";
+    case EDOM:
+        return"EDOM";
+    case ERANGE:
+        return "ERANGE";
+    default:
+        break;
+    }
+    ostringstream oss; oss << (int)errno << "(unknown error)";
+    return oss.str();
+}
+#endif
+
 bool Exists(const std::string& path)
 {
 #ifdef USE_CPP_FS
@@ -161,11 +244,13 @@ bool IsDirectory(const string& path)
     return fs::is_directory(path);
 #else
     bool isDir = false;
-    DIR* pDir = opendir(path.c_str());
-    if (pDir)
+    auto fd = open(path.c_str(), O_RDONLY);
+    if (fd >= 0)
     {
-        isDir = true;
-        closedir(pDir);
+        struct stat st;
+        if (fstat(fd, &st) == 0)
+            isDir = S_ISDIR(st.st_mode);
+        close(fd);
     }
     return isDir;
 #endif
@@ -180,14 +265,16 @@ bool IsFile(const string& path)
     auto fd = open(path.c_str(), O_RDONLY);
     if (fd >= 0)
     {
-        isFile = true;
+        struct stat st;
+        if (fstat(fd, &st) == 0)
+            isFile = S_ISREG(st.st_mode);
         close(fd);
     }
     return isFile;
 #endif
 }
 
-bool CreateDirectory(const std::string& _path, bool createParentIfNotExists)
+bool CreateDirectory(const string& _path, bool createParentIfNotExists)
 {
     if (_path.empty())
         return false;
@@ -215,6 +302,71 @@ bool CreateDirectory(const std::string& _path, bool createParentIfNotExists)
     auto err = mkdir(path.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH);
 #endif
     return err == 0 || err == EEXIST; 
+#endif
+}
+
+#ifndef USE_CPP_FS
+static int _DeleteDirectory_nftwCb(const char *filename, const struct stat *statptr, int fileflags, struct FTW *pfwt)
+{
+    int ret;
+    if (fileflags == FTW_D || fileflags == FTW_DNR || fileflags == FTW_DP)
+        ret = rmdir(filename);
+    else
+        ret = unlink(filename);
+    if (ret != 0)
+        Log(Error) << "FAILED to run '_DeleteDirectory_nftwCb()' on '" << filename << "'! Error is '" << GetErrnoStr() << "'." << endl;
+    return ret;
+}
+#endif
+
+bool DeleteDirectory(const string& path, bool recursiveDelete)
+{
+    if (path.empty())
+    {
+        Log(Error) << "FAILED to run 'DeleteDirectory()',  argument 'path' is EMPTY!" << endl;
+        return false;
+    }
+    if (!IsDirectory(path))
+    {
+        Log(Error) << "FAILED to run 'DeleteDirectory()' on '" << path << "'! Target is NOT a DIRECTORY." << endl;
+        return false;
+    }
+#ifdef USE_CPP_FS
+    error_code ec;
+    if (recursiveDelete)
+    {
+        const auto cnt = fs::remove_all(path, ec);
+        const bool ret = cnt != static_cast<std::uintmax_t>(-1);
+        if (!ret)
+            Log(Error) << "FAILED to run 'DeleteDirectory(recursiveDelete=true)' on '" << path << "'! Error is '" << ec << "'." << endl;
+        return ret;
+    }
+    else
+    {
+        const auto ret = fs::remove(path, ec);
+        if (!ret)
+            Log(Error) << "FAILED to run 'DeleteDirectory(recursiveDelete=false)' on '" << path << "'! Error is '" << ec << "'." << endl;
+        return ret;
+    }
+#else
+    if (recursiveDelete)
+    {
+        const auto ret = nftw(path.c_str(), _DeleteDirectory_nftwCb, 128, FTW_DEPTH|FTW_PHYS);
+        if (ret != 0)
+        {
+            Log(Error) << "FAILED to run 'DeleteDirectory(recursiveDelete=true)' on '" << path << "'! Error is '" << GetErrnoStr() << "'." << endl;
+            return false;
+        }
+    }
+    else
+    {
+        if (rmdir(path.c_str()) != 0)
+        {
+            Log(Error) << "FAILED to run 'DeleteDirectory(recursiveDelete=false)' on '" << path << "'! Error is '" << GetErrnoStr() << "'." << endl;
+            return false;
+        }
+    }
+    return true;
 #endif
 }
 

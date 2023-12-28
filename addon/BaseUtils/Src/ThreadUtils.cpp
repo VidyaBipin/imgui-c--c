@@ -96,7 +96,7 @@ bool BaseAsyncTask::Cancel()
 
 void BaseAsyncTask::WaitDone()
 {
-    while (m_eState != DONE)
+    while (!IsStopped())
         this_thread::sleep_for(chrono::milliseconds(THREAD_IDLE_SLEEP_MILLISEC));
 }
 
