@@ -781,4 +781,12 @@ namespace ImGui {
     // 2) Add entries to the KeyboardLogicalLayout enum and implement keyboards for specific countries, riducing the number of 'empty' keys present in the general layout.
 } // namespace ImGui
 
+namespace ImGui
+{
+    IMGUI_API void TextVWithPadding(const ImVec2& padding, const char* fmt, va_list args) IM_FMTLIST(2);
+    IMGUI_API void TextColoredWithPadding(const ImVec4& col, const ImVec2& padding, const char* fmt, ...) IM_FMTARGS(3);
+    IMGUI_API void TextColoredVWithPadding(const ImVec4& col, const ImVec2& padding, const char* fmt, va_list args) IM_FMTLIST(3);
+    IMGUI_API void TextExWithPadding(const ImVec2& padding, const char* text, const char* text_end = NULL, ImGuiTextFlags flags = 0);
+} // namespace ImGui
+
 #endif // IMGUI_WIDGET_H
