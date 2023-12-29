@@ -2035,7 +2035,7 @@ private:
                 y = m_ptRootPos.y+ratio*m_fCtrlSlope;
             }
             const auto& aContourVertices = m_owner->m_aContourVerticesForUi;
-            bool bIsInside = MatUtils::CheckPointInsidePolygon({x, y}, aContourVertices);
+            bool bIsInside = CheckPointInsidePolygon({x, y}, aContourVertices);
             float fLength = m_fMorphCtrlLength;
             if (m_bInsidePoly^bIsInside)
                 fLength = -fLength;
