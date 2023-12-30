@@ -8688,7 +8688,7 @@ void ImGui::SetStateStorage(ImGuiStorage* tree)
 ImGuiStorage* ImGui::GetStateStorage()
 {
     ImGuiWindow* window = GImGui->CurrentWindow;
-    return window->DC.StateStorage;
+    return window ? window->DC.StateStorage : nullptr; // modify by Dicky check window point
 }
 
 void ImGui::PushID(const char* str_id)
