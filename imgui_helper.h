@@ -48,7 +48,7 @@ IMGUI_API bool GetTexCoordsFromGlyph(unsigned short glyph, ImVec2& uv0, ImVec2& 
 // Warning: according to https://github.com/ocornut/imgui/issues/252 this approach can fail [Better call ImGui::GetWindowSize().y from inside the menu and store the result somewhere]
 IMGUI_API float CalcMainMenuHeight();
 
-IMGUI_API void RenderMouseCursor(const char* mouse_cursor, ImVec2 offset = ImVec2(0 ,0), float base_scale = 1.0, int rotate = 0, ImU32 col_fill = IM_COL32_WHITE, ImU32 col_border = IM_COL32_BLACK, ImU32 col_shadow = IM_COL32(0, 0, 0, 48));
+IMGUI_API void RenderMouseCursor(const char* mouse_cursor, ImVec2 offset = ImVec2(0 ,0), float base_scale = 1.0, float rotate = 0, ImU32 col_fill = IM_COL32_WHITE, ImU32 col_border = IM_COL32_BLACK, ImU32 col_shadow = IM_COL32(0, 0, 0, 48));
 
 // These two methods are inspired by imguidock.cpp
 // if optionalRootWindowName==NULL, they refer to the current window

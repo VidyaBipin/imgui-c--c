@@ -323,7 +323,7 @@ float CalcMainMenuHeight()
     }
 }
 
-void RenderMouseCursor(const char* mouse_cursor, ImVec2 offset, float base_scale, int rotate, ImU32 col_fill, ImU32 col_border, ImU32 col_shadow)
+void RenderMouseCursor(const char* mouse_cursor, ImVec2 offset, float base_scale, float rotate, ImU32 col_fill, ImU32 col_border, ImU32 col_shadow)
 {
     ImGuiViewportP* viewport = (ImGuiViewportP*)ImGui::GetWindowViewport();
     ImDrawList* draw_list = ImGui::GetForegroundDrawList(viewport);
@@ -340,7 +340,7 @@ void RenderMouseCursor(const char* mouse_cursor, ImVec2 offset, float base_scale
     draw_list->AddText(pos + ImVec2(-1, -1), col_border, mouse_cursor);
     draw_list->AddText(pos + ImVec2(1, 1), col_shadow, mouse_cursor);
     draw_list->AddText(pos, col_fill, mouse_cursor);
-    if (rotate != 0)
+    if (rotate != 0.f)
     {
         float rad = M_PI / 180 * (90 - rotate);
         ImVec2 l(FLT_MAX, FLT_MAX), u(-FLT_MAX, -FLT_MAX); // bounds
