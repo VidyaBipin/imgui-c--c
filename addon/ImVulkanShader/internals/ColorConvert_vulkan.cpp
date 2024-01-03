@@ -475,7 +475,7 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_Y, const VkMat& Im_U, con
         resize = true;
 
     int bitDepth = Im_Y.depth != 0 ? Im_Y.depth : Im_Y.type == IM_DT_INT8 ? 8 : Im_Y.type == IM_DT_INT16 || Im_Y.type == IM_DT_INT16_BE ? 16 : 8;
-    std::vector<vk_constant_type> constants(17);
+    std::vector<vk_constant_type> constants(19);
     constants[0].i = Im_Y.w;
     constants[1].i = Im_Y.h;
     constants[2].i = dst.c;
@@ -493,6 +493,8 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_Y, const VkMat& Im_U, con
     constants[14].i = dst.type;
     constants[15].i = resize ? 1 : 0;
     constants[16].i = type;
+    constants[17].i = Im_Y.w;
+    constants[18].i = Im_U.w;
     cmd->record_pipeline(pipeline_y_u_v_rgb, bindings, constants, dst);
 }
 
@@ -505,8 +507,8 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const
     }
 
     VkMat dst_gpu;
-    int dst_width = im_RGB.w > 0 ? im_RGB.w : im_Y.w;
-    int dst_height = im_RGB.h > 0 ? im_RGB.h : im_Y.h;
+    int dst_width = im_RGB.w > 0 ? im_RGB.w : (im_Y.dw > 0 ? im_Y.dw : im_Y.w);
+    int dst_height = im_RGB.h > 0 ? im_RGB.h : (im_Y.dh > 0 ? im_Y.dh : im_Y.h);
     dst_gpu.create_type(dst_width, dst_height, 4, im_RGB.type, opt.blob_vkallocator);
     im_RGB.copy_attribute(im_Y);
     dst_gpu.color_format = im_RGB.color_format;

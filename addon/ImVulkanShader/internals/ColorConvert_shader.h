@@ -383,6 +383,32 @@ SHADER_STORE_RGBA
 SHADER_YUV2RGB_MAIN
 ;
 
+#define SHADER_PARAM_Y_U_V_2R \
+" \n\
+layout (push_constant) uniform parameter \n\
+{ \n\
+    int w; \n\
+    int h; \n\
+    int cstep; \n\
+    int in_format; \n\
+    int in_type; \n\
+    int in_space; \n\
+    int in_range; \n\
+    float in_scale; \n\
+    int in_real_w; \n\
+    int in_real_h; \n\
+    int out_w; \n\
+    int out_h; \n\
+    int out_cstep; \n\
+    int out_format; \n\
+    int out_type; \n\
+    int resize; \n\
+    int interp_type; \n\
+    int uw; \n\
+    int vw; \n\
+} p;\
+"
+
 #define SHADER_LOAD_SRC_Y_U_V \
 " \n\
 sfpvec3 load_src_yuv(int x, int y) \n\
@@ -391,16 +417,17 @@ sfpvec3 load_src_yuv(int x, int y) \n\
     int uv_scale_w = p.in_format == CF_YUV420 || p.in_format == CF_YUV422 ? 2 : 1; \n\
     int uv_scale_h = p.in_format == CF_YUV420 || p.in_format == CF_NV12 || p.in_format == CF_P010LE ? 2 : 1; \n\
     int y_offset = y * p.w + x; \n\
-    int u_offset = (y / uv_scale_h) * p.w / uv_scale_w + x / uv_scale_w; \n\
-    int v_offset = (y / uv_scale_h) * p.w / uv_scale_w + x / uv_scale_w; \n\
-    ivec2 uv_offset = ((y / 2) * p.w / 2 + x / 2) * 2 + ivec2(0, 1); \n\
+    int u_offset = (y / uv_scale_h) * p.uw + x / uv_scale_w; \n\
+    int v_offset = (y / uv_scale_h) * p.vw + x / uv_scale_w; \n\
+    if (p.in_format == CF_NV12 || p.in_format == CF_P010LE) \n\
+    { u_offset -= u_offset&0x1; } \n\
     if (p.in_type == DT_INT8) \n\
     { \n\
         yuv_in.x = sfp(uint(Y_data_int8[y_offset])) / sfp(p.in_scale); \n\
         if (p.in_format == CF_NV12) \n\
         { \n\
-            yuv_in.y = sfp(uint(U_data_int8[uv_offset.x])) / sfp(p.in_scale); \n\
-            yuv_in.z = sfp(uint(U_data_int8[uv_offset.y])) / sfp(p.in_scale); \n\
+            yuv_in.y = sfp(uint(U_data_int8[u_offset  ])) / sfp(p.in_scale); \n\
+            yuv_in.z = sfp(uint(U_data_int8[u_offset+1])) / sfp(p.in_scale); \n\
         } \n\
         else \n\
         { \n\
@@ -416,13 +443,13 @@ sfpvec3 load_src_yuv(int x, int y) \n\
             yuv_in.x = sfp(uint(Y_data_int16[y_offset])) / sfp(p.in_scale); \n\
         if (p.in_format == CF_NV12) \n\
         { \n\
-            yuv_in.y = sfp(uint(U_data_int16[uv_offset.x])) / sfp(p.in_scale); \n\
-            yuv_in.z = sfp(uint(U_data_int16[uv_offset.y])) / sfp(p.in_scale); \n\
+            yuv_in.y = sfp(uint(U_data_int16[u_offset  ])) / sfp(p.in_scale); \n\
+            yuv_in.z = sfp(uint(U_data_int16[u_offset+1])) / sfp(p.in_scale); \n\
         } \n\
         else if (p.in_format == CF_P010LE) \n\
         { \n\
-            yuv_in.y = sfp(uint(U_data_int16[uv_offset.x])) / sfp(65535.0); \n\
-            yuv_in.z = sfp(uint(U_data_int16[uv_offset.y])) / sfp(65535.0); \n\
+            yuv_in.y = sfp(uint(U_data_int16[u_offset  ])) / sfp(65535.0); \n\
+            yuv_in.z = sfp(uint(U_data_int16[u_offset+1])) / sfp(65535.0); \n\
         } \n\
         else \n\
         { \n\
@@ -435,8 +462,8 @@ sfpvec3 load_src_yuv(int x, int y) \n\
         yuv_in.x = sfp(Y_data_float16[y_offset]); \n\
         if (p.in_format == CF_NV12) \n\
         { \n\
-            yuv_in.y = sfp(U_data_float16[uv_offset.x]); \n\
-            yuv_in.z = sfp(U_data_float16[uv_offset.y]); \n\
+            yuv_in.y = sfp(U_data_float16[u_offset  ]); \n\
+            yuv_in.z = sfp(U_data_float16[u_offset+1]); \n\
         } \n\
         else \n\
         { \n\
@@ -449,8 +476,8 @@ sfpvec3 load_src_yuv(int x, int y) \n\
         yuv_in.x = sfp(Y_data_float32[y_offset]); \n\
         if (p.in_format == CF_NV12) \n\
         { \n\
-            yuv_in.y = sfp(U_data_float32[uv_offset.x]); \n\
-            yuv_in.z = sfp(U_data_float32[uv_offset.y]); \n\
+            yuv_in.y = sfp(U_data_float32[u_offset  ]); \n\
+            yuv_in.z = sfp(U_data_float32[u_offset+1]); \n\
         } \n\
         else \n\
         { \n\
@@ -481,7 +508,7 @@ layout (binding = 15) readonly buffer V_float32    { float         V_data_float3
 layout (binding = 16) readonly buffer mat_y2r      { float         convert_matrix_y2r[]; };
 )"
 SHADER_MAT_Y2R
-SHADER_PARAM_Y2R
+SHADER_PARAM_Y_U_V_2R
 SHADER_YUV2RGB
 SHADER_LOAD_SRC_Y_U_V
 INTERPLATE
