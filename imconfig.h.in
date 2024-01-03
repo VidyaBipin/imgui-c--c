@@ -153,6 +153,7 @@
     ImVec2 operator/(const float rhs)               { return ImVec2(x / rhs, y / rhs); } \
     ImVec2 operator+(const ImVec2& rhs)             { return ImVec2(x + rhs.x, y + rhs.y); } \
     ImVec2 operator-(const ImVec2& rhs)             { return ImVec2(x - rhs.x, y - rhs.y); } \
+    float area()                                    { return x * y; } \
     float length()                                  { return sqrt(x * x + y * y); } \
     float cross(const ImVec2& d)                    { return (x * d.y) - (y * d.x); } \
     float dot(const ImVec2& d)                      { return (x * d.x) + (y * d.y); } \
