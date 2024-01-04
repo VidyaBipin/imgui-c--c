@@ -565,6 +565,8 @@ public:
     ImMat reshape(int w, int h, int c, Allocator* allocator = 0) const;
     // transpose
     ImMat t() const;
+    // determinant
+    float determinant();
     // eye
     template<typename T> ImMat& eye(T scale);
     // invert dim = 2 only
@@ -1986,6 +1988,57 @@ inline ImMat ImMat::t() const
         return m;
     }
     return ImMat();
+}
+
+// determinant
+inline float ImMat::determinant()
+{
+    assert(device == IM_DD_CPU);
+    assert(type == IM_DT_FLOAT32);
+    assert(w == h);
+    float result = 0;
+    ImMat a;
+    a.clone_from(*this);
+
+    float * A = (float *)a.data;
+    int p = 1, k;
+    int astep = h;
+    for(int i = 0; i < h; i++ )
+    {
+        k = i;
+        for(int j = i + 1; j < h; j++ )
+            if( std::abs(A[j * astep + i]) > std::abs(A[k * astep + i]) )
+                k = j;
+        if( std::abs(A[k * astep + i]) < FLT_EPSILON )
+        {
+            p = 0;
+            break;
+        }
+        if( k != i )
+        {
+            for(int j = i; j < h; j++ )
+                std::swap(A[i * astep + j], A[k * astep + j]);
+            p = -p;
+        }
+
+        float d = -1 / A[i * astep + i];
+
+        for(int j = i + 1; j < h; j++ )
+        {
+            float alpha = A[j * astep + i] * d;
+
+            for( k = i + 1; k < h; k++ )
+                A[j * astep + k] += alpha * A[i * astep + k];
+        }
+    }
+
+    if(p)
+    {
+        result = p;
+        for( int i = 0; i < h; i++ )
+            result *= a.at<float>(i,i);
+    }
+    return result;
 }
 
 // invert
@@ -4713,6 +4766,8 @@ public:
 IMGUI_API ImMat getPerspectiveTransform(const ImPoint src[], const ImPoint dst[]);
 IMGUI_API ImMat getAffineTransform(const ImPoint src[], const ImPoint dst[]);
 IMGUI_API ImMat getAffineTransform(int sw, int sh, int dw, int dh, float x_offset, float y_offset, float x_scale, float y_scale, float angle);
+IMGUI_API ImMat similarTransform(const ImMat& src, const ImMat& dst);
+IMGUI_API void SVD(const ImMat& A, ImMat& W, ImMat& U, ImMat& V);
 // draw utils
 IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);
 IMGUI_API ImMat MatRotate(const ImMat& mat, float angle);

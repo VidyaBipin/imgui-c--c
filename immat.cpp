@@ -978,6 +978,341 @@ ImMat getAffineTransform(int sw, int sh, int dw, int dh, float x_offset, float y
     return mat;
 }
 
+void SVD(const ImMat& A, ImMat& W, ImMat& U, ImMat& V)
+{
+    int m = A.h, n = A.w;
+    bool at = false;
+    if( m < n )
+    {
+        std::swap(m, n);
+        at = true;
+    }
+    size_t esz = A.elemsize / sizeof(float);
+    size_t astep = m * esz;
+    size_t vstep = n * esz;
+    ImMat temp_a;
+    ImMat temp_w(1, n);
+    ImMat temp_v(n, n);
+    if( !at )
+        temp_a = A.t().clone();
+    else
+        temp_a = A.clone();
+
+    // SVD compute
+    float * At = (float *)temp_a.data;
+    float * Wt = (float *)temp_w.data;
+    float * Vt = (float *)temp_v.data;
+    double sd;
+    float c, s;
+    float eps = FLT_EPSILON * 2;
+    int i, j, k, iter, max_iter = std::max(m, 30);
+    for( i = 0; i < n; i++ )
+    {
+        for( k = 0, sd = 0; k < m; k++ )
+        {
+            float t = At[i * astep + k];
+            sd += (double)t*t;
+        }
+        Wt[i] = sd;
+
+        if( Vt )
+        {
+            for( k = 0; k < n; k++ )
+                Vt[i * vstep + k] = 0;
+            Vt[i * vstep + i] = 1;
+        }
+    }
+    for( iter = 0; iter < max_iter; iter++ )
+    {
+        bool changed = false;
+
+        for( i = 0; i < n - 1; i++ )
+        {
+            for( j = i + 1; j < n; j++ )
+            {
+                float *Ai = At + i * astep, *Aj = At + j * astep;
+                double a = Wt[i], p = 0, b = Wt[j];
+
+                for( k = 0; k < m; k++ )
+                    p += (double)Ai[k] * Aj[k];
+
+                if( std::abs(p) <= eps * std::sqrt((double)a * b) )
+                    continue;
+
+                p *= 2;
+                double beta = a - b, gamma = hypot((double)p, beta);
+                if( beta < 0 )
+                {
+                    double delta = (gamma - beta)*0.5;
+                    s = (float)std::sqrt(delta/gamma);
+                    c = (float)(p/(gamma*s*2));
+                }
+                else
+                {
+                    c = (float)std::sqrt((gamma + beta)/(gamma*2));
+                    s = (float)(p/(gamma*c*2));
+                }
+
+                a = b = 0;
+                for( k = 0; k < m; k++ )
+                {
+                    float t0 = c*Ai[k] + s*Aj[k];
+                    float t1 = -s*Ai[k] + c*Aj[k];
+                    Ai[k] = t0; Aj[k] = t1;
+
+                    a += (double)t0*t0; b += (double)t1*t1;
+                }
+                Wt[i] = a; Wt[j] = b;
+
+                changed = true;
+
+                if( Vt )
+                {
+                    float *Vi = Vt + i*vstep, *Vj = Vt + j*vstep;
+                    k = 0;//vblas.givens(Vi, Vj, n, c, s);
+
+                    for( ; k < n; k++ )
+                    {
+                        float t0 = c*Vi[k] + s*Vj[k];
+                        float t1 = -s*Vi[k] + c*Vj[k];
+                        Vi[k] = t0; Vj[k] = t1;
+                    }
+                }
+            }
+        }
+        if( !changed )
+            break;
+    }
+
+    for( i = 0; i < n; i++ )
+    {
+        for( k = 0, sd = 0; k < m; k++ )
+        {
+            float t = At[i*astep + k];
+            sd += (double)t*t;
+        }
+        Wt[i] = std::sqrt(sd);
+    }
+
+    for( i = 0; i < n-1; i++ )
+    {
+        j = i;
+        for( k = i+1; k < n; k++ )
+        {
+            if( Wt[j] < Wt[k] )
+                j = k;
+        }
+        if( i != j )
+        {
+            std::swap(Wt[i], Wt[j]);
+            if( Vt )
+            {
+                for( k = 0; k < m; k++ )
+                    std::swap(At[i*astep + k], At[j*astep + k]);
+
+                for( k = 0; k < n; k++ )
+                    std::swap(Vt[i*vstep + k], Vt[j*vstep + k]);
+            }
+        }
+    }
+
+    for( i = 0; i < n; i++ )
+    {
+        sd = i < n ? Wt[i] : 0;
+
+        for( int ii = 0; ii < 100 && sd <= FLT_MIN; ii++ )
+        {
+            // if we got a zero singular value, then in order to get the corresponding left singular vector
+            // we generate a random vector, project it to the previously computed left singular vectors,
+            // subtract the projection and normalize the difference.
+            const float val0 = (float)(1./m);
+            for( k = 0; k < m; k++ )
+            {
+                float val = (std::rand() & 256) != 0 ? val0 : -val0;
+                At[i*astep + k] = val;
+            }
+            for( iter = 0; iter < 2; iter++ )
+            {
+                for( j = 0; j < i; j++ )
+                {
+                    sd = 0;
+                    for( k = 0; k < m; k++ )
+                        sd += At[i*astep + k]*At[j*astep + k];
+                    float asum = 0;
+                    for( k = 0; k < m; k++ )
+                    {
+                        float t = (float)(At[i*astep + k] - sd*At[j*astep + k]);
+                        At[i*astep + k] = t;
+                        asum += std::abs(t);
+                    }
+                    asum = asum > eps*100 ? 1/asum : 0;
+                    for( k = 0; k < m; k++ )
+                        At[i*astep + k] *= asum;
+                }
+            }
+            sd = 0;
+            for( k = 0; k < m; k++ )
+            {
+                float t = At[i*astep + k];
+                sd += (double)t*t;
+            }
+            sd = std::sqrt(sd);
+        }
+
+        s = (float)(sd > FLT_MIN ? 1/sd : 0.);
+        for( k = 0; k < m; k++ )
+            At[i*astep + k] *= s;
+    }
+
+    // finial
+    W = temp_w.clone();
+    if( !at )
+    {
+        U = temp_a.t().clone();
+        V = temp_v.clone();
+    }
+    else
+    {
+        U = temp_v.t().clone();
+        V = temp_a.clone();
+    }
+
+}
+
+static inline ImMat meanAxis0(const ImMat &src)
+{
+    int num = src.h;
+    int dim = src.w;
+    // x1 y1
+    // x2 y2
+    ImMat output(dim, 1, IM_DT_FLOAT32);
+    for(int i = 0 ; i <  dim; i ++)
+    {
+        float sum = 0 ;
+        for(int j = 0 ; j < num ; j++)
+        {
+            sum+=src.at<float>(i,j);
+        }
+        output.at<float>(i,0) = sum/num;
+    }
+    return output;
+}
+
+static inline ImMat elementwiseMinus(const ImMat &A,const ImMat &B)
+{
+    ImMat output(A.w, A.h, A.type);
+    assert(B.w == A.w);
+    if(B.w == A.w)
+    {
+        for(int i = 0 ; i <  A.h; i ++)
+        {
+            for(int j = 0 ; j < B.w; j++)
+            {
+                output.at<float>(j,i) = A.at<float>(j,i) - B.at<float>(j,0);
+            }
+        }
+    }
+    return output;
+}
+
+static inline ImMat varAxis0(const ImMat &src)
+{
+    ImMat temp_ = elementwiseMinus(src, meanAxis0(src));
+    temp_ = temp_.mul(temp_);
+    return meanAxis0(temp_);
+}
+
+static inline int MatrixRank(const ImMat& M)
+{
+    ImMat w, u, vt;
+    SVD(M, w, u, vt);
+    int rank = 0;
+    for (int i = 0; i < w.h; i++)
+    {
+        for (int j = 0; j < w.w; j++)
+        {
+            if (w.at<float>(j,i) > 0.0001)
+                rank++;
+        }
+    }
+    return rank;
+}
+
+
+ImMat similarTransform(const ImMat& src, const ImMat& dst)
+{
+    int num = src.h;
+    int dim = src.w;
+    auto src_mean = meanAxis0(src);
+    auto dst_mean = meanAxis0(dst);
+    auto src_demean = elementwiseMinus(src, src_mean);
+    auto dst_demean = elementwiseMinus(dst, dst_mean);
+    auto A = (dst_demean.t() * src_demean) / static_cast<float>(num);
+    ImMat d(1, dim, IM_DT_FLOAT32);
+    d.fill(1.0f);
+    if (A.determinant() < 0) {
+        d.at<float>(0, dim - 1) = -1.0f;
+    }
+    ImMat T = ImMat(dim + 1, dim, IM_DT_FLOAT32).eye(1.f);
+
+    ImMat U, S, V;
+    SVD(A, S, U, V);
+
+    int rank = MatrixRank(A);
+    if (rank == 0) {
+        assert(rank == 0);
+
+    } else if (rank == dim - 1) {
+        /*
+        if (cv::determinant(U) * cv::determinant(V) > 0) {
+            T.rowRange(0, dim).colRange(0, dim) = U * V;
+        } else {
+            int s = d.at<float>(dim - 1, 0) = -1;
+            d.at<float>(dim - 1, 0) = -1;
+
+            T.rowRange(0, dim).colRange(0, dim) = U * V;
+            cv::Mat diag_ = cv::Mat::diag(d);
+            cv::Mat twp = diag_ * V;
+            T.rowRange(0, dim).colRange(0, dim) = U * twp;
+            d.at<float>(dim - 1, 0) = s;
+        }
+        */
+    }
+    else{
+        /*
+        cv::Mat diag_ = cv::Mat::diag(d);
+        cv::Mat twp = diag_ * V.t(); //np.dot(np.diag(d), V.T)
+        cv::Mat res = U * twp; // U
+        T.rowRange(0, dim).colRange(0, dim) = -U.t() * twp;
+        */
+    }
+
+    ImMat var_ = varAxis0(src_demean);
+    float val = 0; // = cv::sum(var_).val[0];
+    for (int h = 0; h < var_.h; h++)
+    {
+        for (int w = 0; w < var_.w; w++)
+            val += var_.at<float>(w, h);
+    }
+    ImMat res = d.mul(S);
+    float sum = 0;
+    for (int h = 0; h < res.h; h++)
+    {
+        for (int w = 0; w < res.w; w++)
+            sum += res.at<float>(w, h);
+    }
+    float scale =  1.0 / val * sum;
+    
+    //T.rowRange(0, dim).colRange(0, dim) = - T.rowRange(0, dim).colRange(0, dim).t();
+    //cv::Mat temp1 = T.rowRange(0, dim).colRange(0, dim);
+    ImMat temp2 = src_mean.t(); 
+    //ImMat temp3 = temp1 * temp2;
+    //ImMat temp4 = scale*temp3;
+    //T.rowRange(0, dim).colRange(dim, dim + 1)=  -(temp4 - dst_mean.t()) ;
+    //T.rowRange(0, dim).colRange(0, dim) *= scale;
+    return T;
+}
+
 // mat resize
 static void resize_bilinear_c1(const unsigned char* src, int srcw, int srch, int srcstride, unsigned char* dst, int w, int h, int stride)
 {
