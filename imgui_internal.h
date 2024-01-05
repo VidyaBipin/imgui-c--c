@@ -568,6 +568,8 @@ struct IMGUI_API ImRect
     void        Floor()                             { Min.x = IM_TRUNC(Min.x); Min.y = IM_TRUNC(Min.y); Max.x = IM_TRUNC(Max.x); Max.y = IM_TRUNC(Max.y); }
     bool        IsInverted() const                  { return Min.x > Max.x || Min.y > Max.y; }
     ImVec4      ToVec4() const                      { return ImVec4(Min.x, Min.y, Max.x, Max.y); }
+    // add by Dicky
+    ImRect      Intersection(const ImRect& r)       { return ImRect(std::max(Min.x, r.Min.x), std::max(Min.y, r.Min.y), std::min(Max.x, r.Max.x), std::min(Max.y, r.Max.y)); }
 };
 
 // Helper: ImBitArray
