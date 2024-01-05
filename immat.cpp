@@ -276,6 +276,7 @@ void ImMat::draw_line(float x1, float y1, float x2, float y2, float t, ImPixel c
     int _x1 = CLAMP((int) ceilf(fmaxf(x1, x2) + t), 0, w - 1);
     int _y0 = CLAMP((int)floorf(fminf(y1, y2) - t), 0, h - 1);
     int _y1 = CLAMP((int) ceilf(fmaxf(y1, y2) + t), 0, h - 1);
+    #pragma omp parallel for num_threads(2)
     for (int y = _y0; y <= _y1; y++)
     {
         for (int x = _x0; x <= _x1; x++)
