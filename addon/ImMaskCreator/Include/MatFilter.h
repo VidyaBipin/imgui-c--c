@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <memory>
 #include "immat.h"
-#include "MatUtilsCommDef.h"
+#include "MatUtilsVecTypeDef.h"
 
 namespace MatUtils
 {

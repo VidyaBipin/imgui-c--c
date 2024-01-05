@@ -3,7 +3,7 @@
 #include <list>
 #include "immat.h"
 #include "imgui.h"
-#include "MatUtilsCommDef.h"
+#include "MatUtilsVecTypeDef.h"
 
 namespace MatUtils
 {

@@ -1,6 +1,6 @@
 #pragma once
 #include "immat.h"
-#include "MatUtilsCommDef.h"
+#include "MatUtilsVecTypeDef.h"
 
 namespace MatUtils
 {

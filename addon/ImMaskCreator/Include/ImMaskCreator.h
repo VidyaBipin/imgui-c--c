@@ -4,7 +4,7 @@
 #include <imgui.h>
 #include <immat.h>
 #include <imgui_json.h>
-#include "MatUtilsCommDef.h"
+#include "MatUtilsVecTypeDef.h"
 #include "Logger.h"
 
 namespace ImGui

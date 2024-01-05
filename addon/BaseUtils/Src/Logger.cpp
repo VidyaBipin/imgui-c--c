@@ -58,7 +58,7 @@ namespace Logger
 {
     uint32_t SINGLE_LOG_MAXSIZE = 4096;
 
-    unordered_map<Level, const string> LEVEL_NAME = {
+    const unordered_map<Level, const string> LEVEL_NAME = {
         { VERBOSE,  "VERBOSE"   },
         { DEBUG,    "DEBUG"     },
         { INFO,     "INFO"      },
@@ -141,15 +141,15 @@ namespace Logger
                 oss << put_time(localtime(&t), "%H:%M:%S") << "." << setfill('0') << setw(3) << millisec << " ";
                 empty = false;
             }
-            if (m_showName)
-            {
-                oss << "[" << m_name << "]";
-                empty = false;
-            }
             if (m_showLevelName)
             {
                 const string& levelName = LEVEL_NAME.at(m_currLevel);
                 oss << "[" << levelName << "]";
+                empty = false;
+            }
+            if (m_showName)
+            {
+                oss << "[" << m_name << "]";
                 empty = false;
             }
             if (!empty) oss << " ";
