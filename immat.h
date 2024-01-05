@@ -606,10 +606,12 @@ public:
     IMGUI_API void alphablend(int x, int y, ImPixel color);
     IMGUI_API void draw_line(float x1, float y1, float x2, float y2, float t, ImPixel color);
     IMGUI_API void draw_line(ImPoint p1, ImPoint p2, float t, ImPixel color);
-    IMGUI_API void draw_line(float x1, float y1, float x2, float y2, ImPixel color);
-    IMGUI_API void draw_line(ImPoint p1, ImPoint p2, ImPixel color);
-    IMGUI_API void draw_rectangle(float x1, float y1, float x2, float y2, ImPixel color);
-    IMGUI_API void draw_rectangle(ImPoint p1, ImPoint p2, ImPixel color);
+    IMGUI_API void draw_line(float x1, float y1, float x2, float y2, ImPixel color, int weight = 1);
+    IMGUI_API void draw_line(ImPoint p1, ImPoint p2, ImPixel color, int weight = 1);
+    IMGUI_API void draw_rectangle(float x1, float y1, float x2, float y2, ImPixel color, int weight = 1);
+    IMGUI_API void draw_rectangle(ImPoint p1, ImPoint p2, ImPixel color, int weight = 1);
+    IMGUI_API void draw_rectangle(float x1, float y1, float x2, float y2, float t, ImPixel color);
+    IMGUI_API void draw_rectangle(ImPoint p1, ImPoint p2, float t, ImPixel color);
     IMGUI_API void draw_circle(float x, float y, float r, ImPixel color);
     IMGUI_API void draw_circle(ImPoint p, float r, ImPixel color);
     IMGUI_API void draw_circle(float x, float y, float r, float t, ImPixel color);

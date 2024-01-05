@@ -297,7 +297,7 @@ void ImMat::draw_line(ImPoint p1, ImPoint p2, float t, ImPixel color)
     draw_line(p1.x, p1.y, p2.x, p2.y, t, color);
 }
 
-void ImMat::draw_line(float x1, float y1, float x2, float y2, ImPixel color)
+void ImMat::draw_line(float x1, float y1, float x2, float y2, ImPixel color, int weight)
 {
     // Bresenham
     x1 = CLAMP(x1, 0.f, w - 1.f);
@@ -323,7 +323,13 @@ void ImMat::draw_line(float x1, float y1, float x2, float y2, ImPixel color)
 	int p = 2 * dy - dx;
 	for(int i = 0; i < dx; i++)
 	{
-        alphablend(x, y, color);
+        for (int c = 0; c < weight; c++)
+        {
+            for (int r = 0; r < weight; r++)
+            {
+                alphablend(x+c, y+r, color);
+            }
+        }
 		if (p >= 0)
 		{
 			if (!interchange)
@@ -340,22 +346,35 @@ void ImMat::draw_line(float x1, float y1, float x2, float y2, ImPixel color)
 	}
 }
 
-void ImMat::draw_line(ImPoint p1, ImPoint p2, ImPixel color)
+void ImMat::draw_line(ImPoint p1, ImPoint p2, ImPixel color, int weight)
 {
-    draw_line(p1.x, p1.y, p2.x, p2.y, color);
+    draw_line(p1.x, p1.y, p2.x, p2.y, color, weight);
 }
 
-void ImMat::draw_rectangle(float x1, float y1, float x2, float y2, ImPixel color)
+void ImMat::draw_rectangle(float x1, float y1, float x2, float y2, ImPixel color, int weight)
 {
-    draw_line(x1, y1, x1, y2, color);
-    draw_line(x1, y2, x2, y2, color);
-    draw_line(x2, y2, x2, y1, color);
-    draw_line(x2, y1, x1, y1, color);
+    draw_line(x1, y1, x1, y2, color, weight);
+    draw_line(x1, y2, x2, y2, color, weight);
+    draw_line(x2, y2, x2, y1, color, weight);
+    draw_line(x2, y1, x1, y1, color, weight);
 }
 
-void ImMat::draw_rectangle(ImPoint p1, ImPoint p2, ImPixel color)
+void ImMat::draw_rectangle(ImPoint p1, ImPoint p2, ImPixel color, int weight)
 {
-    draw_rectangle(p1.x, p1.y, p2.x, p2.y, color);
+    draw_rectangle(p1.x, p1.y, p2.x, p2.y, color, weight);
+}
+
+void ImMat::draw_rectangle(float x1, float y1, float x2, float y2, float t, ImPixel color)
+{
+    draw_line(x1, y1, x1, y2, t, color);
+    draw_line(x1, y2, x2, y2, t, color);
+    draw_line(x2, y2, x2, y1, t, color);
+    draw_line(x2, y1, x1, y1, t, color);
+}
+
+void ImMat::draw_rectangle(ImPoint p1, ImPoint p2, float t, ImPixel color)
+{
+    draw_rectangle(p1.x, p1.y, p2.x, p2.y, t, color);
 }
 
 void ImMat::draw_circle(float x1, float y1, float r, ImPixel color)
