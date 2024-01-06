@@ -537,9 +537,15 @@ void Example::DrawLineDemo()
     draw_mat.draw_circle(draw_mat.w / 2, draw_mat.h / 2, draw_mat.w / 2 - 1, ImPixel(1.0, 1.0, 1.0, 1.0));
 
     std::string text_str = "字体测试\nFont Test\n字体Test\nFont测试";
-    //auto str_mat = ImGui::CreateTextMat(text_str.c_str(), text_color, 1.0);
-    //ImGui::ImageMatCopyTo(str_mat, draw_mat, ImVec2(draw_mat.w / 2 - str_mat.w / 2, draw_mat.h / 2 - str_mat.h / 2));
     ImGui::DrawTextToMat(draw_mat, ImPoint(50, 50), text_str.c_str(), text_color, 1.0);
+
+    // ImMat crop
+    ImGui::ImMat crop_img = draw_mat.crop(ImPoint(20, 20), ImPoint(200, 200));
+    ImGui::ImageMatCopyTo(crop_img, draw_mat, ImPoint(draw_mat.w - 180, draw_mat.h - 180));
+
+    // ImMat resize
+    ImGui::ImMat resize_img = ImGui::MatResize(crop_img, ImSize(112, 112));
+    ImGui::ImageMatCopyTo(resize_img, draw_mat, ImPoint(draw_mat.w - 112, draw_mat.h - 112));
 
     ImGui::ImMatToTexture(draw_mat, DrawMatTexture);
 

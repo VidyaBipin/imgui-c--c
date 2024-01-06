@@ -671,6 +671,84 @@ void ImMat::copy_to(ImMat & mat, ImPoint offset, float alpha)
     }
 }
 
+ImMat ImMat::crop(ImPoint p1, ImPoint p2)
+{
+    assert(!empty());
+    assert(p1.x >= 0 && p1.y >= 0 && p1.x < w && p1.y < h);
+    assert((p2.x - p1.x) > 0 && (p2.y - p1.y) > 0);
+    if (p2.x >= w) p2.x = w - 1;
+    if (p2.y >= h) p2.y = h - 1;
+    ImMat dst(p2.x - p1.x, p2.y - p1.y, c, elemsize, elempack);
+    for (int i = p1.y; i < p2.y; i++)
+    {
+        for (int j = p1.x; j < p2.x; j++)
+        {
+            switch (type)
+            {
+                case IM_DT_INT8:
+                {
+                    if (c > 0) dst.at<uint8_t>(j - p1.x, i - p1.y, 0) = at<uint8_t>(j, i, 0);
+                    if (c > 1) dst.at<uint8_t>(j - p1.x, i - p1.y, 1) = at<uint8_t>(j, i, 1);
+                    if (c > 2) dst.at<uint8_t>(j - p1.x, i - p1.y, 2) = at<uint8_t>(j, i, 2);
+                    if (c > 3) dst.at<uint8_t>(j - p1.x, i - p1.y, 3) = at<uint8_t>(j, i, 3);
+                }
+                break;
+                case IM_DT_INT16:
+                {
+                    if (c > 0) dst.at<uint16_t>(j - p1.x, i - p1.y, 0) = at<uint16_t>(j, i, 0);
+                    if (c > 1) dst.at<uint16_t>(j - p1.x, i - p1.y, 1) = at<uint16_t>(j, i, 1);
+                    if (c > 2) dst.at<uint16_t>(j - p1.x, i - p1.y, 2) = at<uint16_t>(j, i, 2);
+                    if (c > 3) dst.at<uint16_t>(j - p1.x, i - p1.y, 3) = at<uint16_t>(j, i, 3);
+                }
+                break;
+                case IM_DT_INT32:
+                {
+                    if (c > 0) dst.at<uint32_t>(j - p1.x, i - p1.y, 0) = at<uint32_t>(j, i, 0);
+                    if (c > 1) dst.at<uint32_t>(j - p1.x, i - p1.y, 1) = at<uint32_t>(j, i, 1);
+                    if (c > 2) dst.at<uint32_t>(j - p1.x, i - p1.y, 2) = at<uint32_t>(j, i, 2);
+                    if (c > 3) dst.at<uint32_t>(j - p1.x, i - p1.y, 3) = at<uint32_t>(j, i, 3);
+                }
+                break;
+                case IM_DT_INT64:
+                {
+                    if (c > 0) dst.at<uint64_t>(j - p1.x, i - p1.y, 0) = at<uint64_t>(j, i, 0);
+                    if (c > 1) dst.at<uint64_t>(j - p1.x, i - p1.y, 1) = at<uint64_t>(j, i, 1);
+                    if (c > 2) dst.at<uint64_t>(j - p1.x, i - p1.y, 2) = at<uint64_t>(j, i, 2);
+                    if (c > 3) dst.at<uint64_t>(j - p1.x, i - p1.y, 3) = at<uint64_t>(j, i, 3);
+                }
+                break;
+                case IM_DT_FLOAT16:
+                {
+                    if (c > 0) dst.at<uint16_t>(j - p1.x, i - p1.y, 0) = at<uint16_t>(j, i, 0);
+                    if (c > 1) dst.at<uint16_t>(j - p1.x, i - p1.y, 1) = at<uint16_t>(j, i, 1);
+                    if (c > 2) dst.at<uint16_t>(j - p1.x, i - p1.y, 2) = at<uint16_t>(j, i, 2);
+                    if (c > 3) dst.at<uint16_t>(j - p1.x, i - p1.y, 3) = at<uint16_t>(j, i, 3);
+                }
+                break;
+                case IM_DT_FLOAT32:
+                {
+                    if (c > 0) dst.at<float>(j - p1.x, i - p1.y, 0) = at<float>(j, i, 0);
+                    if (c > 1) dst.at<float>(j - p1.x, i - p1.y, 1) = at<float>(j, i, 1);
+                    if (c > 2) dst.at<float>(j - p1.x, i - p1.y, 2) = at<float>(j, i, 2);
+                    if (c > 3) dst.at<float>(j - p1.x, i - p1.y, 3) = at<float>(j, i, 3);
+                }
+                break;
+                case IM_DT_FLOAT64:
+                {
+                    if (c > 0) dst.at<double>(j - p1.x, i - p1.y, 0) = at<double>(j, i, 0);
+                    if (c > 1) dst.at<double>(j - p1.x, i - p1.y, 1) = at<double>(j, i, 1);
+                    if (c > 2) dst.at<double>(j - p1.x, i - p1.y, 2) = at<double>(j, i, 2);
+                    if (c > 3) dst.at<double>(j - p1.x, i - p1.y, 3) = at<double>(j, i, 3);
+                }
+                break;
+                default: break;
+            }
+        }
+    }
+
+    return dst;
+}
+
 void ImMat::clean(ImPixel color)
 {
     assert(dims == 3);
@@ -2802,12 +2880,11 @@ void ImageMatCopyTo(const ImMat& src, ImMat& dst, ImPoint pos)
 {
     if (src.empty() || dst.empty())
         return;
-    ImPixel pixel;
     for (int x = 0; x < src.w; x++)
     {
         for (int y = 0; y < src.h; y++)
         {
-            src.get_pixel(x, y, pixel);
+            ImPixel pixel = src.get_pixel(x, y);
             if (pixel.a > 0)
                 dst.draw_dot((int)(pos.x + x), (int)(pos.y + y), pixel);
         }

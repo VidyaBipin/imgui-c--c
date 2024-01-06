@@ -633,6 +633,9 @@ public:
 
     // copy to
     IMGUI_API void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);
+
+    // crop
+    IMGUI_API ImMat crop(ImPoint p1, ImPoint p2);
     
     // release
     void release();
