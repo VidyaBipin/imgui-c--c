@@ -4893,6 +4893,7 @@ IMGUI_API ImMat similarTransform(const ImMat& src, const ImMat& dst);
 // draw utils
 IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);
 IMGUI_API ImMat MatRotate(const ImMat& mat, float angle);
+IMGUI_API ImMat MatWarpAffine(const ImMat& mat, const ImMat& M, ImSize dsize);
 IMGUI_API ImMat GrayToImage(const ImMat& mat);
 IMGUI_API ImMat CreateTextMat(const char* str, const ImPixel& color, float scale, bool square = false);
 IMGUI_API void  DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, const ImPixel& color, float scale);

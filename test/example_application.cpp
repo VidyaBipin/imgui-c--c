@@ -542,13 +542,36 @@ void Example::DrawLineDemo()
     // ImMat crop
     ImGui::ImMat crop_img = draw_mat.crop(ImPoint(20, 20), ImPoint(200, 200));
     ImGui::ImageMatCopyTo(crop_img, draw_mat, ImPoint(draw_mat.w - 180, draw_mat.h - 180));
+    draw_mat.draw_rectangle(ImPoint(20, 20), ImPoint(200, 200), ImPixel(0, 1, 0, 1));
+    draw_mat.draw_rectangle(ImPoint(draw_mat.w - 180, draw_mat.h - 180), ImPoint(draw_mat.w, draw_mat.h), ImPixel(0, 1, 0, 1));
 
     // ImMat resize
     ImGui::ImMat resize_img = ImGui::MatResize(crop_img, ImSize(112, 112));
     ImGui::ImageMatCopyTo(resize_img, draw_mat, ImPoint(draw_mat.w - 112, draw_mat.h - 112));
+    draw_mat.draw_rectangle(ImPoint(draw_mat.w - 112, draw_mat.h - 112), ImPoint(draw_mat.w, draw_mat.h), ImPixel(1, 1, 1, 1));
 
+    // ImMat WarpAffine
+    const float o_size = 96;
+    ImGui::ImMat src_matrix(2,4);
+    src_matrix.at<float>(0,0) = 0.25 * o_size; src_matrix.at<float>(1, 0) = 0.25 * o_size;
+    src_matrix.at<float>(0,1) = 0.75 * o_size; src_matrix.at<float>(1, 1) = 0.25 * o_size;
+    src_matrix.at<float>(0,2) = 0.25 * o_size; src_matrix.at<float>(1, 2) = 0.75 * o_size;
+    src_matrix.at<float>(0,3) = 0.75 * o_size; src_matrix.at<float>(1, 3) = 0.75 * o_size;
+    ImGui::ImMat dst_matrix(2,4);
+    dst_matrix.at<float>(0, 0) = 128 + 40; dst_matrix.at<float>(1, 0) = 128 + 20;
+    dst_matrix.at<float>(0, 1) = 256 - 20; dst_matrix.at<float>(1, 1) = 128 + 40;
+    dst_matrix.at<float>(0, 2) = 128 + 20; dst_matrix.at<float>(1, 2) = 256 - 20;
+    dst_matrix.at<float>(0, 3) = 256 - 40; dst_matrix.at<float>(1, 3) = 256 - 20;
+    ImGui::ImMat M = ImGui::similarTransform(dst_matrix, src_matrix);
+    ImGui::ImMat affine_img = ImGui::MatWarpAffine(draw_mat, M, ImSize(o_size, o_size));
+    ImGui::ImageMatCopyTo(affine_img, draw_mat, ImPoint(0, draw_mat.h - o_size));
+    draw_mat.draw_rectangle(ImPoint(0, draw_mat.h - o_size), ImPoint(o_size, draw_mat.h), ImPixel(1, 0, 0, 1));
+    draw_mat.draw_rectangle(ImPoint(128, 128), ImPoint(256, 256), ImPixel(1, 0, 0, 1));
+
+    draw_mat.draw_rectangle(ImPoint(0, 0), ImPoint(draw_mat.w, draw_mat.h), ImPixel(0, 0, 1, 1));
     ImGui::ImMatToTexture(draw_mat, DrawMatTexture);
 
+    // mat copy to texture
 #if IMGUI_VULKAN_SHADER
     ImGui::ImCopyToTexture(DrawMatTexture, (unsigned char*)&small_vkmat, small_vkmat.w, small_vkmat.h, small_vkmat.c, offset_x, offset_y, true);
 #else

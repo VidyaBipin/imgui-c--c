@@ -1076,6 +1076,26 @@ ImMat getAffineTransform(int sw, int sh, int dw, int dh, float x_offset, float y
     return mat;
 }
 
+static void invert_affine_transform(const float* tm, float* tm_inv)
+{
+    float D = tm[0] * tm[4] - tm[1] * tm[3];
+    D = D != 0.f ? 1.f / D : 0.f;
+
+    float A11 = tm[4] * D;
+    float A22 = tm[0] * D;
+    float A12 = -tm[1] * D;
+    float A21 = -tm[3] * D;
+    float b1 = -A11 * tm[2] - A12 * tm[5];
+    float b2 = -A21 * tm[2] - A22 * tm[5];
+
+    tm_inv[0] = A11;
+    tm_inv[1] = A12;
+    tm_inv[2] = b1;
+    tm_inv[3] = A21;
+    tm_inv[4] = A22;
+    tm_inv[5] = b2;
+}
+
 static void SVD(const ImMat& A, ImMat& W, ImMat& U, ImMat& V)
 {
     int m = A.h, n = A.w;
@@ -4335,7 +4355,7 @@ ImMat MatRotate(const ImMat& mat, float angle)
     float width = fmax(x3, fmax(x2, fmax(x1, x0))) - fmin(x3, fmin(x2, fmin(x1, x0)));
     float height = fmax(y3, fmax(y2, fmax(y1, y0))) - fmin(y3, fmin(y2, fmin(y1, y0)));
     //dst.create(width, height, mat.c, 1u, mat.c);
-    dst.create(mat.w, mat.h, mat.c, 1u, mat.c);
+    dst.create(mat.w, mat.h, mat.c, 1u, mat.elempack);
 
     switch (mat.c)
     {
@@ -4346,6 +4366,25 @@ ImMat MatRotate(const ImMat& mat, float angle)
         default: break;
     }
 
+    return dst;
+}
+
+ImMat MatWarpAffine(const ImMat& mat, const ImMat& M, ImSize dsize)
+{
+    ImMat dst;
+    if (mat.empty())
+        return dst;
+    ImMat inv_M = M.clone();
+    invert_affine_transform((float*)M.data, (float*)inv_M.data);
+    dst.create(dsize.w, dsize.h, mat.c, 1u, mat.elempack);
+    switch (mat.c)
+    {
+        case 1 : warpaffine_bilinear_c1((const unsigned char*)mat.data, mat.w, mat.h, mat.w * 1, (unsigned char *)dst.data, dst.w, dst.h, dst.w * 1, (const float *)inv_M); break;
+        case 2 : warpaffine_bilinear_c2((const unsigned char*)mat.data, mat.w, mat.h, mat.w * 2, (unsigned char *)dst.data, dst.w, dst.h, dst.w * 2, (const float *)inv_M); break;
+        case 3 : warpaffine_bilinear_c3((const unsigned char*)mat.data, mat.w, mat.h, mat.w * 3, (unsigned char *)dst.data, dst.w, dst.h, dst.w * 3, (const float *)inv_M); break;
+        case 4 : warpaffine_bilinear_c4((const unsigned char*)mat.data, mat.w, mat.h, mat.w * 4, (unsigned char *)dst.data, dst.w, dst.h, dst.w * 4, (const float *)inv_M); break;
+        default: break;
+    }
     return dst;
 }
 } // namespace ImGui
