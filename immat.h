@@ -571,6 +571,8 @@ public:
     template<typename T> ImMat& eye(T scale);
     // invert dim = 2 only
     template<typename T> ImMat inv() const;
+    // diag dim = 2 only
+    template<typename T> ImMat diag() const;
     // rand
     template<typename T> ImMat& randn(T mean, T stddev);
     // clip
@@ -591,6 +593,10 @@ public:
     // mat dot mul dims = 2 only
     ImMat operator*(const ImMat& mat);
     ImMat& operator*=(const ImMat& mat);
+    // negative
+    ImMat  operator-();
+    // sum
+    ImMat sum();
 
     // some draw function only support 3 dims
     // mat default ordination is ncwh
@@ -2106,6 +2112,20 @@ inline ImMat ImMat::inv() const
 		}
     }
     return inverse_mat;
+}
+
+template<typename T> 
+inline ImMat ImMat::diag() const
+{
+    assert(device == IM_DD_CPU);
+    assert(dims == 2);
+    assert(total() > 0);
+    ImGui::ImMat diag_mat;
+    int dl = std::max(w, h);
+    diag_mat.create_type(dl, dl, type);
+    for(int i = 0; i < dl; i++)
+        diag_mat.at<T>(i,i) = at<T>(i, 0);
+    return diag_mat;
 }
 
 // eye
@@ -4735,6 +4755,104 @@ inline ImMat& ImMat::operator*=(const ImMat& mat)
     }
     return *this;
 }
+
+// negative
+inline ImMat ImMat::operator-()
+{
+    assert(device == IM_DD_CPU);
+    assert(total() > 0);
+    ImMat m;
+    m.create_like(*this);
+    #pragma omp parallel for num_threads(OMP_THREADS)
+    for (int i = 0; i < total(); i++)
+    {
+        switch (type)
+        {
+            case IM_DT_INT8:    ((int8_t*)m.data)[i]  = - ((int8_t*)this->data)[i]; break;
+            case IM_DT_INT16:   ((int16_t*)m.data)[i] = - ((int16_t*)this->data)[i]; break;
+            case IM_DT_INT32:   ((int32_t*)m.data)[i] = - ((int32_t*)this->data)[i]; break; break;
+            case IM_DT_INT64:   ((int64_t*)m.data)[i] = - ((int64_t*)this->data)[i]; break; break;
+            case IM_DT_FLOAT32: ((float*)m.data)[i]   = - ((float*)this->data)[i]; break; break;
+            case IM_DT_FLOAT64: ((double*)m.data)[i]  = - ((double*)this->data)[i]; break; break;
+            case IM_DT_FLOAT16: ((int16_t*)m.data)[i] = im_float32_to_float16(-im_float16_to_float32(((int16_t*)this->data)[i])); break; 
+            default: break;
+        }
+    }
+    return m;
+}
+
+// sum
+inline ImMat ImMat::sum()
+{
+    assert(device == IM_DD_CPU);
+    assert(total() > 0);
+    ImMat m;
+    m.create_type(c, (ImDataType)type);
+    if (dims == 1)
+    {
+        for (int _w = 0; _w < w; _w++)
+        {
+            switch (type)
+            {
+                case IM_DT_INT8:    m.at<int8_t>(0)  += at<int8_t>(_w); break;
+                case IM_DT_INT16:   m.at<int16_t>(0) += at<int16_t>(_w); break;
+                case IM_DT_INT32:   m.at<int32_t>(0) += at<int32_t>(_w); break; break;
+                case IM_DT_INT64:   m.at<int64_t>(0) += at<int64_t>(_w); break; break;
+                case IM_DT_FLOAT32: m.at<float>(0)   += at<float>(_w); break; break;
+                case IM_DT_FLOAT64: m.at<double>(0)  += at<double>(_w); break; break;
+                case IM_DT_FLOAT16: m.at<int16_t>(0) = im_float32_to_float16(im_float16_to_float32(at<int16_t>(_w)) +
+                                                        im_float16_to_float32(m.at<int16_t>(0))); break; 
+                default: break;
+            }
+        }
+    }
+    else if (dims == 2)
+    {
+        for (int _h = 0; _h < h; _h++)
+        {
+            for (int _w = 0; _w < w; _w++)
+            {
+                switch (type)
+                {
+                    case IM_DT_INT8:    m.at<int8_t>(0)  += at<int8_t>(_w, _h); break;
+                    case IM_DT_INT16:   m.at<int16_t>(0) += at<int16_t>(_w, _h); break;
+                    case IM_DT_INT32:   m.at<int32_t>(0) += at<int32_t>(_w, _h); break; break;
+                    case IM_DT_INT64:   m.at<int64_t>(0) += at<int64_t>(_w, _h); break; break;
+                    case IM_DT_FLOAT32: m.at<float>(0)   += at<float>(_w, _h); break; break;
+                    case IM_DT_FLOAT64: m.at<double>(0)  += at<double>(_w, _h); break; break;
+                    case IM_DT_FLOAT16: m.at<int16_t>(0) = im_float32_to_float16(im_float16_to_float32(at<int16_t>(_w, _h)) +
+                                                            im_float16_to_float32(m.at<int16_t>(0))); break; 
+                    default: break;
+                }
+            }
+        }
+    }
+    else if (dims == 3)
+    {
+        for (int _c = 0; _c < c; _c++)
+        {
+            for (int _h = 0; _h < h; _h++)
+            {
+                for (int _w = 0; _w < w; _w++)
+                {
+                    switch (type)
+                    {
+                        case IM_DT_INT8:    m.at<int8_t>(_c)  += at<int8_t>(_w, _h, _c); break;
+                        case IM_DT_INT16:   m.at<int16_t>(_c) += at<int16_t>(_w, _h, _c); break;
+                        case IM_DT_INT32:   m.at<int32_t>(_c) += at<int32_t>(_w, _h, _c); break; break;
+                        case IM_DT_INT64:   m.at<int64_t>(_c) += at<int64_t>(_w, _h, _c); break; break;
+                        case IM_DT_FLOAT32: m.at<float>(_c)   += at<float>(_w, _h, _c); break; break;
+                        case IM_DT_FLOAT64: m.at<double>(_c)  += at<double>(_w, _h, _c); break; break;
+                        case IM_DT_FLOAT16: m.at<int16_t>(_c) = im_float32_to_float16(im_float16_to_float32(at<int16_t>(_w, _h, _c)) +
+                                                                im_float16_to_float32(m.at<int16_t>(_c))); break; 
+                        default: break;
+                    }
+                }
+            }
+        }
+    }
+    return m;
+}
 } // namespace ImGui 
 
 // mat utils
@@ -4769,7 +4887,6 @@ IMGUI_API ImMat getPerspectiveTransform(const ImPoint src[], const ImPoint dst[]
 IMGUI_API ImMat getAffineTransform(const ImPoint src[], const ImPoint dst[]);
 IMGUI_API ImMat getAffineTransform(int sw, int sh, int dw, int dh, float x_offset, float y_offset, float x_scale, float y_scale, float angle);
 IMGUI_API ImMat similarTransform(const ImMat& src, const ImMat& dst);
-IMGUI_API void SVD(const ImMat& A, ImMat& W, ImMat& U, ImMat& V);
 // draw utils
 IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);
 IMGUI_API ImMat MatRotate(const ImMat& mat, float angle);

@@ -3,6 +3,7 @@
 
 int main(int argc, char ** argv)
 {
+#if 1
     int mw = 4;
     int mh = 4;
     ImGui::ImMat A, B, C, X;
@@ -28,6 +29,9 @@ int main(int argc, char ** argv)
 
     A.print("A");
     B.print("B");
+
+    C = A.diag<float>();
+    C.print("C=A.diag");
 
     // scalar math
     C = B + 2.f;
@@ -209,26 +213,36 @@ int main(int argc, char ** argv)
     auto rb = B.determinant();
     fprintf(stderr, "B.determinant:%f\n", rb);
 
-    C.create_type(2, 6, IM_DT_FLOAT32);
-    C.at<float>(0, 0) = 0.f;
-    C.at<float>(0, 1) = 1.f;
-    C.at<float>(0, 2) = 2.f;
-    C.at<float>(0, 3) = 3.f;
-    C.at<float>(0, 4) = 4.f;
-    C.at<float>(0, 5) = 5.f;
-    C.at<float>(1, 0) = 6.f;
-    C.at<float>(1, 1) = 7.f;
-    C.at<float>(1, 2) = 8.f;
-    C.at<float>(1, 3) = 9.f;
-    C.at<float>(1, 4) = 10.f;
-    C.at<float>(1, 5) = 11.f;
-    C.print("C");
+    auto nb = -B;
+    nb.print("-B");
 
-    ImGui::ImMat U, S, V;
-    ImGui::SVD(C, S, U, V);
-    S.print("S");
-    U.print("U");
-    V.print("V");
+    auto sb = B.sum();
+    sb.print("B.sum");
 
+    ImGui::ImMat d(1, 3);
+    d.at<float>(0, 0) = 1;
+    d.at<float>(0, 1) = 2;
+    d.at<float>(0, 2) = 3;
+    ImGui::ImMat diag_ = d.diag<float>();
+    diag_.print("diag");
+#endif
+    ImGui::ImMat src_matrix(2,5);
+    src_matrix.at<float>(0,0) = 38.2946; src_matrix.at<float>(1, 0) = 51.6963;
+    src_matrix.at<float>(0,1) = 73.5318; src_matrix.at<float>(1, 1) = 51.5014;
+    src_matrix.at<float>(0,2) = 56.0252; src_matrix.at<float>(1, 2) = 71.7366;
+    src_matrix.at<float>(0,3) = 41.5493; src_matrix.at<float>(1, 3) = 92.3655;
+    src_matrix.at<float>(0,4) = 70.7299; src_matrix.at<float>(1, 4) = 92.2041;
+    ImGui::ImMat dst_matrix(2,5);
+    dst_matrix.at<float>(0, 0) = 18; dst_matrix.at<float>(1, 0) = 31;
+    dst_matrix.at<float>(0, 1) = 53; dst_matrix.at<float>(1, 1) = 31;
+    dst_matrix.at<float>(0, 2) = 36; dst_matrix.at<float>(1, 2) = 51;
+    dst_matrix.at<float>(0, 3) = 21; dst_matrix.at<float>(1, 3) = 72;
+    dst_matrix.at<float>(0, 4) = 50; dst_matrix.at<float>(1, 4) = 72;
+    
+    ImGui::ImMat M = ImGui::similarTransform(dst_matrix, src_matrix);
+    src_matrix.print("src");
+    dst_matrix.print("dst");
+    M.print("M");
+    
     return 0;
 }

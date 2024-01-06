@@ -998,7 +998,7 @@ ImMat getAffineTransform(int sw, int sh, int dw, int dh, float x_offset, float y
     return mat;
 }
 
-void SVD(const ImMat& A, ImMat& W, ImMat& U, ImMat& V)
+static void SVD(const ImMat& A, ImMat& W, ImMat& U, ImMat& V)
 {
     int m = A.h, n = A.w;
     bool at = false;
@@ -1205,7 +1205,7 @@ static inline ImMat meanAxis0(const ImMat &src)
     int dim = src.w;
     // x1 y1
     // x2 y2
-    ImMat output(dim, 1, IM_DT_FLOAT32);
+    ImMat output(dim, 1);
     for(int i = 0 ; i <  dim; i ++)
     {
         float sum = 0 ;
@@ -1220,7 +1220,7 @@ static inline ImMat meanAxis0(const ImMat &src)
 
 static inline ImMat elementwiseMinus(const ImMat &A,const ImMat &B)
 {
-    ImMat output(A.w, A.h, A.type);
+    ImMat output(A.w, A.h);
     assert(B.w == A.w);
     if(B.w == A.w)
     {
@@ -1258,7 +1258,6 @@ static inline int MatrixRank(const ImMat& M)
     return rank;
 }
 
-
 ImMat similarTransform(const ImMat& src, const ImMat& dst)
 {
     int num = src.h;
@@ -1268,68 +1267,83 @@ ImMat similarTransform(const ImMat& src, const ImMat& dst)
     auto src_demean = elementwiseMinus(src, src_mean);
     auto dst_demean = elementwiseMinus(dst, dst_mean);
     auto A = (dst_demean.t() * src_demean) / static_cast<float>(num);
-    ImMat d(1, dim, IM_DT_FLOAT32);
+    ImMat d(1, dim);
     d.fill(1.0f);
     if (A.determinant() < 0) {
         d.at<float>(0, dim - 1) = -1.0f;
     }
-    ImMat T = ImMat(dim + 1, dim, IM_DT_FLOAT32).eye(1.f);
+    ImMat T = ImMat(dim + 1, dim).eye(1.f);
 
     ImMat U, S, V;
     SVD(A, S, U, V);
 
+    auto range = [](ImMat& src, ImMat& dst, int row_min, int row_max, int col_min, int col_max)
+    {
+        for (int r = row_min; r < row_max; r++)
+        {
+            for (int c = col_min; c < col_max; c++)
+            {
+                dst.at<float>(c, r) = src.at<float>(c - col_min, r - row_min);
+            }
+        }
+    };
+    auto range_scale = [](ImMat& dst, float scale, int row_min, int row_max, int col_min, int col_max)
+    {
+        for (int r = row_min; r < row_max; r++)
+        {
+            for (int c = col_min; c < col_max; c++)
+            {
+                dst.at<float>(c, r) *= scale;
+            }
+        }
+    };
     int rank = MatrixRank(A);
     if (rank == 0) {
         assert(rank == 0);
 
     } else if (rank == dim - 1) {
-        /*
-        if (cv::determinant(U) * cv::determinant(V) > 0) {
-            T.rowRange(0, dim).colRange(0, dim) = U * V;
+        if (U.determinant() * V.determinant() > 0) {
+            auto UV = U * V;
+            range(UV, T, 0, dim, 0, dim); //T.rowRange(0, dim).colRange(0, dim) = U * V;
         } else {
             int s = d.at<float>(dim - 1, 0) = -1;
             d.at<float>(dim - 1, 0) = -1;
-
-            T.rowRange(0, dim).colRange(0, dim) = U * V;
-            cv::Mat diag_ = cv::Mat::diag(d);
-            cv::Mat twp = diag_ * V;
-            T.rowRange(0, dim).colRange(0, dim) = U * twp;
+            auto UV = U * V;
+            range(UV, T, 0, dim, 0, dim); //T.rowRange(0, dim).colRange(0, dim) = U * V;
+            ImMat diag_ = d.diag<float>();
+            ImMat twp = diag_ * V;
+            ImMat utwp = U * twp;
+            range(utwp, T, 0, dim, 0, dim); //T.rowRange(0, dim).colRange(0, dim) = U * twp;
             d.at<float>(dim - 1, 0) = s;
         }
-        */
     }
     else{
-        /*
-        cv::Mat diag_ = cv::Mat::diag(d);
-        cv::Mat twp = diag_ * V.t(); //np.dot(np.diag(d), V.T)
-        cv::Mat res = U * twp; // U
-        T.rowRange(0, dim).colRange(0, dim) = -U.t() * twp;
-        */
+        ImMat diag_ = d.diag<float>();
+        ImMat twp = diag_ * V.t();
+        ImMat res = U * twp;
+        ImMat utwp = -U.t() * twp;
+        range(utwp, T, 0, dim, 0, dim); //T.rowRange(0, dim).colRange(0, dim) = -U.t() * twp;
     }
 
     ImMat var_ = varAxis0(src_demean);
-    float val = 0; // = cv::sum(var_).val[0];
-    for (int h = 0; h < var_.h; h++)
-    {
-        for (int w = 0; w < var_.w; w++)
-            val += var_.at<float>(w, h);
-    }
+    float val = var_.sum().at<float>(0);
     ImMat res = d.mul(S);
-    float sum = 0;
-    for (int h = 0; h < res.h; h++)
-    {
-        for (int w = 0; w < res.w; w++)
-            sum += res.at<float>(w, h);
-    }
+    float sum = res.sum().at<float>(0);
     float scale =  1.0 / val * sum;
     
-    //T.rowRange(0, dim).colRange(0, dim) = - T.rowRange(0, dim).colRange(0, dim).t();
-    //cv::Mat temp1 = T.rowRange(0, dim).colRange(0, dim);
+    ImMat temp0(dim, dim);
+    range(T, temp0, 0, dim, 0, dim);
+    temp0 = -temp0.t();
+    range(temp0, T, 0, dim, 0, dim); //T.rowRange(0, dim).colRange(0, dim) = - T.rowRange(0, dim).colRange(0, dim).t();
+    ImMat temp1(dim, dim);
+    range(T, temp1, 0, dim, 0, dim); //temp1 = T.rowRange(0, dim).colRange(0, dim);
     ImMat temp2 = src_mean.t(); 
-    //ImMat temp3 = temp1 * temp2;
-    //ImMat temp4 = scale*temp3;
-    //T.rowRange(0, dim).colRange(dim, dim + 1)=  -(temp4 - dst_mean.t()) ;
-    //T.rowRange(0, dim).colRange(0, dim) *= scale;
+    ImMat temp3 = temp1 * temp2;
+    ImMat temp4 = temp3 * scale;
+
+    ImMat temp5 =  -(temp4 - dst_mean.t());
+    range(temp5, T, 0, dim, dim, dim+1); //T.rowRange(0, dim).colRange(dim, dim + 1)=  -(temp4 - dst_mean.t()) ;
+    range_scale(T, scale, 0, dim, 0, dim); //T.rowRange(0, dim).colRange(0, dim) *= scale;
     return T;
 }
 
