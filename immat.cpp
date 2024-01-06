@@ -674,8 +674,11 @@ void ImMat::copy_to(ImMat & mat, ImPoint offset, float alpha)
 ImMat ImMat::crop(ImPoint p1, ImPoint p2)
 {
     assert(!empty());
-    assert(p1.x >= 0 && p1.y >= 0 && p1.x < w && p1.y < h);
     assert((p2.x - p1.x) > 0 && (p2.y - p1.y) > 0);
+    if (p1.x < 0) p1.x = 0;
+    if (p1.y < 0) p1.y = 0;
+    if (p1.x >= w) p1.x = w - 1;
+    if (p1.y >= h) p1.y = h - 1;
     if (p2.x >= w) p2.x = w - 1;
     if (p2.y >= h) p2.y = h - 1;
     ImMat dst(p2.x - p1.x, p2.y - p1.y, c, elemsize, elempack);

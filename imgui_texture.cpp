@@ -854,7 +854,35 @@ bool ImTextureToFile(ImTextureID texture, std::string path)
     return true;
 }
 
-void ImMatToTexture(ImGui::ImMat mat, ImTextureID& texture)
+bool ImMatToFile(const ImMat& mat, std::string path)
+{
+    int ret = -1;
+    if (mat.empty())
+    {
+        return false;
+    }
+    auto file_suffix = ImGuiHelper::path_filename_suffix(path);
+    if (!file_suffix.empty())
+    {
+        if (file_suffix.compare(".png") == 0 || file_suffix.compare(".PNG") == 0)
+            stbi_write_png(path.c_str(), mat.w, mat.h, mat.c, mat.data, mat.w * mat.c);
+        else if (file_suffix.compare(".jpg") == 0 || file_suffix.compare(".JPG") == 0 ||
+                file_suffix.compare(".jpeg") == 0 || file_suffix.compare(".JPEG") == 0)
+            stbi_write_jpg(path.c_str(), mat.w, mat.h, mat.c, mat.data, mat.w * mat.c);
+        else if (file_suffix.compare(".bmp") == 0 || file_suffix.compare(".BMP") == 0)
+            stbi_write_bmp(path.c_str(), mat.w, mat.h, mat.c, mat.data);
+        else if (file_suffix.compare(".tga") == 0 || file_suffix.compare(".TGA") == 0)
+            stbi_write_tga(path.c_str(), mat.w, mat.h, mat.c, mat.data);
+    }
+    else
+    {
+        path += ".png";
+        stbi_write_png(path.c_str(), mat.w, mat.h, mat.c, mat.data, mat.w * mat.c);
+    }
+    return true;
+}
+
+void ImMatToTexture(const ImGui::ImMat& mat, ImTextureID& texture)
 {
     if (mat.empty())
         return;

@@ -17,7 +17,8 @@ IMGUI_API int ImGetTextureData(ImTextureID texture, void* data);
 IMGUI_API ImPixel ImGetTexturePixel(ImTextureID texture, float x, float y);
 IMGUI_API double ImGetTextureTimeStamp(ImTextureID texture);
 IMGUI_API bool ImTextureToFile(ImTextureID texture, std::string path);
-IMGUI_API void ImMatToTexture(ImMat mat, ImTextureID& texture);
+IMGUI_API bool ImMatToFile(const ImMat& mat, std::string path);
+IMGUI_API void ImMatToTexture(const ImMat& mat, ImTextureID& texture);
 IMGUI_API void ImTextureToMat(ImTextureID texture, ImMat& mat, ImVec2 offset = {}, ImVec2 size = {});
 IMGUI_API void ImCopyToTexture(ImTextureID& imtexid, unsigned char* pixels, int width, int height, int channels, int offset_x, int offset_y, bool is_immat=false);
 #if IMGUI_RENDERING_VULKAN && IMGUI_VULKAN_SHADER
