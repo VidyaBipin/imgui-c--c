@@ -388,6 +388,18 @@ struct ImPoint
     bool operator!=(const ImPoint& d)       { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; }
 };
 
+struct ImPoint3D
+{
+    float                                       x, y, z;
+    ImPoint3D()                                : x(0.0f), y(0.0f), z(0.0f) { }
+    ImPoint3D(float _v)                        : x(_v), y(_v), z(_v) { }
+    ImPoint3D(float _x, float _y, float _z)    : x(_x), y(_y), z(_z) { }
+    bool operator==(const ImPoint3D& d) const { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8; }
+    bool operator==(const ImPoint3D& d)       { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8; }
+    bool operator!=(const ImPoint3D& d) const { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8; }
+    bool operator!=(const ImPoint3D& d)       { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8; }
+};
+
 struct ImPixel
 {
     float r, g, b, a;
@@ -406,8 +418,31 @@ struct ImSize
     constexpr ImSize(int _w, int _h)        : w(_w), h(_h) { }
     bool operator==(const ImSize& d) const  { return w == d.w && h == d.h; }
     bool operator==(const ImSize& d)        { return w == d.w && h == d.h; }
-    bool operator!=(const ImSize& d) const  { return w == d.w || h == d.h; }
-    bool operator!=(const ImSize& d)        { return w == d.w || h == d.h; }
+    bool operator!=(const ImSize& d) const  { return w != d.w || h != d.h; }
+    bool operator!=(const ImSize& d)        { return w != d.w || h != d.h; }
+};
+
+struct ImBox
+{
+    ImPoint Min;
+    ImPoint Max;
+
+    constexpr       ImBox()                                        : Min(0.0f, 0.0f), Max(0.0f, 0.0f)  {}
+    constexpr       ImBox(const ImPoint& min, const ImPoint& max)  : Min(min), Max(max)                {}
+    constexpr       ImBox(float x1, float y1, float x2, float y2)  : Min(x1, y1), Max(x2, y2)          {}
+    bool            operator==(const ImBox& d) const    { return Min == d.Min && Max == d.Max; }
+    bool            operator==(const ImBox& d)          { return Min == d.Min && Max == d.Max; }
+    bool            operator!=(const ImBox& d) const    { return Min != d.Min || Max != d.Max; }
+    bool            operator!=(const ImBox& d)          { return Min != d.Min || Max != d.Max; }
+    ImPoint         GetCenter() const                   { return ImPoint((Min.x + Max.x) * 0.5f, (Min.y + Max.y) * 0.5f); }
+    ImPoint         GetSize() const                     { return ImPoint(Max.x - Min.x, Max.y - Min.y); }
+    float           GetWidth() const                    { return Max.x - Min.x; }
+    float           GetHeight() const                   { return Max.y - Min.y; }
+    float           GetArea() const                     { return (Max.x - Min.x) * (Max.y - Min.y); }
+    ImBox           Intersection(const ImBox& r)        { return ImBox(std::max(Min.x, r.Min.x), std::max(Min.y, r.Min.y), std::min(Max.x, r.Max.x), std::min(Max.y, r.Max.y)); }
+    void            Clamp(const ImPoint& box_min, const ImPoint& box_max) { if (Min.x < box_min.x) Min.x = box_min.x; if (Min.y < box_min.y) Min.y = box_min.y; if (Max.x >= box_max.x) Max.x = box_max.x - 1; if (Max.y >= box_max.y) Max.y = box_max.y - 1; }
+    void            Clamp(const ImBox& box)             { Clamp(box.Min, box.Max); }
+    void            ClampSquare()                       { if (GetWidth() > GetHeight()) Max.x = Min.x + GetHeight(); else Max.y = Min.y + GetWidth(); }
 };
 ////////////////////////////////////////////////////////////////////
 
