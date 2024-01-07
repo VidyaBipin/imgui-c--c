@@ -345,7 +345,7 @@ bool ColorConvert_vulkan::UploadParam(const VkMat& src, VkMat& dst, ImInterpolat
 }
 
 // YUV to RGBA functions
-void ColorConvert_vulkan::upload_param(const VkMat& Im_YUV, VkMat& dst, ImInterpolateMode type, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int video_depth) const
+void ColorConvert_vulkan::upload_param(const VkMat& Im_YUV, VkMat& dst, ImInterpolateMode type, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int video_depth, bool mirror) const
 {
     VkMat matrix_y2r_gpu;
     const ImMat conv_mat_y2r = *color_table[0][color_range][color_space];
@@ -367,7 +367,7 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_YUV, VkMat& dst, ImInterp
     if (dst.w != 0 && dst.h != 0 && (dst.w != Im_YUV.w || dst.h != Im_YUV.h))
         resize = true;
     int bitDepth = Im_YUV.depth != 0 ? Im_YUV.depth : Im_YUV.type == IM_DT_INT8 ? 8 : Im_YUV.type == IM_DT_INT16 || Im_YUV.type == IM_DT_INT16_BE ? 16 : 8;
-    std::vector<vk_constant_type> constants(17);
+    std::vector<vk_constant_type> constants(18);
     constants[0].i = Im_YUV.w;
     constants[1].i = Im_YUV.h;
     constants[2].i = dst.c;
@@ -385,10 +385,11 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_YUV, VkMat& dst, ImInterp
     constants[14].i = dst.type;
     constants[15].i = resize ? 1 : 0;
     constants[16].i = type;
+    constants[17].i = mirror ? 1 : 0;
     cmd->record_pipeline(pipeline_yuv_rgb, bindings, constants, dst);
 }
 
-double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInterpolateMode type) const
+double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInterpolateMode type, bool mirror) const
 {
     double ret = -1.f;
     if (!vkdev || !pipeline_yuv_rgb || !cmd)
@@ -419,7 +420,7 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInte
     cmd->benchmark_start();
 #endif
 
-    upload_param(src_gpu, dst_gpu, type, im_YUV.color_format, im_YUV.color_space, im_YUV.color_range, im_YUV.depth);
+    upload_param(src_gpu, dst_gpu, type, im_YUV.color_format, im_YUV.color_space, im_YUV.color_range, im_YUV.depth, mirror);
 
 #ifdef VULKAN_SHADER_BENCHMARK
     cmd->benchmark_end();
@@ -440,7 +441,7 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInte
     return ret;
 }
 
-void ColorConvert_vulkan::upload_param(const VkMat& Im_Y, const VkMat& Im_U, const VkMat& Im_V, VkMat& dst, ImInterpolateMode type) const
+void ColorConvert_vulkan::upload_param(const VkMat& Im_Y, const VkMat& Im_U, const VkMat& Im_V, VkMat& dst, ImInterpolateMode type, bool mirror) const
 {
     VkMat matrix_y2r_gpu;
     const ImMat conv_mat_y2r = *color_table[0][Im_Y.color_range][Im_Y.color_space];
@@ -475,7 +476,7 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_Y, const VkMat& Im_U, con
         resize = true;
 
     int bitDepth = Im_Y.depth != 0 ? Im_Y.depth : Im_Y.type == IM_DT_INT8 ? 8 : Im_Y.type == IM_DT_INT16 || Im_Y.type == IM_DT_INT16_BE ? 16 : 8;
-    std::vector<vk_constant_type> constants(19);
+    std::vector<vk_constant_type> constants(20);
     constants[0].i = Im_Y.w;
     constants[1].i = Im_Y.h;
     constants[2].i = dst.c;
@@ -493,12 +494,13 @@ void ColorConvert_vulkan::upload_param(const VkMat& Im_Y, const VkMat& Im_U, con
     constants[14].i = dst.type;
     constants[15].i = resize ? 1 : 0;
     constants[16].i = type;
-    constants[17].i = Im_Y.w;
-    constants[18].i = Im_U.w;
+    constants[17].i = Im_U.w;
+    constants[18].i = Im_V.w;
+    constants[19].i = mirror ? 1 : 0;
     cmd->record_pipeline(pipeline_y_u_v_rgb, bindings, constants, dst);
 }
 
-double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const ImMat& im_V, ImMat & im_RGB, ImInterpolateMode type) const
+double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const ImMat& im_V, ImMat & im_RGB, ImInterpolateMode type, bool mirror) const
 {
     double ret = -1.f;
     if (!vkdev || !pipeline_y_u_v_rgb || !cmd)
@@ -549,7 +551,7 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const
     cmd->benchmark_start();
 #endif
 
-    upload_param(src_y_gpu, src_u_gpu, src_v_gpu, dst_gpu, type);
+    upload_param(src_y_gpu, src_u_gpu, src_v_gpu, dst_gpu, type, mirror);
 
 #ifdef VULKAN_SHADER_BENCHMARK
     cmd->benchmark_end();

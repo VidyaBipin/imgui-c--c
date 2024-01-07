@@ -53,6 +53,7 @@ layout (push_constant) uniform parameter \n\
     int out_type; \n\
     int resize; \n\
     int interp_type; \n\
+    int mirror; \n\
 } p;\
 "
 
@@ -360,7 +361,10 @@ void main() \n\
         rgb = yuv_to_rgb(interplate(gx, gy)); \n\
     else \n\
         rgb = yuv_to_rgb(load_src_yuv(gx, gy)); \n\
-    store_rgba(sfpvec4(rgb, 1.0f), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+    if (p.mirror == 1) \n\
+        store_rgba(sfpvec4(rgb, 1.0f), p.out_w - gx - 1, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+    else \n\
+        store_rgba(sfpvec4(rgb, 1.0f), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 
@@ -406,6 +410,7 @@ layout (push_constant) uniform parameter \n\
     int interp_type; \n\
     int uw; \n\
     int vw; \n\
+    int mirror; \n\
 } p;\
 "
 
