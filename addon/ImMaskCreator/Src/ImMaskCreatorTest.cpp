@@ -65,16 +65,24 @@ static bool _AppFrame(void* handle, bool closeApp)
         if (Button("Load json"))
         {
             const char *filters = "JSON文件(*.json){.JSON},.*";
+            IGFD::FileDialogConfig config;
+            config.path = ".";
+            config.countSelectionMax = 1;
+            config.flags = ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_Modal;
             ImGuiFileDialog::Instance()->OpenDialog("LoadJsonFileDlgKey", ICON_IGFD_FOLDER_OPEN " 打开JSON文件", 
-                                                    filters, "./", 1, nullptr, 
-                                                    ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_Modal);
+                                                    filters,
+                                                    config);
         } SameLine(0, 20);
         if (Button("Save json"))
         {
             const char *filters = "JSON文件(*.json){.JSON},.*";
+            IGFD::FileDialogConfig config;
+            config.path = ".";
+            config.countSelectionMax = 1;
+            config.flags = ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_Modal;
             ImGuiFileDialog::Instance()->OpenDialog("SaveJsonFileDlgKey", ICON_IGFD_FOLDER_OPEN " 打开JSON文件", 
-                                                    filters, "./", 1, nullptr, 
-                                                    ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_Modal);
+                                                    filters,
+                                                    config);
         }
 
         BeginDisabled(!bEnableKeyFrame);

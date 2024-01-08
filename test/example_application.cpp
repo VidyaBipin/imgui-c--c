@@ -718,15 +718,16 @@ void Example::DrawFishCircleDemo()
         {
             if (ImGui::MenuItem((std::string(ICON_FA_IMAGE) + " Save Texture to File").c_str()))
             {
+                IGFD::FileDialogConfig config;
+                config.path = ".";
+                config.countSelectionMax = 1;
+                config.flags = ImGuiFileDialogFlags_ShowBookmark |
+                            ImGuiFileDialogFlags_CaseInsensitiveExtention |
+                            ImGuiFileDialogFlags_ConfirmOverwrite |
+                            ImGuiFileDialogFlags_Modal;
                 ImGuiFileDialog::Instance()->OpenDialog(dialog_id.c_str(), ICON_IGFD_FOLDER_OPEN " Choose File", 
                                                         "Image files (*.png *.gif *.jpg *.jpeg *.tiff *.webp){.png,.gif,.jpg,.jpeg,.tiff,.webp}",
-                                                        ".",
-                                                        1, 
-                                                        nullptr, 
-                                                        ImGuiFileDialogFlags_ShowBookmark |
-                                                        ImGuiFileDialogFlags_CaseInsensitiveExtention |
-                                                        ImGuiFileDialogFlags_ConfirmOverwrite |
-                                                        ImGuiFileDialogFlags_Modal);
+                                                        config);
             }
             ImGui::EndPopup();
         }

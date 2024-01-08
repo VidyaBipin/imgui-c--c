@@ -389,12 +389,14 @@ void ShowImGuiTexInspectDemo(bool* p_open)
         ImGui::SameLine();
         if (ImGui::Button("Open Image", ImVec2(140, 60)))
         {
+            IGFD::FileDialogConfig config;
+            config.path = ".";
+            config.countSelectionMax = 1;
+            config.userDatas = IGFDUserDatas("TexInspect");
+            config.flags = ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_CaseInsensitiveExtention | ImGuiFileDialogFlags_DisableCreateDirectoryButton | ImGuiFileDialogFlags_Modal;
             ImGuiFileDialog::Instance()->OpenDialog("##TexInspectDemoFileDlgKey", "Choose Image File", 
                                                     image_filter.c_str(),
-                                                    ".",
-                                                    1, 
-                                                    IGFDUserDatas("TexInspect"), 
-                                                    ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_CaseInsensitiveExtention | ImGuiFileDialogFlags_DisableCreateDirectoryButton | ImGuiFileDialogFlags_Modal);
+                                                    config);
 
         }
 

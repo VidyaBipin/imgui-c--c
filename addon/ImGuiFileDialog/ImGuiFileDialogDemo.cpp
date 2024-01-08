@@ -205,77 +205,117 @@ void show_file_dialog_demo_window(ImGuiFileDialog * dlg, bool * open)
 
 			RadioButtonLabeled_BitWize<ImGuiFileDialogFlags>("Case Insensitive Extentions", "will not take into account the case of file extentions",
 				&flags, ImGuiFileDialogFlags_CaseInsensitiveExtention);
+			// add by Dicky
+			RadioButtonLabeled_BitWize<ImGuiFileDialogFlags>("ShowBookmark", "Display bookmark panel when opened", &flags, ImGuiFileDialogFlags_ShowBookmark);
+			RadioButtonLabeled_BitWize<ImGuiFileDialogFlags>("DisableDragDrop", "Disable Drag-Drop for items", &flags, ImGuiFileDialogFlags_DisableDragDrop);
+			RadioButtonLabeled_BitWize<ImGuiFileDialogFlags>("DirectorySelect", "Allow Directory Selection", &flags, ImGuiFileDialogFlags_AllowDirectorySelect);
+			RadioButtonLabeled_BitWize<ImGuiFileDialogFlags>("PathDecompositionShort", "Decomposition Path Short", &flags, ImGuiFileDialogFlags_PathDecompositionShort);
+			RadioButtonLabeled_BitWize<ImGuiFileDialogFlags>("NoButton", "Dont't show ok/cancel button, it will using embedded mode", &flags, ImGuiFileDialogFlags_NoButton);
+			// add by Dicky end
 		}
 		ImGui::Unindent();
-		// add by Dicky for disable drag drop support
-		static bool DragDropSupport = true;
-		ImGui::Checkbox("Disable Drag drop", &DragDropSupport);
-		if (!DragDropSupport)
-			flags |= ImGuiFileDialogFlags_DisableDragDrop;
-		else
-			flags &= ~ImGuiFileDialogFlags_DisableDragDrop;
-		// add by Dicky end
 
 		ImGui::Text("Singleton acces :");
 		if (ImGui::Button(ICON_IGFD_FOLDER_OPEN " Open File Dialog"))
 		{
 			const char* filters = ".*,.cpp,.h,.hpp";
-			dlg->OpenDialog("ChooseFileDlgKey",	ICON_IGFD_FOLDER_OPEN " Choose a File", filters, ".", "", 1, nullptr, flags);
+			IGFD::FileDialogConfig config;
+			config.path = ".";
+			config.flags = flags;
+			dlg->OpenDialog("ChooseFileDlgKey",	ICON_IGFD_FOLDER_OPEN " Choose a File", filters, config);
 		}
 		if (ImGui::Button(ICON_IGFD_FOLDER_OPEN " Open File Dialog with collections of filters"))
 		{
 			const char* filters = "Source files (*.cpp *.h *.hpp){.cpp,.h,.hpp},Image files (*.png *.gif *.jpg *.jpeg){.png,.gif,.jpg,.jpeg},.md";
-			dlg->OpenDialog("ChooseFileDlgKey",	ICON_IGFD_FOLDER_OPEN " Choose a File", filters, ".", "", 1, nullptr, flags);
+			IGFD::FileDialogConfig config;
+			config.path = ".";
+			config.flags = flags;
+			dlg->OpenDialog("ChooseFileDlgKey",	ICON_IGFD_FOLDER_OPEN " Choose a File", filters, config);
 		}
 		if (ImGui::Button(ICON_IGFD_FOLDER_OPEN " Open File Dialog with selection of 5 items"))
 		{
 			const char* filters = ".*,.cpp,.h,.hpp";
-			dlg->OpenDialog("ChooseFileDlgKey",	ICON_IGFD_FOLDER_OPEN " Choose a File", filters, ".", "", 5, nullptr, flags);
+			IGFD::FileDialogConfig config;
+			config.path = ".";
+			config.flags = flags;
+			config.countSelectionMax = 5;
+			dlg->OpenDialog("ChooseFileDlgKey",	ICON_IGFD_FOLDER_OPEN " Choose a File", filters, config);
 		}
 		if (ImGui::Button(ICON_IGFD_FOLDER_OPEN " Open File Dialog with infinite selection"))
 		{
 			const char* filters = ".*,.cpp,.h,.hpp";
-			dlg->OpenDialog("ChooseFileDlgKey",	ICON_IGFD_FOLDER_OPEN " Choose a File", filters, ".", "", 0, nullptr, flags);
+			IGFD::FileDialogConfig config;
+			config.path = ".";
+			config.flags = flags;
+			config.countSelectionMax = 0;
+			dlg->OpenDialog("ChooseFileDlgKey",	ICON_IGFD_FOLDER_OPEN " Choose a File", filters, config);
 		}
 		if (ImGui::Button(ICON_IGFD_FOLDER_OPEN " Open File Dialog with last file path name"))
 		{
 			const char* filters = ".*,.cpp,.h,.hpp";
-			ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", ICON_IGFD_FOLDER_OPEN " Choose a File", filters, filePathName, 1, nullptr, flags);
+			IGFD::FileDialogConfig config;
+			config.path = ".";
+			config.flags = flags;
+			config.filePathName = filePathName;
+			dlg->OpenDialog("ChooseFileDlgKey", ICON_IGFD_FOLDER_OPEN " Choose a File", filters, config);
 		}
 		if (ImGui::Button(ICON_IGFD_FOLDER_OPEN " Open All file types with filter .*"))
 		{
-			dlg->OpenDialog("ChooseFileDlgKey",	ICON_IGFD_FOLDER_OPEN " Choose a File", ".*", ".", "", 1, nullptr, flags);
+			IGFD::FileDialogConfig config;
+			config.path = ".";
+			config.flags = flags;
+			dlg->OpenDialog("ChooseFileDlgKey",	ICON_IGFD_FOLDER_OPEN " Choose a File", ".*", config);
 		}
 		if (ImGui::Button(ICON_IGFD_SAVE " Save File Dialog with a custom pane"))
 		{
-			dlg->OpenDialogWithPane("ChooseFileDlgKey", "Choose File", ".cpp,.h,.hpp",
-				".", "", std::bind(&InfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), 350, 1, IGFDUserDatas("InfosPane"));
+			IGFD::FileDialogConfig config;
+			config.path = ".";
+			config.countSelectionMax = 1;
+			config.sidePane = std::bind(&InfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+			config.sidePaneWidth = 350.0f;
+			config.userDatas = IGFDUserDatas("InfosPane");
+			config.flags = ImGuiFileDialogFlags_Modal;
+			dlg->OpenDialog("ChooseFileDlgKey", "Choose File", ".cpp,.h,.hpp", config);
 		}
 		if (ImGui::Button(ICON_IGFD_SAVE " Save File Dialog with Confirm Dialog For Overwrite File if exist"))
 		{
 			const char* filters = "C/C++ File (*.c *.cpp){.c,.cpp}, Header File (*.h){.h}";
-			dlg->OpenDialog("ChooseFileDlgKey", ICON_IGFD_SAVE " Choose a File", filters, ".", "", 1, IGFDUserDatas("SaveFile"), ImGuiFileDialogFlags_ConfirmOverwrite);
+			IGFD::FileDialogConfig config;
+			config.path = ".";
+			config.countSelectionMax = 1;
+			config.userDatas = IGFDUserDatas("SaveFile");
+			config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
+			dlg->OpenDialog("ChooseFileDlgKey", ICON_IGFD_SAVE " Choose a File", filters, config);
 		}
 
 		if (ImGui::Button(ICON_IGFD_FOLDER_OPEN " Open Directory Dialog"))
 		{
 			// let filters be null for open directory chooser
-			dlg->OpenDialog("ChooseDirDlgKey",
-					ICON_IGFD_FOLDER_OPEN " Choose a Directory", nullptr, ".", 1, nullptr, flags);
+			IGFD::FileDialogConfig config;
+			config.path = ".";
+			config.flags = flags;
+			dlg->OpenDialog("ChooseDirDlgKey", ICON_IGFD_FOLDER_OPEN " Choose a Directory", nullptr, config);
 		}
 		if (ImGui::Button(ICON_IGFD_FOLDER_OPEN " Open Directory Dialog with selection of 5 items"))
 		{
 			// set filters be null for open directory chooser
-			dlg->OpenDialog("ChooseDirDlgKey", ICON_IGFD_FOLDER_OPEN " Choose a Directory", nullptr, ".", "", 5, nullptr, flags);
+			IGFD::FileDialogConfig config;
+			config.path = ".";
+			config.flags = flags;
+			config.countSelectionMax = 5;
+			dlg->OpenDialog("ChooseDirDlgKey", ICON_IGFD_FOLDER_OPEN " Choose a Directory", nullptr, config);
 		}
 
         if (ImGui::Button(ICON_IGFD_FOLDER_OPEN " Embedded Dialog demo"))
 		{
-            dlg->OpenDialog("embedded", "Select File", ".*", "", -1, nullptr, 
-					ImGuiFileDialogFlags_NoDialog | 
-					ImGuiFileDialogFlags_ShowBookmark |
-					ImGuiFileDialogFlags_DisableCreateDirectoryButton | 
-					ImGuiFileDialogFlags_ReadOnlyFileNameField);
+			IGFD::FileDialogConfig config;
+			config.path = ".";
+			config.flags = ImGuiFileDialogFlags_NoDialog | 
+							ImGuiFileDialogFlags_ShowBookmark |
+							ImGuiFileDialogFlags_DisableCreateDirectoryButton | 
+							ImGuiFileDialogFlags_ReadOnlyFileNameField;
+			config.countSelectionMax = -1;
+            dlg->OpenDialog("embedded", "Select File", ".*", config);
         }
 
 		ImGui::Separator();
