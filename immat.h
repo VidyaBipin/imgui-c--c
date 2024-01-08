@@ -32,7 +32,7 @@
 // allocating more bytes keeps us safe from SEGV_ACCERR failure
 #define IM_MALLOC_OVERREAD 64
 
-#define OMP_THREADS 8
+#define OMP_THREADS 1
 // exchange-add operation for atomic operations on reference counters
 #if defined __riscv && !defined __riscv_atomic
 // riscv target without A extension
