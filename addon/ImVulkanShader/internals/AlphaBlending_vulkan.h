@@ -25,7 +25,7 @@ public:
     // argument 'alpha' must be IM_DT_FLOAT32, channel == 1
     void blend(const ImMat& src1, const ImMat& src2, const ImMat& alpha, ImMat& dst, int offx = 0, int offy = 0) const;
 
-    // overlay picture 'overlayImg' on top of 'baseImg' with transparency computation,
+    // overlay picture 'overlayImg' on top of 'baseImg' with opacity computation,
     // color_mix_alpha = overlayImg(x-offx,y-offy).alpha * overlayAlpha
     // dst(x,y).rgb = baseImg(x,y).rgb * (1-color_mix_alpha) + overlayImg(x-offx,y-offy).rgb * color_mix_alpha
     // dst(x,y).alpha = 1 - (1 - baseImg(x,y).alpha) * (1 - color_mix_alpha)
