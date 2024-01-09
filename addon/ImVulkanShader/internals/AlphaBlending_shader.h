@@ -182,3 +182,44 @@ SHADER_LOAD_GRAY_NAME(alpha)
 SHADER_STORE_RGBA
 SHADER_ALPHA_WITH_ALPHA_MAT
 ;
+
+#define SHADER_ALPHA_OVERLAY_MAIN \
+" \n\
+void main() \n\
+{ \n\
+    ivec2 uv = ivec2(gl_GlobalInvocationID.xy); \n\
+    if (uv.x >= p.out_w || uv.y >= p.out_h) \n\
+        return; \n\
+    sfpvec4 result; \n\
+    sfpvec4 rgba_src1 = load_rgba(uv.x, uv.y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    if (uv.x - p.x_offset >= 0 && uv.y - p.y_offset >= 0 && \n\
+        uv.x - p.x_offset < p.w && uv.y - p.y_offset < p.h) \n\
+    { \n\
+        sfpvec4 rgba_src2 = load_rgba_src2(uv.x - p.x_offset, uv.y - p.y_offset, p.w2, p.h2, p.cstep2, p.in_format2, p.in_type2); \n\
+        sfp alpha2 = rgba_src2.a*sfp(p.alpha); \n\
+        sfp alpha = sfp(1.f)-(sfp(1.f)-rgba_src1.a)*(sfp(1.f)-alpha2); \n\
+        result = sfpvec4(mix(rgba_src1.rgb, rgba_src2.rgb, alpha2), alpha); \n\
+    } \n\
+    else \n\
+    { \n\
+        result = rgba_src1; \n\
+    } \n\
+    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+} \
+"
+
+static const char AlphaBlending_overlay_data[] = 
+SHADER_HEADER
+SHADER_PARAM
+SHADER_INPUT_OUTPUT_DATA
+R"(
+layout (binding =  8) readonly buffer src2_int8       { uint8_t   src2_data_int8[]; };
+layout (binding =  9) readonly buffer src2_int16      { uint16_t  src2_data_int16[]; };
+layout (binding = 10) readonly buffer src2_float16    { float16_t src2_data_float16[]; };
+layout (binding = 11) readonly buffer src2_float32    { float     src2_data_float32[]; };
+)"
+SHADER_LOAD_RGBA
+SHADER_LOAD_RGBA_NAME(src2)
+SHADER_STORE_RGBA
+SHADER_ALPHA_OVERLAY_MAIN
+;

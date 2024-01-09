@@ -38,6 +38,13 @@ AlphaBlending_vulkan::AlphaBlending_vulkan(int gpu)
         pipe_alpha_mat->create(spirv_data.data(), spirv_data.size() * 4, specializations);
         spirv_data.clear();
     }
+
+    if (compile_spirv_module(AlphaBlending_overlay_data, opt, spirv_data) == 0)
+    {
+        pipe_overlay = new Pipeline(vkdev);
+        pipe_overlay->create(spirv_data.data(), spirv_data.size() * 4, specializations);
+        spirv_data.clear();
+    }
     cmd->reset();
 }
 
@@ -47,6 +54,8 @@ AlphaBlending_vulkan::~AlphaBlending_vulkan()
     {
         if (pipe) { delete pipe; pipe = nullptr; }
         if (pipe_alpha) { delete pipe_alpha; pipe_alpha = nullptr; }
+        if (pipe_alpha_mat) { delete pipe_alpha_mat; pipe_alpha_mat = nullptr; }
+        if (pipe_overlay) { delete pipe_overlay; pipe_overlay = nullptr; }
         if (cmd) { delete cmd; cmd = nullptr; }
         if (opt.blob_vkallocator) { vkdev->reclaim_blob_allocator(opt.blob_vkallocator); opt.blob_vkallocator = nullptr; }
         if (opt.staging_vkallocator) { vkdev->reclaim_staging_allocator(opt.staging_vkallocator); opt.staging_vkallocator = nullptr; }
@@ -341,6 +350,81 @@ void AlphaBlending_vulkan::blend(const ImMat& src1, const ImMat& src2, const ImM
     cmd->submit_and_wait();
     cmd->reset();
     dst.copy_attribute(src1);
+}
+
+void AlphaBlending_vulkan::upload_param_overlay(const VkMat& src1, const VkMat& src2, VkMat& dst, float alpha, int x, int y) const
+{
+    std::vector<VkMat> bindings(12);
+    if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
+    else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)    bindings[1] = dst;
+    else if (dst.type == IM_DT_FLOAT16)  bindings[2] = dst;
+    else if (dst.type == IM_DT_FLOAT32)  bindings[3] = dst;
+
+    if      (src1.type == IM_DT_INT8)      bindings[4] = src1;
+    else if (src1.type == IM_DT_INT16 || src1.type == IM_DT_INT16_BE)     bindings[5] = src1;
+    else if (src1.type == IM_DT_FLOAT16)   bindings[6] = src1;
+    else if (src1.type == IM_DT_FLOAT32)   bindings[7] = src1;
+
+    if      (src2.type == IM_DT_INT8)      bindings[8] = src2;
+    else if (src2.type == IM_DT_INT16 || src2.type == IM_DT_INT16_BE)     bindings[9] = src2;
+    else if (src2.type == IM_DT_FLOAT16)   bindings[10] = src2;
+    else if (src2.type == IM_DT_FLOAT32)   bindings[11] = src2;
+
+    std::vector<vk_constant_type> constants(18);
+    constants[0].i = src1.w;
+    constants[1].i = src1.h;
+    constants[2].i = src1.c;
+    constants[3].i = src1.color_format;
+    constants[4].i = src1.type;
+    constants[5].i = src2.w;
+    constants[6].i = src2.h;
+    constants[7].i = src2.c;
+    constants[8].i = src2.color_format;
+    constants[9].i = src2.type;
+    constants[10].i = dst.w;
+    constants[11].i = dst.h;
+    constants[12].i = dst.c;
+    constants[13].i = dst.color_format;
+    constants[14].i = dst.type;
+    constants[15].i = x;
+    constants[16].i = y;
+    constants[17].f = alpha;
+    cmd->record_pipeline(pipe_overlay, bindings, constants, dst);
+}
+
+bool AlphaBlending_vulkan::overlay(const ImMat& baseImg, const ImMat& overlayImg, ImMat& dst, float overlayAlpha, int x, int y) const
+{
+    if (!vkdev || !pipe_overlay || !cmd)
+        return false;
+    if (x >= baseImg.w || y >= baseImg.h || x <= -overlayImg.w || y <= -overlayImg.h)
+        return false;
+
+    VkMat dst_gpu;
+    dst_gpu.create_type(baseImg.w, baseImg.h, 4, dst.type, opt.blob_vkallocator);
+
+    VkMat baseImg_gpu;
+    if (baseImg.device == IM_DD_VULKAN)
+        baseImg_gpu = baseImg;
+    else if (baseImg.device == IM_DD_CPU)
+        cmd->record_clone(baseImg, baseImg_gpu, opt);
+
+    VkMat overlayImg_gpu;
+    if (overlayImg.device == IM_DD_VULKAN)
+        overlayImg_gpu = overlayImg;
+    else if (overlayImg.device == IM_DD_CPU)
+        cmd->record_clone(overlayImg, overlayImg_gpu, opt);
+
+    upload_param_overlay(baseImg_gpu, overlayImg_gpu, dst_gpu, overlayAlpha, x, y);
+
+    // download
+    if (dst.device == IM_DD_CPU)
+        cmd->record_clone(dst_gpu, dst, opt);
+    else if (dst.device == IM_DD_VULKAN)
+        dst = dst_gpu;
+    cmd->submit_and_wait();
+    cmd->reset();
+    dst.copy_attribute(baseImg);
+    return true;
 }
 
 } //namespace ImGui 
