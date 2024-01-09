@@ -235,12 +235,14 @@ static bool App_Frame(void * handle, bool app_will_quit)
         ImGui::Checkbox("Normal", &bNormal);
         if (ImGui::Button(ICON_FK_PLUS " Add model"))
         {
+            IGFD::FileDialogConfig config;
+            config.path = ".";
+            config.countSelectionMax = 1;
+            config.userDatas = IGFDUserDatas("Open Model");
+            config.flags = ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_CaseInsensitiveExtention | ImGuiFileDialogFlags_DisableCreateDirectoryButton | ImGuiFileDialogFlags_Modal;
             ImGuiFileDialog::Instance()->OpenDialog("##OpenFileDlgKey", ICON_IGFD_FOLDER_OPEN " Choose OBJ File", 
                                                     "3D Object file(*.obj){.obj}",
-                                                    ".",
-                                                    1, 
-                                                    IGFDUserDatas("Open Model"), 
-                                                    ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_CaseInsensitiveExtention | ImGuiFileDialogFlags_DisableCreateDirectoryButton | ImGuiFileDialogFlags_Modal);
+                                                    config);
         }
 
         for (auto iter = models.begin(); iter != models.end();)
