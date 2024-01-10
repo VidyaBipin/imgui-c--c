@@ -592,6 +592,7 @@ ImMat ImMat::threshold(float thres)
 
 ImMat ImMat::resize(float factor)
 {
+    assert(device == IM_DD_CPU);
     assert(dims == 2);
     assert(w > 0 && h > 0);
     assert(factor > 0);
@@ -631,6 +632,7 @@ ImMat ImMat::resize(float factor)
 void ImMat::copy_to(ImMat & mat, ImPoint offset, float alpha)
 {
     // assert mat same as this
+    assert(device == IM_DD_CPU);
     assert(!empty() && !mat.empty());
     assert(offset.x + w >= 0 && offset.y + h >= 0 &&
             offset.x < mat.w && offset.y < mat.h);
@@ -673,14 +675,15 @@ void ImMat::copy_to(ImMat & mat, ImPoint offset, float alpha)
 
 ImMat ImMat::crop(ImPoint p1, ImPoint p2)
 {
+    assert(device == IM_DD_CPU);
     assert(!empty());
     assert((p2.x - p1.x) > 0 && (p2.y - p1.y) > 0);
     if (p1.x < 0) p1.x = 0;
     if (p1.y < 0) p1.y = 0;
-    if (p1.x >= w) p1.x = w - 1;
-    if (p1.y >= h) p1.y = h - 1;
-    if (p2.x >= w) p2.x = w - 1;
-    if (p2.y >= h) p2.y = h - 1;
+    if (p1.x > w) p1.x = w;
+    if (p1.y > h) p1.y = h;
+    if (p2.x > w) p2.x = w;
+    if (p2.y > h) p2.y = h;
     ImMat dst(p2.x - p1.x, p2.y - p1.y, c, elemsize, elempack);
     for (int i = p1.y; i < p2.y; i++)
     {
@@ -749,6 +752,37 @@ ImMat ImMat::crop(ImPoint p1, ImPoint p2)
         }
     }
 
+    return dst;
+}
+
+ImMat ImMat::repeat(int nx, int ny)
+{
+    ImMat dst;
+    assert(device == IM_DD_CPU);
+    assert(!empty());
+    assert(dims <= 2);
+    assert(ny > 0 && nx > 0);
+    if( nx == 1 && ny == 1 )
+    {
+        dst = this->clone();
+    }
+    else
+    {
+        ImSize ssize(w, h);
+        ImSize dsize(nx * w, ny * h);
+        dst.create_type(dsize.w, dsize.h, c, (ImDataType)type);
+        int x, y;
+        int esz = (int)elemsize;
+        ssize.w *= esz; dsize.w *= esz;
+        for( y = 0; y < ssize.h; y++ )
+        {
+            for( x = 0; x < dsize.w; x += ssize.w )
+                memcpy((int8_t*)dst.data + (y * dst.w * dst.elemsize) + x, (int8_t *)data + y * w * elemsize, ssize.w);
+        }
+
+        for( ; y < dsize.h; y++ )
+            memcpy((int8_t*)dst.data + (y * dst.w * dst.elemsize), (int8_t *)dst.data + (y - ssize.h) * dst.w * dst.elemsize, dsize.w );
+    }
     return dst;
 }
 
@@ -834,7 +868,7 @@ void ImMat::clean(ImPixel color)
 
 void ImMat::print(std::string name)
 {
-    std::cout << name << std::endl << "[" << std::endl;
+    std::cout << name << "(" << w << "x" << h << "x" << c << ")" << std::endl << "[" << std::endl;
     if (dims == 1)
     {
         for (int _w = 0; _w < w; _w++)

@@ -510,6 +510,12 @@ public:
 class ImMat
 {
 public:
+    enum NormTypes : int {
+        NORM_INF = 1,
+        NORM_L1,
+        NORM_L2,
+        NORM_MINMAX,
+    };
     // empty
     ImMat();
     // vec
@@ -632,6 +638,10 @@ public:
     ImMat  operator-();
     // sum
     ImMat sum();
+    // min/max
+    template<typename T> void minmax(T* vmin, T* vmax, int* imin = nullptr, int* imax = nullptr);
+    // normalize
+    template<typename T> void normalize(T vmin, T vmax, int norm_type);
 
     // some draw function only support 3 dims
     // mat default ordination is ncwh
@@ -671,6 +681,9 @@ public:
 
     // crop
     IMGUI_API ImMat crop(ImPoint p1, ImPoint p2);
+
+    // repeat
+    IMGUI_API ImMat repeat(int nx, int ny);
     
     // release
     void release();
@@ -4890,6 +4903,115 @@ inline ImMat ImMat::sum()
         }
     }
     return m;
+}
+
+// min/max
+template<typename T> 
+inline void ImMat::minmax(T* vmin, T* vmax, int* imin, int* imax)
+{
+    assert(device == IM_DD_CPU);
+    T _vmin, _vmax;
+    switch (type)
+    {
+        case IM_DT_INT8:    _vmin = INT8_MAX;   _vmax = INT8_MIN; break;
+        case IM_DT_INT16:   _vmin = INT16_MAX;  _vmax = INT16_MIN; break;
+        case IM_DT_INT32:   _vmin = INT32_MAX;  _vmax = INT32_MIN; break;  
+        case IM_DT_INT64:   _vmin = INT64_MAX;  _vmax = INT64_MIN; break;
+        case IM_DT_FLOAT32: _vmin = FLT_MAX;    _vmax = FLT_MIN; break;
+        case IM_DT_FLOAT64: _vmin = DBL_MAX;    _vmax = DBL_MIN; break;
+        case IM_DT_FLOAT16: _vmin = im_float32_to_float16(FLT_MAX); _vmax = im_float32_to_float16(FLT_MIN); break;
+        default: break;
+    }
+    for (int i = 0; i < total(); i++)
+    {
+        switch (type)
+        {
+            case IM_DT_INT8:
+                if (((int8_t*)data)[i] > _vmax) { _vmax = ((int8_t*)data)[i]; if (imax) *imax = i; }
+                if (((int8_t*)data)[i] < _vmin) { _vmin = ((int8_t*)data)[i]; if (imin) *imin = i; }
+                break;
+            case IM_DT_INT16:
+                if (((int16_t*)data)[i] > _vmax) { _vmax = ((int16_t*)data)[i]; if (imax) *imax = i; }
+                if (((int16_t*)data)[i] < _vmin) { _vmin = ((int16_t*)data)[i]; if (imin) *imin = i; }
+                break;
+            case IM_DT_INT32:
+                if (((int32_t*)data)[i] > _vmax) { _vmax = ((int32_t*)data)[i]; if (imax) *imax = i; }
+                if (((int32_t*)data)[i] < _vmin) { _vmin = ((int32_t*)data)[i]; if (imin) *imin = i; }
+                break;
+            case IM_DT_INT64:
+                if (((int64_t*)data)[i] > _vmax) { _vmax = ((int64_t*)data)[i]; if (imax) *imax = i; }
+                if (((int64_t*)data)[i] < _vmin) { _vmin = ((int64_t*)data)[i]; if (imin) *imin = i; }
+                break;
+            case IM_DT_FLOAT32:
+                if (((float*)data)[i] > _vmax) { _vmax = ((float*)data)[i]; if (imax) *imax = i; }
+                if (((float*)data)[i] < _vmin) { _vmin = ((float*)data)[i]; if (imin) *imin = i; }
+                break;
+            case IM_DT_FLOAT64:
+                if (((double*)data)[i] > _vmax) { _vmax = ((double*)data)[i]; if (imax) *imax = i; }
+                if (((double*)data)[i] < _vmin) { _vmin = ((double*)data)[i]; if (imin) *imin = i; }
+                break;
+            case IM_DT_FLOAT16:
+                if (im_float16_to_float32(((int16_t*)data)[i]) > im_float16_to_float32(_vmax)) { _vmax = ((int16_t*)data)[i]; if (imax) *imax = i; }
+                if (im_float16_to_float32(((int16_t*)data)[i]) < im_float16_to_float32(_vmin)) { _vmin = ((int16_t*)data)[i]; if (imin) *imin = i; }
+                break;
+            default: break;
+        }
+    }
+    if (vmin) *vmin = _vmin;
+    if (vmax) *vmax = _vmax;
+}
+
+// normalize
+template<typename T> 
+inline void ImMat::normalize(T vmin, T vmax, int norm_type)
+{
+    assert(device == IM_DD_CPU);
+    assert(total() > 0);
+    double scale = 1., shift = 0.;
+    switch (norm_type)
+    {
+        case NORM_MINMAX:
+        {
+            T smin, smax;
+            double dmin, dmax;
+            minmax(&smin, &smax);
+            if (type == IM_DT_FLOAT16)
+            {
+                dmin = std::min(im_float16_to_float32(vmin), im_float16_to_float32(vmax));
+                dmax = std::max(im_float16_to_float32(vmin), im_float16_to_float32(vmax));
+            }
+            else
+            {
+                dmin = std::min(vmin, vmax);
+                dmax = std::max(vmin, vmax);
+            }
+
+            scale = (dmax - dmin)*(smax - smin > DBL_EPSILON ? 1./(smax - smin) : 0);
+            shift = dmin - smin * scale;
+            for (int i = 0; i < total(); i++)
+            {
+                switch (type)
+                {
+                    case IM_DT_INT8:    ((int8_t*)data)[i] = (int8_t)(((int8_t*)data)[i] * scale + shift); break;
+                    case IM_DT_INT16:   ((int16_t*)data)[i] = (int16_t)(((int16_t*)data)[i] * scale + shift); break;
+                    case IM_DT_INT32:   ((int32_t*)data)[i] = (int32_t)(((int32_t*)data)[i] * scale + shift); break;
+                    case IM_DT_INT64:   ((int64_t*)data)[i] = (int64_t)(((int64_t*)data)[i] * scale + shift); break;
+                    case IM_DT_FLOAT32: ((float*)data)[i] = (float)(((float*)data)[i] * scale + shift); break;
+                    case IM_DT_FLOAT64: ((double*)data)[i] = (double)(((double*)data)[i] * scale + shift); break;
+                    case IM_DT_FLOAT16: ((int16_t*)data)[i] = im_float32_to_float16(im_float16_to_float32(((int16_t*)data)[i]) * scale + shift); break;
+                    break;
+                    default: break;
+                }
+            }
+        }
+        break;
+        case NORM_INF:
+        case NORM_L1:
+        case NORM_L2:
+            // TODO::Dicky
+        break;
+        default: break;
+    }
 }
 } // namespace ImGui 
 
