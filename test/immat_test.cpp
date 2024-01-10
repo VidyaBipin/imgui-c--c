@@ -302,5 +302,36 @@ int main(int argc, char ** argv)
 
     vertex_depth.print("vertex_depth norm");
 
+    auto norm = vertex_depth.norm(ImGui::ImMat::NormTypes::NORM_L1);
+    std::cout << "vertex_depth.norm l1:" << norm << std::endl;
+    norm = vertex_depth.norm(ImGui::ImMat::NormTypes::NORM_L2);
+    std::cout << "vertex_depth.norm l2:" << norm << std::endl;
+    norm = vertex_depth.norm(ImGui::ImMat::NormTypes::NORM_INF);
+    std::cout << "vertex_depth.norm inf:" << norm << std::endl;
+
+    const float r1data[] = {1, 2, 3};
+    const float r2data[] = {3, 2, 1};
+    ImGui::ImMat r1(3, 1, (void*)r1data, 4u);
+    ImGui::ImMat r2(3, 1, (void*)r2data, 4u);
+    ImGui::ImMat r3(r1.w, r1.h);
+    r3.at<float>(0,0) = r1.at<float>(1,0) * r2.at<float>(2,0) - r1.at<float>(2,0) * r2.at<float>(1,0);
+    r3.at<float>(1,0) = r1.at<float>(2,0) * r2.at<float>(0,0) - r1.at<float>(0,0) * r2.at<float>(2,0);
+    r3.at<float>(2,0) = r1.at<float>(0,0) * r2.at<float>(1,0) - r1.at<float>(1,0) * r2.at<float>(0,0);
+
+    r1.print("r1");
+    r2.print("r2");
+    r3.print("r3");
+
+    ImGui::ImMat ba(4, 3);
+    ba = ba.eye(1.f);
+    ImGui::ImMat t3d = ba.crop(ImPoint(3, 0), ImPoint(4, 3)).t();
+    ImGui::ImMat R = r1.vconcat(r2);
+    R = R.vconcat(r3);
+    ImGui::ImMat P = R.hconcat(t3d.t());
+
+    ba.print("ba");
+    t3d.print("t3d");
+    P.print("P");
+
     return 0;
 }
