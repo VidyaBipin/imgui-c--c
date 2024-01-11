@@ -386,6 +386,18 @@ struct ImPoint
     bool operator==(const ImPoint& d)       { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8; }
     bool operator!=(const ImPoint& d) const { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; }
     bool operator!=(const ImPoint& d)       { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8; }
+    ImPoint operator+(const float rhs)      { return ImPoint(x + rhs, y + rhs); }
+    ImPoint operator-(const float rhs)      { return ImPoint(x - rhs, y - rhs); }
+    ImPoint operator*(const float rhs)      { return ImPoint(x * rhs, y * rhs); }
+    ImPoint operator/(const float rhs)      { return ImPoint(x / rhs, y / rhs); }
+    ImPoint operator+(const ImPoint& rhs)   { return ImPoint(x + rhs.x, y + rhs.y); }
+    ImPoint operator-(const ImPoint& rhs)   { return ImPoint(x - rhs.x, y - rhs.y); }
+    ImPoint operator*(const ImPoint& rhs)   { return ImPoint(x * rhs.x, y * rhs.y); }
+    ImPoint operator/(const ImPoint& rhs)   { return ImPoint(x / rhs.x, y / rhs.y); }
+    float dot(const ImPoint& d)             { return (x * d.x) + (y * d.y); }
+    float length()                          { return sqrt(x * x + y * y); }
+    float cross(const ImPoint& d)           { return (x * d.y) - (y * d.x); }
+    float distance(const ImPoint& d)        { return sqrt((d.x - x) * (d.x - x) + (d.y - y) * (d.y - y)); }
 };
 
 struct ImPoint3D
@@ -398,6 +410,18 @@ struct ImPoint3D
     bool operator==(const ImPoint3D& d)       { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8; }
     bool operator!=(const ImPoint3D& d) const { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8; }
     bool operator!=(const ImPoint3D& d)       { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8; }
+    ImPoint3D operator+(const float rhs)      { return ImPoint3D(x + rhs, y + rhs, z + rhs); }
+    ImPoint3D operator-(const float rhs)      { return ImPoint3D(x - rhs, y - rhs, z - rhs); }
+    ImPoint3D operator*(const float rhs)      { return ImPoint3D(x * rhs, y * rhs, z * rhs); }
+    ImPoint3D operator/(const float rhs)      { return ImPoint3D(x / rhs, y / rhs, z / rhs); }
+    ImPoint3D operator+(const ImPoint3D& rhs) { return ImPoint3D(x + rhs.x, y + rhs.y, z + rhs.z); }
+    ImPoint3D operator-(const ImPoint3D& rhs) { return ImPoint3D(x - rhs.x, y - rhs.y, z - rhs.z); }
+    ImPoint3D operator*(const ImPoint3D& rhs) { return ImPoint3D(x * rhs.x, y * rhs.y, z * rhs.z); }
+    ImPoint3D operator/(const ImPoint3D& rhs) { return ImPoint3D(x / rhs.x, y / rhs.y, z / rhs.z); }
+    float dot(const ImPoint3D& b) const       { return x * b.x + y * b.y + z * b.z; }
+    float length() const                      { return (float)sqrt(x * x + y * y + z * z); }
+    ImPoint3D cross(const ImPoint3D& b) const { return ImPoint3D(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x); }
+    float distance(const ImPoint3D& d)        { return sqrt((d.x - x) * (d.x - x) + (d.y - y) * (d.y - y) + (d.z - z) * (d.z - z)); }
 };
 
 struct ImPixel
@@ -409,6 +433,14 @@ struct ImPixel
     bool operator==(const ImPixel& d)       { return fabs(r - d.r) < 10e-8 && fabs(g - d.g) < 10e-8 && fabs(b - d.b) < 10e-8 && fabs(a - d.a) < 10e-8; }
     bool operator!=(const ImPixel& d) const { return fabs(r - d.r) > 10e-8 || fabs(g - d.g) > 10e-8 || fabs(b - d.b) > 10e-8 || fabs(a - d.a) > 10e-8; }
     bool operator!=(const ImPixel& d)       { return fabs(r - d.r) > 10e-8 || fabs(g - d.g) > 10e-8 || fabs(b - d.b) > 10e-8 || fabs(a - d.a) > 10e-8; }
+    ImPixel operator+(const float rhs)      { return ImPixel(r + rhs, g + rhs, b + rhs, a + rhs); }
+    ImPixel operator-(const float rhs)      { return ImPixel(r - rhs, g - rhs, b - rhs, a - rhs); }
+    ImPixel operator*(const float rhs)      { return ImPixel(r * rhs, g * rhs, b * rhs, a * rhs); }
+    ImPixel operator/(const float rhs)      { return ImPixel(r / rhs, g / rhs, b / rhs, a / rhs); }
+    ImPixel operator+(const ImPixel& rhs)   { return ImPixel(r + rhs.r, g + rhs.g, b + rhs.b, a + rhs.a); }
+    ImPixel operator-(const ImPixel& rhs)   { return ImPixel(r - rhs.r, g - rhs.g, b - rhs.b, a - rhs.a); }
+    ImPixel operator*(const ImPixel& rhs)   { return ImPixel(r * rhs.r, g * rhs.g, b * rhs.b, a * rhs.a); }
+    ImPixel operator/(const ImPixel& rhs)   { return ImPixel(r / rhs.r, g / rhs.g, b / rhs.b, a / rhs.a); }
 };
 
 struct ImSize
@@ -420,6 +452,7 @@ struct ImSize
     bool operator==(const ImSize& d)        { return w == d.w && h == d.h; }
     bool operator!=(const ImSize& d) const  { return w != d.w || h != d.h; }
     bool operator!=(const ImSize& d)        { return w != d.w || h != d.h; }
+    float area()                            { return w * h; }
 };
 
 struct ImBox
@@ -758,7 +791,7 @@ public:
         if (elempack == 1)
             return *(_Tp*)((unsigned char*)data + _c * cstep * elemsize + (y * w + x) * elemsize); 
         else
-            return *(_Tp*)((unsigned char*)data + (y * w + x) * elemsize * c + _c); 
+            return *(_Tp*)((unsigned char*)data + (y * w + x) * elemsize * c + _c * elemsize); 
     };
     template<typename _Tp> const _Tp& at(int x, int y, int _c) const 
     {
@@ -766,7 +799,7 @@ public:
         if (elempack == 1)
             return *(const _Tp*)((unsigned char*)data + _c * cstep * elemsize + (y * w + x) * elemsize);
         else
-            return *(const _Tp*)((unsigned char*)data + (y * w + x) * elemsize * c + _c); 
+            return *(const _Tp*)((unsigned char*)data + (y * w + x) * elemsize * c + _c * elemsize); 
     };
 
     // debug
