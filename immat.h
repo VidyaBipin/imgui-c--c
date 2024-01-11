@@ -638,6 +638,8 @@ public:
     ImMat  operator-();
     // sum
     ImMat sum();
+    // mean
+    ImMat mean();
     // norm
     float norm(int norm_type = NORM_L2);
     // min/max
@@ -4833,6 +4835,79 @@ inline ImMat ImMat::operator-()
             case IM_DT_FLOAT64: ((double*)m.data)[i]  = - ((double*)this->data)[i]; break;
             case IM_DT_FLOAT16: ((int16_t*)m.data)[i] = im_float32_to_float16(-im_float16_to_float32(((int16_t*)this->data)[i])); break; 
             default: break;
+        }
+    }
+    return m;
+}
+
+// mean
+inline ImMat ImMat::mean()
+{
+    assert(device == IM_DD_CPU);
+    assert(total() > 0);
+    ImMat m;
+    m.create_type(c, IM_DT_FLOAT32);
+    if (dims == 1)
+    {
+        for (int _w = 0; _w < w; _w++)
+        {
+            switch (type)
+            {
+                case IM_DT_INT8:    m.at<float>(0) += at<int8_t>(_w); break;
+                case IM_DT_INT16:   m.at<float>(0) += at<int16_t>(_w); break;
+                case IM_DT_INT32:   m.at<float>(0) += at<int32_t>(_w); break;
+                case IM_DT_INT64:   m.at<float>(0) += at<int64_t>(_w); break;
+                case IM_DT_FLOAT32: m.at<float>(0) += at<float>(_w); break;
+                case IM_DT_FLOAT64: m.at<float>(0) += at<double>(_w); break;
+                case IM_DT_FLOAT16: m.at<float>(0) += im_float16_to_float32(at<int16_t>(_w)); break; 
+                default: break;
+            }
+        }
+        m.at<float>(0) /= w;
+    }
+    else if (dims == 2)
+    {
+        for (int _h = 0; _h < h; _h++)
+        {
+            for (int _w = 0; _w < w; _w++)
+            {
+                switch (type)
+                {
+                    case IM_DT_INT8:    m.at<float>(0) += at<int8_t>(_w, _h); break;
+                    case IM_DT_INT16:   m.at<float>(0) += at<int16_t>(_w, _h); break;
+                    case IM_DT_INT32:   m.at<float>(0) += at<int32_t>(_w, _h); break;
+                    case IM_DT_INT64:   m.at<float>(0) += at<int64_t>(_w, _h); break;
+                    case IM_DT_FLOAT32: m.at<float>(0) += at<float>(_w, _h); break;
+                    case IM_DT_FLOAT64: m.at<float>(0) += at<double>(_w, _h); break;
+                    case IM_DT_FLOAT16: m.at<float>(0) += im_float16_to_float32(m.at<int16_t>(0)); break; 
+                    default: break;
+                }
+            }
+        }
+        m.at<float>(0) /= w * h;
+    }
+    else if (dims == 3)
+    {
+        for (int _c = 0; _c < c; _c++)
+        {
+            for (int _h = 0; _h < h; _h++)
+            {
+                for (int _w = 0; _w < w; _w++)
+                {
+                    switch (type)
+                    {
+                        case IM_DT_INT8:    m.at<float>(_c) += at<int8_t>(_w, _h, _c); break;
+                        case IM_DT_INT16:   m.at<float>(_c) += at<int16_t>(_w, _h, _c); break;
+                        case IM_DT_INT32:   m.at<float>(_c) += at<int32_t>(_w, _h, _c); break;
+                        case IM_DT_INT64:   m.at<float>(_c) += at<int64_t>(_w, _h, _c); break;
+                        case IM_DT_FLOAT32: m.at<float>(_c) += at<float>(_w, _h, _c); break;
+                        case IM_DT_FLOAT64: m.at<float>(_c) += at<double>(_w, _h, _c); break;
+                        case IM_DT_FLOAT16: m.at<float>(_c) += im_float16_to_float32(m.at<int16_t>(_c)); break; 
+                        default: break;
+                    }
+                }
+            }
+            m.at<float>(_c) /= w * h;
         }
     }
     return m;

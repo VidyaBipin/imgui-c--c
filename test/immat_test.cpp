@@ -294,6 +294,9 @@ int main(int argc, char ** argv)
     vertex_y.print("vertex_y");
     vertex_depth.print("vertex_depth");
 
+    ImGui::ImMat v_mean = vertex_depth.mean();
+    v_mean.print("v_mean");
+/*
     float vmin, vmax;
     int imin, imax;
     vertex_depth.minmax(&vmin, &vmax, &imin, &imax);
@@ -332,6 +335,6 @@ int main(int argc, char ** argv)
     ba.print("ba");
     t3d.print("t3d");
     P.print("P");
-
+*/
     return 0;
 }
