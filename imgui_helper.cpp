@@ -2827,3 +2827,190 @@ std::string getVideoFolder() {
 #endif
 }
 } // namespace ImGuiHelper
+
+//-----------------------------------------------------------------------------
+// ImVec/ImMat fuctions
+void ImVec4::Transform(const ImMat4x4& matrix)
+{
+    ImVec4 out;
+
+    out.x = x * matrix.m[0][0] + y * matrix.m[1][0] + z * matrix.m[2][0] + w * matrix.m[3][0];
+    out.y = x * matrix.m[0][1] + y * matrix.m[1][1] + z * matrix.m[2][1] + w * matrix.m[3][1];
+    out.z = x * matrix.m[0][2] + y * matrix.m[1][2] + z * matrix.m[2][2] + w * matrix.m[3][2];
+    out.w = x * matrix.m[0][3] + y * matrix.m[1][3] + z * matrix.m[2][3] + w * matrix.m[3][3];
+
+    x = out.x;
+    y = out.y;
+    z = out.z;
+    w = out.w;
+}
+
+void ImVec4::TransformPoint(const ImMat4x4& matrix)
+{
+    ImVec4 out;
+
+    out.x = x * matrix.m[0][0] + y * matrix.m[1][0] + z * matrix.m[2][0] + matrix.m[3][0];
+    out.y = x * matrix.m[0][1] + y * matrix.m[1][1] + z * matrix.m[2][1] + matrix.m[3][1];
+    out.z = x * matrix.m[0][2] + y * matrix.m[1][2] + z * matrix.m[2][2] + matrix.m[3][2];
+    out.w = x * matrix.m[0][3] + y * matrix.m[1][3] + z * matrix.m[2][3] + matrix.m[3][3];
+
+    x = out.x;
+    y = out.y;
+    z = out.z;
+    w = out.w;
+}
+
+void ImVec4::TransformVector(const ImMat4x4& matrix)
+{
+    ImVec4 out;
+
+    out.x = x * matrix.m[0][0] + y * matrix.m[1][0] + z * matrix.m[2][0];
+    out.y = x * matrix.m[0][1] + y * matrix.m[1][1] + z * matrix.m[2][1];
+    out.z = x * matrix.m[0][2] + y * matrix.m[1][2] + z * matrix.m[2][2];
+    out.w = x * matrix.m[0][3] + y * matrix.m[1][3] + z * matrix.m[2][3];
+
+    x = out.x;
+    y = out.y;
+    z = out.z;
+    w = out.w;
+}
+
+float ImMat4x4::Inverse(const ImMat4x4 &srcMatrix, bool affine)
+{
+    float det = 0;
+
+    if (affine)
+    {
+        det = GetDeterminant();
+        float s = 1 / det;
+        m[0][0] = (srcMatrix.m[1][1] * srcMatrix.m[2][2] - srcMatrix.m[1][2] * srcMatrix.m[2][1]) * s;
+        m[0][1] = (srcMatrix.m[2][1] * srcMatrix.m[0][2] - srcMatrix.m[2][2] * srcMatrix.m[0][1]) * s;
+        m[0][2] = (srcMatrix.m[0][1] * srcMatrix.m[1][2] - srcMatrix.m[0][2] * srcMatrix.m[1][1]) * s;
+        m[1][0] = (srcMatrix.m[1][2] * srcMatrix.m[2][0] - srcMatrix.m[1][0] * srcMatrix.m[2][2]) * s;
+        m[1][1] = (srcMatrix.m[2][2] * srcMatrix.m[0][0] - srcMatrix.m[2][0] * srcMatrix.m[0][2]) * s;
+        m[1][2] = (srcMatrix.m[0][2] * srcMatrix.m[1][0] - srcMatrix.m[0][0] * srcMatrix.m[1][2]) * s;
+        m[2][0] = (srcMatrix.m[1][0] * srcMatrix.m[2][1] - srcMatrix.m[1][1] * srcMatrix.m[2][0]) * s;
+        m[2][1] = (srcMatrix.m[2][0] * srcMatrix.m[0][1] - srcMatrix.m[2][1] * srcMatrix.m[0][0]) * s;
+        m[2][2] = (srcMatrix.m[0][0] * srcMatrix.m[1][1] - srcMatrix.m[0][1] * srcMatrix.m[1][0]) * s;
+        m[3][0] = -(m[0][0] * srcMatrix.m[3][0] + m[1][0] * srcMatrix.m[3][1] + m[2][0] * srcMatrix.m[3][2]);
+        m[3][1] = -(m[0][1] * srcMatrix.m[3][0] + m[1][1] * srcMatrix.m[3][1] + m[2][1] * srcMatrix.m[3][2]);
+        m[3][2] = -(m[0][2] * srcMatrix.m[3][0] + m[1][2] * srcMatrix.m[3][1] + m[2][2] * srcMatrix.m[3][2]);
+    }
+    else
+    {
+        // transpose matrix
+        float src[16];
+        for (int i = 0; i < 4; ++i)
+        {
+            src[i] = srcMatrix.m16[i * 4];
+            src[i + 4] = srcMatrix.m16[i * 4 + 1];
+            src[i + 8] = srcMatrix.m16[i * 4 + 2];
+            src[i + 12] = srcMatrix.m16[i * 4 + 3];
+        }
+
+        // calculate pairs for first 8 elements (cofactors)
+        float tmp[12]; // temp array for pairs
+        tmp[0] = src[10] * src[15];
+        tmp[1] = src[11] * src[14];
+        tmp[2] = src[9] * src[15];
+        tmp[3] = src[11] * src[13];
+        tmp[4] = src[9] * src[14];
+        tmp[5] = src[10] * src[13];
+        tmp[6] = src[8] * src[15];
+        tmp[7] = src[11] * src[12];
+        tmp[8] = src[8] * src[14];
+        tmp[9] = src[10] * src[12];
+        tmp[10] = src[8] * src[13];
+        tmp[11] = src[9] * src[12];
+
+        // calculate first 8 elements (cofactors)
+        m16[0] = (tmp[0] * src[5] + tmp[3] * src[6] + tmp[4] * src[7]) - (tmp[1] * src[5] + tmp[2] * src[6] + tmp[5] * src[7]);
+        m16[1] = (tmp[1] * src[4] + tmp[6] * src[6] + tmp[9] * src[7]) - (tmp[0] * src[4] + tmp[7] * src[6] + tmp[8] * src[7]);
+        m16[2] = (tmp[2] * src[4] + tmp[7] * src[5] + tmp[10] * src[7]) - (tmp[3] * src[4] + tmp[6] * src[5] + tmp[11] * src[7]);
+        m16[3] = (tmp[5] * src[4] + tmp[8] * src[5] + tmp[11] * src[6]) - (tmp[4] * src[4] + tmp[9] * src[5] + tmp[10] * src[6]);
+        m16[4] = (tmp[1] * src[1] + tmp[2] * src[2] + tmp[5] * src[3]) - (tmp[0] * src[1] + tmp[3] * src[2] + tmp[4] * src[3]);
+        m16[5] = (tmp[0] * src[0] + tmp[7] * src[2] + tmp[8] * src[3]) - (tmp[1] * src[0] + tmp[6] * src[2] + tmp[9] * src[3]);
+        m16[6] = (tmp[3] * src[0] + tmp[6] * src[1] + tmp[11] * src[3]) - (tmp[2] * src[0] + tmp[7] * src[1] + tmp[10] * src[3]);
+        m16[7] = (tmp[4] * src[0] + tmp[9] * src[1] + tmp[10] * src[2]) - (tmp[5] * src[0] + tmp[8] * src[1] + tmp[11] * src[2]);
+
+        // calculate pairs for second 8 elements (cofactors)
+        tmp[0] = src[2] * src[7];
+        tmp[1] = src[3] * src[6];
+        tmp[2] = src[1] * src[7];
+        tmp[3] = src[3] * src[5];
+        tmp[4] = src[1] * src[6];
+        tmp[5] = src[2] * src[5];
+        tmp[6] = src[0] * src[7];
+        tmp[7] = src[3] * src[4];
+        tmp[8] = src[0] * src[6];
+        tmp[9] = src[2] * src[4];
+        tmp[10] = src[0] * src[5];
+        tmp[11] = src[1] * src[4];
+
+        // calculate second 8 elements (cofactors)
+        m16[8] = (tmp[0] * src[13] + tmp[3] * src[14] + tmp[4] * src[15]) - (tmp[1] * src[13] + tmp[2] * src[14] + tmp[5] * src[15]);
+        m16[9] = (tmp[1] * src[12] + tmp[6] * src[14] + tmp[9] * src[15]) - (tmp[0] * src[12] + tmp[7] * src[14] + tmp[8] * src[15]);
+        m16[10] = (tmp[2] * src[12] + tmp[7] * src[13] + tmp[10] * src[15]) - (tmp[3] * src[12] + tmp[6] * src[13] + tmp[11] * src[15]);
+        m16[11] = (tmp[5] * src[12] + tmp[8] * src[13] + tmp[11] * src[14]) - (tmp[4] * src[12] + tmp[9] * src[13] + tmp[10] * src[14]);
+        m16[12] = (tmp[2] * src[10] + tmp[5] * src[11] + tmp[1] * src[9]) - (tmp[4] * src[11] + tmp[0] * src[9] + tmp[3] * src[10]);
+        m16[13] = (tmp[8] * src[11] + tmp[0] * src[8] + tmp[7] * src[10]) - (tmp[6] * src[10] + tmp[9] * src[11] + tmp[1] * src[8]);
+        m16[14] = (tmp[6] * src[9] + tmp[11] * src[11] + tmp[3] * src[8]) - (tmp[10] * src[11] + tmp[2] * src[8] + tmp[7] * src[9]);
+        m16[15] = (tmp[10] * src[10] + tmp[4] * src[8] + tmp[9] * src[9]) - (tmp[8] * src[9] + tmp[11] * src[10] + tmp[5] * src[8]);
+
+        // calculate determinant
+        det = src[0] * m16[0] + src[1] * m16[1] + src[2] * m16[2] + src[3] * m16[3];
+
+        // calculate matrix inverse
+        float invdet = 1 / det;
+        for (int j = 0; j < 16; ++j)
+        {
+            m16[j] *= invdet;
+        }
+    }
+
+    return det;
+}
+
+void ImMat4x4::RotationAxis(const ImVec4 &axis, float angle)
+{
+    float length2 = axis.LengthSq();
+    if (length2 < FLT_EPSILON)
+    {
+        SetToIdentity();
+        return;
+    }
+
+    ImVec4 n = axis * (1.f / sqrtf(length2));
+    float s = sinf(angle);
+    float c = cosf(angle);
+    float k = 1.f - c;
+
+    float xx = n.x * n.x * k + c;
+    float yy = n.y * n.y * k + c;
+    float zz = n.z * n.z * k + c;
+    float xy = n.x * n.y * k;
+    float yz = n.y * n.z * k;
+    float zx = n.z * n.x * k;
+    float xs = n.x * s;
+    float ys = n.y * s;
+    float zs = n.z * s;
+
+    m[0][0] = xx;
+    m[0][1] = xy + zs;
+    m[0][2] = zx - ys;
+    m[0][3] = 0.f;
+    m[1][0] = xy - zs;
+    m[1][1] = yy;
+    m[1][2] = yz + xs;
+    m[1][3] = 0.f;
+    m[2][0] = zx + ys;
+    m[2][1] = yz - xs;
+    m[2][2] = zz;
+    m[2][3] = 0.f;
+    m[3][0] = 0.f;
+    m[3][1] = 0.f;
+    m[3][2] = 0.f;
+    m[3][3] = 1.f;
+}
+//-----------------------------------------------------------------------------
+
