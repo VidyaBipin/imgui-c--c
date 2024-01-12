@@ -689,20 +689,6 @@ namespace ImGui
     IMGUI_API float         GetFrameHeight();                                               // ~ FontSize + style.FramePadding.y * 2
     IMGUI_API float         GetFrameHeightWithSpacing();                                    // ~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)
 
-    // Add By Dicky for stack layout
-    IMGUI_API void          BeginHorizontal(const char* str_id, const ImVec2& size = ImVec2(0, 0), float align = -1.0f);
-    IMGUI_API void          BeginHorizontal(const void* ptr_id, const ImVec2& size = ImVec2(0, 0), float align = -1.0f);
-    IMGUI_API void          BeginHorizontal(int id, const ImVec2& size = ImVec2(0, 0), float align = -1);
-    IMGUI_API void          EndHorizontal();
-    IMGUI_API void          BeginVertical(const char* str_id, const ImVec2& size = ImVec2(0, 0), float align = -1.0f);
-    IMGUI_API void          BeginVertical(const void* ptr_id, const ImVec2& size = ImVec2(0, 0), float align = -1.0f);
-    IMGUI_API void          BeginVertical(int id, const ImVec2& size = ImVec2(0, 0), float align = -1);
-    IMGUI_API void          EndVertical();
-    IMGUI_API void          Spring(float weight = 1.0f, float spacing = -1.0f);
-    IMGUI_API void          SuspendLayout();
-    IMGUI_API void          ResumeLayout();
-    // Stack Layout add by Dicky end
-
     // ID stack/scopes
     // Read the FAQ (docs/FAQ.md or http://dearimgui.com/faq) for more details about how ID are handled in dear imgui.
     // - Those questions are answered and impacted by understanding of the ID stack system:
@@ -1908,7 +1894,6 @@ enum ImGuiStyleVar_
     ImGuiStyleVar_SeparatorTextPadding,// ImVec2    SeparatorTextPadding
     ImGuiStyleVar_DockingSeparatorSize,// float     DockingSeparatorSize
 	// add By Dicky
-    ImGuiStyleVar_LayoutAlign,         // float     LayoutAlign
     ImGuiStyleVar_TextSpacing,         // float     TextSpacing
     ImGuiStyleVar_TextInternationalize,// int       TextInternationalize
     ImGuiStyleVar_TexGlyphShadowOffset,// ImVec2    TexGlyphShadowOffset
@@ -2381,8 +2366,7 @@ struct ImGuiStyle
     ImGuiHoveredFlags HoverFlagsForTooltipMouse;// Default flags when using IsItemHovered(ImGuiHoveredFlags_ForTooltip) or BeginItemTooltip()/SetItemTooltip() while using mouse.
     ImGuiHoveredFlags HoverFlagsForTooltipNav;  // Default flags when using IsItemHovered(ImGuiHoveredFlags_ForTooltip) or BeginItemTooltip()/SetItemTooltip() while using keyboard/gamepad.
 
-    // Add by Dicky for stack layout, text shadow and Internationlize
-    float       LayoutAlign;                // Element alignment inside horizontal and vertical layouts (0.0f - left/top, 1.0f - right/bottom, 0.5f - center).
+    // Add by Dicky for text shadow and Internationlize
     float       TextSpacing;                // Text character spacing, default is 1.0
     ImVec2      TexGlyphShadowOffset;       // If you would like to use shadows with your text use this. Defaults to (0, 0). Defines horizontal and vertical shadows. Can only be positive at the moment.
     int         TextInternationalize;       // If you need multi-language supported, set this to 1
