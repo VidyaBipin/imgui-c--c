@@ -3053,7 +3053,25 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
     // Draw frame
     const ImU32 frame_col = GetColorU32(g.ActiveId == id ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
     RenderNavHighlight(frame_bb, id);
-    RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, g.Style.FrameRounding);
+
+    // modify by Dicky for stick style slider
+    if (flags & ImGuiSliderFlags_Stick)
+    {
+        float height = frame_bb.GetHeight() / 3;
+        ImRect slider_bb = frame_bb;
+        slider_bb.Expand(ImVec2(0, -height));
+        RenderFrame(slider_bb.Min, slider_bb.Max, IM_COL32_ALPHA(frame_col, 255), true, height);
+    }
+    else if (flags & ImGuiSliderFlags_Mark)
+    {
+        float height = frame_bb.GetHeight() / 4;
+        ImRect slider_bb = frame_bb;
+        slider_bb.Expand(ImVec2(0, -height));
+        RenderFrame(slider_bb.Min, slider_bb.Max, IM_COL32_ALPHA(frame_col, 255), true, g.Style.FrameRounding);
+    }
+    else
+        RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, g.Style.FrameRounding);
+    // modify by Dicky end
 
     // Slider behavior
     ImRect grab_bb;
@@ -3064,11 +3082,19 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
     // Render grab modify by dicky
     if (grab_bb.Max.x > grab_bb.Min.x)
     {
-        if (flags & ImGuiSliderFlags_Mark)
+        PushClipRect(frame_bb.Min, frame_bb.Max, true);
+        if (flags & ImGuiSliderFlags_Stick)
+        {
+            ImU32 col = GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab);
+            float radius = std::fmax(grab_bb.GetWidth(), grab_bb.GetHeight()) / 2;
+            ImVec2 center = grab_bb.GetCenter();
+            window->DrawList->AddCircleFilled(center, radius, IM_COL32_ALPHA(col, 255));
+        }
+        else if (flags & ImGuiSliderFlags_Mark)
         {
             const bool disabled_global = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
             ImU32 col = GetColorU32(disabled_global ? ImGuiCol_TextDisabled : ImGuiCol_Text);
-            grab_bb.Expand(ImVec2(16, 4));
+            grab_bb.Expand(ImVec2(16, 2));
             window->DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab));
             float gap_x = (grab_bb.GetSize().x - 2) / 8;
             float offset_y = grab_bb.GetSize().y / 4;
@@ -3083,6 +3109,7 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
         }
         else
             window->DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab), style.GrabRounding);
+        PopClipRect();
     }
     // modify by dicky end
 
@@ -3091,7 +3118,19 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
     const char* value_buf_end = value_buf + DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_buf), data_type, p_data, format);
     if (g.LogEnabled)
         LogSetNextTextDecoration("{", "}");
-    RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.5f, 0.5f));
+
+    // modify by dicky for Stick style value
+    if (flags & ImGuiSliderFlags_Stick || flags & ImGuiSliderFlags_Mark)
+    {
+        if (hovered && BeginTooltip())
+        {
+            TextUnformatted(value_buf, value_buf_end);
+            EndTooltip();
+        }
+    }
+    else
+        RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.5f, 0.5f));
+    // modify by dicky end
 
     if (label_size.x > 0.0f)
         RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
@@ -3223,7 +3262,25 @@ bool ImGui::VSliderScalar(const char* label, const ImVec2& size, ImGuiDataType d
     // Draw frame
     const ImU32 frame_col = GetColorU32(g.ActiveId == id ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
     RenderNavHighlight(frame_bb, id);
-    RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, g.Style.FrameRounding);
+    // modify by Dicky for stick style slider
+    if (flags & ImGuiSliderFlags_Stick)
+    {
+        float width = frame_bb.GetWidth() / 3;
+        ImRect slider_bb = frame_bb;
+        slider_bb.Expand(ImVec2(-width, 0));
+        RenderFrame(slider_bb.Min, slider_bb.Max, IM_COL32_ALPHA(frame_col, 255), true, width);
+    }
+    else if (flags & ImGuiSliderFlags_Mark)
+    {
+        float width = frame_bb.GetWidth() / 4;
+        ImRect slider_bb = frame_bb;
+        slider_bb.Expand(ImVec2(-width, 0));
+        RenderFrame(slider_bb.Min, slider_bb.Max, IM_COL32_ALPHA(frame_col, 255), true, g.Style.FrameRounding);
+    }
+    else
+        RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, g.Style.FrameRounding);
+
+    // modify by Dicky end
 
     // Slider behavior
     ImRect grab_bb;
@@ -3234,11 +3291,19 @@ bool ImGui::VSliderScalar(const char* label, const ImVec2& size, ImGuiDataType d
     // Render grab modify by dicky
     if (grab_bb.Max.y > grab_bb.Min.y)
     {
-        if (flags & ImGuiSliderFlags_Mark)
+        PushClipRect(frame_bb.Min, frame_bb.Max, true);
+        if (flags & ImGuiSliderFlags_Stick)
+        {
+            ImU32 col = GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab);
+            float radius = std::fmax(grab_bb.GetWidth(), grab_bb.GetHeight()) / 2;
+            ImVec2 center = grab_bb.GetCenter();
+            window->DrawList->AddCircleFilled(center, radius, IM_COL32_ALPHA(col, 255));
+        }
+        else if (flags & ImGuiSliderFlags_Mark)
         {
             const bool disabled_global = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
             ImU32 col = GetColorU32(disabled_global ? ImGuiCol_TextDisabled : ImGuiCol_Text);
-            grab_bb.Expand(ImVec2(4, 16));
+            grab_bb.Expand(ImVec2(0, 16));
             window->DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab));
             float gap_y = (grab_bb.GetSize().y - 2) / 8;
             float offset_x = grab_bb.GetSize().x / 4;
@@ -3253,6 +3318,7 @@ bool ImGui::VSliderScalar(const char* label, const ImVec2& size, ImGuiDataType d
         }
         else
             window->DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab), style.GrabRounding);
+        PopClipRect();
     }
     // modify by dicky end
 
@@ -3260,7 +3326,19 @@ bool ImGui::VSliderScalar(const char* label, const ImVec2& size, ImGuiDataType d
     // For the vertical slider we allow centered text to overlap the frame padding
     char value_buf[64];
     const char* value_buf_end = value_buf + DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_buf), data_type, p_data, format);
-    RenderTextClipped(ImVec2(frame_bb.Min.x, frame_bb.Min.y + style.FramePadding.y), frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.5f, 0.0f));
+    // modify by dicky for Stick style value
+    if (flags & ImGuiSliderFlags_Stick || flags & ImGuiSliderFlags_Mark)
+    {
+        if (hovered && BeginTooltip())
+        {
+            TextUnformatted(value_buf, value_buf_end);
+            EndTooltip();
+        }
+    }
+    else
+        RenderTextClipped(ImVec2(frame_bb.Min.x, frame_bb.Min.y + style.FramePadding.y), frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.5f, 0.0f));
+    // modify by dicky end
+
     if (label_size.x > 0.0f)
         RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
 

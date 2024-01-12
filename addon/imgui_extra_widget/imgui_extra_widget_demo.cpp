@@ -169,15 +169,6 @@ void ShowExtraWidgetDemoWindow()
         //Rainbow Text
         ImGui::RainbowText("The quick brown fox jumps over the lazy dog, 那只敏捷的棕毛狐狸跃过那只懒狗");
 
-        // SliderBar with Marks
-        ImGui::Spacing();
-        static float slider_vol = 0.0f;
-        static int slider_int = 0;
-        ImGui::SliderFloat("##slider_with_mark", &slider_vol, -1.f, 1.0f, "%.1f", ImGuiSliderFlags_Mark);
-        ImGui::VSliderFloat("##vslider_with_mark_float", ImVec2(32, 160), &slider_vol, -1.f, 1.0f, "%.1f", ImGuiSliderFlags_Mark);
-        ImGui::SameLine();
-        ImGui::VSliderInt("##vslider_with_mark_int", ImVec2(32, 160), &slider_int, -100, 100, "%d", ImGuiSliderFlags_Mark);
-
         // CheckboxFlags Overload
         ImGui::Spacing();
         ImGui::AlignTextToFramePadding();ImGui::Text("CheckBoxFlags Overload:");

@@ -2191,6 +2191,12 @@ static void ShowDemoWindowWidgets()
         ImGui::SliderFloat("SliderFloat (0 -> 1)", &slider_f, 0.0f, 1.0f, "%.3f", flags);
         ImGui::SliderInt("SliderInt (0 -> 100)", &slider_i, 0, 100, "%d", flags);
 
+        // Add by Dicky for new style Slider
+        ImGui::SliderFloat("SliderFloat Mark(0 -> 1)", &slider_f, 0.f, 1.0f, "%.3f", flags | ImGuiSliderFlags_Mark);
+        ImGui::SliderInt("SliderInt Mark(0 -> 100)", &slider_i, 0, 100, "%d", flags | ImGuiSliderFlags_Mark);
+        ImGui::SliderFloat("SliderFloat Stick(0 -> 1)", &slider_f, 0.f, 1.0f, "%.3f", flags | ImGuiSliderFlags_Stick);
+        ImGui::SliderInt("SliderInt Stick(0 -> 100)", &slider_i, 0, 100, "%d", flags | ImGuiSliderFlags_Stick);
+        // Add by Dicky end
         ImGui::TreePop();
     }
 
@@ -2423,6 +2429,13 @@ static void ShowDemoWindowWidgets()
             ImGui::PopID();
         }
         ImGui::PopID();
+
+        // add by Dicky for new style VSlider
+        ImGui::SameLine();
+        ImGui::VSliderFloat("##vslider_with_stick_float", ImVec2(24, 160), &values[0], 0.f, 1.f, "%.2f", ImGuiSliderFlags_Stick);
+        ImGui::SameLine();
+        ImGui::VSliderInt("##vslider_with_mark_int", ImVec2(24, 160), &int_value, 0, 5, "%d", ImGuiSliderFlags_Mark);
+        // add by Dicky end
         ImGui::PopStyleVar();
         ImGui::TreePop();
     }
