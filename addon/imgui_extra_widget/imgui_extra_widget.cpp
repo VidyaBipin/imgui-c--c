@@ -628,10 +628,27 @@ bool ImGui::Knob(char const *label, float *p_value, float v_min, float v_max, fl
     float step = isnan(v_step) ? (v_max - v_min) / 200.f : v_step;
     bool value_changed = false;
     bool is_active = ImGui::IsItemActive();
-    bool is_hovered = ImGui::IsItemActive();
+    bool is_hovered = ImGui::IsItemHovered();
+    if (is_hovered || (is_active && ImGui::IsMouseDragging(ImGuiMouseButton_Left)))
+    {
+        ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+    }
     if (is_active && io.MouseDelta.y != 0.0f)
     {
         *p_value -= io.MouseDelta.y * step;
+        if (!is_no_limit)
+        {
+            if (*p_value < v_min)
+                *p_value = v_min;
+            if (*p_value > v_max)
+                *p_value = v_max;
+        }
+        value_changed = true;
+    }
+
+    if (is_hovered && !is_active && io.MouseWheel != 0)
+    {
+        *p_value += io.MouseWheel * step;
         if (!is_no_limit)
         {
             if (*p_value < v_min)
