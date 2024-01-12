@@ -158,6 +158,10 @@ void show_file_dialog_demo_window(ImGuiFileDialog * dlg, bool * open)
 	static std::string userDatas = "";
 	static std::vector<std::pair<std::string, std::string>> selection = {};
 
+#ifdef USE_THUMBNAILS
+    dlg->ManageGPUThumbnails();
+#endif
+
 	ImGui::Begin("imGuiFileDialog Demo", open); 
 	ImGui::Text("imGuiFileDialog Version : %s", IMGUIFILEDIALOG_VERSION);
 	ImGui::Indent();

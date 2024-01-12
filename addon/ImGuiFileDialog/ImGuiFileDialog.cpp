@@ -2736,7 +2736,7 @@ void IGFD::FileDialogInternal::configureDialog(const std::string& vKey, const st
     filterManager.ParseFilters(vFilters);
     filterManager.SetSelectedFilterWithExt(filterManager.dLGdefaultExt);
     fileManager.SetCurrentPath(fileManager.dLGpath);
-    fileManager.dLGDirectoryMode     = m_DialogConfig.flags & ImGuiFileDialogFlags_AllowDirectorySelect; //(vFilters == nullptr);
+    fileManager.dLGDirectoryMode     = m_DialogConfig.flags & ImGuiFileDialogFlags_AllowDirectorySelect; // modify by Dicky (vFilters == nullptr);
     fileManager.dLGcountSelectionMax = m_DialogConfig.countSelectionMax;  //-V101
     fileManager.ClearAll();
     showDialog = true;
@@ -2797,7 +2797,10 @@ void IGFD::ThumbnailFeature::m_StartThumbnailFileDatasExtraction() {
         m_CountFiles                = 0U;
         m_ThumbnailGenerationThread = std::shared_ptr<std::thread>(new std::thread(&IGFD::ThumbnailFeature::m_ThreadThumbnailFileDatasExtractionFunc, this), [this](std::thread* obj) {
             m_IsWorking = false;
-            if (obj) obj->join();
+            if (obj) {
+                m_ThumbnailFileDatasToGetCv.notify_all();
+                obj->join();
+            }
         });
     }
 }
@@ -2817,12 +2820,14 @@ void IGFD::ThumbnailFeature::m_ThreadThumbnailFileDatasExtractionFunc() {
 
     // infinite loop while is thread working
     while (m_IsWorking) {
+        std::unique_lock<std::mutex> thumbnailFileDatasToGetLock(m_ThumbnailFileDatasToGetMutex);
+        m_ThumbnailFileDatasToGetCv.wait(thumbnailFileDatasToGetLock);
         if (!m_ThumbnailFileDatasToGet.empty()) {
             std::shared_ptr<FileInfos> file = nullptr;
-            m_ThumbnailFileDatasToGetMutex.lock();
             // get the first file in the list
             file = (*m_ThumbnailFileDatasToGet.begin());
-            m_ThumbnailFileDatasToGetMutex.unlock();
+            m_ThumbnailFileDatasToGet.pop_front();
+            thumbnailFileDatasToGetLock.unlock();
 
             // retrieve datas of the texture file if its an image file
             if (file.use_count()) {
@@ -2875,16 +2880,9 @@ void IGFD::ThumbnailFeature::m_ThreadThumbnailFileDatasExtractionFunc() {
                         }
                     }
                 }
-
-                // peu importe le resultat on vire le fichier
-                // remove form this list
-                // write => thread concurency issues
-                m_ThumbnailFileDatasToGetMutex.lock();
-                m_ThumbnailFileDatasToGet.pop_front();
-                m_ThumbnailFileDatasToGetMutex.unlock();
             }
         } else {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            thumbnailFileDatasToGetLock.unlock();
         }
     }
 }
@@ -2921,6 +2919,7 @@ void IGFD::ThumbnailFeature::m_AddThumbnailToLoad(const std::shared_ptr<FileInfo
                 m_ThumbnailFileDatasToGet.push_back(vFileInfos);
                 vFileInfos->thumbnailInfo.isLoadingOrLoaded = true;
                 m_ThumbnailFileDatasToGetMutex.unlock();
+                m_ThumbnailFileDatasToGetCv.notify_all();
             }
         }
     }
@@ -2985,16 +2984,16 @@ void IGFD::ThumbnailFeature::SetDestroyThumbnailCallback(const DestroyThumbnailF
 
 void IGFD::ThumbnailFeature::ManageGPUThumbnails() {
     if (m_CreateThumbnailFun) {
+        m_ThumbnailToCreateMutex.lock();
         if (!m_ThumbnailToCreate.empty()) {
             for (const auto& file : m_ThumbnailToCreate) {
                 if (file.use_count()) {
                     m_CreateThumbnailFun(&file->thumbnailInfo);
                 }
             }
-            m_ThumbnailToCreateMutex.lock();
             m_ThumbnailToCreate.clear();
-            m_ThumbnailToCreateMutex.unlock();
         }
+        m_ThumbnailToCreateMutex.unlock();
     } else {
         printf(
             "No Callback found for create texture\nYou need to define the callback with a call to "
@@ -3002,14 +3001,14 @@ void IGFD::ThumbnailFeature::ManageGPUThumbnails() {
     }
 
     if (m_DestroyThumbnailFun) {
+        m_ThumbnailToDestroyMutex.lock();
         if (!m_ThumbnailToDestroy.empty()) {
             for (auto thumbnail : m_ThumbnailToDestroy) {
                 m_DestroyThumbnailFun(&thumbnail);
             }
-            m_ThumbnailToDestroyMutex.lock();
             m_ThumbnailToDestroy.clear();
-            m_ThumbnailToDestroyMutex.unlock();
         }
+        m_ThumbnailToDestroyMutex.unlock();
     } else {
         printf(
             "No Callback found for destroy texture\nYou need to define the callback with a call to "
