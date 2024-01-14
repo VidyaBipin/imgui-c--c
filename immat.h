@@ -472,7 +472,7 @@ struct ImBox
     float           GetWidth() const                    { return Max.x - Min.x; }
     float           GetHeight() const                   { return Max.y - Min.y; }
     float           GetArea() const                     { return (Max.x - Min.x) * (Max.y - Min.y); }
-    ImBox           Intersection(const ImBox& r)        { return ImBox(std::max(Min.x, r.Min.x), std::max(Min.y, r.Min.y), std::min(Max.x, r.Max.x), std::min(Max.y, r.Max.y)); }
+    ImBox           Intersection(const ImBox& r) const  { return ImBox(std::max(Min.x, r.Min.x), std::max(Min.y, r.Min.y), std::min(Max.x, r.Max.x), std::min(Max.y, r.Max.y)); }
     void            Clamp(const ImPoint& box_min, const ImPoint& box_max) { if (Min.x < box_min.x) Min.x = box_min.x; if (Min.y < box_min.y) Min.y = box_min.y; if (Max.x >= box_max.x) Max.x = box_max.x - 1; if (Max.y >= box_max.y) Max.y = box_max.y - 1; }
     void            Clamp(const ImBox& box)             { Clamp(box.Min, box.Max); }
     void            ClampSquare()                       { if (GetWidth() > GetHeight()) Max.x = Min.x + GetHeight(); else Max.y = Min.y + GetWidth(); }
