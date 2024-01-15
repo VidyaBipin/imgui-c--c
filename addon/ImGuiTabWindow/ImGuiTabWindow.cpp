@@ -2739,11 +2739,12 @@ bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex
     {
         i = pOptionalItemOrdering ? pOptionalItemOrdering[j] : j;
         if (i==-1) continue;
-
+        std::string tooltips = tabLabelTooltips.size() >= tabLabels.size() ? tabLabelTooltips[i] : "";
+        ImTextureID texture = tabTextures.size() >= tabLabels.size() ? tabTextures[i] : nullptr;
         if (!wrapMode)
         {
             if (!noButtonDrawn) ImGui::SameLine();
-            ImGui::TabImageButton(tabLabels[i].c_str(),(i == selectedIndex),tabTextures[i],tabLabelTooltips[i].c_str(),&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select);
+            ImGui::TabImageButton(tabLabels[i].c_str(),(i == selectedIndex),texture,tooltips.c_str(),&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select);
             if (noButtonDrawn)
             {
                 if (first_index > 0)
@@ -2761,7 +2762,7 @@ bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex
         else if (sumX > 0.f)
         {
             sumX+=style.ItemSpacing.x;   // Maybe we can skip it if we use SameLine(0,0) below
-            ImGui::TabImageButton(tabLabels[i].c_str(),(i == selectedIndex),tabTextures[i],tabLabelTooltips[i].c_str(),&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select);
+            ImGui::TabImageButton(tabLabels[i].c_str(),(i == selectedIndex),texture,tooltips.c_str(),&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select);
             sumX+=tabButtonSz.x;
             if (sumX>windowWidth) sumX = 0.f;
             else ImGui::SameLine();
@@ -2778,7 +2779,7 @@ bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex
         if (wrapMode || sumX < windowWidth - button_size.x * 2)
         {
             ImGui::PushID(i);   // otherwise two tabs with the same name would clash.
-            if (ImGui::TabImageButton(tabLabels[i].c_str(),i == selectedIndex,tabTextures[i],tabLabelTooltips[i].c_str(),&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select))   {
+            if (ImGui::TabImageButton(tabLabels[i].c_str(),i == selectedIndex,texture,tooltips.c_str(),&texture_size,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select))   {
                 selection_changed = (selectedIndex!=i);
                 newSelectedIndex = i;
             }
