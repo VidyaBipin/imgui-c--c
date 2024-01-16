@@ -101,7 +101,8 @@ double ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMa
         // TODO: add other rgb format support
         // only support input format ABGR/ARGB/RGBA/BGRA.
         if (srcMat.color_format != IM_CF_ABGR && srcMat.color_format != IM_CF_ARGB &&
-            dstMat.color_format != IM_CF_RGBA && dstMat.color_format != IM_CF_BGRA &&
+            srcMat.color_format != IM_CF_RGBA && srcMat.color_format != IM_CF_BGRA &&
+            srcMat.color_format != IM_CF_RGB && srcMat.color_format != IM_CF_BGR &&
             dstClrCatg != 1)
         {
             mErrMsg = "Only support rgb input format ABGR/ARGB/RGBA/BGRA!";
@@ -146,7 +147,7 @@ double ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMa
         tmp.create_type(dst_width, dst_height, GetChannelCountByColorFormat(dstMat.color_format), dstMat.type);
         tmp.color_format = dstMat.color_format;
         tmp.color_range = dstMat.color_range;
-        tmp.color_space = srcMat.color_space;
+        tmp.color_space = dstMat.color_space;
         dstMat = tmp;
         dstVkMat.create_like(dstMat, opt.blob_vkallocator);
     }

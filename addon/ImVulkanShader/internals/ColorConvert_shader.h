@@ -699,7 +699,11 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
-    sfpvec3 yuv = rgb_to_yuv(load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb); \n\
+    sfpvec3 yuv; \n\
+    if (p.in_format == CF_BGR || p.in_format == CF_RGB) \n\
+        yuv = rgb_to_yuv(load_rgb(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb); \n\
+    else \n\
+        yuv = rgb_to_yuv(load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb); \n\
     store_dst_yuv(yuv, gx, gy); \n\
 } \
 "
@@ -712,6 +716,7 @@ layout (binding = 8) readonly buffer mat_r2y        { float         convert_matr
 )"
 SHADER_MAT_R2Y
 SHADER_PARAM_R2Y
+SHADER_LOAD_RGB
 SHADER_LOAD_RGBA
 SHADER_RGB2YUV
 SHADER_STORE_YUV
