@@ -20,6 +20,14 @@ layout (push_constant) uniform parameter \n\
 } p; \
 "
 
+#define INTERPLATE_NONE \
+" \n\
+sfpvec4 interplate_none(int x, int y) \n\
+{ \n\
+    return load_rgb_image(x, y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+} \
+"
+
 #define INTERPLATE_NEAREST \
 " \n\
 sfpvec4 interplate_nearest(int x, int y) \n\
@@ -214,6 +222,8 @@ sfpvec4 interplate_area(int x, int y) \n\
 " \n\
 sfpvec4 interplate(int x, int y) \n\
 { \n\
+    if (p.interp_type == INTERPOLATE_NONE) \n\
+        return interplate_none(x, y); \n\
     if (p.interp_type == INTERPOLATE_NEAREST) \n\
         return interplate_nearest(x, y); \n\
     else if (p.interp_type == INTERPOLATE_BILINEAR) \n\
@@ -250,6 +260,7 @@ SHADER_INPUT_OUTPUT_DATA
 SHADER_LOAD_RGB_IMAGE
 SHADER_STORE_RGBA
 SHADER_STORE_RGB
+INTERPLATE_NONE
 INTERPLATE_NEAREST
 INTERPLATE_BILINEAR
 INTERPLATE_BICUBIC
