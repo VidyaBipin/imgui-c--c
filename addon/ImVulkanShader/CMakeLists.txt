@@ -334,6 +334,7 @@ set(VKSHADER_SRCS
     filters/Box.cpp
     filters/Dilation_vulkan.cpp
     filters/Erosion_vulkan.cpp
+    filters/USM_vulkan.cpp
 )
 set(VKSHADER_INCS
     ${VKSHADER_INCS}
@@ -364,6 +365,8 @@ set(VKSHADER_INCS
     filters/Dilation_vulkan.h
     filters/Erosion_shader.h
     filters/Erosion_vulkan.h
+    filters/USM_shader.h
+    filters/USM_vulkan.h
 )
 
 set(VKSHADER_INC_DIRS
