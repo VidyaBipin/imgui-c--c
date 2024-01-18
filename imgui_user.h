@@ -10,7 +10,7 @@
 #define STBIRDEF inline
 #include "stb_image.h"
 #include "stb_image_write.h"
-#include "stb_image_resize.h"
+#include "stb_image_resize2.h"
 #endif
 
 inline float ImDegToRad(float degree) { return degree * (float(M_PI) / 180.0f); }

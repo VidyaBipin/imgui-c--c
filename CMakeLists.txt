@@ -356,7 +356,7 @@ set(IMGUI_INCS
     misc/cpp/imgui_fft.h
     misc/stb_image.h
     misc/stb_image_write.h
-    misc/stb_image_resize.h
+    misc/stb_image_resize2.h
     misc/DynObjectLoader.h
     misc/json/imgui_json.h
 )
@@ -1452,7 +1452,7 @@ endif(IMGUI_STATIC)
 
 set(IMGUI_VERSION_MAJOR 1)
 set(IMGUI_VERSION_MINOR 90)
-set(IMGUI_VERSION_PATCH 12)
+set(IMGUI_VERSION_PATCH 13)
 string(TIMESTAMP IMGUI_VERSION_BUILD "%y%m%d")
 set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH})
 add_definitions(-DIMGUI_VERSION_MAJOR=${IMGUI_VERSION_MAJOR})

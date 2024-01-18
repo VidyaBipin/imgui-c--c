@@ -2854,9 +2854,10 @@ void IGFD::ThumbnailFeature::m_ThreadThumbnailFileDatasExtractionFunc() {
                                 const auto newBufSize = (size_t)(newWidth * newHeight * 4U);  //-V112 //-V1028
                                 auto resizedData      = new uint8_t[newBufSize];
 
-                                const int resizeSucceeded = stbir_resize_uint8(datas, w, h, 0, resizedData, newWidth, newHeight, 0,
-                                                                               4);  //-V112
-
+                                // modify by Dicky to using stb_image_resize2
+                                unsigned char * resizeSucceeded = stbir_resize_uint8_linear(datas, w, h, 0, resizedData, newWidth, newHeight, 0,
+                                                                               STBIR_RGBA);  //-V112
+                                // modify by Dicky end
                                 if (resizeSucceeded) {
                                     auto th = &file->thumbnailInfo;
 

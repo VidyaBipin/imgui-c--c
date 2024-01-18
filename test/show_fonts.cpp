@@ -109,7 +109,12 @@ static bool DrawFrame(void* handle, bool app_will_quit)
                 font->RenderChar(draw_list, cell_size, cell_p1, glyph_col, (ImWchar)(base + n));
                 if (ImGui::IsMouseHoveringRect(cell_p1, cell_p2) && ImGui::BeginTooltip())
                 {
-                    ImGui::DebugNodeFontGlyph(font, glyph);
+                    ImGui::Text("Codepoint: U+%04X", glyph->Codepoint);
+                    ImGui::Separator();
+                    ImGui::Text("Visible: %d", glyph->Visible);
+                    ImGui::Text("AdvanceX: %.1f", glyph->AdvanceX);
+                    ImGui::Text("Pos: (%.2f,%.2f)->(%.2f,%.2f)", glyph->X0, glyph->Y0, glyph->X1, glyph->Y1);
+                    ImGui::Text("UV: (%.3f,%.3f)->(%.3f,%.3f)", glyph->U0, glyph->V0, glyph->U1, glyph->V1);
                     ImGui::EndTooltip();
                 }
                 snprintf(code_str, 8, "%04X", glyph->Codepoint);
