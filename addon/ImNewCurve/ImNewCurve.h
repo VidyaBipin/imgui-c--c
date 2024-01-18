@@ -171,6 +171,7 @@ namespace ImNewCurve
         const KeyPoint::ValType& GetDefaultVal() const { return m_tDefaultVal; }
         const std::pair<uint32_t, uint32_t>& GetTimeBase() const { return m_tTimeBase; }
         size_t GetKeyPointCount() const { return m_aKeyPoints.size(); }
+        std::vector<float> GetTicks() const;
         const KeyPoint::Holder GetKeyPoint(size_t idx) const;
         int GetKeyPointIndex(const KeyPoint::Holder& hKp) const;
         int GetKeyPointIndex(float t) const;
@@ -217,6 +218,8 @@ namespace ImNewCurve
         std::pair<uint32_t, uint32_t> m_tTimeBase;
         bool m_bTimeBaseValid;
     };
+
+    bool DrawCurveArraySimpleView(float fViewWidth, const std::vector<Curve::Holder>& aCurves, float& fCurrTick, const ImVec2& v2TickRange = ImVec2(0,0), ImGuiKey eRemoveKey = ImGuiKey_LeftAlt);
 
     // forward declaration
     class Editor;

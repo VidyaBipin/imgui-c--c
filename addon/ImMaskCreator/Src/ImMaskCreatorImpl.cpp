@@ -808,7 +808,7 @@ public:
             pDrawList->AddCircleFilled(v2TickPos, fKeyFrameIndicatorRadius+2, u32KeyFrameIndicatorBorderHoverColor);
             pDrawList->AddCircleFilled(v2TickPos, fKeyFrameIndicatorRadius, u32KeyFrameIndicatorHoverColor);
         }
-        
+
         const bool bRemoveKeyDown = IsKeyDown(m_eRemoveVertexKey);
         // handle click event on a key-frame indicator
         if (IsMouseClicked(ImGuiMouseButton_Left) && bHasHoveredTick)

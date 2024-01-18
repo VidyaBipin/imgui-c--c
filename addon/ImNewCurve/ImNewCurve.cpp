@@ -1,6 +1,8 @@
 #include <iostream>
 #include <algorithm>
 #include <sstream>
+#include <list>
+#include <limits>
 #include "ImNewCurve.h"
 #include "imgui_internal.h"
 
@@ -211,6 +213,14 @@ Curve::Holder Curve::Clone() const
     for (const auto& hKp : m_aKeyPoints)
         aClonedKeyPoints.push_back(KeyPoint::Holder(new KeyPoint(*hKp)));
     return hNewInstance;
+}
+
+std::vector<float> Curve::GetTicks() const
+{
+    std::vector<float> aTicks(m_aKeyPoints.size());
+    for (const auto& hKp : m_aKeyPoints)
+        aTicks.push_back(hKp->t);
+    return std::move(aTicks);
 }
 
 const KeyPoint::Holder Curve::GetKeyPoint(size_t idx) const
@@ -702,6 +712,159 @@ void Curve::LoadFromJson(const imgui_json::value& j)
         hKp->LoadFromJson(jelem);
         m_aKeyPoints.push_back(hKp);
     }
+}
+
+bool DrawCurveArraySimpleView(float fViewWidth, const std::vector<Curve::Holder>& aCurves, float& fCurrTick, const ImVec2& _v2TickRange, ImGuiKey eRemoveKey)
+{
+    std::list<float> aAllTicks;
+    // merge ticks from all curves
+    for (const auto& hCurve : aCurves)
+    {
+        const auto aCurveTicks = hCurve->GetTicks();
+        if (aAllTicks.empty())
+        {
+            for (const auto& t : aCurveTicks)
+                aAllTicks.push_back(t);
+        }
+        else
+        {
+            for (const auto& t : aCurveTicks)
+            {
+                auto itIns = find_if(aAllTicks.begin(), aAllTicks.end(), [t] (const auto& elem) {
+                    return elem >= t;
+                });
+                if (itIns == aAllTicks.end() || *itIns > t)
+                    aAllTicks.insert(itIns, t);
+            }
+        }
+    }
+    // prepare tick range
+    ImVec2 v2TickRange(_v2TickRange);
+    if (v2TickRange.y <= v2TickRange.x && !aAllTicks.empty())
+    {
+        v2TickRange.x = aAllTicks.front();
+        v2TickRange.y = aAllTicks.back();
+    }
+    if (v2TickRange.y < v2TickRange.x+10)
+        v2TickRange.y = v2TickRange.x+10;
+
+    const auto v2MousePosAbs = GetMousePos();
+    const auto v2ViewPos = GetCursorScreenPos();
+    const auto v2MousePos = v2MousePosAbs-v2ViewPos;
+    const auto v2AvailSize = GetContentRegionAvail();
+    const auto v2CursorPos = GetCursorScreenPos();
+    const ImVec2 v2PaddingUnit(5.f, 2.f);
+    ImDrawList* pDrawList = GetWindowDrawList();
+    ImVec2 v2ViewSize(fViewWidth <= 0 ? v2AvailSize.x : fViewWidth, v2AvailSize.y);
+    // draw timeline slider
+    const auto fTickLength = v2TickRange.y-v2TickRange.x;
+    const float fTimelineSliderHeight = 5.f;
+    const float fKeyFrameIndicatorRadius = 5.f;
+    const ImVec2 v2TimeLineWdgSize(v2ViewSize.x, fTimelineSliderHeight);
+    ImVec2 v2SliderRectLt(v2ViewPos.x+fKeyFrameIndicatorRadius+v2PaddingUnit.x, v2CursorPos.y+v2PaddingUnit.y);
+    ImVec2 v2SliderRectRb(v2SliderRectLt.x+v2ViewSize.x-(fKeyFrameIndicatorRadius+v2PaddingUnit.x)*2, v2SliderRectLt.y+fTimelineSliderHeight);
+    const auto fSliderWdgWidth = v2SliderRectRb.x-v2SliderRectLt.x;
+    const ImU32 u32TimelineSliderBorderColor{IM_COL32(80, 80, 80, 255)};
+    pDrawList->AddRect(v2SliderRectLt, v2SliderRectRb, u32TimelineSliderBorderColor, fTimelineSliderHeight/2, 0, 1);
+    // draw key point indicators
+    const float fKeyFrameIndicatorY = v2CursorPos.y+v2PaddingUnit.y+v2TimeLineWdgSize.y/2;
+    const ImU32 u32KeyFrameIndicatorColor{IM_COL32(200, 150, 20, 255)};
+    const ImU32 u32KeyFrameIndicatorBorderColor = u32TimelineSliderBorderColor;
+    const float fHoverBrightnessIncreament = 0.4;
+    ImColor tHoverColor(u32KeyFrameIndicatorColor);
+    tHoverColor.Value.x += fHoverBrightnessIncreament; tHoverColor.Value.y += fHoverBrightnessIncreament; tHoverColor.Value.z += fHoverBrightnessIncreament;
+    const ImU32 u32KeyFrameIndicatorHoverColor = (ImU32)tHoverColor;
+    tHoverColor = ImColor(u32KeyFrameIndicatorBorderColor);
+    tHoverColor.Value.x += fHoverBrightnessIncreament; tHoverColor.Value.y += fHoverBrightnessIncreament; tHoverColor.Value.z += fHoverBrightnessIncreament;
+    const ImU32 u32KeyFrameIndicatorBorderHoverColor = (ImU32)tHoverColor;
+    bool bHasPointAtCurrTick = false;
+    bool bHasHoveredTick = false;
+    float fHoveredTick;
+    float fHoverDistance = std::numeric_limits<float>::max();
+    auto fHoverDistThresh = fKeyFrameIndicatorRadius+5.f;
+    fHoverDistThresh = fHoverDistThresh*fHoverDistThresh;
+    const auto szTickCnt = aAllTicks.size();
+    for (const auto t : aAllTicks)
+    {
+        const float fKeyFrameIndicatorX = v2SliderRectLt.x+((double)(t-v2TickRange.x)/fTickLength)*fSliderWdgWidth;
+        const ImVec2 v2TickPos(fKeyFrameIndicatorX, fKeyFrameIndicatorY);
+        const auto v2Offset = v2TickPos-v2MousePosAbs;
+        const float distSqr = v2Offset.x*v2Offset.x+v2Offset.y*v2Offset.y;
+        if (distSqr <= fHoverDistThresh && distSqr < fHoverDistance)
+        {
+            bHasHoveredTick = true;
+            fHoveredTick = t;
+            fHoverDistance = distSqr;
+        }
+        if (t != fCurrTick)
+        {
+            pDrawList->AddCircleFilled(v2TickPos, fKeyFrameIndicatorRadius+1, u32KeyFrameIndicatorBorderColor);
+            pDrawList->AddCircleFilled(v2TickPos, fKeyFrameIndicatorRadius, u32KeyFrameIndicatorColor);
+        }
+        else
+            bHasPointAtCurrTick = true;
+    }
+    if (bHasPointAtCurrTick)
+    {
+        const float fKeyFrameIndicatorX = v2SliderRectLt.x+((fCurrTick-v2TickRange.x)/fTickLength)*fSliderWdgWidth;
+        const ImVec2 v2TickPos(fKeyFrameIndicatorX, fKeyFrameIndicatorY);
+        pDrawList->AddCircleFilled(v2TickPos, fKeyFrameIndicatorRadius+1, u32KeyFrameIndicatorBorderHoverColor);
+        pDrawList->AddCircleFilled(v2TickPos, fKeyFrameIndicatorRadius, u32KeyFrameIndicatorHoverColor);
+    }
+    if (bHasHoveredTick)
+    {
+        const float fKeyFrameIndicatorX = v2SliderRectLt.x+((fHoveredTick-v2TickRange.x)/fTickLength)*fSliderWdgWidth;
+        const ImVec2 v2TickPos(fKeyFrameIndicatorX, fKeyFrameIndicatorY);
+        pDrawList->AddCircleFilled(v2TickPos, fKeyFrameIndicatorRadius+2, u32KeyFrameIndicatorBorderHoverColor);
+        pDrawList->AddCircleFilled(v2TickPos, fKeyFrameIndicatorRadius, u32KeyFrameIndicatorHoverColor);
+    }
+
+    bool bCurveChanged = false;
+    const bool bRemoveKeyDown = IsKeyDown(eRemoveKey);
+    // handle click event on a key-frame indicator
+    if (IsMouseClicked(ImGuiMouseButton_Left) && bHasHoveredTick)
+    {
+        if (bRemoveKeyDown)
+        {
+            if (fHoveredTick != v2TickRange.x)
+            {  // remove a key point
+                for (const auto& hCurve : aCurves)
+                    hCurve->RemovePoint(fHoveredTick);
+                bCurveChanged = true;
+            }
+        }
+        else
+        {
+            fCurrTick = fHoveredTick;
+        }
+    }
+
+    // draw tick indicator
+    const ImVec2 v2TickIndicatorPos(v2SliderRectLt.x+((fCurrTick-v2TickRange.x)/fTickLength)*fSliderWdgWidth, v2SliderRectRb.y+fKeyFrameIndicatorRadius+2);
+    const ImVec2 v2TickIndicatorSize(10, 6);
+    const ImU32 u32TickIndicatorColor{IM_COL32(80, 180, 80, 255)};
+    if (fCurrTick >= v2TickRange.x && fCurrTick <= v2TickRange.y)
+    {
+        pDrawList->AddTriangleFilled(
+                v2TickIndicatorPos,
+                v2TickIndicatorPos+ImVec2(-v2TickIndicatorSize.x/2, v2TickIndicatorSize.y),
+                v2TickIndicatorPos+ImVec2(v2TickIndicatorSize.x/2, v2TickIndicatorSize.y),
+                u32TickIndicatorColor);
+    }
+
+    v2ViewSize.y = v2TickIndicatorPos.y+v2TickIndicatorSize.y-v2ViewPos.y+1;
+    ImRect bb(v2ViewPos, v2ViewPos+v2ViewSize);
+    if (!ItemAdd(bb, 0))
+    {
+        std::cerr << "[DrawCurveArraySimpleView] FAILED at 'ItemAdd' with item rect (("
+                << bb.Min.x << ", " << bb.Min.y << "), (" << bb.Max.x << ", " << bb.Max.y << "))!" << std::endl;
+    }
+    SetCursorScreenPos(ImVec2(v2ViewPos.x, v2ViewPos.y+v2ViewSize.y));
+
+    const bool bMouseInView = bb.Contains(v2MousePosAbs);
+    if (bRemoveKeyDown && bMouseInView && fCurrTick != v2TickRange.x)
+        SetMouseCursor(ImGuiMouseCursor_Minus);
+    return bCurveChanged;
 }
 
 // 'CurveUiObj' implementation
