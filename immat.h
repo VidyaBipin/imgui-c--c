@@ -319,7 +319,8 @@ enum ImColorFormat {
 };
 
 enum ImInterpolateMode {
-    IM_INTERPOLATE_NEAREST = 0,
+    IM_INTERPOLATE_NONE = 0,
+    IM_INTERPOLATE_NEAREST,
     IM_INTERPOLATE_BILINEAR,
     IM_INTERPOLATE_BICUBIC,
     IM_INTERPOLATE_AREA,
@@ -682,6 +683,10 @@ public:
     ImMat sum();
     // mean
     ImMat mean();
+    // absdiff
+    ImMat absdiff(const ImMat& m) const;
+    // sqr
+    ImMat sqr() const;
     // norm
     float norm(int norm_type = NORM_L2);
     // min/max
@@ -701,8 +706,8 @@ public:
     IMGUI_API void get_pixel(ImPoint p, ImPixel& color) const;
     IMGUI_API ImPixel get_pixel(int x, int y) const;
     IMGUI_API ImPixel get_pixel(ImPoint p) const;
-    IMGUI_API void draw_dot(int x, int y, ImPixel color);
-    IMGUI_API void draw_dot(ImPoint p, ImPixel color);
+    IMGUI_API void set_pixel(int x, int y, ImPixel color);
+    IMGUI_API void set_pixel(ImPoint p, ImPixel color);
     IMGUI_API void alphablend(int x, int y, float alpha, ImPixel color);
     IMGUI_API void alphablend(int x, int y, ImPixel color);
     IMGUI_API void draw_line(float x1, float y1, float x2, float y2, float t, ImPixel color);
@@ -4955,27 +4960,103 @@ inline ImMat ImMat::mean()
     return m;
 }
 
+// absdiff
+inline ImMat ImMat::absdiff(const ImMat& m) const
+{
+    assert(device == IM_DD_CPU);
+    assert(total() > 0);
+    ImMat dst;
+    dst.create_type(w, h, c, type);
+    for (int i = 0; i < total(); i++)
+    {
+        switch (type)
+        {
+            case IM_DT_INT8:
+                ((int8_t*)dst.data)[i] = std::abs(((int8_t*)data)[i] - ((int8_t*)m.data)[i]);
+                break;
+            case IM_DT_INT16:
+                ((int16_t*)dst.data)[i] = std::abs(((int16_t*)data)[i] - ((int16_t*)m.data)[i]);
+                break;
+            case IM_DT_INT32:
+                ((int32_t*)dst.data)[i] = std::abs(((int32_t*)data)[i] - ((int32_t*)m.data)[i]);
+                break;
+            case IM_DT_INT64:
+                ((int64_t*)dst.data)[i] = std::abs(((int64_t*)data)[i] - ((int64_t*)m.data)[i]);
+                break;
+            case IM_DT_FLOAT32:
+                ((float*)dst.data)[i] = std::abs(((float*)data)[i] - ((float*)m.data)[i]);
+                break;
+            case IM_DT_FLOAT64:
+                ((double*)dst.data)[i] = std::abs(((double*)data)[i] - ((double*)m.data)[i]);
+                break;
+            case IM_DT_FLOAT16:
+                ((int16_t*)dst.data)[i] = im_float32_to_float16(std::abs(im_float16_to_float32(((int16_t*)data)[i]) - im_float16_to_float32(((int16_t*)m.data)[i])));
+                break;
+            default: break;
+        }
+    }
+    return dst;
+}
+
+// sqr
+inline ImMat ImMat::sqr() const
+{
+    assert(device == IM_DD_CPU);
+    assert(total() > 0);
+    ImMat dst;
+    dst.create_type(w, h, c, IM_DT_FLOAT32);
+    for (int i = 0; i < total(); i++)
+    {
+        switch (type)
+        {
+            case IM_DT_INT8:
+                ((float*)dst.data)[i] = std::pow(((int8_t*)data)[i], 2);
+                break;
+            case IM_DT_INT16:
+                ((float*)dst.data)[i] = std::pow(((int16_t*)data)[i], 2);
+                break;
+            case IM_DT_INT32:
+                ((float*)dst.data)[i] = std::pow(((int32_t*)data)[i], 2);
+                break;
+            case IM_DT_INT64:
+                ((float*)dst.data)[i] = std::pow(((int64_t*)data)[i], 2);
+                break;
+            case IM_DT_FLOAT32:
+                ((float*)dst.data)[i] = std::pow(((float*)data)[i], 2);
+                break;
+            case IM_DT_FLOAT64:
+                ((float*)dst.data)[i] = std::pow(((double*)data)[i], 2);
+                break;
+            case IM_DT_FLOAT16:
+                ((float*)dst.data)[i] = std::pow(im_float16_to_float32(((int16_t*)data)[i]), 2);
+                break;
+            default: break;
+        }
+    }
+    return dst;
+}
+
 // sum
 inline ImMat ImMat::sum()
 {
     assert(device == IM_DD_CPU);
     assert(total() > 0);
     ImMat m;
-    m.create_type(c, (ImDataType)type);
+    m.create_type(c, (ImDataType)IM_DT_FLOAT32);
     if (dims == 1)
     {
         for (int _w = 0; _w < w; _w++)
         {
             switch (type)
             {
-                case IM_DT_INT8:    m.at<int8_t>(0)  += at<int8_t>(_w); break;
-                case IM_DT_INT16:   m.at<int16_t>(0) += at<int16_t>(_w); break;
-                case IM_DT_INT32:   m.at<int32_t>(0) += at<int32_t>(_w); break;
-                case IM_DT_INT64:   m.at<int64_t>(0) += at<int64_t>(_w); break;
-                case IM_DT_FLOAT32: m.at<float>(0)   += at<float>(_w); break;
-                case IM_DT_FLOAT64: m.at<double>(0)  += at<double>(_w); break;
-                case IM_DT_FLOAT16: m.at<int16_t>(0) = im_float32_to_float16(im_float16_to_float32(at<int16_t>(_w)) +
-                                                        im_float16_to_float32(m.at<int16_t>(0))); break; 
+                case IM_DT_INT8:    m.at<float>(0) += at<int8_t>(_w); break;
+                case IM_DT_INT16:   m.at<float>(0) += at<int16_t>(_w); break;
+                case IM_DT_INT32:   m.at<float>(0) += at<int32_t>(_w); break;
+                case IM_DT_INT64:   m.at<float>(0) += at<int64_t>(_w); break;
+                case IM_DT_FLOAT32: m.at<float>(0) += at<float>(_w); break;
+                case IM_DT_FLOAT64: m.at<float>(0) += at<double>(_w); break;
+                case IM_DT_FLOAT16: m.at<float>(0) = im_float16_to_float32(at<int16_t>(_w)) +
+                                                        im_float16_to_float32(m.at<int16_t>(0)); break; 
                 default: break;
             }
         }
@@ -4988,14 +5069,14 @@ inline ImMat ImMat::sum()
             {
                 switch (type)
                 {
-                    case IM_DT_INT8:    m.at<int8_t>(0)  += at<int8_t>(_w, _h); break;
-                    case IM_DT_INT16:   m.at<int16_t>(0) += at<int16_t>(_w, _h); break;
-                    case IM_DT_INT32:   m.at<int32_t>(0) += at<int32_t>(_w, _h); break;
-                    case IM_DT_INT64:   m.at<int64_t>(0) += at<int64_t>(_w, _h); break;
-                    case IM_DT_FLOAT32: m.at<float>(0)   += at<float>(_w, _h); break;
-                    case IM_DT_FLOAT64: m.at<double>(0)  += at<double>(_w, _h); break;
-                    case IM_DT_FLOAT16: m.at<int16_t>(0) = im_float32_to_float16(im_float16_to_float32(at<int16_t>(_w, _h)) +
-                                                            im_float16_to_float32(m.at<int16_t>(0))); break; 
+                    case IM_DT_INT8:    m.at<float>(0) += at<int8_t>(_w, _h); break;
+                    case IM_DT_INT16:   m.at<float>(0) += at<int16_t>(_w, _h); break;
+                    case IM_DT_INT32:   m.at<float>(0) += at<int32_t>(_w, _h); break;
+                    case IM_DT_INT64:   m.at<float>(0) += at<int64_t>(_w, _h); break;
+                    case IM_DT_FLOAT32: m.at<float>(0) += at<float>(_w, _h); break;
+                    case IM_DT_FLOAT64: m.at<float>(0) += at<double>(_w, _h); break;
+                    case IM_DT_FLOAT16: m.at<float>(0) = im_float16_to_float32(at<int16_t>(_w, _h)) +
+                                                            im_float16_to_float32(m.at<int16_t>(0)); break; 
                     default: break;
                 }
             }
@@ -5011,14 +5092,14 @@ inline ImMat ImMat::sum()
                 {
                     switch (type)
                     {
-                        case IM_DT_INT8:    m.at<int8_t>(_c)  += at<int8_t>(_w, _h, _c); break;
-                        case IM_DT_INT16:   m.at<int16_t>(_c) += at<int16_t>(_w, _h, _c); break;
-                        case IM_DT_INT32:   m.at<int32_t>(_c) += at<int32_t>(_w, _h, _c); break;
-                        case IM_DT_INT64:   m.at<int64_t>(_c) += at<int64_t>(_w, _h, _c); break;
-                        case IM_DT_FLOAT32: m.at<float>(_c)   += at<float>(_w, _h, _c); break;
-                        case IM_DT_FLOAT64: m.at<double>(_c)  += at<double>(_w, _h, _c); break;
-                        case IM_DT_FLOAT16: m.at<int16_t>(_c) = im_float32_to_float16(im_float16_to_float32(at<int16_t>(_w, _h, _c)) +
-                                                                im_float16_to_float32(m.at<int16_t>(_c))); break; 
+                        case IM_DT_INT8:    m.at<float>(_c) += at<int8_t>(_w, _h, _c); break;
+                        case IM_DT_INT16:   m.at<float>(_c) += at<int16_t>(_w, _h, _c); break;
+                        case IM_DT_INT32:   m.at<float>(_c) += at<int32_t>(_w, _h, _c); break;
+                        case IM_DT_INT64:   m.at<float>(_c) += at<int64_t>(_w, _h, _c); break;
+                        case IM_DT_FLOAT32: m.at<float>(_c) += at<float>(_w, _h, _c); break;
+                        case IM_DT_FLOAT64: m.at<float>(_c) += at<double>(_w, _h, _c); break;
+                        case IM_DT_FLOAT16: m.at<float>(_c) = im_float16_to_float32(at<int16_t>(_w, _h, _c)) +
+                                                                im_float16_to_float32(m.at<int16_t>(_c)); break; 
                         default: break;
                     }
                 }
@@ -5100,25 +5181,14 @@ template<typename T>
 inline void ImMat::minmax(T* vmin, T* vmax, int* imin, int* imax)
 {
     assert(device == IM_DD_CPU);
-    T _vmin, _vmax;
-    switch (type)
-    {
-        case IM_DT_INT8:    _vmin = INT8_MAX;   _vmax = INT8_MIN; break;
-        case IM_DT_INT16:   _vmin = INT16_MAX;  _vmax = INT16_MIN; break;
-        case IM_DT_INT32:   _vmin = INT32_MAX;  _vmax = INT32_MIN; break;  
-        case IM_DT_INT64:   _vmin = INT64_MAX;  _vmax = INT64_MIN; break;
-        case IM_DT_FLOAT32: _vmin = FLT_MAX;    _vmax = FLT_MIN; break;
-        case IM_DT_FLOAT64: _vmin = DBL_MAX;    _vmax = DBL_MIN; break;
-        case IM_DT_FLOAT16: _vmin = im_float32_to_float16(FLT_MAX); _vmax = im_float32_to_float16(FLT_MIN); break;
-        default: break;
-    }
+    T _vmin = std::numeric_limits<T>::max(), _vmax = std::numeric_limits<T>::min();
     for (int i = 0; i < total(); i++)
     {
         switch (type)
         {
             case IM_DT_INT8:
-                if (((int8_t*)data)[i] > _vmax) { _vmax = ((int8_t*)data)[i]; if (imax) *imax = i; }
-                if (((int8_t*)data)[i] < _vmin) { _vmin = ((int8_t*)data)[i]; if (imin) *imin = i; }
+                if (((uint8_t*)data)[i] > _vmax) { _vmax = ((uint8_t*)data)[i]; if (imax) *imax = i; }
+                if (((uint8_t*)data)[i] < _vmin) { _vmin = ((uint8_t*)data)[i]; if (imin) *imin = i; }
                 break;
             case IM_DT_INT16:
                 if (((int16_t*)data)[i] > _vmax) { _vmax = ((int16_t*)data)[i]; if (imax) *imax = i; }
@@ -5162,9 +5232,11 @@ inline void ImMat::normalize(T vmin, T vmax, int norm_type)
     {
         case NORM_MINMAX:
         {
-            T smin, smax;
-            double dmin, dmax;
-            minmax(&smin, &smax);
+            T _smin, _smax;
+            double smin, smax, dmin, dmax;
+            minmax(&_smin, &_smax);
+            smin = (double)_smin;
+            smax = (double)_smax;
             if (type == IM_DT_FLOAT16)
             {
                 dmin = std::min(im_float16_to_float32(vmin), im_float16_to_float32(vmax));

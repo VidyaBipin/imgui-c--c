@@ -137,6 +137,14 @@ sfpvec3 load_src_yuv(int x, int y) \n\
 } \
 "
 
+#define INTERPLATE_NONE \
+" \n\
+sfpvec3 interplate_none(int x, int y) \n\
+{ \n\
+    return load_src_yuv(x, y); \n\
+} \
+"
+
 #define INTERPLATE_NEAREST \
 " \n\
 sfpvec3 interplate_nearest(int x, int y) \n\
@@ -328,6 +336,7 @@ sfpvec3 interplate_area(int x, int y) \n\
 "
 
 #define INTERPLATE \
+INTERPLATE_NONE \
 INTERPLATE_NEAREST \
 INTERPLATE_BILINEAR \
 INTERPLATE_BICUBIC \
@@ -335,6 +344,8 @@ INTERPLATE_AREA \
 " \n\
 sfpvec3 interplate(int x, int y) \n\
 { \n\
+    if (p.interp_type == INTERPOLATE_NONE) \n\
+        return interplate_none(x, y); \n\
     if (p.interp_type == INTERPOLATE_NEAREST) \n\
         return interplate_nearest(x, y); \n\
     else if (p.interp_type == INTERPOLATE_BILINEAR) \n\
@@ -361,10 +372,20 @@ void main() \n\
         rgb = yuv_to_rgb(interplate(gx, gy)); \n\
     else \n\
         rgb = yuv_to_rgb(load_src_yuv(gx, gy)); \n\
-    if (p.mirror == 1) \n\
-        store_rgba(sfpvec4(rgb, 1.0f), p.out_w - gx - 1, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+    if (p.out_format == CF_ABGR || p.out_format == CF_ARGB || p.out_format == CF_BGRA || p.out_format == CF_RGBA) \n\
+    { \n\
+        if (p.mirror == 1) \n\
+            store_rgba(sfpvec4(rgb, 1.0f), p.out_w - gx - 1, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+        else \n\
+            store_rgba(sfpvec4(rgb, 1.0f), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+    } \n\
     else \n\
-        store_rgba(sfpvec4(rgb, 1.0f), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+    { \n\
+        if (p.mirror == 1) \n\
+            store_rgb(rgb, p.out_w - gx - 1, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+        else \n\
+            store_rgb(rgb, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+    } \n\
 } \
 "
 
@@ -383,6 +404,7 @@ SHADER_PARAM_Y2R
 SHADER_YUV2RGB
 SHADER_LOAD_SRC_YUV
 INTERPLATE
+SHADER_STORE_RGB
 SHADER_STORE_RGBA
 SHADER_YUV2RGB_MAIN
 ;
@@ -517,6 +539,7 @@ SHADER_PARAM_Y_U_V_2R
 SHADER_YUV2RGB
 SHADER_LOAD_SRC_Y_U_V
 INTERPLATE
+SHADER_STORE_RGB
 SHADER_STORE_RGBA
 SHADER_YUV2RGB_MAIN
 ;
@@ -676,7 +699,11 @@ void main() \n\
     int gy = int(gl_GlobalInvocationID.y); \n\
     if (gx >= p.w || gy >= p.h) \n\
         return; \n\
-    sfpvec3 yuv = rgb_to_yuv(load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb); \n\
+    sfpvec3 yuv; \n\
+    if (p.in_format == CF_BGR || p.in_format == CF_RGB) \n\
+        yuv = rgb_to_yuv(load_rgb(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb); \n\
+    else \n\
+        yuv = rgb_to_yuv(load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type).rgb); \n\
     store_dst_yuv(yuv, gx, gy); \n\
 } \
 "
@@ -689,6 +716,7 @@ layout (binding = 8) readonly buffer mat_r2y        { float         convert_matr
 )"
 SHADER_MAT_R2Y
 SHADER_PARAM_R2Y
+SHADER_LOAD_RGB
 SHADER_LOAD_RGBA
 SHADER_RGB2YUV
 SHADER_STORE_YUV

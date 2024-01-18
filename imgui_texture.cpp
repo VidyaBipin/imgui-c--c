@@ -992,6 +992,9 @@ void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, I
             uvMin,
             uvMax
         );
+
+        if (tf_x) *tf_x = _tf_x;
+        if (tf_y) *tf_y = _tf_y;
         
         _tf_x = _offset_x + adj_w;
         _tf_y = _offset_y + adj_h;
@@ -1038,8 +1041,6 @@ void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, I
         }
         if (offset_x) *offset_x = _offset_x;
         if (offset_y) *offset_y = _offset_y;
-        if (tf_x) *tf_x = _tf_x;
-        if (tf_y) *tf_y = _tf_y;
     }
 }
 } // namespace ImGui

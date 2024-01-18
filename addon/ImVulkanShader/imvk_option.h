@@ -71,8 +71,10 @@ public:
     // enable cooperative matrix optimization for gpu inference
     bool use_cooperative_matrix;
 
-    bool use_reserved_3;
-    bool use_reserved_4;
+    // enable options for shared variables in gpu shader
+    bool use_fp16_uniform;
+    bool use_int8_uniform;
+
     bool use_reserved_5;
     bool use_reserved_6;
     bool use_reserved_7;

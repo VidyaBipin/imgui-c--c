@@ -39,6 +39,9 @@ Option::Option()
 
     use_shader_local_memory = true;
     use_cooperative_matrix = true;
+
+    use_fp16_uniform = false;
+    use_int8_uniform = false;
 }
 
 } // namespace ImGui

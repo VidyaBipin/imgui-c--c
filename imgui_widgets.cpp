@@ -1,4 +1,4 @@
-// dear imgui, v1.90.1
+// dear imgui, v1.90.2 WIP
 // (widgets code)
 
 /*
@@ -599,7 +599,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
 
     // Gamepad/Keyboard navigation
     // We report navigated item as hovered but we don't set g.HoveredId to not interfere with mouse.
-    if (g.NavId == id && !g.NavDisableHighlight && g.NavDisableMouseHover && (g.ActiveId == 0 || g.ActiveId == id || g.ActiveId == window->MoveId))
+    if (g.NavId == id && !g.NavDisableHighlight && g.NavDisableMouseHover)
         if (!(flags & ImGuiButtonFlags_NoHoveredOnFocus))
             hovered = true;
     if (g.NavActivateDownId == id)
@@ -666,7 +666,9 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
         else if (g.ActiveIdSource == ImGuiInputSource_Keyboard || g.ActiveIdSource == ImGuiInputSource_Gamepad)
         {
             // When activated using Nav, we hold on the ActiveID until activation button is released
-            if (g.NavActivateDownId != id)
+            if (g.NavActivateDownId == id)
+                held = true;
+            else
                 ClearActiveID();
         }
         if (pressed)
@@ -972,7 +974,6 @@ bool ImGui::ScrollbarEx(const ImRect& bb_frame, ImGuiID id, ImGuiAxis axis, ImS6
 
         // Click position in scrollbar normalized space (0.0f->1.0f)
         const float clicked_v_norm = ImSaturate((mouse_pos_v - scrollbar_pos_v) / scrollbar_size_v);
-        SetHoveredID(id);
 
         bool seek_absolute = false;
         if (g.ActiveIdIsJustActivated)
@@ -3011,6 +3012,7 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
     const ImVec2 label_size = CalcTextSize(label, NULL, true);
     const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y * 2.0f));
     const ImRect total_bb(frame_bb.Min, frame_bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
+
     const bool temp_input_allowed = (flags & ImGuiSliderFlags_NoInput) == 0;
     ItemSize(total_bb, style.FramePadding.y);
     if (!ItemAdd(total_bb, id, &frame_bb, temp_input_allowed ? ImGuiItemFlags_Inputable : 0))

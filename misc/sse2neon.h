@@ -1,6 +1,30 @@
 #ifndef SSE2NEON_H
 #define SSE2NEON_H
 
+/*
+ * sse2neon is freely redistributable under the MIT License.
+ *
+ * Copyright (c) 2015-2024 SSE2NEON Contributors.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 // This header file provides a simple API translation layer
 // between SSE intrinsics to their corresponding Arm/Aarch64 NEON versions
 //
@@ -27,28 +51,6 @@
 //   Cuda Chen <clh960524@gmail.com>
 //   Aymen Qader <aymen.qader@arm.com>
 //   Anthony Roberts <anthony.roberts@linaro.org>
-
-/*
- * sse2neon is freely redistributable under the MIT License.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
 
 /* Tunable configurations */
 
@@ -104,6 +106,10 @@
 #pragma message("Macro name collisions may happen with unsupported compilers.")
 #endif
 
+#if !defined(__clang__) && defined(__GNUC__) && __GNUC__ < 10
+#warning "GCC versions earlier than 10 are not supported."
+#endif
+
 /* C language does not allow initializing a variable with a function call. */
 #ifdef __cplusplus
 #define _sse2neon_const static const
@@ -130,7 +136,7 @@
 #endif
 
 #if !defined(__cplusplus)
-#error sse2neon only supports C++ compilation with this compiler
+#error SSE2NEON only supports C++ compilation with this compiler
 #endif
 
 #ifdef SSE2NEON_ALLOC_DEFINED
@@ -1716,7 +1722,7 @@ FORCE_INLINE int64_t _mm_cvttss_si64(__m128 a)
 // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_div_ps
 FORCE_INLINE __m128 _mm_div_ps(__m128 a, __m128 b)
 {
-#if defined(__aarch64__) || defined(_M_ARM64)
+#if (defined(__aarch64__) || defined(_M_ARM64)) && !SSE2NEON_PRECISE_DIV
     return vreinterpretq_m128_f32(
         vdivq_f32(vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b)));
 #else
@@ -2293,6 +2299,10 @@ FORCE_INLINE __m128 _mm_rcp_ps(__m128 in)
 {
     float32x4_t recip = vrecpeq_f32(vreinterpretq_f32_m128(in));
     recip = vmulq_f32(recip, vrecpsq_f32(recip, vreinterpretq_f32_m128(in)));
+#if SSE2NEON_PRECISE_DIV
+    // Additional Netwon-Raphson iteration for accuracy
+    recip = vmulq_f32(recip, vrecpsq_f32(recip, vreinterpretq_f32_m128(in)));
+#endif
     return vreinterpretq_m128_f32(recip);
 }
 
@@ -2325,6 +2335,11 @@ FORCE_INLINE __m128 _mm_rsqrt_ps(__m128 in)
 
     out = vmulq_f32(
         out, vrsqrtsq_f32(vmulq_f32(vreinterpretq_f32_m128(in), out), out));
+#if SSE2NEON_PRECISE_SQRT
+    // Additional Netwon-Raphson iteration for accuracy
+    out = vmulq_f32(
+        out, vrsqrtsq_f32(vmulq_f32(vreinterpretq_f32_m128(in), out), out));
+#endif
 
     // Set output vector element to infinity/negative-infinity if
     // the corresponding input vector element is 0.0f/-0.0f.
@@ -2640,7 +2655,7 @@ FORCE_INLINE void _mm_lfence(void)
 // https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html#text=_mm_sqrt_ps
 FORCE_INLINE __m128 _mm_sqrt_ps(__m128 in)
 {
-#if defined(__aarch64__) || defined(_M_ARM64)
+#if (defined(__aarch64__) || defined(_M_ARM64)) && !SSE2NEON_PRECISE_SQRT
     return vreinterpretq_m128_f32(vsqrtq_f32(vreinterpretq_f32_m128(in)));
 #else
     float32x4_t recip = vrsqrteq_f32(vreinterpretq_f32_m128(in));

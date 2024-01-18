@@ -18,8 +18,11 @@ public:
     double GRAY2RGBA(const ImMat& im, ImMat & im_RGB, ImColorSpace color_space, ImColorRange color_range, int video_depth, int video_shift) const;
     double Conv(const ImMat& im, ImMat & om) const;
 
-    double YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGB, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC, bool mirror = false) const;
-    double YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const ImMat& im_V, ImMat & im_RGB, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC, bool mirror = false) const;
+    double YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGBA, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC, bool mirror = false) const;
+    double YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const ImMat& im_V, ImMat & im_RGBA, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC, bool mirror = false) const;
+
+    double YUV2RGB(const ImMat& im_YUV, ImMat & im_RGB, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC, bool mirror = false) const;
+    double YUV2RGB(const ImMat& im_Y, const ImMat& im_U, const ImMat& im_V, ImMat & im_RGB, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC, bool mirror = false) const;
 
 public:
     const VulkanDevice* vkdev;
