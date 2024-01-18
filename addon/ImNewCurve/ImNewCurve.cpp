@@ -477,6 +477,11 @@ KeyPoint::Holder Curve::RemovePoint(float t)
     return RemovePoint((size_t)idx);
 }
 
+void Curve::ClearAll()
+{
+    m_aKeyPoints.clear();
+}
+
 float Curve::MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint, bool bNormalize)
 {
     if (v2SyncPoint.x < m_tMinVal.w || v2SyncPoint.x > m_tMaxVal.w)

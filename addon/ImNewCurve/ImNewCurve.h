@@ -141,10 +141,10 @@ namespace ImNewCurve
         }
     };
 
-    static inline KeyPoint::ValType Min(const KeyPoint::ValType& a, const KeyPoint::ValType& b)
+    inline KeyPoint::ValType Min(const KeyPoint::ValType& a, const KeyPoint::ValType& b)
     { return KeyPoint::ValType(a.x<b.x?a.x:b.x, a.y<b.y?a.y:b.y, a.z<b.z?a.z:b.z, a.w<b.w?a.w:b.w); }
 
-    static inline KeyPoint::ValType Max(const KeyPoint::ValType& a, const KeyPoint::ValType& b)
+    inline KeyPoint::ValType Max(const KeyPoint::ValType& a, const KeyPoint::ValType& b)
     { return KeyPoint::ValType(a.x>b.x?a.x:b.x, a.y>b.y?a.y:b.y, a.z>b.z?a.z:b.z, a.w>b.w?a.w:b.w); }
 
     class IMGUI_API Curve
@@ -190,6 +190,7 @@ namespace ImNewCurve
         virtual int ChangeCurveType(size_t idx, CurveType eCurveType);
         virtual KeyPoint::Holder RemovePoint(size_t idx);
         virtual KeyPoint::Holder RemovePoint(float t);
+        virtual void ClearAll();
         virtual float MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint, bool bNormalize);
         virtual bool SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds);
         virtual bool ScaleKeyPoints(const KeyPoint::ValType& tScale, const KeyPoint::ValType& tOrigin = KeyPoint::ValType(0, 0, 0, 0));
