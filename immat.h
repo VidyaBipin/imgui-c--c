@@ -473,7 +473,6 @@ struct ImBox
     float           GetWidth() const                    { return Max.x - Min.x; }
     float           GetHeight() const                   { return Max.y - Min.y; }
     float           GetArea() const                     { return (Max.x - Min.x) * (Max.y - Min.y); }
-    ImBox           Intersection(const ImBox& r) const  { return ImBox(std::max(Min.x, r.Min.x), std::max(Min.y, r.Min.y), std::min(Max.x, r.Max.x), std::min(Max.y, r.Max.y)); }
     void            Clamp(const ImPoint& box_min, const ImPoint& box_max) { if (Min.x < box_min.x) Min.x = box_min.x; if (Min.y < box_min.y) Min.y = box_min.y; if (Max.x >= box_max.x) Max.x = box_max.x - 1; if (Max.y >= box_max.y) Max.y = box_max.y - 1; }
     void            Clamp(const ImBox& box)             { Clamp(box.Min, box.Max); }
     void            ClampSquare()                       { if (GetWidth() > GetHeight()) Max.x = Min.x + GetHeight(); else Max.y = Min.y + GetWidth(); }
@@ -482,9 +481,23 @@ struct ImBox
                                                             auto width = GetWidth(); auto height = GetHeight();
                                                             Min.x -= width * ratio_w;
                                                             Min.y -= height * ratio_h;
-                                                            Max.x += width * ratio_w * 2;
-                                                            Max.y += height * ratio_h * 2;
+                                                            Max.x += width * ratio_w;
+                                                            Max.y += height * ratio_h;
                                                             if (limite.w > 0 && limite.h > 0) Clamp(ImBox(0, 0, limite.w, limite.h));
+                                                        }
+    void            Shift(float ratio_x, float ratio_y, ImSize limite = ImSize())
+                                                        {
+                                                            auto width = GetWidth(); auto height = GetHeight();
+                                                            Min.x += width * ratio_x;
+                                                            Min.y += height * ratio_y;
+                                                            Max.x += width * ratio_x;
+                                                            Max.y += height * ratio_y;
+                                                            if (limite.w > 0 && limite.h > 0) Clamp(ImBox(0, 0, limite.w, limite.h));
+                                                        }
+    ImBox           Intersection(const ImBox& r) const  { 
+                                                            auto box = ImBox(std::max(Min.x, r.Min.x), std::max(Min.y, r.Min.y), std::min(Max.x, r.Max.x), std::min(Max.y, r.Max.y)); 
+                                                            if (GetWidth() <= 0 || GetHeight() <= 0) memset(&box, 0, sizeof(ImBox)); 
+                                                            return box;
                                                         }
 };
 ////////////////////////////////////////////////////////////////////
@@ -730,6 +743,7 @@ public:
     IMGUI_API ImMat highpass(float lambda);
     IMGUI_API ImMat threshold(float thres);
     IMGUI_API ImMat resize(float factor);     // interpolate_linear
+    IMGUI_API ImMat resize(float w, float h); // interpolate_linear
 
     // copy to
     IMGUI_API void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);

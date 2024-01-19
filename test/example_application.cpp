@@ -550,6 +550,11 @@ void Example::DrawLineDemo()
     ImGui::ImageMatCopyTo(resize_img, draw_mat, ImPoint(draw_mat.w - 112, draw_mat.h - 112));
     draw_mat.draw_rectangle(ImPoint(draw_mat.w - 112, draw_mat.h - 112), ImPoint(draw_mat.w, draw_mat.h), ImPixel(1, 1, 1, 1));
 
+    // ImMat.resize
+    ImGui::ImMat resize_img2 = crop_img.resize(112, 112);//ImGui::MatResize(crop_img, ImSize(112, 112));
+    ImGui::ImageMatCopyTo(resize_img2, draw_mat, ImPoint(draw_mat.w - 224, draw_mat.h - 224));
+    draw_mat.draw_rectangle(ImPoint(draw_mat.w - 224, draw_mat.h - 224), ImPoint(draw_mat.w - 112, draw_mat.h - 112), ImPixel(1, 1, 0, 1));
+
     // ImMat WarpAffine
     const float o_size = 96;
     ImGui::ImMat src_matrix(2,4);
