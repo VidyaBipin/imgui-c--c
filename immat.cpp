@@ -642,8 +642,9 @@ ImMat ImMat::resize(float _w, float _h)
 		fy -= sy;
 		sy = std::min(sy, h - 2);
 		sy = std::max(0, sy);
+        const auto mw = m.w;
         #pragma omp parallel for num_threads(OMP_THREADS)
-		for (int i = 0; i < _w; ++i)
+		for (int i = 0; i < mw; ++i)
 		{
 			float fx = (float)((i + 0.5) * scale_x - 0.5);
 			int sx = std::floor(fx);
