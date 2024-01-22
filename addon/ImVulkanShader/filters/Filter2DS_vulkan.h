@@ -25,6 +25,8 @@ public:
     const VulkanDevice* vkdev   {nullptr};
     Pipeline * pipe_column      {nullptr};
     Pipeline * pipe_row         {nullptr};
+    Pipeline * pipe_column_mono {nullptr};
+    Pipeline * pipe_row_mono    {nullptr};
     VkCompute * cmd             {nullptr};
     Option opt;
 

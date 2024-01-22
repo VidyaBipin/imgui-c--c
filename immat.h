@@ -712,6 +712,8 @@ public:
     ImMat vconcat(const ImMat& m);
     // hconcat
     ImMat hconcat(const ImMat& m);
+    // convert type
+    ImMat convert(ImDataType t, float scale = 1.0f) const;
 
     // some draw function only support 3 dims
     // mat default ordination is ncwh
@@ -5388,6 +5390,42 @@ inline ImMat ImMat::hconcat(const ImMat& m)
         }
     }
     return dst;
+}
+// convert type
+inline ImMat ImMat::convert(ImDataType t, float scale) const
+{
+    assert(device == IM_DD_CPU);
+    assert(total() > 0);
+    ImMat m;
+    m.create_type(w, h, c, t);
+    for (int i = 0; i < total(); i++)
+    {
+        double value = 0;
+        switch (type)
+        {
+            case IM_DT_INT8: value = ((int8_t*)data)[i]; break;
+            case IM_DT_INT16: value = ((int16_t*)data)[i]; break;
+            case IM_DT_INT32: value = ((int32_t*)data)[i]; break;
+            case IM_DT_INT64: value = ((int64_t*)data)[i]; break;
+            case IM_DT_FLOAT32: value = ((float*)data)[i]; break;
+            case IM_DT_FLOAT64: value = ((double*)data)[i]; break;
+            case IM_DT_FLOAT16:  value = im_float16_to_float32(((int16_t*)data)[i]); break;
+            default: break;
+        }
+        value *= scale;
+        switch (t)
+        {
+            case IM_DT_INT8: ((int8_t*)m.data)[i] = value; break;
+            case IM_DT_INT16: ((int16_t*)m.data)[i] = value; break;
+            case IM_DT_INT32: ((int32_t*)m.data)[i] = value; break;
+            case IM_DT_INT64:  ((int64_t*)m.data)[i] = value; break;
+            case IM_DT_FLOAT32: ((float*)m.data)[i] = value; break;
+            case IM_DT_FLOAT64: ((double*)m.data)[i] = value; break;
+            case IM_DT_FLOAT16: ((int16_t*)m.data)[i] = im_float32_to_float16(value); break;
+            default: break;
+        }
+    }
+    return m;
 }
 
 } // namespace ImGui 

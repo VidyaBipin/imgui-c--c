@@ -32,6 +32,19 @@ Filter2DS_vulkan::Filter2DS_vulkan(int gpu)
         spirv_data.clear();
     }
     
+    if (compile_spirv_module(FilterColumnMono_data, opt, spirv_data) == 0)
+    {
+        pipe_column_mono = new Pipeline(vkdev);
+        pipe_column_mono->create(spirv_data.data(), spirv_data.size() * 4, specializations);
+        spirv_data.clear();
+    }
+
+    if (compile_spirv_module(FilterRowMono_data, opt, spirv_data) == 0)
+    {
+        pipe_row_mono = new Pipeline(vkdev);
+        pipe_row_mono->create(spirv_data.data(), spirv_data.size() * 4, specializations);
+        spirv_data.clear();
+    }
     cmd->reset();
 }
 
@@ -41,6 +54,8 @@ Filter2DS_vulkan::~Filter2DS_vulkan()
     {
         if (pipe_column) { delete pipe_column; pipe_column = nullptr; }
         if (pipe_row) { delete pipe_row; pipe_row = nullptr; }
+        if (pipe_column_mono) { delete pipe_column_mono; pipe_column_mono = nullptr; }
+        if (pipe_row_mono) { delete pipe_row_mono; pipe_row_mono = nullptr; }
         if (cmd) { delete cmd; cmd = nullptr; }
         if (opt.blob_vkallocator) { vkdev->reclaim_blob_allocator(opt.blob_vkallocator); opt.blob_vkallocator = nullptr; }
         if (opt.staging_vkallocator) { vkdev->reclaim_staging_allocator(opt.staging_vkallocator); opt.staging_vkallocator = nullptr; }
@@ -79,7 +94,10 @@ void Filter2DS_vulkan::upload_param(const VkMat& src, VkMat& dst) const
     else if (src.type == IM_DT_FLOAT16)   column_bindings[6] = src;
     else if (src.type == IM_DT_FLOAT32)   column_bindings[7] = src;
     column_bindings[8] = vk_kernel;
-    cmd->record_pipeline(pipe_column, column_bindings, constants, vk_column);
+    if (src.c == 1)
+        cmd->record_pipeline(pipe_column_mono, column_bindings, constants, vk_column);
+    else
+        cmd->record_pipeline(pipe_column, column_bindings, constants, vk_column);
 
     constants[0].i = vk_column.w;
     constants[1].i = vk_column.h;
@@ -98,7 +116,10 @@ void Filter2DS_vulkan::upload_param(const VkMat& src, VkMat& dst) const
     else if (vk_column.type == IM_DT_FLOAT16)   row_bindings[6] = vk_column;
     else if (vk_column.type == IM_DT_FLOAT32)   row_bindings[7] = vk_column;
     row_bindings[8] = vk_kernel;
-    cmd->record_pipeline(pipe_row, row_bindings, constants, dst);
+    if (src.c == 1)
+        cmd->record_pipeline(pipe_row_mono, row_bindings, constants, dst);
+    else
+        cmd->record_pipeline(pipe_row, row_bindings, constants, dst);
 }
 
 double Filter2DS_vulkan::filter(const ImMat& src, ImMat& dst) const
@@ -110,7 +131,7 @@ double Filter2DS_vulkan::filter(const ImMat& src, ImMat& dst) const
     }
 
     VkMat dst_gpu;
-    dst_gpu.create_type(src.w, src.h, 4, dst.type, opt.blob_vkallocator);
+    dst_gpu.create_type(src.w, src.h, src.c, dst.type, opt.blob_vkallocator);
 
     VkMat src_gpu;
     if (src.device == IM_DD_VULKAN)
