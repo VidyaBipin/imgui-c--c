@@ -331,7 +331,7 @@ set(VKSHADER_SRCS
     filters/Hue_vulkan.cpp
     filters/ColorInvert_vulkan.cpp
     filters/Bilateral_vulkan.cpp
-    filters/Box.cpp
+    filters/Box_vulkan.cpp
     filters/Dilation_vulkan.cpp
     filters/Erosion_vulkan.cpp
     filters/USM_vulkan.cpp
@@ -360,7 +360,7 @@ set(VKSHADER_INCS
     filters/ColorInvert_vulkan.h
     filters/Bilateral_shader.h
     filters/Bilateral_vulkan.h
-    filters/Box.h
+    filters/Box_vulkan.h
     filters/Dilation_shader.h
     filters/Dilation_vulkan.h
     filters/Erosion_shader.h
