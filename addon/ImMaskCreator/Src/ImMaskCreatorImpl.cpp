@@ -26,6 +26,7 @@
 using namespace std;
 using namespace Logger;
 namespace json = imgui_json;
+namespace LibCurve = ImGui::ImNewCurve;
 
 namespace ImGui
 {
@@ -283,22 +284,22 @@ public:
                             {
                                 m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::FromImVec2<float>(-coordOff);
                                 m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::FromImVec2<float>(coordOff);
-                                ImNewCurve::KeyPoint::ValType tKpVal(-coordOff.x, -coordOff.y, 0, 0);
-                                auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                LibCurve::KeyPoint::ValType tKpVal(-coordOff.x, -coordOff.y, 0, 0);
+                                auto hKp = LibCurve::KeyPoint::CreateInstance(tKpVal);
                                 m_itHoveredVertex->AddKeyPoint(1, hKp, false);
                                 if (i64Tick > 0)
                                 {
                                     tKpVal.w = i64Tick;
-                                    auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                    auto hKp = LibCurve::KeyPoint::CreateInstance(tKpVal);
                                     m_itHoveredVertex->AddKeyPoint(1, hKp, false);
                                 }
                                 tKpVal.x = coordOff.x; tKpVal.y = coordOff.y; tKpVal.w = 0;
-                                hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                hKp = LibCurve::KeyPoint::CreateInstance(tKpVal);
                                 m_itHoveredVertex->AddKeyPoint(2, hKp, false);
                                 if (i64Tick > 0)
                                 {
                                     tKpVal.w = i64Tick;
-                                    auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                    auto hKp = LibCurve::KeyPoint::CreateInstance(tKpVal);
                                     m_itHoveredVertex->AddKeyPoint(2, hKp, false);
                                 }
                             }
@@ -311,12 +312,12 @@ public:
                                 m_itHoveredVertex->m_v2Pos = v2MousePos;
                             if (m_bKeyFrameEnabled)
                             {
-                                const ImNewCurve::KeyPoint::ValType tKpVal(v2MousePos.x, v2MousePos.y, 0, i64Tick);
-                                auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                const LibCurve::KeyPoint::ValType tKpVal(v2MousePos.x, v2MousePos.y, 0, i64Tick);
+                                auto hKp = LibCurve::KeyPoint::CreateInstance(tKpVal);
                                 m_itHoveredVertex->AddKeyPoint(0, hKp, false);
                                 m_itHoveredVertex->m_ptCurrPos = MatUtils::FromImVec2<float>(v2MousePos);
-                                // const auto strKpPosX = m_itHoveredVertex->m_ahCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
-                                // const auto strKpPosY = m_itHoveredVertex->m_ahCurves[0]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                                // const auto strKpPosX = m_itHoveredVertex->m_ahCurves[0]->PrintKeyPointsByDim(LibCurve::DIM_X);
+                                // const auto strKpPosY = m_itHoveredVertex->m_ahCurves[0]->PrintKeyPointsByDim(LibCurve::DIM_Y);
                                 // m_pLogger->Log(DEBUG) << "Pos X:" << strKpPosX << ", Y:" << strKpPosY << endl;
                             }
                             bNeedUpdateContour = true;
@@ -336,8 +337,8 @@ public:
                             }
                             if (m_bKeyFrameEnabled)
                             {
-                                ImNewCurve::KeyPoint::ValType tKpVal(coordOff.x, coordOff.y, 0, i64Tick);
-                                auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                LibCurve::KeyPoint::ValType tKpVal(coordOff.x, coordOff.y, 0, i64Tick);
+                                auto hKp = LibCurve::KeyPoint::CreateInstance(tKpVal);
                                 m_itHoveredVertex->AddKeyPoint(1, hKp, false);
                                 m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::FromImVec2<float>(coordOff);
                                 auto c0sqr = coordOff.x*coordOff.x+coordOff.y*coordOff.y;
@@ -346,11 +347,11 @@ public:
                                 auto ratio = sqrt(c1sqr/c0sqr);
                                 tKpVal.x = -coordOff.x*ratio;
                                 tKpVal.y = -coordOff.y*ratio;
-                                hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                hKp = LibCurve::KeyPoint::CreateInstance(tKpVal);
                                 m_itHoveredVertex->AddKeyPoint(2, hKp, false);
                                 m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::Point2f(tKpVal.x, tKpVal.y);
-                                // const auto strKpPosX = m_itHoveredVertex->m_ahCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
-                                // const auto strKpPosY = m_itHoveredVertex->m_ahCurves[1]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                                // const auto strKpPosX = m_itHoveredVertex->m_ahCurves[1]->PrintKeyPointsByDim(LibCurve::DIM_X);
+                                // const auto strKpPosY = m_itHoveredVertex->m_ahCurves[1]->PrintKeyPointsByDim(LibCurve::DIM_Y);
                                 // m_pLogger->Log(DEBUG) << "G0 X:" << strKpPosX << ", Y:" << strKpPosY << endl;
                             }
                             bNeedUpdateContour = true;
@@ -370,8 +371,8 @@ public:
                             }
                             if (m_bKeyFrameEnabled)
                             {
-                                ImNewCurve::KeyPoint::ValType tKpVal(coordOff.x, coordOff.y, 0, i64Tick);
-                                auto hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                LibCurve::KeyPoint::ValType tKpVal(coordOff.x, coordOff.y, 0, i64Tick);
+                                auto hKp = LibCurve::KeyPoint::CreateInstance(tKpVal);
                                 m_itHoveredVertex->AddKeyPoint(2, hKp, false);
                                 m_itHoveredVertex->m_ptCurrGrabber1Offset = MatUtils::FromImVec2<float>(coordOff);
                                 auto c1sqr = coordOff.x*coordOff.x+coordOff.y*coordOff.y;
@@ -380,11 +381,11 @@ public:
                                 auto ratio = sqrt(c0sqr/c1sqr);
                                 tKpVal.x = -coordOff.x*ratio;
                                 tKpVal.y = -coordOff.y*ratio;
-                                hKp = ImNewCurve::KeyPoint::CreateInstance(tKpVal, ImNewCurve::Smooth);
+                                hKp = LibCurve::KeyPoint::CreateInstance(tKpVal);
                                 m_itHoveredVertex->AddKeyPoint(1, hKp, false);
                                 m_itHoveredVertex->m_ptCurrGrabber0Offset = MatUtils::Point2f(tKpVal.x, tKpVal.y);
-                                // const auto strKpPosX = m_itHoveredVertex->m_ahCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_X);
-                                // const auto strKpPosY = m_itHoveredVertex->m_ahCurves[2]->PrintKeyPointsByDim(ImNewCurve::DIM_Y);
+                                // const auto strKpPosX = m_itHoveredVertex->m_ahCurves[2]->PrintKeyPointsByDim(LibCurve::DIM_X);
+                                // const auto strKpPosY = m_itHoveredVertex->m_ahCurves[2]->PrintKeyPointsByDim(LibCurve::DIM_Y);
                                 // m_pLogger->Log(DEBUG) << "G1 X:" << strKpPosX << ", Y:" << strKpPosY << endl;
                             }
                             bNeedUpdateContour = true;
@@ -874,7 +875,7 @@ public:
                     cp.m_v2Grabber1Offset *= v2Scale;
                     if (m_bKeyFrameEnabled)
                     {
-                        const ImNewCurve::KeyPoint::ValType tScale(v2Scale.x, v2Scale.y, 1.f, 1.f);
+                        const LibCurve::KeyPoint::ValType tScale(v2Scale.x, v2Scale.y, 1.f, 1.f);
                         for (auto i = 0; i < 3; i++)
                             cp.m_ahCurves[i]->ScaleKeyPoints(tScale);
                         cp.UpdateByTick(m_i64PrevUiTick);
@@ -1274,12 +1275,12 @@ private:
         int m_iHoverPointOnContourIdx;
         ImRect m_rGrabberContBox;
         ImRect m_rEdgeContBox;
-        ImNewCurve::Curve::Holder m_ahCurves[3];
+        LibCurve::Curve::Holder m_ahCurves[3];
         list<float> m_aKpTicks;
         MatUtils::Point2f m_ptCurrPos;
         MatUtils::Point2f m_ptCurrGrabber0Offset{0, 0}, m_ptCurrGrabber1Offset{0, 0};
 
-        bool AddKeyPoint(int iCurveIdx, ImNewCurve::KeyPoint::Holder hKp, bool bNeedNormalize)
+        bool AddKeyPoint(int iCurveIdx, LibCurve::KeyPoint::Holder hKp, bool bNeedNormalize)
         {
             if (iCurveIdx >= 3)
                 return false;
@@ -1369,11 +1370,11 @@ private:
             m_bHovered = false;
             m_iHoverType = -1;
             if (j.contains("curve0"))
-                m_ahCurves[0] = ImNewCurve::Curve::CreateFromJson(j["curve0"]);
+                m_ahCurves[0] = LibCurve::Curve::CreateFromJson(j["curve0"]);
             if (j.contains("curve1"))
-                m_ahCurves[1] = ImNewCurve::Curve::CreateFromJson(j["curve1"]);
+                m_ahCurves[1] = LibCurve::Curve::CreateFromJson(j["curve1"]);
             if (j.contains("curve2"))
-                m_ahCurves[2] = ImNewCurve::Curve::CreateFromJson(j["curve2"]);
+                m_ahCurves[2] = LibCurve::Curve::CreateFromJson(j["curve2"]);
             // rebuild tick array
             list<float> aKpTicks;
             for (int i = 0; i < 3; i++)
@@ -1401,7 +1402,7 @@ private:
             if (t <= 0 || !m_ahCurves[0])
                 return MatUtils::FromImVec2<float>(m_v2Pos);
             const auto tKpVal = m_ahCurves[0]->CalcPointVal(t, false, false);
-            const ImVec2 v2Pos(ImNewCurve::KeyPoint::GetDimVal(tKpVal, ImNewCurve::DIM_X), ImNewCurve::KeyPoint::GetDimVal(tKpVal, ImNewCurve::DIM_Y));
+            const ImVec2 v2Pos(LibCurve::KeyPoint::GetDimVal(tKpVal, LibCurve::DIM_X), LibCurve::KeyPoint::GetDimVal(tKpVal, LibCurve::DIM_Y));
             return MatUtils::FromImVec2<float>(v2Pos);
         }
 
@@ -1414,7 +1415,7 @@ private:
                 if (t <= 0 || !m_ahCurves[1])
                     return MatUtils::FromImVec2<float>(m_v2Grabber0Offset);
                 const auto tKpVal = m_ahCurves[1]->CalcPointVal(t, false, false);
-                const ImVec2 v2Offset(ImNewCurve::KeyPoint::GetDimVal(tKpVal, ImNewCurve::DIM_X), ImNewCurve::KeyPoint::GetDimVal(tKpVal, ImNewCurve::DIM_Y));
+                const ImVec2 v2Offset(LibCurve::KeyPoint::GetDimVal(tKpVal, LibCurve::DIM_X), LibCurve::KeyPoint::GetDimVal(tKpVal, LibCurve::DIM_Y));
                 return MatUtils::FromImVec2<float>(v2Offset);
             }
             else
@@ -1422,7 +1423,7 @@ private:
                 if (t <= 0 || !m_ahCurves[2])
                     return MatUtils::FromImVec2<float>(m_v2Grabber1Offset);
                 const auto tKpVal = m_ahCurves[2]->CalcPointVal(t, false, false);
-                const ImVec2 v2Offset(ImNewCurve::KeyPoint::GetDimVal(tKpVal, ImNewCurve::DIM_X), ImNewCurve::KeyPoint::GetDimVal(tKpVal, ImNewCurve::DIM_Y));
+                const ImVec2 v2Offset(LibCurve::KeyPoint::GetDimVal(tKpVal, LibCurve::DIM_X), LibCurve::KeyPoint::GetDimVal(tKpVal, LibCurve::DIM_Y));
                 return MatUtils::FromImVec2<float>(v2Offset);
             }
         }
@@ -1445,31 +1446,31 @@ private:
                 ostringstream oss; oss << "ContourPont_Curve";
                 string strCurveName = oss.str();
                 {
-                    const ImNewCurve::KeyPoint::ValType tMinVal(0, 0, 0, prTickRange.first);
-                    const ImNewCurve::KeyPoint::ValType tMaxVal(7680, 4320, 0, prTickRange.second);
-                    const ImNewCurve::KeyPoint::ValType tDefaultVal(m_v2Pos.x, m_v2Pos.y, 0, 0);
-                    m_ahCurves[0] = ImNewCurve::Curve::CreateInstance(strCurveName, ImNewCurve::Smooth, tMinVal, tMaxVal, tDefaultVal);
+                    const LibCurve::KeyPoint::ValType tMinVal(0, 0, 0, prTickRange.first);
+                    const LibCurve::KeyPoint::ValType tMaxVal(7680, 4320, 0, prTickRange.second);
+                    const LibCurve::KeyPoint::ValType tDefaultVal(m_v2Pos.x, m_v2Pos.y, 0, 0);
+                    m_ahCurves[0] = LibCurve::Curve::CreateInstance(strCurveName, LibCurve::Smooth, tMinVal, tMaxVal, tDefaultVal);
                 }
                 {
-                    const ImNewCurve::KeyPoint::ValType tMinVal(-1000, -1000, 0, prTickRange.first);
-                    const ImNewCurve::KeyPoint::ValType tMaxVal(1000, 1000, 0, prTickRange.second);
-                    ImNewCurve::KeyPoint::ValType tDefaultVal(m_v2Grabber0Offset.x, m_v2Grabber0Offset.y, 0, 0);
+                    const LibCurve::KeyPoint::ValType tMinVal(-1000, -1000, 0, prTickRange.first);
+                    const LibCurve::KeyPoint::ValType tMaxVal(1000, 1000, 0, prTickRange.second);
+                    LibCurve::KeyPoint::ValType tDefaultVal(m_v2Grabber0Offset.x, m_v2Grabber0Offset.y, 0, 0);
                     oss.str(""); oss << "Grabber0Offset_Curve";
                     strCurveName = oss.str();
-                    m_ahCurves[1] = ImNewCurve::Curve::CreateInstance(strCurveName, ImNewCurve::Smooth, tMinVal, tMaxVal, tDefaultVal);
-                    tDefaultVal = ImNewCurve::KeyPoint::ValType(m_v2Grabber1Offset.x, m_v2Grabber1Offset.y, 0, 0);
+                    m_ahCurves[1] = LibCurve::Curve::CreateInstance(strCurveName, LibCurve::Smooth, tMinVal, tMaxVal, tDefaultVal);
+                    tDefaultVal = LibCurve::KeyPoint::ValType(m_v2Grabber1Offset.x, m_v2Grabber1Offset.y, 0, 0);
                     oss.str(""); oss << "Grabber1Offset_Curve";
                     strCurveName = oss.str();
-                    m_ahCurves[2] = ImNewCurve::Curve::CreateInstance(strCurveName, ImNewCurve::Smooth, tMinVal, tMaxVal, tDefaultVal);
+                    m_ahCurves[2] = LibCurve::Curve::CreateInstance(strCurveName, LibCurve::Smooth, tMinVal, tMaxVal, tDefaultVal);
                 }
                 m_ptCurrPos = MatUtils::FromImVec2<float>(m_v2Pos);
                 m_ptCurrGrabber0Offset = MatUtils::FromImVec2<float>(m_v2Grabber0Offset);
                 m_ptCurrGrabber1Offset = MatUtils::FromImVec2<float>(m_v2Grabber1Offset);
-                auto hKp = ImNewCurve::KeyPoint::CreateInstance(m_ahCurves[0]->GetDefaultVal(), ImNewCurve::Smooth);
+                auto hKp = LibCurve::KeyPoint::CreateInstance(m_ahCurves[0]->GetDefaultVal());
                 AddKeyPoint(0, hKp, false);
-                hKp = ImNewCurve::KeyPoint::CreateInstance(m_ahCurves[1]->GetDefaultVal(), ImNewCurve::Smooth);
+                hKp = LibCurve::KeyPoint::CreateInstance(m_ahCurves[1]->GetDefaultVal());
                 AddKeyPoint(1, hKp, false);
-                hKp = ImNewCurve::KeyPoint::CreateInstance(m_ahCurves[2]->GetDefaultVal(), ImNewCurve::Smooth);
+                hKp = LibCurve::KeyPoint::CreateInstance(m_ahCurves[2]->GetDefaultVal());
                 AddKeyPoint(2, hKp, false);
             }
             else
@@ -2518,7 +2519,7 @@ private:
         if (fabs(v2MoveOffset.x) < FLT_EPSILON && fabs(v2MoveOffset.y) < FLT_EPSILON)
             return;
         const bool bKeyFrameEnabled = m_bKeyFrameEnabled;
-        const ImNewCurve::KeyPoint::ValType tPanOffset(v2MoveOffset.x, v2MoveOffset.y, 0, 0);
+        const LibCurve::KeyPoint::ValType tPanOffset(v2MoveOffset.x, v2MoveOffset.y, 0, 0);
         for (auto& rp : m_aRoutePointsForUi)
         {
             rp.m_v2Pos += v2MoveOffset;
@@ -2533,8 +2534,8 @@ private:
     void ScaleRoute(float fScale)
     {
         const bool bKeyFrameEnabled = m_bKeyFrameEnabled;
-        const ImNewCurve::KeyPoint::ValType tScale(fScale, fScale, 1, 1);
-        const ImNewCurve::KeyPoint::ValType tOrigin(m_v2Center.x, m_v2Center.y, 0, 0);
+        const LibCurve::KeyPoint::ValType tScale(fScale, fScale, 1, 1);
+        const LibCurve::KeyPoint::ValType tOrigin(m_v2Center.x, m_v2Center.y, 0, 0);
         for (auto& rp : m_aRoutePointsForUi)
         {
             const auto off = rp.m_v2Pos-m_v2Center;

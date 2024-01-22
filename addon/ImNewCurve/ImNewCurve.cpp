@@ -171,16 +171,16 @@ KeyPoint::Holder KeyPoint::CreateInstance(const ValType& val, CurveType type)
 // 'Curve' implementation
 Curve::Holder Curve::CreateInstance(
         const std::string& name, CurveType eCurveType, const std::pair<uint32_t, uint32_t>& tTimeBase,
-        const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal)
+        const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal, bool bAddInitKp)
 {
-    return Curve::Holder(new Curve(name, eCurveType, tTimeBase, minVal, maxVal, defaultVal));
+    return Curve::Holder(new Curve(name, eCurveType, tTimeBase, minVal, maxVal, defaultVal, bAddInitKp));
 }
 
 Curve::Holder Curve::CreateInstance(
         const std::string& name, CurveType eCurveType,
-        const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal)
+        const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal, bool bAddInitKp)
 {
-    return CreateInstance(name, eCurveType, {0, 0}, minVal, maxVal, defaultVal);
+    return CreateInstance(name, eCurveType, {0, 0}, minVal, maxVal, defaultVal, bAddInitKp);
 }
 
 Curve::Holder Curve::CreateFromJson(const imgui_json::value& j)
@@ -191,7 +191,7 @@ Curve::Holder Curve::CreateFromJson(const imgui_json::value& j)
 }
 
 Curve::Curve(const std::string& name, CurveType eCurveType, const std::pair<uint32_t, uint32_t>& tTimeBase,
-        const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal)
+        const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal, bool bAddInitKp)
     : m_strName(name), m_eCurveType(eCurveType), m_tTimeBase(tTimeBase), m_tDefaultVal(defaultVal)
 {
     m_tMinVal = Min(minVal, maxVal);
@@ -203,6 +203,12 @@ Curve::Curve(const std::string& name, CurveType eCurveType, const std::pair<uint
     {
         m_tMinVal.w = Time2TickAligned(m_tMinVal.w);
         m_tMaxVal.w = Time2TickAligned(m_tMaxVal.w);
+    }
+    if (bAddInitKp)
+    {
+        auto tInitKpVal = defaultVal;
+        tInitKpVal.w = m_tMinVal.w;
+        m_aKeyPoints.push_back(KeyPoint::CreateInstance(tInitKpVal, eCurveType));
     }
 }
 
@@ -217,7 +223,8 @@ Curve::Holder Curve::Clone() const
 
 std::vector<float> Curve::GetTicks() const
 {
-    std::vector<float> aTicks(m_aKeyPoints.size());
+    std::vector<float> aTicks;
+    aTicks.reserve(m_aKeyPoints.size());
     for (const auto& hKp : m_aKeyPoints)
         aTicks.push_back(hKp->t);
     return std::move(aTicks);
@@ -321,13 +328,18 @@ int Curve::AddPoint(KeyPoint::Holder hKp, bool bNormalize, bool bOverwriteIfExis
         hKp->t = t;
     }
 
+    if (hKp->type == UnKnown)
+        hKp->type = m_eCurveType;
     if (iter == m_aKeyPoints.end())
     {
         m_aKeyPoints.push_back(hKp);
         SortKeyPoints();
     }
     else
+    {
         (*iter)->val = hKp->val;
+        (*iter)->type = hKp->type;
+    }
     return GetKeyPointIndex(hKp->t);
 }
 
@@ -854,11 +866,7 @@ bool DrawCurveArraySimpleView(float fViewWidth, const std::vector<Curve::Holder>
 
     v2ViewSize.y = v2TickIndicatorPos.y+v2TickIndicatorSize.y-v2ViewPos.y+1;
     ImRect bb(v2ViewPos, v2ViewPos+v2ViewSize);
-    if (!ItemAdd(bb, 0))
-    {
-        std::cerr << "[DrawCurveArraySimpleView] FAILED at 'ItemAdd' with item rect (("
-                << bb.Min.x << ", " << bb.Min.y << "), (" << bb.Max.x << ", " << bb.Max.y << "))!" << std::endl;
-    }
+    ItemAdd(bb, 0);
     SetCursorScreenPos(ImVec2(v2ViewPos.x, v2ViewPos.y+v2ViewSize.y));
 
     const bool bMouseInView = bb.Contains(v2MousePosAbs);

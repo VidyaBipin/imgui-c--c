@@ -70,7 +70,7 @@ namespace ImNewCurve
         using Holder = std::shared_ptr<KeyPoint>;
         using ValType = ImVec4;
         static Holder CreateInstance();
-        static Holder CreateInstance(const ValType& val, CurveType type);
+        static Holder CreateInstance(const ValType& val, CurveType type = UnKnown);
 
         float &x, &y, &z, &t;
         ValType val {0, 0, 0, 0};
@@ -152,16 +152,16 @@ namespace ImNewCurve
     public:
         using Holder = std::shared_ptr<Curve>;
         static Holder CreateInstance(const std::string& name, CurveType eCurveType, const std::pair<uint32_t, uint32_t>& tTimeBase,
-                const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal);
+                const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal, bool bAddInitKp = false);
         static Holder CreateInstance(const std::string& name, CurveType eCurveType,
-                const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal);
+                const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal, bool bAddInitKp = false);
         static Holder CreateFromJson(const imgui_json::value& j);
 
         Curve(const std::string& name, CurveType eCurveType, const std::pair<uint32_t, uint32_t>& tTimeBase,
-                const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal);
+                const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal, bool bAddInitKp = false);
         Curve(const std::string& name, CurveType eCurveType,
-                const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal)
-            : Curve(name, eCurveType, {0, 0}, minVal, maxVal, defaultVal) {}
+                const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal, bool bAddInitKp = false)
+            : Curve(name, eCurveType, {0, 0}, minVal, maxVal, defaultVal, bAddInitKp) {}
         virtual Holder Clone() const;
 
         const std::string& GetName() const { return m_strName; }
