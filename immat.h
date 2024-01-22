@@ -312,6 +312,7 @@ enum ImColorFormat {
     IM_CF_RGBA,
     IM_CF_YUV420,
     IM_CF_YUV422,
+    IM_CF_YUV440,
     IM_CF_YUV444,
     IM_CF_YUVA,
     IM_CF_NV12,
@@ -356,7 +357,7 @@ enum ImInterpolateMode {
 #define IM_DEPTH(a)    (a == IM_DT_INT8 ? 8 : (a == IM_DT_INT16 || a == IM_DT_INT16_BE || a == IM_DT_FLOAT16) ? 16 : (a == IM_DT_INT32 || a == IM_DT_FLOAT32) ? 32 : (a == IM_DT_INT64 || a == IM_DT_FLOAT64) ? 64 : 0)
 #define IM_ISMONO(a)   (a == IM_CF_GRAY)
 #define IM_ISRGB(a)    (a == IM_CF_BGR || a == IM_CF_RGB || a == IM_CF_ABGR || a == IM_CF_ARGB || a == IM_CF_BGRA || a == IM_CF_RGBA)
-#define IM_ISYUV(a)    (a == IM_CF_YUV420 || a == IM_CF_YUV422 || a == IM_CF_YUV444 || a == IM_CF_YUVA || a == IM_CF_NV12 || a == IM_CF_P010LE)
+#define IM_ISYUV(a)    (a == IM_CF_YUV420 || a == IM_CF_YUV422 || a == IM_CF_YUV440 || a == IM_CF_YUV444 || a == IM_CF_YUVA || a == IM_CF_NV12 || a == IM_CF_P010LE)
 #define IM_ISALPHA(a)  (a == IM_CF_ABGR || a == IM_CF_ARGB || a == IM_CF_YUVA)
 #define IM_ISNV12(a)   (a == IM_CF_NV12 || a == IM_CF_P010LE)
 
@@ -524,6 +525,7 @@ static inline int GetChannelCountByColorFormat(ImColorFormat fmt)
             return 1;
         case IM_CF_YUV420:
         case IM_CF_YUV422:
+        case IM_CF_YUV440:
         case IM_CF_NV12:
         case IM_CF_P010LE:
             return 2;
@@ -749,7 +751,7 @@ public:
     IMGUI_API void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);
 
     // crop
-    IMGUI_API ImMat crop(ImPoint p1, ImPoint p2);
+    IMGUI_API ImMat crop(ImPoint p1, ImPoint p2) const;
 
     // repeat
     IMGUI_API ImMat repeat(int nx, int ny);
@@ -5417,10 +5419,11 @@ public:
     ImMat K;                   //kalman增益矩阵 K = p'(k) * Ht * inv(H * p'(k) * Ht + R)
     ImMat errorCovPost;        //转移噪声修正矩阵(p(k)) p(k) = (I - K(k) * H) * p'(k)  ： 8 * 8
 };
-// warpAffine helper
+
 IMGUI_API ImMat getPerspectiveTransform(const ImPoint src[], const ImPoint dst[]);
 IMGUI_API ImMat getAffineTransform(const ImPoint src[], const ImPoint dst[]);
 IMGUI_API ImMat getAffineTransform(int sw, int sh, int dw, int dh, float x_offset, float y_offset, float x_scale, float y_scale, float angle);
+IMGUI_API void  getAffineParam(const ImMat& M, float& x_offset, float& y_offset, float& x_scale, float& y_scale, float& angle);
 IMGUI_API ImMat similarTransform(const ImMat& src, const ImMat& dst);
 // draw utils
 IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);

@@ -723,7 +723,7 @@ void ImMat::copy_to(ImMat & mat, ImPoint offset, float alpha)
     }
 }
 
-ImMat ImMat::crop(ImPoint p1, ImPoint p2)
+ImMat ImMat::crop(ImPoint p1, ImPoint p2) const
 {
     assert(device == IM_DD_CPU);
     assert(!empty());
@@ -1142,6 +1142,16 @@ ImMat getAffineTransform(int sw, int sh, int dw, int dh, float x_offset, float y
     mat.at<float>(0, 0) =  alpha_00;    mat.at<float>(1, 0) = beta_01;      mat.at<float>(2, 0) = (1 - alpha_00) * center_x - beta_01 * center_y - _x_offset;
     mat.at<float>(0, 1) = -beta_10;     mat.at<float>(1, 1) = alpha_11;     mat.at<float>(2, 1) = beta_10 * center_x + (1 - alpha_11) * center_y - _y_offset;
     return mat;
+}
+
+void getAffineParam(const ImMat& M, float& x_offset, float& y_offset, float& x_scale, float& y_scale, float& angle)
+{
+    x_offset = M.at<float>(2, 0);
+    y_offset = M.at<float>(2, 1);
+    angle = M.at<float>(1, 0) / M.at<float>(0, 0);
+    angle = atan(angle);
+    x_scale = M.at<float>(0, 0) / cos(angle);
+    y_scale = M.at<float>(1, 1) / cos(angle);
 }
 
 static void invert_affine_transform(const float* tm, float* tm_inv)

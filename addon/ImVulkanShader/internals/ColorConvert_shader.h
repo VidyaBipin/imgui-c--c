@@ -442,7 +442,7 @@ sfpvec3 load_src_yuv(int x, int y) \n\
 { \n\
     sfpvec3 yuv_in = {sfp(0.0f), sfp(0.5f), sfp(0.5f)}; \n\
     int uv_scale_w = p.in_format == CF_YUV420 || p.in_format == CF_YUV422 ? 2 : 1; \n\
-    int uv_scale_h = p.in_format == CF_YUV420 || p.in_format == CF_NV12 || p.in_format == CF_P010LE ? 2 : 1; \n\
+    int uv_scale_h = p.in_format == CF_YUV420 || p.in_format == CF_YUV440 || p.in_format == CF_NV12 || p.in_format == CF_P010LE ? 2 : 1; \n\
     int y_offset = y * p.w + x; \n\
     int u_offset = (y / uv_scale_h) * p.uw + x / uv_scale_w; \n\
     int v_offset = (y / uv_scale_h) * p.vw + x / uv_scale_w; \n\

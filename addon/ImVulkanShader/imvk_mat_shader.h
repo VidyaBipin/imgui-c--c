@@ -181,10 +181,11 @@ void main()
 #define CF_RGBA     6 \n\
 #define CF_YUV420   7 \n\
 #define CF_YUV422   8 \n\
-#define CF_YUV444   9 \n\
-#define CF_YUVA     10 \n\
-#define CF_NV12     11 \n\
-#define CF_P010LE   12 \n\
+#define CF_YUV440   9 \n\
+#define CF_YUV444   10 \n\
+#define CF_YUVA     11 \n\
+#define CF_NV12     12 \n\
+#define CF_P010LE   13 \n\
 #define INTERPOLATE_NONE        0 \n\
 #define INTERPOLATE_NEAREST     1 \n\
 #define INTERPOLATE_BILINEAR    2 \n\
