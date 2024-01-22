@@ -13,8 +13,8 @@ namespace ImGui
 void ImMat::get_pixel(int x, int y, ImPixel& color) const
 {
     assert(dims == 3 || dims == 2);
-    assert(x >= 0 && x < w);
-    assert(y >= 0 && y < h);
+    x = std::max(0, std::min(x, w - 1));
+    y = std::max(0, std::min(y, h - 1));
     if (dims == 3)
     {
         switch (type)
@@ -97,10 +97,8 @@ ImPixel ImMat::get_pixel(ImPoint p) const
 void ImMat::set_pixel(int x, int y, ImPixel color)
 {
     assert(dims == 3 || dims == 2);
-    //assert(x >= 0 && x < w);
-    //assert(y >= 0 && y < h);
-    if (x < 0 || x >= w || y < 0 || y >= h)
-        return;
+    x = std::max(0, std::min(x, w - 1));
+    y = std::max(0, std::min(y, h - 1));
     if (dims == 3)
     {
         switch (type)
@@ -627,43 +625,57 @@ ImMat ImMat::threshold(float thres)
     return ImMat();
 }
 
-ImMat ImMat::resize(float factor)
+ImMat ImMat::resize(float _w, float _h)
 {
     assert(device == IM_DD_CPU);
-    assert(dims == 2);
-    assert(w > 0 && h > 0);
-    assert(factor > 0);
-    ImMat m((int)(w * factor), (int)(h * factor), (size_t)1);
-    /* interpolate */
-    int p00, p01, p10, p11;
-    double xx, yy, av;
-    double p0, p1;
-    for (int i = 0; i < w; i++)
-    {
-        for (int j = 0; j < h; j++)
-        {
-            p00 = at<int8_t>(i, j);
-            p01 = at<int8_t>(i, j + 1);
-            p10 = at<int8_t>(i + 1, j);
-            p11 = at<int8_t>(i + 1, j + 1);
+    assert(dims == 2 || dims == 3);
+    assert(w > 0 && h > 0 && _w > 0 && _h > 0);
+    ImMat m((int)(_w), (int)(_h), (int)c, (size_t)elemsize, elempack);
+    double scale_x = (double)w / _w;
+	double scale_y = (double)h / _h;
+    ImPixel p00, p01, p10, p11, av;
 
-            /* the general case */
-            #pragma omp parallel for num_threads(OMP_THREADS)
-            for (int x = 0; x < (int)factor; x++)
-            {
-                xx = x / (double)factor;
-                p0 = p00 * (1 - xx) + p10 * xx;
-                p1 = p01 * (1 - xx) + p11 * xx;
-                for (int y = 0; y < factor; y++)
-                {
-                    yy = y / (double)factor;
-                    av = p0 * (1 - yy) + p1 * yy;
-                    m.at<int8_t>(i * factor + x, j * factor + y) = av;
-                }
-            }
-        }
-    }
+    for (int j = 0; j < _h; ++j)
+	{
+		float fy = (float)((j + 0.5) * scale_y - 0.5);
+		int sy = std::floor(fy);
+		fy -= sy;
+		sy = std::min(sy, h - 2);
+		sy = std::max(0, sy);
+        #pragma omp parallel for num_threads(OMP_THREADS)
+		for (int i = 0; i < _w; ++i)
+		{
+			float fx = (float)((i + 0.5) * scale_x - 0.5);
+			int sx = std::floor(fx);
+			fx -= sx;
+
+			if (sx < 0) {
+				fx = 0, sx = 0;
+			}
+			if (sx >= w - 1) {
+				fx = 0, sx = w - 2;
+			}
+
+            p00 = get_pixel(sx, sy);
+            p01 = get_pixel(sx, sy + 1);
+            p10 = get_pixel(sx + 1, sy);
+            p11 = get_pixel(sx + 1, sy + 1);
+            av = p00 * (1.f - fx) * (1.f - fy) + 
+                p01 * (1.f - fx) * fy +
+                p10 * fx * (1.f - fy) +
+                p11 * fx * fy;
+            av.a = 1;
+            m.set_pixel(i, j, av);
+		}
+	}
     return m;
+}
+
+ImMat ImMat::resize(float factor)
+{
+    float _w = w * factor;
+    float _h = h * factor;
+    return resize(_w, _h);
 }
 
 void ImMat::copy_to(ImMat & mat, ImPoint offset, float alpha)

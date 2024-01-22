@@ -31,11 +31,17 @@ public:
     // dst(x,y).alpha = 1 - (1 - baseImg(x,y).alpha) * (1 - color_mix_alpha)
     bool overlay(const ImMat& baseImg, const ImMat& overlayImg, ImMat& dst, float overlayAlpha, int offx = 0, int offy = 0) const;
 
+    // alpha blending src1 and src2 using alpha from argument 'alpha',
+    // dst(x,y) = src(x-offx,y-offy)*alpha
+    // argument 'alpha' must be IM_DT_FLOAT32, channel == 1
+    void blendto(const ImMat& src, const ImMat& alpha, ImMat& dst, int offx = 0, int offy = 0) const;
+
 public:
     const VulkanDevice* vkdev {nullptr};
     Pipeline * pipe           {nullptr};
     Pipeline * pipe_alpha     {nullptr};
     Pipeline * pipe_alpha_mat {nullptr};
+    Pipeline * pipe_alpha_mat_to {nullptr};
     Pipeline * pipe_overlay   {nullptr};
     VkCompute * cmd           {nullptr};
     Option opt;
@@ -45,5 +51,6 @@ private:
     void upload_param(const VkMat& src1, const VkMat& src2, VkMat& dst, float alpha, int x, int y) const;
     void upload_param(const VkMat& src1, const VkMat& src2, VkMat& dst, const VkMat& alpha, int x, int y) const;
     void upload_param_overlay(const VkMat& src1, const VkMat& src2, VkMat& dst, float alpha, int x, int y) const;
+    void upload_param_to(const VkMat& src, const VkMat& alpha, VkMat& dst, int x, int y) const;
 };
 } // namespace ImGui 
