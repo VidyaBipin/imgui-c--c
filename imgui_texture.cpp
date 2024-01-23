@@ -152,9 +152,9 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
         g_Textures.resize(g_Textures.size() + 1);
         ImTexture& texture = g_Textures.back();
         if (is_vulkan)
-            texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(buffer, offset, width, height, bit_depth);
+            texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(buffer, offset, width, height, channels, bit_depth);
         else
-            texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(data, width, height, bit_depth);
+            texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(data, width, height, channels, bit_depth);
         if (!texture.TextureID)
         {
             g_Textures.pop_back();
@@ -171,10 +171,10 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
     }
 #if IMGUI_VULKAN_SHADER
     if (is_vulkan)
-        ImGui_ImplVulkan_UpdateTexture(imtexid, buffer, offset, width, height, bit_depth);
+        ImGui_ImplVulkan_UpdateTexture(imtexid, buffer, offset, width, height, channels, bit_depth);
     else
 #endif
-        ImGui_ImplVulkan_UpdateTexture(imtexid, data, width, height, bit_depth);
+        ImGui_ImplVulkan_UpdateTexture(imtexid, data, width, height, channels, bit_depth);
 #elif IMGUI_RENDERING_DX11
     auto textureID = (ID3D11ShaderResourceView *)imtexid;
     if (textureID)
@@ -182,7 +182,7 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
         textureID->Release();
         textureID = nullptr;
     }
-    imtexid = ImCreateTexture(pixels, width, height);
+    imtexid = ImCreateTexture(pixels, width, height, channels);
 #elif IMGUI_RENDERING_DX9
     LPDIRECT3DDEVICE9 pd3dDevice = (LPDIRECT3DDEVICE9)ImGui_ImplDX9_GetDevice();
     if (!pd3dDevice) return;
@@ -388,10 +388,10 @@ void ImCopyToTexture(ImTextureID& imtexid, unsigned char* pixels, int width, int
         return;
 #if IMGUI_VULKAN_SHADER
     if (is_vulkan)
-        ImGui_ImplVulkan_UpdateTexture(imtexid, buffer, offset, width, height, bit_depth, offset_x, offset_y);
+        ImGui_ImplVulkan_UpdateTexture(imtexid, buffer, offset, width, height, channels, bit_depth, offset_x, offset_y);
     else
 #endif
-        ImGui_ImplVulkan_UpdateTexture(imtexid, data, width, height, bit_depth, offset_x, offset_y);
+        ImGui_ImplVulkan_UpdateTexture(imtexid, data, width, height, channels, bit_depth, offset_x, offset_y);
 #elif IMGUI_RENDERING_DX11
 #elif IMGUI_RENDERING_DX9
 #elif IMGUI_OPENGL
@@ -451,13 +451,13 @@ void ImCopyToTexture(ImTextureID& imtexid, unsigned char* pixels, int width, int
 #endif
 }
 
-ImTextureID ImCreateTexture(const void* data, int width, int height, double time_stamp, int bit_depth)
+ImTextureID ImCreateTexture(const void* data, int width, int height, int channels, double time_stamp, int bit_depth)
 {
 #if IMGUI_RENDERING_VULKAN
     g_tex_mutex.lock();
     g_Textures.resize(g_Textures.size() + 1);
     ImTexture& texture = g_Textures.back();
-    texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(data, width, height, bit_depth);
+    texture.TextureID = (ImTextureVk)ImGui_ImplVulkan_CreateTexture(data, width, height, channels, bit_depth);
     if (!texture.TextureID)
     {
         g_Textures.pop_back();
@@ -712,7 +712,7 @@ ImTextureID ImLoadTexture(const char* path)
     int width = 0, height = 0, component = 0;
     if (auto data = stbi_load(path, &width, &height, &component, 4))
     {
-        auto texture = ImCreateTexture(data, width, height);
+        auto texture = ImCreateTexture(data, width, height, component);
         stbi_image_free(data);
         return texture;
     }

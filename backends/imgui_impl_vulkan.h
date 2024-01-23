@@ -206,10 +206,10 @@ typedef struct ImTextureVK
 IMGUI_IMPL_API std::string  ImGui_ImplVulkan_GetDeviceName();
 IMGUI_IMPL_API std::string  ImGui_ImplVulkan_GetApiVersion();
 IMGUI_IMPL_API std::string  ImGui_ImplVulkan_GetDrvVersion();
-IMGUI_IMPL_API ImTextureID  ImGui_ImplVulkan_CreateTexture(const void * pixels, int width, int height, int bit_depth);
-IMGUI_IMPL_API ImTextureID  ImGui_ImplVulkan_CreateTexture(VkBuffer buffer, size_t buffer_offset, int width, int height, int bit_depth);
-IMGUI_IMPL_API void         ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, const void * pixels, int width, int height, int bit_depth, int offset_x = 0, int offset_y = 0);
-IMGUI_IMPL_API void         ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, VkBuffer stagingBuffer, size_t buffer_offset, int width, int height, int bit_depth, int offset_x = 0, int offset_y = 0);
+IMGUI_IMPL_API ImTextureID  ImGui_ImplVulkan_CreateTexture(const void * pixels, int width, int height, int channels, int bit_depth);
+IMGUI_IMPL_API ImTextureID  ImGui_ImplVulkan_CreateTexture(VkBuffer buffer, size_t buffer_offset, int width, int height, int channels, int bit_depth);
+IMGUI_IMPL_API void         ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, const void * pixels, int width, int height, int channels, int bit_depth, int offset_x = 0, int offset_y = 0);
+IMGUI_IMPL_API void         ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, VkBuffer stagingBuffer, size_t buffer_offset, int width, int height, int channels, int bit_depth, int offset_x = 0, int offset_y = 0);
 IMGUI_IMPL_API int          ImGui_ImplVulkan_GetTextureData(ImTextureVk texture, void *data, int& width, int& height, int& channels);
 IMGUI_IMPL_API ImVec4       ImGui_ImplVulkan_GetTexturePixel(ImTextureVk texture, int x, int y);
 IMGUI_IMPL_API void         ImGui_ImplVulkan_DestroyTexture(ImTextureVk * texture);

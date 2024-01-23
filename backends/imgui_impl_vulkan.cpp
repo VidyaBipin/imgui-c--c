@@ -2197,7 +2197,112 @@ static void BlitImage(ImGui_ImplVulkan_InitInfo* v, VkCommandPool commandPool, V
     endSingleTimeCommands(v, commandPool, commandBuffer);
 }
 
-ImTextureID ImGui_ImplVulkan_CreateTexture(const void * pixels, int width, int height, int bit_depth)
+static void copy_RGB_2_RGBA(const void * pixels, void * dst, int width, int height, int bit_depth)
+{
+    // TODO::Dicky opt copy RGB to RGBA
+    switch (bit_depth)
+    {
+        case 8: 
+        {
+            for (int h = 0; h < height; h++)
+            {
+                for (int w = 0; w < width; w++)
+                {
+                    ((uint8_t*)dst)[h * width * 4 + w * 4 + 0] = ((uint8_t*)pixels)[h * width * 3 + w * 3 + 0];
+                    ((uint8_t*)dst)[h * width * 4 + w * 4 + 1] = ((uint8_t*)pixels)[h * width * 3 + w * 3 + 1];
+                    ((uint8_t*)dst)[h * width * 4 + w * 4 + 2] = ((uint8_t*)pixels)[h * width * 3 + w * 3 + 2];
+                    ((uint8_t*)dst)[h * width * 4 + w * 4 + 3] = 255;
+                }
+            }
+        }
+        break;
+        case 16:
+        {
+            for (int h = 0; h < height; h++)
+            {
+                for (int w = 0; w < width; w++)
+                {
+                    ((uint16_t*)dst)[h * width * 4 + w * 4 + 0] = ((uint16_t*)pixels)[h * width * 3 + w * 3 + 0];
+                    ((uint16_t*)dst)[h * width * 4 + w * 4 + 1] = ((uint16_t*)pixels)[h * width * 3 + w * 3 + 1];
+                    ((uint16_t*)dst)[h * width * 4 + w * 4 + 2] = ((uint16_t*)pixels)[h * width * 3 + w * 3 + 2];
+                    ((uint16_t*)dst)[h * width * 4 + w * 4 + 3] = 65535;
+                }
+            }
+        }
+        break;
+        case 32:
+        {
+            for (int h = 0; h < height; h++)
+            {
+                for (int w = 0; w < width; w++)
+                {
+                    ((float*)dst)[h * width * 4 + w * 4 + 0] = ((float*)pixels)[h * width * 3 + w * 3 + 0];
+                    ((float*)dst)[h * width * 4 + w * 4 + 1] = ((float*)pixels)[h * width * 3 + w * 3 + 1];
+                    ((float*)dst)[h * width * 4 + w * 4 + 2] = ((float*)pixels)[h * width * 3 + w * 3 + 2];
+                    ((float*)dst)[h * width * 4 + w * 4 + 3] = 1.0f;
+                }
+            }
+        }
+        break;
+        default: break;
+    }
+}
+
+static void copy_Gray_2_RGBA(const void * pixels, void * dst, int width, int height, int bit_depth)
+{
+    // TODO::Dicky opt copy GRAY to RGBA
+    switch (bit_depth)
+    {
+        case 8:
+        {
+            for (int h = 0; h < height; h++)
+            {
+                for (int w = 0; w < width; w++)
+                {
+                    uint8_t val =  ((uint8_t*)pixels)[h * width + w];
+                    ((uint8_t*)dst)[h * width * 4 + w * 4 + 0] = 
+                    ((uint8_t*)dst)[h * width * 4 + w * 4 + 1] = 
+                    ((uint8_t*)dst)[h * width * 4 + w * 4 + 2] = val;
+                    ((uint8_t*)dst)[h * width * 4 + w * 4 + 3] = 255;
+                }
+            }
+        }
+        break;
+        case 16: 
+        {
+            for (int h = 0; h < height; h++)
+            {
+                for (int w = 0; w < width; w++)
+                {
+                    uint16_t val =  ((uint16_t*)pixels)[h * width + w];
+                    ((uint16_t*)dst)[h * width * 4 + w * 4 + 0] = 
+                    ((uint16_t*)dst)[h * width * 4 + w * 4 + 1] = 
+                    ((uint16_t*)dst)[h * width * 4 + w * 4 + 2] = val;
+                    ((uint16_t*)dst)[h * width * 4 + w * 4 + 3] = 65535;
+                }
+            }
+        }
+        break;
+        case 32:
+        {
+            for (int h = 0; h < height; h++)
+            {
+                for (int w = 0; w < width; w++)
+                {
+                    float val =  ((float*)pixels)[h * width + w];
+                    ((float*)dst)[h * width * 4 + w * 4 + 0] = 
+                    ((float*)dst)[h * width * 4 + w * 4 + 1] = 
+                    ((float*)dst)[h * width * 4 + w * 4 + 2] = val;
+                    ((float*)dst)[h * width * 4 + w * 4 + 3] = 1.f;
+                }
+            }
+        }
+        break;
+        default: break;
+    }
+}
+
+ImTextureID ImGui_ImplVulkan_CreateTexture(const void * pixels, int width, int height, int channels, int bit_depth)
 {
     ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
     if (!bd) return (ImTextureID)0;
@@ -2224,7 +2329,9 @@ ImTextureID ImGui_ImplVulkan_CreateTexture(const void * pixels, int width, int h
     {
         throw std::runtime_error("failed to map image memory!");
     }
-    memcpy(data, pixels, static_cast<size_t>(imageSize));
+    if (channels == 4) memcpy(data, pixels, static_cast<size_t>(imageSize));
+    else if (channels == 3) copy_RGB_2_RGBA(pixels, data, width, height, bit_depth);
+    else if (channels == 1) copy_Gray_2_RGBA(pixels, data, width, height, bit_depth);
     vkUnmapMemory(v->Device, stagingBufferMemory);
 
     createImage(v, width,height,VK_FORMAT_R8G8B8A8_UNORM,
@@ -2274,7 +2381,7 @@ ImTextureID ImGui_ImplVulkan_CreateTexture(const void * pixels, int width, int h
     return (ImTextureID)texture;
 }
 
-ImTextureID ImGui_ImplVulkan_CreateTexture(VkBuffer buffer, size_t buffer_offset, int width, int height, int bit_depth)
+ImTextureID ImGui_ImplVulkan_CreateTexture(VkBuffer buffer, size_t buffer_offset, int width, int height, int channels, int bit_depth)
 {
     ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
     if (!bd) return (ImTextureID)0;
@@ -2332,7 +2439,7 @@ ImTextureID ImGui_ImplVulkan_CreateTexture(VkBuffer buffer, size_t buffer_offset
     return (ImTextureID)texture;
 }
 
-void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, VkBuffer stagingBuffer, size_t buffer_offset, int width, int height, int bit_depth, int offset_x, int offset_y)
+void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, VkBuffer stagingBuffer, size_t buffer_offset, int width, int height, int channels, int bit_depth, int offset_x, int offset_y)
 {
     ImTextureVk texture = (ImTextureVk)textureid;
     if (!texture) return;
@@ -2379,7 +2486,7 @@ void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, VkBuffer stagingBuffe
     vkDestroyCommandPool(v->Device, commandPool, nullptr);
 }
 
-void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, const void * pixels, int width, int height, int bit_depth, int offset_x, int offset_y)
+void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, const void * pixels, int width, int height, int channels, int bit_depth, int offset_x, int offset_y)
 {
     ImTextureVk texture = (ImTextureVk)textureid;
     if (!texture) return;
@@ -2403,7 +2510,9 @@ void ImGui_ImplVulkan_UpdateTexture(ImTextureID textureid, const void * pixels, 
     {
         throw std::runtime_error("failed to map image memory!");
     }
-    memcpy(data, pixels, static_cast<size_t>(imageSize));
+    if (channels == 4) memcpy(data, pixels, static_cast<size_t>(imageSize));
+    else if (channels == 3) copy_RGB_2_RGBA(pixels, data, width, height, bit_depth);
+    else if (channels == 1) copy_Gray_2_RGBA(pixels, data, width, height, bit_depth);
     vkUnmapMemory(v->Device, stagingBufferMemory);
 
     VkCommandPoolCreateInfo poolInfo{};

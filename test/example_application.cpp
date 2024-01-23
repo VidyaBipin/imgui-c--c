@@ -362,10 +362,12 @@ public:
 public:
     ImGui::ImMat image {ImGui::ImMat(256, 256, 4, 1u, 4)};
     ImGui::ImMat draw_mat {ImGui::ImMat(512, 512, 4, 1u, 4)};
-    ImGui::ImMat small_mat {ImGui::ImMat(128, 128, 4, 4u, 4)};
+    ImGui::ImMat float_mat {ImGui::ImMat(128, 128, 4, 4u, 4)};
+    ImGui::ImMat rgb_mat {ImGui::ImMat(128, 128, 3, 1u, 3)};
     ImGui::ImMat custom_mat {ImGui::ImMat(2048, 2048, 4, 1u, 4)};
     ImTextureID ImageTexture = 0;
     ImTextureID DrawMatTexture = 0;
+    ImTextureID SmallTexture = 0;
     ImTextureID CustomDrawTexture = 0;
 };
 
@@ -501,15 +503,16 @@ void Example::DrawLineDemo()
     ImPixel line_color(base_color.x, base_color.y, base_color.z, 1.f);
     ImPixel circle_color(light_color.x, light_color.y, light_color.z, 1.f);
     ImPixel text_color(t_color.x, t_color.y, t_color.z, 1.f);
-    small_mat.clean(text_color);
-    small_mat.draw_line(ImPoint(0, 0), ImPoint(small_mat.w - 1, 0), 1, ImPixel(0, 0, 0, 1));
-    small_mat.draw_line(ImPoint(0, 0), ImPoint(0, small_mat.h - 1), 1, ImPixel(0, 0, 0, 1));
-    small_mat.draw_line(ImPoint(small_mat.w - 1, 0), ImPoint(small_mat.w - 1, small_mat.h - 1), 1, ImPixel(0, 0, 0, 1));
-    small_mat.draw_line(ImPoint(0, small_mat.h - 1), ImPoint(small_mat.w - 1, small_mat.h - 1), 1, ImPixel(0, 0, 0, 1));
-    small_mat.draw_line(ImPoint(small_mat.w / 2, 0), ImPoint(small_mat.w / 2, small_mat.h - 1), 1, ImPixel(0, 0, 0, 1));
-    small_mat.draw_line(ImPoint(0, small_mat.h / 2), ImPoint(small_mat.w - 1, small_mat.h / 2), 1, ImPixel(0, 0, 0, 1));
+    float_mat.clean(text_color);
+    float_mat.draw_line(ImPoint(0, 0), ImPoint(float_mat.w - 1, 0), 1, ImPixel(0, 0, 0, 1));
+    float_mat.draw_line(ImPoint(0, 0), ImPoint(0, float_mat.h - 1), 1, ImPixel(0, 0, 0, 1));
+    float_mat.draw_line(ImPoint(float_mat.w - 1, 0), ImPoint(float_mat.w - 1, float_mat.h - 1), 1, ImPixel(0, 0, 0, 1));
+    float_mat.draw_line(ImPoint(0, float_mat.h - 1), ImPoint(float_mat.w - 1, float_mat.h - 1), 1, ImPixel(0, 0, 0, 1));
+    float_mat.draw_line(ImPoint(float_mat.w / 2, 0), ImPoint(float_mat.w / 2, float_mat.h - 1), 1, ImPixel(0, 0, 0, 1));
+    float_mat.draw_line(ImPoint(0, float_mat.h / 2), ImPoint(float_mat.w - 1, float_mat.h / 2), 1, ImPixel(0, 0, 0, 1));
+    rgb_mat.clean(text_color);
 #if IMGUI_VULKAN_SHADER
-    ImGui::VkMat small_vkmat(small_mat);
+    ImGui::VkMat float_vkmat(float_mat);
 #endif
 
     // draw line test
@@ -578,17 +581,20 @@ void Example::DrawLineDemo()
 
     // mat copy to texture
 #if IMGUI_VULKAN_SHADER
-    ImGui::ImCopyToTexture(DrawMatTexture, (unsigned char*)&small_vkmat, small_vkmat.w, small_vkmat.h, small_vkmat.c, offset_x, offset_y, true);
+    ImGui::ImCopyToTexture(DrawMatTexture, (unsigned char*)&float_vkmat, float_vkmat.w, float_vkmat.h, float_vkmat.c, offset_x, offset_y, true);
 #else
-    ImGui::ImCopyToTexture(DrawMatTexture, (unsigned char*)&small_mat, small_mat.w, small_mat.h, small_mat.c, offset_x, offset_y, true);
+    ImGui::ImCopyToTexture(DrawMatTexture, (unsigned char*)&float_mat, float_mat.w, float_mat.h, float_mat.c, offset_x, offset_y, true);
 #endif
 
     offset_x += step_x;
     offset_y += step_y;
-    if (offset_x < 0 || offset_x + small_mat.w >= draw_mat.w) { step_x = -step_x; offset_x += step_x; }
-    if (offset_y < 0 || offset_y + small_mat.h >= draw_mat.h) { step_y = -step_y; offset_y += step_y; }
+    if (offset_x < 0 || offset_x + float_mat.w >= draw_mat.w) { step_x = -step_x; offset_x += step_x; }
+    if (offset_y < 0 || offset_y + float_mat.h >= draw_mat.h) { step_y = -step_y; offset_y += step_y; }
     
     ImGui::Image(DrawMatTexture, ImVec2(draw_mat.w, draw_mat.h));
+
+    ImGui::ImMatToTexture(rgb_mat, SmallTexture);
+    if (SmallTexture) ImGui::Image(SmallTexture, ImVec2(rgb_mat.w, rgb_mat.h));
 }
 
 void Example::DrawRotateDemo()
@@ -949,7 +955,7 @@ void Example_Initialize(void** handle)
             vThumbnail_Info->isReadyToUpload && 
             vThumbnail_Info->textureFileDatas)
         {
-            auto texture = ImGui::ImCreateTexture(vThumbnail_Info->textureFileDatas, vThumbnail_Info->textureWidth, vThumbnail_Info->textureHeight);
+            auto texture = ImGui::ImCreateTexture(vThumbnail_Info->textureFileDatas, vThumbnail_Info->textureWidth, vThumbnail_Info->textureHeight, vThumbnail_Info->textureChannels);
             vThumbnail_Info->textureID = (void*)texture;
             delete[] vThumbnail_Info->textureFileDatas;
             vThumbnail_Info->textureFileDatas = nullptr;
@@ -992,7 +998,7 @@ bool Example_Frame(void* handle, bool app_will_quit)
         return true;
     if (!example->ImageTexture) 
     {
-        example->ImageTexture = ImGui::ImCreateTexture(example->image.data, example->image.w, example->image.h);
+        example->ImageTexture = ImGui::ImCreateTexture(example->image.data, example->image.w, example->image.h, example->image.c);
     }
     // Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
     if (example->show_demo_window)
