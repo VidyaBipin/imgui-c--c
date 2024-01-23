@@ -387,7 +387,7 @@ static void FramePresent(ImGui_ImplVulkanH_Window* wd)
         return;
     }
     check_vk_result(err);
-    wd->SemaphoreIndex = (wd->SemaphoreIndex + 1) % wd->ImageCount; // Now we can use the next set of semaphores
+    wd->SemaphoreIndex = (wd->SemaphoreIndex + 1) % wd->SemaphoreCount; // Now we can use the next set of semaphores
 }
 
 static void FrameRendering(ImGui_ImplVulkanH_Window* wd)

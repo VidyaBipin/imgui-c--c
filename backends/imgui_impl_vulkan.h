@@ -48,10 +48,12 @@
 #if defined(IMGUI_IMPL_VULKAN_NO_PROTOTYPES) && !defined(VK_NO_PROTOTYPES)
 #define VK_NO_PROTOTYPES
 #endif
-#ifdef _WIN32            // add by Dicky
-#define VK_USE_PLATFORM_WIN32_KHR
-#endif
+#if defined(VK_USE_PLATFORM_WIN32_KHR) && !defined(NOMINMAX)
+#define NOMINMAX
 #include <vulkan/vulkan.h>
+#else
+#include <vulkan/vulkan.h>
+#endif
 #include <memory>        // add by Dicky
 #include <mutex>        // add by Dicky
 // Initialization data, for ImGui_ImplVulkan_Init()
