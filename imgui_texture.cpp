@@ -143,6 +143,8 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
             is_vulkan = false;
         }
     }
+    else
+        data = (unsigned char *)pixels;
     if (!is_vulkan && !data)
         return;
     if (imtexid == 0)
