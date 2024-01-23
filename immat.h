@@ -495,10 +495,12 @@ struct ImBox
                                                             Max.y += height * ratio_y;
                                                             if (limite.w > 0 && limite.h > 0) Clamp(ImBox(0, 0, limite.w, limite.h));
                                                         }
-    ImBox           Intersection(const ImBox& r) const  { 
-                                                            auto box = ImBox(std::max(Min.x, r.Min.x), std::max(Min.y, r.Min.y), std::min(Max.x, r.Max.x), std::min(Max.y, r.Max.y)); 
-                                                            if (GetWidth() <= 0 || GetHeight() <= 0) memset(&box, 0, sizeof(ImBox)); 
-                                                            return box;
+    float           IntersectionArea(const ImBox& box) const
+                                                        {
+                                                            if (Min.x > box.Max.x || Max.x < box.Min.x || Min.y > box.Max.y || Max.y < box.Min.y) return 0.f;
+                                                            float inter_width = std::min(Max.x, box.Max.x) - std::max(Min.x, box.Min.x);
+                                                            float inter_height = std::min(Max.y, box.Max.y) - std::max(Min.y, box.Min.y);
+                                                            return inter_width * inter_height;
                                                         }
 };
 ////////////////////////////////////////////////////////////////////
