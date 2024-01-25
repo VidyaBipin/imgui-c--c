@@ -748,8 +748,7 @@ public:
     IMGUI_API ImMat lowpass(float lambda);
     IMGUI_API ImMat highpass(float lambda);
     IMGUI_API ImMat threshold(float thres);
-    IMGUI_API ImMat resize(float factor);     // interpolate_linear
-    IMGUI_API ImMat resize(float w, float h); // interpolate_linear
+    IMGUI_API ImMat resize(float w, float h, int interpolate = 0); // interpolate_linear = 0 interpolate_nearest = 1
 
     // copy to
     IMGUI_API void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);

@@ -44,7 +44,10 @@ void ImMat::get_pixel(int x, int y, ImPixel& color) const
                 if (c > 3) color.a = (float)at<uint64_t>(x, y, 3) / (float)UINT64_MAX;
             break;
             case IM_DT_FLOAT16:
-                // TODO::Dicky add FLOAT16 get pixel from ImPixel
+                if (c > 0) color.r = im_float16_to_float32(at<uint16_t>(x, y, 0));
+                if (c > 1) color.g = im_float16_to_float32(at<uint16_t>(x, y, 1));
+                if (c > 2) color.b = im_float16_to_float32(at<uint16_t>(x, y, 2));
+                if (c > 3) color.a = im_float16_to_float32(at<uint16_t>(x, y, 3));
             break;
             case IM_DT_FLOAT32:
                 if (c > 0) color.r = at<float>(x, y, 0);
@@ -279,7 +282,10 @@ void ImMat::alphablend(int x, int y, ImPixel color)
         }
         break;
         case IM_DT_FLOAT16:
-            // TODO::Dicky add FLOAT16 alphablend
+            if (c > 0) at<uint16_t>(x, y, 0) = im_float32_to_float16(im_float16_to_float32(at<uint16_t>(x, y, 0)) * (1 - color.a) + color.r * color.a);
+            if (c > 1) at<uint16_t>(x, y, 1) = im_float32_to_float16(im_float16_to_float32(at<uint16_t>(x, y, 1)) * (1 - color.a) + color.g * color.a);
+            if (c > 2) at<uint16_t>(x, y, 2) = im_float32_to_float16(im_float16_to_float32(at<uint16_t>(x, y, 2)) * (1 - color.a) + color.b * color.a);
+            if (c > 3) at<uint16_t>(x, y, 3) = im_float32_to_float16(1.f);//CLAMP(color.a + alpha_org, 0.f, 1.f);
         break;
         case IM_DT_FLOAT32:
         {
@@ -625,7 +631,7 @@ ImMat ImMat::threshold(float thres)
     return ImMat();
 }
 
-ImMat ImMat::resize(float _w, float _h)
+ImMat ImMat::resize(float _w, float _h, int interpolate)
 {
     assert(device == IM_DD_CPU);
     assert(dims == 2 || dims == 3);
@@ -656,27 +662,26 @@ ImMat ImMat::resize(float _w, float _h)
 			if (sx >= w - 1) {
 				fx = 0, sx = w - 2;
 			}
-
-            p00 = get_pixel(sx, sy);
-            p01 = get_pixel(sx, sy + 1);
-            p10 = get_pixel(sx + 1, sy);
-            p11 = get_pixel(sx + 1, sy + 1);
-            av = p00 * (1.f - fx) * (1.f - fy) + 
-                p01 * (1.f - fx) * fy +
-                p10 * fx * (1.f - fy) +
-                p11 * fx * fy;
-            av.a = 1;
+            if (interpolate == 0)
+            {
+                p00 = get_pixel(sx, sy);
+                p01 = get_pixel(sx, sy + 1);
+                p10 = get_pixel(sx + 1, sy);
+                p11 = get_pixel(sx + 1, sy + 1);
+                av = p00 * (1.f - fx) * (1.f - fy) + 
+                    p01 * (1.f - fx) * fy +
+                    p10 * fx * (1.f - fy) +
+                    p11 * fx * fy;
+                av.a = 1;
+            }
+            else
+            {
+                av = get_pixel(sx, sy);
+            }
             m.set_pixel(i, j, av);
 		}
 	}
     return m;
-}
-
-ImMat ImMat::resize(float factor)
-{
-    float _w = w * factor;
-    float _h = h * factor;
-    return resize(_w, _h);
 }
 
 void ImMat::copy_to(ImMat & mat, ImPoint offset, float alpha)
