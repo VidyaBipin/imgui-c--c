@@ -274,7 +274,7 @@ bool IsFile(const string& path)
 #endif
 }
 
-bool CreateDirectory(const string& _path, bool createParentIfNotExists)
+bool CreateDirectoryCstm(const string& _path, bool createParentIfNotExists)
 {
     if (_path.empty())
         return false;

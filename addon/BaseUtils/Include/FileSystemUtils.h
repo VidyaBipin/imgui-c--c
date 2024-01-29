@@ -32,7 +32,7 @@ BASEUTILS_API std::string JoinPath(const std::string& path1, const std::string& 
 BASEUTILS_API bool Exists(const std::string& path);
 BASEUTILS_API bool IsDirectory(const std::string& path);
 BASEUTILS_API bool IsFile(const std::string& path);
-BASEUTILS_API bool CreateDirectory(const std::string& path, bool createParentIfNotExists);
+BASEUTILS_API bool CreateDirectoryCstm(const std::string& path, bool createParentIfNotExists);
 BASEUTILS_API bool DeleteDirectory(const std::string& path, bool recursiveDelete = true);
 
 

@@ -219,7 +219,7 @@ namespace ImNewCurve
         bool m_bTimeBaseValid;
     };
 
-    bool DrawCurveArraySimpleView(float fViewWidth, const std::vector<Curve::Holder>& aCurves, float& fCurrTick, const ImVec2& v2TickRange = ImVec2(0,0), ImGuiKey eRemoveKey = ImGuiKey_LeftAlt);
+    IMGUI_API bool DrawCurveArraySimpleView(float fViewWidth, const std::vector<Curve::Holder>& aCurves, float& fCurrTick, const ImVec2& v2TickRange = ImVec2(0,0), ImGuiKey eRemoveKey = ImGuiKey_LeftAlt);
 
     // forward declaration
     class Editor;
