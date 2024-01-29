@@ -1,6 +1,7 @@
 #include <iostream>
 #include <algorithm>
 #include <sstream>
+#include <iostream>
 #include <list>
 #include <limits>
 #include "ImNewCurve.h"
@@ -197,13 +198,14 @@ Curve::Curve(const std::string& name, CurveType eCurveType, const std::pair<uint
     m_tMinVal = Min(minVal, maxVal);
     m_tMaxVal = Max(minVal, maxVal);
     m_tValRange = m_tMaxVal-m_tMinVal;
-    m_tValRange.w = 1.f;
     m_bTimeBaseValid = tTimeBase.first > 0 && tTimeBase.second > 0;
     if (m_bTimeBaseValid)
     {
         m_tMinVal.w = Time2TickAligned(m_tMinVal.w);
         m_tMaxVal.w = Time2TickAligned(m_tMaxVal.w);
     }
+    if (m_tMinVal.w > m_tMaxVal.w)
+        throw std::runtime_error("INVALID arguments to create a 'Curve'! 'minVal.w' (time range begin) is larger than 'maxVal.w' (time range end).");
     if (bAddInitKp)
     {
         auto tInitKpVal = defaultVal;
@@ -312,7 +314,7 @@ void Curve::SetMaxVal(const KeyPoint::ValType& maxVal)
     m_tValRange = m_tMaxVal-m_tMinVal;
 }
 
-int Curve::AddPoint(KeyPoint::Holder hKp, bool bNormalize, bool bOverwriteIfExists)
+int Curve::AddPoint(KeyPoint::Holder hKp, bool bOverwriteIfExists)
 {
     hKp->t = Time2TickAligned(hKp->t);
     auto iter = std::find_if(m_aKeyPoints.begin(), m_aKeyPoints.end(), [hKp] (const auto& elem) {
@@ -320,13 +322,6 @@ int Curve::AddPoint(KeyPoint::Holder hKp, bool bNormalize, bool bOverwriteIfExis
     });
     if (iter != m_aKeyPoints.end() && !bOverwriteIfExists)
         return -1;
-
-    if (bNormalize)
-    {
-        const auto t = hKp->t;
-        hKp->val = (hKp->val-m_tMinVal)/(m_tValRange+FLT_EPSILON);
-        hKp->t = t;
-    }
 
     if (hKp->type == UnKnown)
         hKp->type = m_eCurveType;
@@ -340,31 +335,35 @@ int Curve::AddPoint(KeyPoint::Holder hKp, bool bNormalize, bool bOverwriteIfExis
         (*iter)->val = hKp->val;
         (*iter)->type = hKp->type;
     }
-    return GetKeyPointIndex(hKp->t);
+    const auto idx = GetKeyPointIndex(hKp->t);
+    if (idx >= 0)
+    {
+        for (const auto& pCb : m_aCallbacksArray)
+            pCb->OnKeyPointAdded((size_t)idx, hKp);
+    }
+    return idx;
 }
 
-int Curve::AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize, bool bOverwriteIfExists)
+int Curve::AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType, bool bOverwriteIfExists)
 {
-    KeyPoint::ValType tKpVal(m_tDefaultVal);
+    auto tKpVal = CalcPointVal(v2DimVal.x);
     KeyPoint::SetDimVal(tKpVal, v2DimVal.y, eDim);
     tKpVal.w = v2DimVal.x;
     auto hKp = KeyPoint::CreateInstance(tKpVal, eCurveType);
-    return AddPoint(hKp, bNormalize, bOverwriteIfExists);
+    return AddPoint(hKp, bOverwriteIfExists);
 }
 
-int Curve::EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCurveType, bool bNormalize)
+int Curve::EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCurveType)
 {
     const auto szKpCnt = m_aKeyPoints.size();
     if (idx >= szKpCnt)
         return -1;
 
-    KeyPoint::ValType tKpVal_;
-    if (bNormalize)
-        tKpVal_ = (tKpVal-m_tMinVal)/(m_tValRange+FLT_EPSILON);
-    else
-        tKpVal_ = tKpVal;
+    KeyPoint::ValType tKpVal_(tKpVal);
     tKpVal_.w = Time2TickAligned(tKpVal.w);
     auto hKp = GetKeyPoint(idx);
+    if (eCurveType == UnKnown)
+        eCurveType = hKp->type;
     if (tKpVal_ == hKp->val && eCurveType == hKp->type)
         return -2;
 
@@ -443,34 +442,29 @@ int Curve::EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCur
     hKp->t = t;
     hKp->type = eCurveType;
     SortKeyPoints();
-    return GetKeyPointIndex(hKp);
+    const auto iNewIdx = GetKeyPointIndex(hKp);
+    if (iNewIdx >= 0)
+    {
+        for (const auto& pCb : m_aCallbacksArray)
+            pCb->OnKeyPointChanged((size_t)iNewIdx, hKp);
+        if (iNewIdx != idx)
+            for (const auto& pCb : m_aCallbacksArray)
+                pCb->OnKeyPointChanged(idx, hKp);
+    }
+    return iNewIdx;
 }
 
-int Curve::EditPointByDim(ValueDimension eDim, size_t idx, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize)
+int Curve::EditPointByDim(ValueDimension eDim, size_t idx, const ImVec2& v2DimVal, CurveType eCurveType)
 {
     if (idx >= m_aKeyPoints.size())
         return -1;
     KeyPoint::ValType tKpVal = GetKeyPoint_(idx)->val;
     KeyPoint::SetDimVal(tKpVal, v2DimVal.y, eDim);
     tKpVal.w = v2DimVal.x;
-    return EditPoint(idx, tKpVal, eCurveType, bNormalize);
+    return EditPoint(idx, tKpVal, eCurveType);
 }
 
-int Curve::ChangePointVal(size_t idx, const KeyPoint::ValType& tKpVal, bool bNormalize)
-{
-    if (idx >= m_aKeyPoints.size())
-        return -1;
-    return EditPoint(idx, tKpVal, GetKeyPoint(idx)->type, bNormalize);
-}
-
-int Curve::ChangePointValByDim(ValueDimension eDim, size_t idx, const ImVec2& v2DimVal, bool bNormalize)
-{
-    if (idx >= m_aKeyPoints.size())
-        return -1;
-    return EditPointByDim(eDim, idx, v2DimVal, GetKeyPoint(idx)->type, bNormalize);
-}
-
-int Curve::ChangeCurveType(size_t idx, CurveType eCurveType)
+int Curve::ChangeKeyPointCurveType(size_t idx, CurveType eCurveType)
 {
     if (idx >= m_aKeyPoints.size())
         return -1;
@@ -484,10 +478,13 @@ KeyPoint::Holder Curve::RemovePoint(size_t idx)
     if (idx >= m_aKeyPoints.size())
         return nullptr;
     auto iter = m_aKeyPoints.begin();
-    while (idx-- > 0)
+    int c = (int)idx;
+    while (c-- > 0)
         iter++;
     auto hKp = *iter;
     m_aKeyPoints.erase(iter);
+    for (const auto& pCb : m_aCallbacksArray)
+        pCb->OnKeyPointRemoved(idx, hKp);
     return hKp;
 }
 
@@ -504,19 +501,12 @@ void Curve::ClearAll()
     m_aKeyPoints.clear();
 }
 
-float Curve::MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint, bool bNormalize)
+float Curve::MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint)
 {
     if (v2SyncPoint.x < m_tMinVal.w || v2SyncPoint.x > m_tMaxVal.w)
         return 0.f;
-    auto v2SyncPoint_(v2SyncPoint);
-    if (bNormalize)
-    {
-        const auto fMinVal = KeyPoint::GetDimVal(m_tMinVal, eDim);
-        const auto fValRange = KeyPoint::GetDimVal(m_tValRange, eDim);
-        v2SyncPoint_.y = (v2SyncPoint.y-fMinVal)/(fValRange+FLT_EPSILON);
-    }
-    const auto fOrgPtVal = KeyPoint::GetDimVal(CalcPointVal(v2SyncPoint_.x, false, false), eDim);
-    const auto fOffset = v2SyncPoint_.y-fOrgPtVal;
+    const auto fOrgPtVal = KeyPoint::GetDimVal(CalcPointVal(v2SyncPoint.x, false), eDim);
+    const auto fOffset = v2SyncPoint.y-fOrgPtVal;
     if (fabs(fOffset) < FLT_EPSILON)
         return 0.f;
     for (auto& hKp : m_aKeyPoints)
@@ -527,7 +517,7 @@ float Curve::MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint,
     return fOffset;
 }
 
-KeyPoint::ValType Curve::CalcPointVal(float t, bool bDenormalize, bool bAlignTime) const
+KeyPoint::ValType Curve::CalcPointVal(float t, bool bAlignTime) const
 {
     t = bAlignTime ? Time2TickAligned(t) : Time2Tick(t);
     KeyPoint::ValType res(m_tDefaultVal);
@@ -569,8 +559,6 @@ KeyPoint::ValType Curve::CalcPointVal(float t, bool bDenormalize, bool bAlignTim
         const float rt = SmoothStep(p1->t, p2->t, t, type);
         res = ImLerp(p1->val, p2->val, rt);
     }
-    if (bDenormalize)
-        res = res*m_tValRange+m_tMinVal;
     res.w = Tick2Time(t);
     return res;
 }
@@ -581,8 +569,8 @@ bool Curve::SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds)
         return false;
     if (m_bTimeBaseValid)
     {
-        m_tMinVal.w = Time2TickAligned(m_tMinVal.w);
-        m_tMaxVal.w = Time2TickAligned(m_tMaxVal.w);
+        m_tMinVal.w = Time2TickAligned(v2TimeRange.x);
+        m_tMaxVal.w = Time2TickAligned(v2TimeRange.y);
     }
     else
     {
@@ -705,7 +693,6 @@ void Curve::LoadFromJson(const imgui_json::value& j)
     m_tMinVal = Min(tMinVal, tMaxVal);
     m_tMaxVal = Max(tMinVal, tMaxVal);
     m_tValRange = m_tMaxVal-m_tMinVal;
-    m_tValRange.w = 1.f;
     m_tDefaultVal = j["default_val"].get<imgui_json::vec4>();
     ImVec2 v2Tmp = j["time_base"].get<imgui_json::vec2>();
     m_tTimeBase.first = (uint32_t)v2Tmp.x;
@@ -724,6 +711,20 @@ void Curve::LoadFromJson(const imgui_json::value& j)
         hKp->LoadFromJson(jelem);
         m_aKeyPoints.push_back(hKp);
     }
+}
+
+void Curve::RigisterCallbacks(Callbacks* pCb)
+{
+    auto iter = std::find(m_aCallbacksArray.begin(), m_aCallbacksArray.end(), pCb);
+    if (iter == m_aCallbacksArray.end())
+        m_aCallbacksArray.push_back(pCb);
+}
+
+void Curve::UnrigsterCallbacks(Callbacks* pCb)
+{
+    auto iter = std::find(m_aCallbacksArray.begin(), m_aCallbacksArray.end(), pCb);
+    if (iter != m_aCallbacksArray.end())
+        m_aCallbacksArray.erase(iter);
 }
 
 bool DrawCurveArraySimpleView(float fViewWidth, const std::vector<Curve::Holder>& aCurves, float& fCurrTick, const ImVec2& _v2TickRange, ImGuiKey eRemoveKey)
@@ -875,62 +876,222 @@ bool DrawCurveArraySimpleView(float fViewWidth, const std::vector<Curve::Holder>
     return bCurveChanged;
 }
 
-// 'CurveUiObj' implementation
-CurveUiObj::Holder CurveUiObj::CreateInstance(Editor* owner, const std::string& name, CurveType type, const std::pair<uint32_t, uint32_t>& tTimeBase,
-        const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal,
-        ImU32 color, bool visible, int64_t id, int64_t subId)
+Editor::CurveUiObj::CurveUiObj(Editor* pOwner, Curve::Holder hCurve, ValueDimension eDim, ImU32 u32CurveColor)
+    : m_pOwner(pOwner), m_hCurve(hCurve), m_eDim(eDim), m_u32CurveColor(u32CurveColor)
 {
-    return CurveUiObj::Holder(new CurveUiObj(owner, name, type, tTimeBase, minVal, maxVal, defaultVal, color, visible, id, subId));
+    ImColor tHoverColor(u32CurveColor);
+    tHoverColor.Value += ImVec4(0.1, 0.1, 0.1, 0);
+    m_u32CurveHoverColor = (ImU32)tHoverColor;
+    hCurve->RigisterCallbacks(this);
 }
 
-CurveUiObj::Holder CurveUiObj::CreateInstance(Editor* owner, const std::string& name, CurveType type,
-        const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal,
-        ImU32 color, bool visible, int64_t id, int64_t subId)
+Editor::CurveUiObj::~CurveUiObj()
 {
-    return CreateInstance(owner, name, type, {0, 0}, minVal, maxVal, defaultVal, color, visible, id, subId);
+    m_hCurve->UnrigsterCallbacks(this);
 }
 
-CurveUiObj::Holder CurveUiObj::CreateFromJson(Editor* owner, const imgui_json::value& j)
+void Editor::CurveUiObj::DrawCurve(ImDrawList* pDrawList, const ImVec2& v2OriginPos, bool bIsHovering) const
 {
-    auto hCurveUiObj = CurveUiObj::Holder(new CurveUiObj(owner));
-    hCurveUiObj->LoadFromJson(j);
-    return hCurveUiObj;
-}
-
-bool CurveUiObj::CheckMouseHoverCurve(ValueDimension eDim, const ImVec2& pos)
-{
-    if (m_aKeyPoints.size() < 2)
-        return false;
-    if (m_aContourPoints.find(eDim) == m_aContourPoints.end())
-        UpdateContourPointsByDim(eDim, -1);
-    auto& aDimCpTable = m_aContourPoints.at(eDim);
-    auto iter = m_aKeyPoints.begin();
-    while (iter != m_aKeyPoints.end())
-    {
-        const auto& hKp = *iter;
-        if (aDimCpTable.find(hKp) == aDimCpTable.end())
-            UpdateDimContourPoints(eDim, iter);
-        iter++;
-    }
-
-    bool bIsHovering = false;
-    ImVec2 p1, p2;
+    const auto szKpCnt = m_hCurve->GetKeyPointCount();
+    if (szKpCnt == 0)
+        return;
+    const auto v2DrawOffset = v2OriginPos+m_pOwner->m_v2PanOffset;
+    // draw curve contour
+    const auto u32CurveColor = bIsHovering ? m_u32CurveHoverColor : m_u32CurveColor;
+    const auto fCurveWidth = bIsHovering ? m_pOwner->m_fCurveHoverWidth : m_pOwner->m_fCurveWidth;
+    auto itKp = m_hCurve->GetKpIter(0);
+    const auto itEnd = m_hCurve->GetKpIter(szKpCnt);
     bool bStartPoint = true;
-    const auto fCheckHoverDistanceThresh = m_owner->m_fCheckHoverDistanceThresh;
-    iter = m_aKeyPoints.begin();
+    ImVec2 p1, p2;
     while (true)
     {
-        const auto& hKp = *iter++;
-        if (iter == m_aKeyPoints.end())
+        const auto& hKp = *itKp++;
+        if (itKp == itEnd)
             break;
         p1 = p2;
-        const auto& aKpCurvePoints = aDimCpTable.at(hKp);
-        for (const auto& v2CurvePt : aKpCurvePoints)
+        const auto& aCps = m_aCpTable.at(hKp);
+        p2 = aCps[0];
+        if (bStartPoint)
+            bStartPoint = false;
+        else
+            pDrawList->AddLine(p1+v2DrawOffset, p2+v2DrawOffset, u32CurveColor, fCurveWidth);
+
+        const auto szCpCnt = aCps.size();
+        for (auto j = 1; j < szCpCnt; j++)
         {
-            p2 = v2CurvePt;
+            p1 = p2;
+            p2 = aCps[j];
+            pDrawList->AddLine(p1+v2DrawOffset, p2+v2DrawOffset, u32CurveColor, fCurveWidth);
+        }
+    }
+    // draw key points
+    int iHoveredKpIdx = bIsHovering ? m_pOwner->m_iHoveredKeyPointIdx : -1;
+    const auto fKeyPointRadius = m_pOwner->m_fKeyPointRadius;
+    size_t idx = 0;
+    itKp = m_hCurve->GetKpIter(0);
+    while (itKp != itEnd)
+    {
+        const auto u32KpColor = idx==iHoveredKpIdx ? m_pOwner->m_u32KeyPointHoverColor : m_pOwner->m_u32KeyPointColor;
+        const auto& hKp = *itKp++; idx++;
+        const auto v2KpPos = m_aCpTable.at(hKp)[0];
+        ImVec2 aPolyPoints[] = {
+                ImVec2(v2KpPos.x+fKeyPointRadius, v2KpPos.y), ImVec2(v2KpPos.x, v2KpPos.y+fKeyPointRadius),
+                ImVec2(v2KpPos.x-fKeyPointRadius, v2KpPos.y), ImVec2(v2KpPos.x, v2KpPos.y-fKeyPointRadius) };
+        for (int j = 0; j < 4; j++)
+            aPolyPoints[j] += v2DrawOffset;
+        pDrawList->AddConvexPolyFilled(aPolyPoints, 4, u32KpColor);
+        const auto fPointEdgeWidth = fCurveWidth-0.5f;
+        aPolyPoints[0].x += fPointEdgeWidth; aPolyPoints[1].y += fPointEdgeWidth;
+        aPolyPoints[2].x -= fPointEdgeWidth; aPolyPoints[3].y -= fPointEdgeWidth;
+        const auto fPointEdgeColor = m_pOwner->m_u32KeyPointEdgeColor;
+        pDrawList->AddPolyline(aPolyPoints, 4, fPointEdgeColor, ImDrawFlags_Closed, fCurveWidth);
+    }
+}
+
+int Editor::CurveUiObj::MoveKeyPoint(int iKpIdx, const ImVec2& v2MousePos)
+{
+    const auto v2NormedKpDimVal = m_pOwner->CvtPos2Point(v2MousePos);
+    const auto v2KpDimVal = v2NormedKpDimVal*m_v2DimValRange+m_v2DimMinVal;
+    const auto iRet =m_hCurve->EditPointByDim(m_eDim, iKpIdx, v2KpDimVal);
+    if (iRet >= 0)
+    {
+        UpdateContourPoints(iRet);
+        iKpIdx = iRet;
+    }
+    else if (iRet != -2)
+        std::cerr << "[Editor::CurveUiObj::MoveKeyPoint] FAILED to invoke 'Curve::EditPointByDim()' with arguments: eDim="
+                << m_eDim << ", idx=" << iKpIdx << ", v2DimVal=(" << v2KpDimVal.x << ", " << v2KpDimVal.y << ")." << std::endl;
+    return iKpIdx;
+}
+
+void Editor::CurveUiObj::MoveCurveVertically(const ImVec2& v2MousePos)
+{
+    const auto v2NormedKpDimVal = m_pOwner->CvtPos2Point(v2MousePos);
+    const auto v2KpDimVal = v2NormedKpDimVal*m_v2DimValRange+m_v2DimMinVal;
+    const auto fKpMoveOffsetV = m_hCurve->MoveVerticallyByDim(m_eDim, v2KpDimVal);
+    if (fKpMoveOffsetV != 0)
+    {
+        const auto fUiMoveOffsetV = -fKpMoveOffsetV/m_v2DimValRange.y*m_pOwner->m_v2CurveAxisAreaSize.y;
+        for (auto& elem : m_aCpTable)
+        {
+            auto& aCps = elem.second;
+            for (auto& cp : aCps)
+                cp.y += fUiMoveOffsetV;
+        }
+    }
+}
+
+void Editor::CurveUiObj::ScaleContour(const ImVec2& v2Scale)
+{
+    for (auto& elem2 : m_aCpTable)
+    {
+        auto& aCps = elem2.second;
+        for (auto& v2Cp : aCps)
+            v2Cp *= v2Scale;
+    }
+}
+
+void Editor::CurveUiObj::UpdateCurveAttributes()
+{
+    const auto& tValRange = m_hCurve->GetValueRange();
+    const auto v2DimValRange = ImVec2(tValRange.w, KeyPoint::GetDimVal(tValRange, m_eDim));
+    if (m_v2DimValRange != v2DimValRange)
+    {
+        m_v2DimValRange = v2DimValRange;
+        m_bNeedRefreshContour = true;
+    }
+    const auto& tMinVal = m_hCurve->GetMinVal();
+    const auto v2DimMinVal = ImVec2(tMinVal.w, KeyPoint::GetDimVal(tMinVal, m_eDim));
+    if (m_v2DimMinVal != v2DimMinVal)
+    {
+        m_v2DimMinVal = v2DimMinVal;
+        m_bNeedRefreshContour = true;
+    }
+}
+
+void Editor::CurveUiObj::UpdateContourPoints(int iKpIdx)
+{
+    const auto szKpCnt = m_hCurve->GetKeyPointCount();
+    if (szKpCnt < 2)
+    {
+        m_aCpTable.clear();
+        return;
+    }
+    if (iKpIdx >= (int)szKpCnt)
+        return;
+    size_t szStartIdx, szStopIdx;
+    if (iKpIdx < 0)
+    { szStartIdx = 0; szStopIdx = szKpCnt-1; m_bNeedRefreshContour = false; }
+    else if (iKpIdx == 0)
+    { szStartIdx = 0; szStopIdx = 1; }
+    else if (iKpIdx == szKpCnt-1)
+    { szStartIdx = iKpIdx-1; szStopIdx = iKpIdx; }
+    else
+    { szStartIdx = iKpIdx-1; szStopIdx = iKpIdx+1; }
+    auto itKp = m_hCurve->GetKpIter(szStartIdx);
+    auto itStop = m_hCurve->GetKpIter(szStopIdx);
+    auto v2NormedKpDimVal = ((*itKp)->GetVec2PointValByDim(m_eDim)-m_v2DimMinVal)/m_v2DimValRange;
+    ImVec2 p1, p2;
+    p2 = m_pOwner->CvtPoint2Pos(v2NormedKpDimVal); p2.y = -p2.y;
+    while (itKp != itStop)
+    {
+        p1 = p2;
+        const auto& hKp1 = *itKp++;
+        const auto& hKp2 = *itKp;
+        v2NormedKpDimVal = (hKp2->GetVec2PointValByDim(m_eDim)-m_v2DimMinVal)/m_v2DimValRange;
+        p2 = m_pOwner->CvtPoint2Pos(v2NormedKpDimVal); p2.y = -p2.y;
+        size_t steps = (size_t)(CalcDistance(p1, p2)/2);
+        steps = ImClamp<size_t>(steps, 2, 100);
+        auto eCurveType = hKp2->type;
+        std::vector<ImVec2> aContourPos(steps);
+        aContourPos[0] = p1;
+        for (auto j = 1; j < steps; j++)
+        {
+            const float s = (float)j/steps;
+            const auto t = ImLerp(p1.x, p2.x, s);
+            const auto rt = SmoothStep(p1.x, p2.x, t, eCurveType);
+            aContourPos[j].x = t;
+            aContourPos[j].y = p1.y==p2.y ? p1.y : ImLerp(p1.y, p2.y, rt);
+        }
+        m_aCpTable[hKp1] = std::move(aContourPos);
+    }
+    if (iKpIdx < 0 || iKpIdx == szKpCnt-1)
+    {
+        const auto& hKp2 = *itKp;
+        v2NormedKpDimVal = (hKp2->GetVec2PointValByDim(m_eDim)-m_v2DimMinVal)/m_v2DimValRange;
+        p2 = m_pOwner->CvtPoint2Pos(v2NormedKpDimVal); p2.y = -p2.y;
+        m_aCpTable[hKp2] = { p2 };
+    }
+}
+
+bool Editor::CurveUiObj::CheckMouseHoverCurve(const ImVec2& _v2MousePos) const
+{
+    const ImVec2 v2MousePos(_v2MousePos.x, -_v2MousePos.y);
+    const auto szKpCnt = m_hCurve->GetKeyPointCount();
+    if (szKpCnt < 1)
+        return false;
+    if (szKpCnt == 1)
+        return CheckMouseHoverPoint(v2MousePos);
+
+    const auto fCheckHoverDistanceThresh = m_pOwner->m_fCheckHoverDistanceThresh;
+    bool bIsHovering = false;
+    bool bStartPoint = true;
+    auto itKp = m_hCurve->GetKpIter(0);
+    const auto itEnd = m_hCurve->GetKpIter(szKpCnt);
+    ImVec2 p1, p2;
+    while (true)
+    {
+        const auto& hKp = *itKp++;
+        if (itKp == itEnd)
+            break;
+        p1 = p2;
+        const auto& aKpCurvePoints = m_aCpTable.at(hKp);
+        for (const auto& v2Cp : aKpCurvePoints)
+        {
+            p2 = v2Cp;
             if (bStartPoint)
                 bStartPoint = false;
-            else if (CalcDistance(pos, p1, p2) < fCheckHoverDistanceThresh)
+            else if (CalcDistance(v2MousePos, p1, p2) < fCheckHoverDistanceThresh)
             {
                 bIsHovering = true;
                 break;
@@ -943,402 +1104,65 @@ bool CurveUiObj::CheckMouseHoverCurve(ValueDimension eDim, const ImVec2& pos)
     return bIsHovering;
 }
 
-int CurveUiObj::CheckMouseHoverPoint(ValueDimension eDim, const ImVec2& pos) const
+int Editor::CurveUiObj::CheckMouseHoverPoint(const ImVec2& _v2MousePos) const
 {
-    const int iKpCnt = m_aKeyPoints.size();
-    if (iKpCnt < 1)
-        return false;
-    auto& aDimCpTable = m_aContourPoints.at(eDim);
-    const auto fCheckHoverDistanceThresh = m_owner->m_fCheckHoverDistanceThresh;
-    int idx = 0;
-    auto iter = m_aKeyPoints.begin();
-    while (iter != m_aKeyPoints.end())
+    const ImVec2 v2MousePos(_v2MousePos.x, -_v2MousePos.y);
+    const auto szKpCnt = m_hCurve->GetKeyPointCount();
+    if (szKpCnt < 1)
+        return -1;
+    const auto fCheckHoverDistanceThresh = m_pOwner->m_fCheckHoverDistanceThresh;
+    size_t idx = 0;
+    auto itKp = m_hCurve->GetKpIter(0);
+    const auto itEnd = m_hCurve->GetKpIter(szKpCnt);
+    while (itKp != itEnd)
     {
-        const auto& hKp = *iter++;
-        const auto& p = aDimCpTable.at(hKp)[0];
-        if (CalcDistance(pos, p) < fCheckHoverDistanceThresh)
+        const auto& hKp = *itKp++;
+        const auto& p = m_aCpTable.at(hKp)[0];
+        if (CalcDistance(v2MousePos, p) < fCheckHoverDistanceThresh)
             break;
         idx++;
     }
-    if (idx >= iKpCnt)
+    if (idx >= szKpCnt)
         return -1;
-    return idx;
+    return (int)idx;
 }
 
-int CurveUiObj::AddPoint(KeyPoint::Holder hKp, bool bNormalize, bool bOverwriteIfExists)
+ImVec2 Editor::CurveUiObj::CalcPointValue(const ImVec2& v2MousePos) const
 {
-    int idx = Curve::AddPoint(hKp, bNormalize, bOverwriteIfExists);
-    if (idx < 0)
-        return idx;
-    UpdateContourPoints(idx);
-    return idx;
+    const auto v2NormedKpDimVal = m_pOwner->CvtPos2Point(v2MousePos);
+    const auto fTick = v2NormedKpDimVal.x*m_v2DimValRange.x+m_v2DimMinVal.x;
+    const auto tKpVal = m_hCurve->CalcPointVal(fTick);
+    return ImVec2(tKpVal.w, KeyPoint::GetDimVal(tKpVal, m_eDim));
 }
 
-int CurveUiObj::AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize, bool bOverwriteIfExists)
+void Editor::CurveUiObj::OnKeyPointAdded(size_t szKpIdx, KeyPoint::Holder hKp)
 {
-    if (m_aContourPoints.find(eDim) == m_aContourPoints.end())
-        UpdateContourPointsByDim(eDim, -1);
-    return Curve::AddPointByDim(eDim, v2DimVal, eCurveType, bNormalize, bOverwriteIfExists);
+    UpdateContourPoints(szKpIdx);
 }
 
-int CurveUiObj::EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCurveType, bool bNormalize)
+void Editor::CurveUiObj::OnKeyPointRemoved(size_t szKpIdx, KeyPoint::Holder hKp)
 {
-    int iNewIdx = Curve::EditPoint(idx, tKpVal, eCurveType, bNormalize);
-    if (iNewIdx < 0)
-        return iNewIdx;
-    UpdateContourPoints(iNewIdx);
-    if (iNewIdx != idx)
-        UpdateContourPoints(idx);
-    return iNewIdx;
+    UpdateContourPoints(szKpIdx);
 }
 
-int CurveUiObj::EditPointByDim(ValueDimension eDim, size_t idx, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize)
+void Editor::CurveUiObj::OnKeyPointChanged(size_t szKpIdx, KeyPoint::Holder hKp)
 {
-    if (m_aContourPoints.find(eDim) == m_aContourPoints.end())
-        UpdateContourPointsByDim(eDim, -1);
-    return Curve::EditPointByDim(eDim, idx, v2DimVal, eCurveType, bNormalize);
+    UpdateContourPoints(szKpIdx);
 }
 
-int CurveUiObj::ChangeCurveType(size_t idx, CurveType eCurveType)
+void Editor::CurveUiObj::OnContourNeedUpdate(size_t szKpIdx)
 {
-    if (Curve::ChangeCurveType(idx, eCurveType) < 0)
-        return -1;
-    UpdateContourPoints(idx);
-    return idx;
+    UpdateContourPoints(szKpIdx);
 }
 
-KeyPoint::Holder CurveUiObj::RemovePoint(size_t idx)
-{
-    auto hKp = Curve::RemovePoint(idx);
-    if (!hKp)
-        return nullptr;
-    for (auto& elem : m_aContourPoints)
-    {
-        auto& aCpTable = elem.second;
-        aCpTable.erase(hKp);
-    }
-    UpdateContourPoints(idx);
-    return hKp;
-}
+Editor::Editor()
+{}
 
-KeyPoint::Holder CurveUiObj::RemovePoint(float t)
-{
-    auto idx = GetKeyPointIndex(t);
-    if (idx < 0)
-        return nullptr;
-    return RemovePoint((size_t)idx);
-}
-
-float CurveUiObj::MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint, bool bNormalize)
-{
-    const auto fOffset = Curve::MoveVerticallyByDim(eDim, v2SyncPoint, bNormalize);
-    if (fabs(fOffset) < FLT_EPSILON)
-        return fOffset;
-    if (m_aContourPoints.find(eDim) == m_aContourPoints.end())
-        UpdateContourPointsByDim(eDim, -1);
-    else
-    {
-        const auto v2PosOffset = m_owner->CvtPoint2Pos(ImVec2(m_owner->m_v2TimeRange.x, fOffset));
-        const auto fVPosOffset = v2PosOffset.y;
-        auto& aDimCpTable = m_aContourPoints.at(eDim);
-        for (auto& elem : aDimCpTable)
-        {
-            auto& aContourPoints = elem.second;
-            for (auto& v2Pos : aContourPoints)
-                v2Pos.y += fVPosOffset;
-        }
-    }
-    return fOffset;
-}
-
-bool CurveUiObj::SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds)
-{
-    if (!Curve::SetTimeRange(v2TimeRange, bDockEnds))
-        return false;
-    const auto szKpCnt = m_aKeyPoints.size();
-    if (szKpCnt > 1)
-    {
-        for (const auto& elem : m_aContourPoints)
-        {
-            const auto eDim = elem.first;
-            UpdateContourPointsByDim(eDim, 0);
-            if (szKpCnt > 2)
-                UpdateContourPointsByDim(eDim, szKpCnt-1);
-        }
-    }
-    if (bDockEnds)
-        RemoveInvalidContourPoints();
-    return true;
-}
-
-bool CurveUiObj::DrawDim(ValueDimension eDim, ImDrawList* pDrawList, const ImVec2& v2CursorPos, bool bIsHovering)
-{
-    if (m_aKeyPoints.size() < 1)
-        return false;
-    if (m_aContourPoints.find(eDim) == m_aContourPoints.end())
-        UpdateContourPointsByDim(eDim, -1);
-    auto& aDimCpTable = m_aContourPoints.at(eDim);
-    const auto szKpCnt = m_aKeyPoints.size();
-    if (szKpCnt > 1)
-    {
-        auto iter = m_aKeyPoints.begin();
-        while (iter != m_aKeyPoints.end())
-        {
-            const auto& hKp = *iter;
-            if (aDimCpTable.find(hKp) == aDimCpTable.end())
-                UpdateDimContourPoints(eDim, iter);
-            iter++;
-        }
-    }
-
-    const ImVec2 v2DrawOffset = v2CursorPos+ImVec2(0, m_owner->m_v2CurveAreaSize.y*m_owner->m_v2UiScale.y)+m_owner->m_v2PanOffset;
-    // draw curve contour
-    ImVec2 p1, p2;
-    bool bStartPoint = true;
-    const auto u32CurveColor = bIsHovering ? m_u32CurveHoveringColor : m_u32CurveColor;
-    const auto fCurveWidth = bIsHovering ? m_fCurveHoveringWidth : m_fCurveWidth;
-    auto iter = m_aKeyPoints.begin();
-    while (true)
-    {
-        const auto& hKp = *iter++;
-        if (iter == m_aKeyPoints.end())
-            break;
-        p1 = p2;
-        const auto& aKpCurvePoints = aDimCpTable.at(hKp);
-        p2 = aKpCurvePoints[0];
-        if (bStartPoint)
-            bStartPoint = false;
-        else
-            pDrawList->AddLine(p1+v2DrawOffset, p2+v2DrawOffset, u32CurveColor, fCurveWidth);
-
-        const auto szKpCurvePointsCnt = aKpCurvePoints.size();
-        for (auto j = 1; j < szKpCurvePointsCnt; j++)
-        {
-            p1 = p2;
-            p2 = aKpCurvePoints[j];
-            pDrawList->AddLine(p1+v2DrawOffset, p2+v2DrawOffset, u32CurveColor, fCurveWidth);
-        }
-    }
-    // draw key points
-    int iHoveringKpIdx = bIsHovering ? m_owner->m_iPointHoveringIdx : -1;
-    const auto fKeyPointRadius = m_fKeyPointRadius;
-    size_t idx = 0;
-    iter = m_aKeyPoints.begin();
-    while (iter != m_aKeyPoints.end())
-    {
-        const auto u32KeyPointColor = idx==iHoveringKpIdx ? m_u32KeyPointHoveringColor : m_u32KeyPointColor;
-        const auto& hKp = *iter++; idx++;
-        const auto v2KpCenter = m_owner->CvtPoint2Pos(hKp->GetVec2PointValByDim(eDim));
-        ImVec2 aPolyPoints[] = {
-                ImVec2(v2KpCenter.x+fKeyPointRadius, v2KpCenter.y), ImVec2(v2KpCenter.x, v2KpCenter.y+fKeyPointRadius),
-                ImVec2(v2KpCenter.x-fKeyPointRadius, v2KpCenter.y), ImVec2(v2KpCenter.x, v2KpCenter.y-fKeyPointRadius) };
-        for (int j = 0; j < 4; j++)
-            aPolyPoints[j] += v2DrawOffset;
-        pDrawList->AddConvexPolyFilled(aPolyPoints, 4, u32KeyPointColor);
-        const auto fPointEdgeWidth = fCurveWidth-0.5;
-        aPolyPoints[0].x += fPointEdgeWidth; aPolyPoints[1].y += fPointEdgeWidth;
-        aPolyPoints[2].x -= fPointEdgeWidth; aPolyPoints[3].y -= fPointEdgeWidth;
-        const auto fPointEdgeColor = m_u32KeyPointEdgeColor;
-        pDrawList->AddPolyline(aPolyPoints, 4, fPointEdgeColor, ImDrawFlags_Closed, fCurveWidth);
-    }
-    return false;
-}
-
-void CurveUiObj::UpdateContourPoints(int idx)
-{
-    for (const auto& elem : m_aContourPoints)
-    {
-        const auto eDim = elem.first;
-        UpdateContourPointsByDim(eDim, idx);
-    }
-}
-
-void CurveUiObj::UpdateContourPointsByDim(ValueDimension eDim, int idx)
-{
-    if (m_aContourPoints.find(eDim) == m_aContourPoints.end())
-    {
-        m_aContourPoints[eDim] = {};
-        idx = -1;
-    }
-    auto& aDimCpTable = m_aContourPoints.at(eDim);
-    const auto szKpCnt = m_aKeyPoints.size();
-    if (szKpCnt < 2)
-    {
-        aDimCpTable.clear();
-        return;
-    }
-    if (idx >= (int)szKpCnt)
-        return;
-    ImVec2 p1, p2;
-    size_t szLoopStart = idx > 0 ? idx-1 : 0;
-    size_t szLoopEnd = idx >= 0 ? idx+1 : szKpCnt;
-    auto itKp = GetKpIter(szLoopStart);
-    auto itEnd = GetKpIter(szLoopEnd);
-    KeyPoint::ValType tKpVal = (*itKp)->val;
-    tKpVal.w = Tick2Time(tKpVal.w);
-    p2 = m_owner->CvtPoint2Pos(tKpVal, eDim);
-    while (itKp == itEnd)
-    {
-        const auto& hKp0 = *itKp++;
-        if (itKp == m_aKeyPoints.end())
-        {
-            aDimCpTable[hKp0] = { p2 };
-            break;
-        }
-        p1 = p2;
-        const auto& hKp1 = *itKp;
-        tKpVal = hKp1->val;
-        tKpVal.w = Tick2Time(tKpVal.w);
-        p2 = m_owner->CvtPoint2Pos(tKpVal, eDim);
-        size_t steps = (size_t)(CalcDistance(p1, p2)/2);
-        steps = ImClamp<size_t>(steps, 2, 100);
-        auto eCurveType = hKp1->type;
-        std::vector<ImVec2> aContourPos(steps);
-        aContourPos[0] = p1;
-        for (auto j = 1; j < steps; j++)
-        {
-            const float s = (float)j/steps;
-            const auto t = ImLerp(p1.x, p2.x, s);
-            const auto rt = SmoothStep(p1.x, p2.x, t, eCurveType);
-            aContourPos[j].x = t;
-            aContourPos[j].y = p1.y==p2.y ? p1.y : ImLerp(p1.y, p2.y, rt);
-        }
-        aDimCpTable[hKp0] = std::move(aContourPos);
-    }
-}
-
-void CurveUiObj::UpdateDimContourPoints(ValueDimension eDim, std::list<KeyPoint::Holder>::iterator itKp)
-{
-    auto& aDimCpTable = m_aContourPoints.at(eDim);
-    const auto szKpCnt = m_aKeyPoints.size();
-    if (szKpCnt < 2 || itKp == m_aKeyPoints.end())
-    {
-        aDimCpTable.clear();
-        return;
-    }
-    if (itKp != m_aKeyPoints.begin())
-        itKp--;
-    auto hKp0 = *itKp++;
-    KeyPoint::ValType tKpVal = hKp0->val;
-    tKpVal.w = Tick2Time(tKpVal.w);
-    ImVec2 p1 = m_owner->CvtPoint2Pos(tKpVal, eDim);
-    auto hKp1 = *itKp++;
-    tKpVal = hKp1->val;
-    tKpVal.w = Tick2Time(tKpVal.w);
-    ImVec2 p2 = m_owner->CvtPoint2Pos(tKpVal, eDim);
-    size_t steps = (size_t)(CalcDistance(p1, p2)/2);
-    steps = ImClamp<size_t>(steps, 2, 100);
-    auto eCurveType = hKp1->type;
-    std::vector<ImVec2> aContourPos(steps);
-    aContourPos[0] = p1;
-    for (auto j = 1; j < steps; j++)
-    {
-        const float s = (float)j/steps;
-        const auto t = ImLerp(p1.x, p2.x, s);
-        const auto rt = SmoothStep(p1.x, p2.x, t, eCurveType);
-        aContourPos[j].x = t;
-        aContourPos[j].y = p1.y==p2.y ? p1.y : ImLerp(p1.y, p2.y, rt);
-    }
-    aDimCpTable[hKp0] = std::move(aContourPos);
-    if (itKp == m_aKeyPoints.end())
-    {
-        aDimCpTable[hKp1] = { p2 };
-        return;
-    }
-    p1 = p2;
-    hKp0 = hKp1;
-    hKp1 = *itKp++;
-    tKpVal = hKp1->val;
-    tKpVal.w = Tick2Time(tKpVal.w);
-    p2 = m_owner->CvtPoint2Pos(tKpVal, eDim);
-    steps = (size_t)(CalcDistance(p1, p2)/2);
-    steps = ImClamp<size_t>(steps, 2, 100);
-    eCurveType = hKp1->type;
-    aContourPos.resize(steps);
-    aContourPos[0] = p1;
-    for (auto j = 1; j < steps; j++)
-    {
-        const float s = (float)j/steps;
-        const auto t = ImLerp(p1.x, p2.x, s);
-        const auto rt = SmoothStep(p1.x, p2.x, t, eCurveType);
-        aContourPos[j].x = t;
-        aContourPos[j].y = p1.y==p2.y ? p1.y : ImLerp(p1.y, p2.y, rt);
-    }
-    aDimCpTable[hKp0] = std::move(aContourPos);
-}
-
-void CurveUiObj::RemoveInvalidContourPoints()
-{
-    for (auto& elem1 : m_aContourPoints)
-    {
-        auto& aDimCpTable = elem1.second;
-        // remove invalid key-point entries
-        auto iter = aDimCpTable.begin();
-        while (iter != aDimCpTable.end())
-        {
-            const auto& elem2 = *iter;
-            if (std::find(m_aKeyPoints.begin(), m_aKeyPoints.end(), elem2.first) == m_aKeyPoints.end())
-                iter = aDimCpTable.erase(iter);
-            else
-                iter++;
-        }
-    }
-}
-
-imgui_json::value CurveUiObj::SaveAsJson() const
-{
-    imgui_json::value j = Curve::SaveAsJson();
-    j["curve_color"] = imgui_json::number(m_u32CurveColor);
-    j["curve_hovering_color"] = imgui_json::number(m_u32CurveHoveringColor);
-    j["curve_width"] = imgui_json::number(m_fCurveWidth);
-    j["curve_hovering_width"] = imgui_json::number(m_fCurveHoveringWidth);
-    j["key_point_color"] = imgui_json::number(m_u32KeyPointColor);
-    j["key_point_hovering_color"] = imgui_json::number(m_u32KeyPointHoveringColor);
-    j["key_point_edge_color"] = imgui_json::number(m_u32KeyPointEdgeColor);
-    j["key_point_radius"] = imgui_json::number(m_fKeyPointRadius);
-    j["visible"] = imgui_json::boolean(m_bVisible);
-    j["id"] = imgui_json::number(m_id);
-    j["sub_id"] = imgui_json::number(m_subId);
-    return std::move(j);
-}
-
-void CurveUiObj::LoadFromJson(const imgui_json::value& j)
-{
-    Curve::LoadFromJson(j);
-    m_u32CurveColor = (ImU32)j["curve_color"].get<imgui_json::number>();
-    m_u32CurveHoveringColor = (ImU32)j["curve_hovering_color"].get<imgui_json::number>();
-    m_fCurveWidth = (float)j["curve_width"].get<imgui_json::number>();
-    m_fCurveHoveringWidth = (float)j["curve_hovering_width"].get<imgui_json::number>();
-    m_u32KeyPointColor = (ImU32)j["key_point_color"].get<imgui_json::number>();
-    m_u32KeyPointHoveringColor = (ImU32)j["key_point_hovering_color"].get<imgui_json::number>();
-    m_u32KeyPointEdgeColor = (ImU32)j["key_point_edge_color"].get<imgui_json::number>();
-    m_fKeyPointRadius = (float)j["key_point_radius"].get<imgui_json::number>();
-    m_bVisible = (bool)j["visible"].get<imgui_json::boolean>();
-    m_id = (int64_t)j["id"].get<imgui_json::number>();
-    m_subId = (int64_t)j["sub_id"].get<imgui_json::number>();
-}
-
-bool Editor::SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds)
-{
-    if (v2TimeRange.x >= v2TimeRange.y)
-        return false;
-
-    m_v2TimeRange = v2TimeRange;
-    for (auto& hCurve : m_aCurveUiObjs)
-        hCurve->SetTimeRange(v2TimeRange, bDockEnds);
-    return true;
-}
-
-void Editor::Clear()
-{
-    m_aCurveUiObjs.clear();
-}
-
-bool Editor::DrawDim(ValueDimension eDim, const char* pcLabel, const ImVec2& v2ViewSize, uint32_t flags, ImDrawList* pDrawList)
+bool Editor::DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, uint32_t flags, ImDrawList* pDrawList)
 {
     bool bCurveChanged = false;
     ImGuiIO& io = GetIO();
-    const bool bDeleteMode = IsKeyDown(ImGuiKey_LeftShift) && (io.KeyMods == ImGuiMod_Shift);
+    const bool bDeleteMode = IsKeyDown(ImGuiKey_LeftShift) && io.KeyShift;
     PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
     PushStyleColor(ImGuiCol_Border, 0);
     PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.f, 0.f, 0.f, 0.f));
@@ -1346,62 +1170,98 @@ bool Editor::DrawDim(ValueDimension eDim, const char* pcLabel, const ImVec2& v2V
     const ImVec2 v2CursorPos = GetCursorScreenPos();
     if (!pDrawList) pDrawList = GetWindowDrawList();
 
-    const ImVec2 v2ViewPadding(0, 2);
-    const ImVec2 v2EditorSize = v2ViewSize-v2ViewPadding*2;
-    const ImVec2 v2DrawCursorPos = v2CursorPos+v2ViewPadding;
-    const ImRect rContainer(v2CursorPos, v2CursorPos+v2EditorSize);
+    const auto v2CurveAreaPos = v2CursorPos+m_v2ViewPadding;
+    const auto v2CurveAreaSize = v2ViewSize-m_v2ViewPadding*2;
+    const ImRect rCurveArea(v2CursorPos, v2CursorPos+m_v2CurveAreaSize);
+    const auto v2CurveOriginPos = v2CurveAreaPos+ImVec2(0, v2CurveAreaSize.y*(1-m_fCurveAreaBottomMargin));
+    const auto v2MousePos = GetMousePos();
 
-    // update curve point->pos scale
-    if (m_v2CurveAreaSize != v2EditorSize)
+    if (m_v2CurveAreaSize != v2CurveAreaSize)
     {
-        m_v2Point2PosScale.x = v2EditorSize.x*m_v2UiScale.x/(m_v2TimeRange.y-m_v2TimeRange.x);
-        m_v2Point2PosScale.y = -v2EditorSize.y*m_v2UiScale.y;
-        m_v2CurveAreaSize = v2EditorSize;
+        const auto v2Scale = v2CurveAreaSize/m_v2CurveAreaSize;
         for (auto& hCurveUiObj : m_aCurveUiObjs)
-            hCurveUiObj->UpdateContourPoints(-1);
+            hCurveUiObj->ScaleContour(v2Scale);
+        m_v2CurveAreaSize = v2CurveAreaSize;
+        m_v2CurveAxisAreaSize.x = m_v2CurveAreaSize.x;
+        m_v2CurveAxisAreaSize.y = v2CurveAreaSize.y*(1-m_fCurveAreaBottomMargin-m_fCurveAreaBottomMargin);
     }
 
-    // handle zoom and VScroll
-    if (flags & CURVE_EDIT_FLAG_SCROLL_V)
+    // draw graticule lines
+    const float fScaledGraticuleHeight = m_v2CurveAxisAreaSize.y*m_v2UiScale.y/m_fGraticuleCount;
+    for (auto i = 0; i <= m_szGraticuleLineCnt; i++)
     {
-        if (rContainer.Contains(io.MousePos))
+        const float fYOffset = -fScaledGraticuleHeight*i;
+        const auto p1 = v2CurveOriginPos+m_v2PanOffset+ImVec2(0, fYOffset);
+        const auto p2 = v2CurveOriginPos+m_v2PanOffset+ImVec2(v2CurveAreaSize.x, fYOffset);
+        if (i == 0)
+            pDrawList->AddLine(p1, p2, m_u32MinValLineColor, m_fMinMaxLineThickness);
+        else if (i == m_szGraticuleLineCnt)
+            pDrawList->AddLine(p1, p2, m_u32MaxValLineColor, m_fMinMaxLineThickness);
+        else
+            pDrawList->AddLine(p1, p2, m_u32GraticuleColor, m_fGraticuleLineThickness);
+    }
+
+    // handle zoom and scroll vertically
+    if ((flags&IMNEWCURVE_EDITOR_FLAG_ZOOM_V) > 0)
+    {
+        if (rCurveArea.Contains(v2MousePos))
         {
-            if (fabsf(io.MouseWheel) > FLT_EPSILON)
+            const auto fMouseWheel = io.MouseWheel*0.1f;
+            if (fabs(fMouseWheel) > FLT_EPSILON)
             {
-                const float r = 1+ImClamp(io.MouseWheel, -0.5f, 0.5f);
-                m_v2UiScale.y *= r;
+                if (io.KeyCtrl)
+                {
+                    const float r = 1+ImClamp(fMouseWheel, -0.5f, 0.5f);
+                    const auto fNewScaleY = ImClamp(m_v2UiScale.y*r, 1.f, m_fMaxScale);
+                    if (fNewScaleY != m_v2UiScale.y)
+                    {
+                        m_v2UiScale.y = fNewScaleY;
+                        for (auto& hCurveUiObj : m_aCurveUiObjs)
+                            hCurveUiObj->SetRefreshContour();
+                        const auto fMaxOffset = v2CurveAreaSize.y*(m_v2UiScale.y > 1 ? m_v2UiScale.y-1 : 0);
+                        if (m_v2PanOffset.y > fMaxOffset) m_v2PanOffset.y = fMaxOffset;
+                    }
+                }
+                else
+                {
+                    const auto fMaxOffset = v2CurveAreaSize.y*(m_v2UiScale.y > 1 ? m_v2UiScale.y-1 : 0);
+                    auto fPanOffsetY = fMouseWheel*v2CurveAreaSize.y+m_v2PanOffset.y;
+                    if (fPanOffsetY > fMaxOffset) fPanOffsetY = fMaxOffset;
+                    else if (fPanOffsetY < 0) fPanOffsetY = 0;
+                    if (fPanOffsetY != m_v2PanOffset.y)
+                        m_v2PanOffset.y = fPanOffsetY;
+                }
             }
         }
     }
 
-    const float fGraticuleHeight = v2EditorSize.y/10.f;
-    for (int i = 0; i <= 10; i++)
+    for (auto& hCurveUiObj : m_aCurveUiObjs)
     {
-        const float fYOffset = fGraticuleHeight*i;
-        pDrawList->AddLine(v2DrawCursorPos+ImVec2(0, fYOffset), v2DrawCursorPos+ImVec2(v2EditorSize.x, fYOffset), m_u32GraticuleColor, 1.0f);
+        hCurveUiObj->UpdateCurveAttributes();
+        if (hCurveUiObj->NeedRrefreshContour())
+            hCurveUiObj->UpdateContourPoints(-1);
     }
 
     const auto szCurveCnt = m_aCurveUiObjs.size();
-    const auto v2AdjustedMousePos = io.MousePos-v2DrawCursorPos-m_v2PanOffset-ImVec2(0, v2EditorSize.y);
+    const ImVec2 v2MousePosToCurveOrigin(v2MousePos.x-v2CurveOriginPos.x-m_v2PanOffset.x, v2CurveOriginPos.y-v2MousePos.y+m_v2PanOffset.y);
     int iCurveHoveringIdx = -1, iPointHoveringIdx = -1;
     if (!m_bIsDragging)
     {
         // check hovering state
-        if (rContainer.Contains(io.MousePos))
+        if (rCurveArea.Contains(v2MousePos))
         {
             // if there is already a hovering curve, check its hovering state first
-            if (m_iCurveHoveringIdx >= 0 && m_iCurveHoveringIdx < (int)m_aCurveUiObjs.size() &&
-                m_aCurveUiObjs[m_iCurveHoveringIdx]->CheckMouseHoverCurve(eDim, v2AdjustedMousePos))
-                iCurveHoveringIdx = m_iCurveHoveringIdx;
+            if (m_iHoveredCurveUiObjIdx >= 0 &&
+                m_aCurveUiObjs[m_iHoveredCurveUiObjIdx]->CheckMouseHoverCurve(v2MousePosToCurveOrigin))
+                iCurveHoveringIdx = m_iHoveredCurveUiObjIdx;
             if (iCurveHoveringIdx < 0)
             {
                 // check other curves' hovering state
-                const auto iPrevCurveHoveringIdx = m_iCurveHoveringIdx;
                 for (auto i = 0; i < szCurveCnt; i++)
                 {
-                    if ((int)i == iPrevCurveHoveringIdx)
+                    if ((int)i == m_iHoveredCurveUiObjIdx)
                         continue;
-                    if (m_aCurveUiObjs[i]->CheckMouseHoverCurve(eDim, v2AdjustedMousePos))
+                    if (m_aCurveUiObjs[i]->CheckMouseHoverCurve(v2MousePosToCurveOrigin))
                     {
                         iCurveHoveringIdx = i;
                         break;
@@ -1410,72 +1270,63 @@ bool Editor::DrawDim(ValueDimension eDim, const char* pcLabel, const ImVec2& v2V
             }
             // if there is a hovering curve, check whether there is a key point under hovering
             if (iCurveHoveringIdx >= 0)
-                iPointHoveringIdx = m_aCurveUiObjs[iCurveHoveringIdx]->CheckMouseHoverPoint(eDim, v2AdjustedMousePos);
+                iPointHoveringIdx = m_aCurveUiObjs[iCurveHoveringIdx]->CheckMouseHoverPoint(v2MousePosToCurveOrigin);
         }
-        m_iCurveHoveringIdx = iCurveHoveringIdx;
-        m_iPointHoveringIdx = iPointHoveringIdx;
+        m_iHoveredCurveUiObjIdx = iCurveHoveringIdx;
+        m_iHoveredKeyPointIdx = iPointHoveringIdx;
     }
     else
     {
-        iCurveHoveringIdx = m_iCurveHoveringIdx;
-        iPointHoveringIdx = m_iPointHoveringIdx;
+        iCurveHoveringIdx = m_iHoveredCurveUiObjIdx;
+        iPointHoveringIdx = m_iHoveredKeyPointIdx;
     }
 
     // draw curves
     // 1st, draw curves except the hovering one
     for (auto i = 0; i < szCurveCnt; i++)
     {
-        if ((int)i == iCurveHoveringIdx)
+        const auto& hCurveUiObj = m_aCurveUiObjs[i];
+        if ((int)i == iCurveHoveringIdx || !hCurveUiObj->IsVisible())
             continue;
-        m_aCurveUiObjs[i]->DrawDim(eDim, pDrawList, v2DrawCursorPos, false);
+        hCurveUiObj->DrawCurve(pDrawList, v2CurveOriginPos, false);
     }
     // 2nd, draw the hovering curve if there is one, to make sure the hovering curve is drawn ontop of the others
     if (iCurveHoveringIdx >= 0)
-        m_aCurveUiObjs[iCurveHoveringIdx]->DrawDim(eDim, pDrawList, v2DrawCursorPos, true);
+        m_aCurveUiObjs[iCurveHoveringIdx]->DrawCurve(pDrawList, v2CurveOriginPos, true);
 
-    const auto v2PtVal = CvtPos2Point(v2AdjustedMousePos);
     if (IsMouseDown(ImGuiMouseButton_Left))
     {
         if (iPointHoveringIdx >= 0 || iCurveHoveringIdx >= 0)
             m_bIsDragging = true;
     }
-    if (IsMouseReleased(ImGuiMouseButton_Left))
+    else if (IsMouseReleased(ImGuiMouseButton_Left))
     {
-        if (m_bIsDragging) m_bIsDragging = false;
+        m_bIsDragging = false;
     }
     if (m_bIsDragging)
     {
         // handle move key point
         if (iPointHoveringIdx >= 0)
-        {
-            auto& hCurveUiObj = m_aCurveUiObjs[iCurveHoveringIdx];
-            // std::cout << "-> ChangePointValByDim: curveIdx=" << iCurveHoveringIdx << ", pointIdx=" << iPointHoveringIdx << std::endl;
-            auto ret = hCurveUiObj->ChangePointValByDim(eDim, iPointHoveringIdx, v2PtVal, false);
-            // std::cout << "------>> KeyPoints: " << hCurveUiObj->PrintKeyPointsByDim(eDim) << std::endl;
-            if (ret == -1)
-                std::cerr << "FAILED to ChangePointValByDim(), curveIdx=" << iCurveHoveringIdx << ", pointIdx=" << iPointHoveringIdx
-                        << ", newPointVal=(" << v2PtVal.x << ", " << v2PtVal.y << "), ret=" << ret << std::endl;
-            else if (ret >= 0)
-            {
-                m_bIsDragging = true;
-                m_iPointHoveringIdx = iPointHoveringIdx = ret;
-            }
-        }
+            m_iHoveredKeyPointIdx = m_aCurveUiObjs[iCurveHoveringIdx]->MoveKeyPoint(iPointHoveringIdx, v2MousePosToCurveOrigin);
         // handle move curve
-        else if (iCurveHoveringIdx >= 0)
-        {
-            auto& hCurveUiObj = m_aCurveUiObjs[iCurveHoveringIdx];
-            hCurveUiObj->MoveVerticallyByDim(eDim, v2PtVal, false);
-            m_bIsDragging = true;
-        }
+        else if (iCurveHoveringIdx >= 0 && (flags&IMNEWCURVE_EDITOR_FLAG_MOVE_CURVE_V) > 0)
+            m_aCurveUiObjs[iCurveHoveringIdx]->MoveCurveVertically(v2MousePosToCurveOrigin);
     }
 
     if (m_bShowValueToolTip && iCurveHoveringIdx >= 0)
     {
-        auto& hCurveUiObj = m_aCurveUiObjs[iCurveHoveringIdx];
-        const auto tKpVal = hCurveUiObj->CalcPointVal(v2PtVal.x, true);
-        const auto strCurveName = hCurveUiObj->GetName();
-        SetTooltip("%s: %.03f, %.03f", strCurveName.c_str(), tKpVal.w, KeyPoint::GetDimVal(tKpVal, eDim));
+        const auto& hCurveUiObj = m_aCurveUiObjs[iCurveHoveringIdx];
+        const auto v2PointVal = hCurveUiObj->CalcPointValue(v2MousePosToCurveOrigin);
+        std::ostringstream oss; oss << hCurveUiObj->GetCurveName();
+        switch (hCurveUiObj->GetDim())
+        {
+            case DIM_X: oss << "[X]"; break;
+            case DIM_Y: oss << "[Y]"; break;
+            case DIM_Z: oss << "[Z]"; break;
+            default: oss << "[T]"; break;
+        }
+        const auto strToolTipName = oss.str();
+        SetTooltip("%s: %.03f, %.03f", strToolTipName.c_str(), v2PointVal.x, v2PointVal.y);
     }
 
     EndChildFrame();
@@ -1484,84 +1335,51 @@ bool Editor::DrawDim(ValueDimension eDim, const char* pcLabel, const ImVec2& v2V
     return bCurveChanged;
 }
 
-CurveUiObj::Holder Editor::AddCurve(
-        const std::string& name, CurveType eType, const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal,
-        ImU32 color, bool visible, int64_t id, int64_t subId)
+bool Editor::AddCurve(Curve::Holder hCurve, ValueDimension eDim, ImU32 u32CurveColor)
 {
-    KeyPoint::ValType minVal_(minVal); minVal_.w = m_v2TimeRange.x;
-    KeyPoint::ValType maxVal_(maxVal); maxVal_.w = m_v2TimeRange.y;
-    auto hCurveUiObj = CurveUiObj::CreateInstance(this, name, eType, minVal_, maxVal_, defaultVal, color, visible, id, subId);
-    m_aCurveUiObjs.push_back(hCurveUiObj);
-    return hCurveUiObj;
+    m_aCurveUiObjs.push_back(CurveUiObj::Holder(new CurveUiObj(this, hCurve, eDim, u32CurveColor)));
+    return true;
 }
 
-CurveUiObj::Holder Editor::AddCurveByDim(
-        const std::string& name, CurveType eType, ValueDimension eDim, float minVal, float maxVal, float _defaultVal,
-        ImU32 color, bool visible, int64_t id, int64_t subId)
-{
-    KeyPoint::ValType minVal_, maxVal_(1, 1, 1, 1), defaultVal;
-    KeyPoint::SetDimVal(minVal_, minVal, eDim);
-    KeyPoint::SetDimVal(maxVal_, maxVal, eDim);
-    KeyPoint::SetDimVal(defaultVal, _defaultVal, eDim);
-    return AddCurve(name, eType, minVal_, maxVal_, defaultVal, color, visible, id, subId);
-}
+// imgui_json::value Editor::SaveAsJson() const
+// {
+//     imgui_json::value j;
+//     j["background_color"] = imgui_json::number(m_u32BackgroundColor);
+//     j["graticule_color"] = imgui_json::number(m_u32GraticuleColor);
+//     j["time_range"] = imgui_json::vec2(m_v2TimeRange);
+//     j["check_hover_distance_thresh"] = imgui_json::number(m_fCheckHoverDistanceThresh);
+//     j["ui_scale"] = imgui_json::vec2(m_v2UiScale);
+//     j["pan_offset"] = imgui_json::vec2(m_v2PanOffset);
+//     j["show_value_tool_tip"] = imgui_json::boolean(m_bShowValueToolTip);
+//     imgui_json::array jaCurves;
+//     for (const auto& hCurve : m_aCurveUiObjs)
+//         jaCurves.push_back(hCurve->SaveAsJson());
+//     j["curves"] = jaCurves;
+//     return std::move(j);
+// }
 
-CurveUiObj::Holder Editor::GetCurveByIndex(size_t idx) const
-{
-    if (idx >= m_aCurveUiObjs.size())
-        return nullptr;
-    return m_aCurveUiObjs[idx];
-}
+// void Editor::LoadFromJson(const imgui_json::value& j)
+// {
+//     m_u32BackgroundColor = (ImU32)j["background_color"].get<imgui_json::number>();
+//     m_u32GraticuleColor = (ImU32)j["graticule_color"].get<imgui_json::number>();
+//     m_v2TimeRange = j["time_range"].get<imgui_json::vec2>();
+//     m_fCheckHoverDistanceThresh = (float)j["check_hover_distance_thresh"].get<imgui_json::number>();
+//     m_v2UiScale = j["ui_scale"].get<imgui_json::vec2>();
+//     m_v2PanOffset = j["pan_offset"].get<imgui_json::vec2>();
+//     m_bShowValueToolTip = j["show_value_tool_tip"].get<imgui_json::boolean>();
+//     imgui_json::array jaCurves = j["curves"].get<imgui_json::array>();
+//     m_aCurveUiObjs.clear();
+//     m_aCurveUiObjs.reserve(jaCurves.size());
+//     for (const auto& jelem : jaCurves)
+//     {
+//         auto hCurve = CurveUiObj::CreateFromJson(this, jelem);
+//         m_aCurveUiObjs.push_back(hCurve);
+//     }
+// }
 
-CurveUiObj::Holder Editor::GetCurveByName(const std::string& name) const
+Editor::Holder Editor::CreateInstance()
 {
-    auto iter = std::find_if(m_aCurveUiObjs.begin(), m_aCurveUiObjs.end(), [name] (const auto& elem) {
-        return elem->GetName() == name;
-    });
-    if (iter == m_aCurveUiObjs.end())
-        return nullptr;
-    return *iter;
-}
-
-imgui_json::value Editor::SaveAsJson() const
-{
-    imgui_json::value j;
-    j["background_color"] = imgui_json::number(m_u32BackgroundColor);
-    j["graticule_color"] = imgui_json::number(m_u32GraticuleColor);
-    j["time_range"] = imgui_json::vec2(m_v2TimeRange);
-    j["check_hover_distance_thresh"] = imgui_json::number(m_fCheckHoverDistanceThresh);
-    j["ui_scale"] = imgui_json::vec2(m_v2UiScale);
-    j["pan_offset"] = imgui_json::vec2(m_v2PanOffset);
-    j["show_value_tool_tip"] = imgui_json::boolean(m_bShowValueToolTip);
-    imgui_json::array jaCurves;
-    for (const auto& hCurve : m_aCurveUiObjs)
-        jaCurves.push_back(hCurve->SaveAsJson());
-    j["curves"] = jaCurves;
-    return std::move(j);
-}
-
-void Editor::LoadFromJson(const imgui_json::value& j)
-{
-    m_u32BackgroundColor = (ImU32)j["background_color"].get<imgui_json::number>();
-    m_u32GraticuleColor = (ImU32)j["graticule_color"].get<imgui_json::number>();
-    m_v2TimeRange = j["time_range"].get<imgui_json::vec2>();
-    m_fCheckHoverDistanceThresh = (float)j["check_hover_distance_thresh"].get<imgui_json::number>();
-    m_v2UiScale = j["ui_scale"].get<imgui_json::vec2>();
-    m_v2PanOffset = j["pan_offset"].get<imgui_json::vec2>();
-    m_bShowValueToolTip = j["show_value_tool_tip"].get<imgui_json::boolean>();
-    imgui_json::array jaCurves = j["curves"].get<imgui_json::array>();
-    m_aCurveUiObjs.clear();
-    m_aCurveUiObjs.reserve(jaCurves.size());
-    for (const auto& jelem : jaCurves)
-    {
-        auto hCurve = CurveUiObj::CreateFromJson(this, jelem);
-        m_aCurveUiObjs.push_back(hCurve);
-    }
-}
-
-Editor::Holder Editor::CreateInstance(const ImVec2& v2TimeRange)
-{
-    return Editor::Holder(new Editor(v2TimeRange));
+    return Editor::Holder(new Editor());
 }
 
 }  // ~ namespace ImCurve

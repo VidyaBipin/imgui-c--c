@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 #include <list>
+#include <functional>
 #include <imgui.h>
 #include <imgui_json.h>
 
@@ -14,12 +15,13 @@ namespace ImGui
 namespace ImNewCurve
 {
 
-#define CURVE_EDIT_FLAG_NONE            (0)
-#define CURVE_EDIT_FLAG_VALUE_LIMITED   (1)
-#define CURVE_EDIT_FLAG_SCROLL_V        (1<<1)
-#define CURVE_EDIT_FLAG_MOVE_CURVE      (1<<2)
-#define CURVE_EDIT_FLAG_KEEP_BEGIN_END  (1<<3)
-#define CURVE_EDIT_FLAG_DOCK_BEGIN_END  (1<<4)
+#define IMNEWCURVE_EDITOR_FLAG_NONE                 (0)
+#define IMNEWCURVE_EDITOR_FLAG_VALUE_LIMITED        (1)
+#define IMNEWCURVE_EDITOR_FLAG_ZOOM_V               (1<<1)
+#define IMNEWCURVE_EDITOR_FLAG_SCROLL_V             (1<<2)
+#define IMNEWCURVE_EDITOR_FLAG_MOVE_CURVE_V         (1<<3)
+#define IMNEWCURVE_EDITOR_FLAG_KEEP_BEGIN_END       (1<<4)
+#define IMNEWCURVE_EDITOR_FLAG_DOCK_BEGIN_END       (1<<5)
 // #define CURVE_EDIT_FLAG_DRAW_TIMELINE   (1<<5)
 
     enum CurveType
@@ -169,30 +171,29 @@ namespace ImNewCurve
         const KeyPoint::ValType& GetMinVal() const { return m_tMinVal; }
         const KeyPoint::ValType& GetMaxVal() const { return m_tMaxVal; }
         const KeyPoint::ValType& GetDefaultVal() const { return m_tDefaultVal; }
+        const KeyPoint::ValType& GetValueRange() const { return m_tValRange; }
         const std::pair<uint32_t, uint32_t>& GetTimeBase() const { return m_tTimeBase; }
         size_t GetKeyPointCount() const { return m_aKeyPoints.size(); }
         std::vector<float> GetTicks() const;
         const KeyPoint::Holder GetKeyPoint(size_t idx) const;
         int GetKeyPointIndex(const KeyPoint::Holder& hKp) const;
         int GetKeyPointIndex(float t) const;
-        KeyPoint::ValType CalcPointVal(float t, bool bDenormalize, bool bAlignTime = true) const;
+        KeyPoint::ValType CalcPointVal(float t, bool bAlignTime = true) const;
         float Tick2Time(float tick) const { if (m_bTimeBaseValid) return tick*1000*m_tTimeBase.first/m_tTimeBase.second; return tick; }
         float Time2Tick(float time) const { if (m_bTimeBaseValid) return time*m_tTimeBase.second/(m_tTimeBase.first*1000); return time; }
         float Time2TickAligned(float time) const { if (m_bTimeBaseValid) return roundf(time*m_tTimeBase.second/(m_tTimeBase.first*1000)); return time; }
 
-        void SetMinVal(const KeyPoint::ValType& minVal);
-        void SetMaxVal(const KeyPoint::ValType& maxVal);
-        virtual int AddPoint(KeyPoint::Holder hKp, bool bNeedNormalize, bool bOverwriteIfExists = true);
-        virtual int AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize, bool bOverwriteIfExists = true);
-        virtual int EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCurveType, bool bNormalize);
-        virtual int EditPointByDim(ValueDimension eDim, size_t idx, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize);
-        virtual int ChangePointVal(size_t idx, const KeyPoint::ValType& tKpVal, bool bNormalize);
-        virtual int ChangePointValByDim(ValueDimension eDim, size_t idx, const ImVec2& v2DimVal, bool bNormalize);
-        virtual int ChangeCurveType(size_t idx, CurveType eCurveType);
+        void SetMinVal(const KeyPoint::ValType& minVal);  // only set the minimum key point value (i.e., min value for DIM X,Y,Z), do not change time range start point
+        void SetMaxVal(const KeyPoint::ValType& maxVal);  // only set the maximum key point value (i.e., max value for DIM X,Y,Z), do not change time range end point
+        virtual int AddPoint(KeyPoint::Holder hKp, bool bOverwriteIfExists = true);
+        virtual int AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType = UnKnown, bool bOverwriteIfExists = true);
+        virtual int EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCurveType = UnKnown);
+        virtual int EditPointByDim(ValueDimension eDim, size_t idx, const ImVec2& v2DimVal, CurveType eCurveType = UnKnown);
+        virtual int ChangeKeyPointCurveType(size_t idx, CurveType eCurveType);
         virtual KeyPoint::Holder RemovePoint(size_t idx);
         virtual KeyPoint::Holder RemovePoint(float t);
         virtual void ClearAll();
-        virtual float MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint, bool bNormalize);
+        virtual float MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint);
         virtual bool SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds);
         virtual bool ScaleKeyPoints(const KeyPoint::ValType& tScale, const KeyPoint::ValType& tOrigin = KeyPoint::ValType(0, 0, 0, 0));
         virtual bool PanKeyPoints(const KeyPoint::ValType& tOffset);
@@ -201,11 +202,22 @@ namespace ImNewCurve
         virtual imgui_json::value SaveAsJson() const;
         virtual void LoadFromJson(const imgui_json::value& j);
 
+        std::list<KeyPoint::Holder>::iterator GetKpIter(size_t idx);
+
+        struct Callbacks
+        {
+            virtual void OnKeyPointAdded(size_t szKpIdx, KeyPoint::Holder hKp) = 0;
+            virtual void OnKeyPointRemoved(size_t szKpIdx, KeyPoint::Holder hKp) = 0;
+            virtual void OnKeyPointChanged(size_t szKpIdx, KeyPoint::Holder hKp) = 0;
+            virtual void OnContourNeedUpdate(size_t szKpIdx) = 0;
+        };
+        void RigisterCallbacks(Callbacks* pCb);
+        void UnrigsterCallbacks(Callbacks* pCb);
+
     protected:
         Curve() {}
         void SortKeyPoints();
         KeyPoint::Holder GetKeyPoint_(size_t idx) const;
-        std::list<KeyPoint::Holder>::iterator GetKpIter(size_t idx);
 
     protected:
         std::string m_strName;
@@ -217,154 +229,117 @@ namespace ImNewCurve
         KeyPoint::ValType m_tDefaultVal;
         std::pair<uint32_t, uint32_t> m_tTimeBase;
         bool m_bTimeBaseValid;
+        std::list<Callbacks*> m_aCallbacksArray;
     };
 
     bool DrawCurveArraySimpleView(float fViewWidth, const std::vector<Curve::Holder>& aCurves, float& fCurrTick, const ImVec2& v2TickRange = ImVec2(0,0), ImGuiKey eRemoveKey = ImGuiKey_LeftAlt);
-
-    // forward declaration
-    class Editor;
-
-    class IMGUI_API CurveUiObj : public Curve
-    {
-    public:
-        using Holder = std::shared_ptr<CurveUiObj>;
-        static Holder CreateInstance(Editor* owner, const std::string& name, CurveType type,
-                const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal,
-                ImU32 color, bool visible, int64_t id, int64_t subId);
-        static Holder CreateInstance(Editor* owner, const std::string& name, CurveType type, const std::pair<uint32_t, uint32_t>& tTimeBase,
-                const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal,
-                ImU32 color, bool visible, int64_t id, int64_t subId);
-        static Holder CreateFromJson(Editor* owner, const imgui_json::value& j);
-
-        CurveUiObj(Editor* owner, const std::string& name, CurveType type, const std::pair<uint32_t, uint32_t>& tTimeBase,
-                const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal,
-                ImU32 curveColor, bool visible, int64_t id, int64_t subId)
-            : Curve(name, type, tTimeBase, minVal, maxVal, defaultVal), m_owner(owner), m_u32CurveColor(curveColor), m_bVisible(visible), m_id(id), m_subId(subId)
-        {
-            ImColor tmp(curveColor);
-            tmp.Value.x += 0.1f; if (tmp.Value.x > 1) tmp.Value.x = 1;
-            tmp.Value.y += 0.1f; if (tmp.Value.y > 1) tmp.Value.y = 1;
-            tmp.Value.z += 0.1f; if (tmp.Value.z > 1) tmp.Value.z = 1;
-            m_u32CurveHoveringColor = (ImU32)tmp;
-        }
-        CurveUiObj(Editor* owner, const std::string& name, CurveType type,
-                const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal,
-                ImU32 curveColor, bool visible, int64_t id, int64_t subId)
-            : CurveUiObj(owner, name, type, {0, 0}, minVal, maxVal, defaultVal, curveColor, visible, id, subId) {}
-
-        bool DrawDim(ValueDimension eDim, ImDrawList* pDrawList, const ImVec2& v2CursorPos, bool bIsHovering);
-        bool CheckMouseHoverCurve(ValueDimension eDim, const ImVec2& pos);
-        int CheckMouseHoverPoint(ValueDimension eDim, const ImVec2& pos) const;
-        int AddPoint(KeyPoint::Holder hKp, bool bNeedNormalize, bool bOverwriteIfExists = true) override;
-        int AddPointByDim(ValueDimension eDim, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize, bool bOverwriteIfExists = true) override;
-        int EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCurveType, bool bNormalize) override;
-        int EditPointByDim(ValueDimension eDim, size_t idx, const ImVec2& v2DimVal, CurveType eCurveType, bool bNormalize) override;
-        int ChangeCurveType(size_t idx, CurveType eCurveType) override;
-        KeyPoint::Holder RemovePoint(size_t idx) override;
-        KeyPoint::Holder RemovePoint(float t) override;
-        float MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint, bool bNormalize) override;
-        bool SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds) override;
-        void SetVisible(bool bVisible) { m_bVisible = bVisible; }
-        bool IsVisible() const { return m_bVisible; }
-
-        void UpdateContourPoints(int idx);
-        void UpdateContourPointsByDim(ValueDimension eDim, int idx);
-        void RemoveInvalidContourPoints();
-
-        imgui_json::value SaveAsJson() const override;
-        void LoadFromJson(const imgui_json::value& j) override;
-
-    private:
-        using ContourPointsTable = std::unordered_map<KeyPoint::Holder, std::vector<ImVec2>>;
-        std::unordered_map<ValueDimension, ContourPointsTable> m_aContourPoints;
-
-        CurveUiObj(Editor* owner) : m_owner(owner) {}
-        void UpdateDimContourPoints(ValueDimension eDim, std::list<KeyPoint::Holder>::iterator itKp);
-
-    private:
-        Editor* m_owner;
-        ImU32 m_u32CurveColor;
-        ImU32 m_u32CurveHoveringColor;
-        float m_fCurveWidth {1.5f};
-        float m_fCurveHoveringWidth {2.5f};
-        ImU32 m_u32KeyPointColor {IM_COL32(40, 40, 40, 255)};
-        ImU32 m_u32KeyPointHoveringColor {IM_COL32(240, 240, 240, 255)};
-        ImU32 m_u32KeyPointEdgeColor {IM_COL32(255, 128, 0, 255)};
-        float m_fKeyPointRadius {3.5f};
-        bool m_bVisible {true};
-        int64_t m_id {-1};
-        int64_t m_subId {-1};
-    };
 
     class IMGUI_API Editor
     {
     public:
         using Holder = std::shared_ptr<Editor>;
-        static Holder CreateInstance(const ImVec2& v2TimeRange);
+        static Holder CreateInstance();
 
-        Editor(const ImVec2& v2TimeRange) : m_v2TimeRange(v2TimeRange) {}
-        void Clear();
-        ImU32 GetBackgroundColor() const { return m_u32BackgroundColor; }
-        ImU32 GetGraticuleColor() const { return m_u32GraticuleColor; }
+        Editor(const Editor&) = delete;
+
+        bool DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, uint32_t flags, ImDrawList* pDrawList = nullptr);
+
+        bool AddCurve(Curve::Holder hCurve, ValueDimension eDim, ImU32 u32CurveColor);
+        void ClearAll() { m_aCurveUiObjs.clear(); }
+        size_t GetCurveCount() const;
+        Curve::Holder GetCurveByIndex(int idx) const;
+
         void SetBackgroundColor(ImU32 color) { m_u32BackgroundColor = color; }
+        ImU32 GetBackgroundColor() const { return m_u32BackgroundColor; }
         void SetGraticuleColor(ImU32 color) { m_u32GraticuleColor = color; }
-        const ImVec2& GetTimeRange() const { return m_v2TimeRange; }
-        bool SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds);
+        ImU32 GetGraticuleColor() const { return m_u32GraticuleColor; }
         void SetShowValueToolTip(bool bShow) { m_bShowValueToolTip = bShow; }
-        bool DrawDim(ValueDimension eDim, const char* pcLabel, const ImVec2& v2ViewSize, uint32_t flags, ImDrawList* pDrawList = nullptr);
+        bool IsShowValueToolTip() const { return m_bShowValueToolTip; }
+        bool SetCurveVisible(int iCurveIdx, bool bVisible);
+        bool IsCurveVisible(int iCurveIdx) const;
+        bool SetCurveDimVisible(int iCurveIdx, ValueDimension eDim, bool bVisible);
+        bool IsCurveDimVisible(int iCurveIdx, ValueDimension eDim);
 
-        // Curve related apis
-        size_t GetCurveCount() const { return m_aCurveUiObjs.size(); }
-        CurveUiObj::Holder AddCurve(
-                const std::string& name, CurveType eType, const KeyPoint::ValType& minVal, const KeyPoint::ValType& maxVal, const KeyPoint::ValType& defaultVal,
-                ImU32 color, bool visible, int64_t id = -1, int64_t subId = -1);
-        CurveUiObj::Holder AddCurveByDim(
-                const std::string& name, CurveType eType, ValueDimension eDim, float minVal, float maxVal, float defaultVal,
-                ImU32 color, bool visible, int64_t id = -1, int64_t subId = -1);
-        CurveUiObj::Holder GetCurveByIndex(size_t idx) const;
-        CurveUiObj::Holder GetCurveByName(const std::string& name) const;
-        bool IsCurveVisible(size_t idx) const { if (idx >= m_aCurveUiObjs.size()) return false; return m_aCurveUiObjs[idx]->IsVisible(); }
-
-        inline ImVec2 CvtPoint2Pos(const KeyPoint::ValType& tKpVal, ValueDimension eDim) const
-        {
-            const float x = (tKpVal.w-m_v2TimeRange.x)*m_v2Point2PosScale.x;
-            const float y = KeyPoint::GetDimVal(tKpVal, eDim)*m_v2Point2PosScale.y;
-            return ImVec2(x, y);
-        }
-
-        inline ImVec2 CvtPoint2Pos(const ImVec2& v2PtVal) const
-        {
-            const float x = (v2PtVal.x-m_v2TimeRange.x)*m_v2Point2PosScale.x;
-            const float y = v2PtVal.y*m_v2Point2PosScale.y;
-            return ImVec2(x, y);
-        }
+        inline ImVec2 CvtPoint2Pos(const ImVec2& v2NormedPointVal) const
+        { return v2NormedPointVal*m_v2UiScale*m_v2CurveAxisAreaSize; }
 
         inline ImVec2 CvtPos2Point(const ImVec2& v2Pos) const
-        {
-            const float x = v2Pos.x/m_v2Point2PosScale.x+m_v2TimeRange.x;
-            const float y = v2Pos.y/m_v2Point2PosScale.y;
-            return ImVec2(x, y);
-        }
+        { return v2Pos/(m_v2CurveAxisAreaSize*m_v2UiScale); }
 
-        imgui_json::value SaveAsJson() const;
-        void LoadFromJson(const imgui_json::value& j);
+        // imgui_json::value SaveAsJson() const;
+        // void LoadFromJson(const imgui_json::value& j);
+
+    private:
+        class CurveUiObj : public Curve::Callbacks
+        {
+        public:
+            using Holder = std::shared_ptr<CurveUiObj>;
+            CurveUiObj(Editor* pOwner, Curve::Holder hCurve, ValueDimension eDim, ImU32 u32CurveColor);
+            ~CurveUiObj();
+            void DrawCurve(ImDrawList* pDrawList, const ImVec2& v2OriginPos, bool bIsHovering) const;
+            int MoveKeyPoint(int iKpIdx, const ImVec2& v2MousePos);
+            void MoveCurveVertically(const ImVec2& v2MousePos);
+            void UpdateCurveAttributes();
+            void UpdateContourPoints(int iKpIdx);
+            bool CheckMouseHoverCurve(const ImVec2& v2MousePos) const;
+            int CheckMouseHoverPoint(const ImVec2& v2MousePos) const;
+            void ScaleContour(const ImVec2& v2Scale);
+            void SetVisible(bool bVisible) { m_bVisible = bVisible; }
+            bool IsVisible() const { return m_bVisible; }
+            void SetRefreshContour() { m_bNeedRefreshContour = true; }
+            bool NeedRrefreshContour() const { return m_bNeedRefreshContour; }
+            std::string GetCurveName() const { return m_hCurve->GetName(); }
+            ValueDimension GetDim() const { return m_eDim; }
+            ImVec2 CalcPointValue(const ImVec2& v2MousePos) const;
+
+            void OnKeyPointAdded(size_t szKpIdx, KeyPoint::Holder hKp) override;
+            void OnKeyPointRemoved(size_t szKpIdx, KeyPoint::Holder hKp) override;
+            void OnKeyPointChanged(size_t szKpIdx, KeyPoint::Holder hKp) override;
+            void OnContourNeedUpdate(size_t szKpIdx) override;
+
+        private:
+            using ContourPointsTable = std::unordered_map<KeyPoint::Holder, std::vector<ImVec2>>;
+            ContourPointsTable m_aCpTable;
+
+        private:
+            Editor* m_pOwner;
+            Curve::Holder m_hCurve;
+            ValueDimension m_eDim;
+            ImVec2 m_v2DimValRange, m_v2DimMinVal;
+            bool m_bVisible{true};
+            bool m_bNeedRefreshContour{true};
+            ImU32 m_u32CurveColor, m_u32CurveHoverColor;
+        };
+
+    private:
+        Editor();
 
     private:
         std::vector<CurveUiObj::Holder> m_aCurveUiObjs;
-        ImU32 m_u32BackgroundColor {IM_COL32(24, 24, 24, 255)};
-        ImU32 m_u32GraticuleColor {IM_COL32(48, 48, 48, 128)};
-        ImVec2 m_v2TimeRange;
-        float m_fCheckHoverDistanceThresh {8.f};
-        int m_iCurveHoveringIdx {-1};
-        int m_iPointHoveringIdx {-1};
-        bool m_bIsDragging {false};
-        ImVec2 m_v2UiScale {1.f, 1.f};
-        ImVec2 m_v2CurveAreaSize;
-        ImVec2 m_v2Point2PosScale;
-        ImVec2 m_v2PanOffset;
-        bool m_bShowValueToolTip {false};
-
-        friend CurveUiObj;
+        ImVec2 m_v2CurveAreaSize, m_v2CurveAxisAreaSize;
+        ImVec2 m_v2UiScale{1.f, 1.f};
+        float m_fMaxScale{10.f};
+        ImVec2 m_v2PanOffset{0.f, 0.f};
+        float m_fGraticuleCount{10.f};
+        float m_fCheckHoverDistanceThresh{8.f};
+        int m_iHoveredCurveUiObjIdx{-1};
+        int m_iHoveredKeyPointIdx{-1};
+        bool m_bIsDragging{false};
+        bool m_bShowValueToolTip{false};
+        ImVec2 m_v2ViewPadding{0, 2};
+        ImU32 m_u32BackgroundColor{IM_COL32(24, 24, 24, 255)};
+        ImU32 m_u32GraticuleColor{IM_COL32(48, 48, 48, 128)};
+        size_t m_szGraticuleLineCnt{10};
+        float m_fGraticuleLineThickness{1.f};
+        float m_fCurveWidth{1.5f}, m_fCurveHoverWidth{2.5f};
+        ImU32 m_u32KeyPointColor{IM_COL32(40, 40, 40, 255)};
+        ImU32 m_u32KeyPointHoverColor{IM_COL32(240, 240, 240, 255)};
+        ImU32 m_u32KeyPointEdgeColor{IM_COL32(255, 128, 0, 255)};
+        float m_fKeyPointRadius{3.5f};
+        float m_fCurveAreaTopMargin{0.05f}, m_fCurveAreaBottomMargin{0.05f};
+        ImU32 m_u32MaxValLineColor{IM_COL32(220, 140, 140, 255)};
+        ImU32 m_u32MinValLineColor{IM_COL32(160, 160, 220, 255)};
+        float m_fMinMaxLineThickness{1.5f};
     };
 
 #if IMGUI_BUILD_EXAMPLE
