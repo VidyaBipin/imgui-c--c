@@ -3100,7 +3100,7 @@ bool ImGui::SliderScalar(const char* label, ImGuiDataType data_type, void* p_dat
             float height = frame_bb.GetHeight() / 2 - 2;
             float offset = height / 2;
             ImU32 col = GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab);
-            float radius = std::fmax(grab_bb.GetWidth(), grab_bb.GetHeight()) / 3;
+            float radius = 6;//std::fmax(grab_bb.GetWidth(), grab_bb.GetHeight()) / 3;
             ImVec2 center = grab_bb.GetCenter() + ImVec2(0, offset);
             window->DrawList->AddCircleFilled(center, radius, IM_COL32_ALPHA(col, 255));
         }
@@ -3319,7 +3319,7 @@ bool ImGui::VSliderScalar(const char* label, const ImVec2& size, ImGuiDataType d
         if (flags & ImGuiSliderFlags_Stick)
         {
             ImU32 col = GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab);
-            float radius = std::fmax(grab_bb.GetWidth(), grab_bb.GetHeight()) / 2;
+            float radius = 6;//std::fmax(grab_bb.GetWidth(), grab_bb.GetHeight()) / 2;
             ImVec2 center = grab_bb.GetCenter();
             window->DrawList->AddCircleFilled(center, radius, IM_COL32_ALPHA(col, 255));
         }

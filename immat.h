@@ -317,6 +317,9 @@ enum ImColorFormat {
     IM_CF_YUVA,
     IM_CF_NV12,
     IM_CF_P010LE,
+    IM_CF_LAB,
+    IM_CF_HSV,
+    IM_CF_HLS,
 };
 
 enum ImInterpolateMode {
@@ -541,6 +544,12 @@ static inline int GetChannelCountByColorFormat(ImColorFormat fmt)
         case IM_CF_RGBA:
         case IM_CF_YUVA:
             return 4;
+        case IM_CF_LAB:
+        case IM_CF_HLS:
+        case IM_CF_HSV:
+            return 3;
+        default:
+            return 1;
     }
     return 0;
 }
@@ -716,6 +725,13 @@ public:
     ImMat hconcat(const ImMat& m);
     // convert type
     ImMat convert(ImDataType t, float scale = 1.0f) const;
+    // convert color
+    IMGUI_API ImMat cvtToLAB() const;
+    IMGUI_API ImMat cvtToGray() const;
+    IMGUI_API ImMat cvtToHSV() const;
+    IMGUI_API ImMat cvtToHLS() const;
+    IMGUI_API ImMat cvtToRGB() const;
+    IMGUI_API ImMat cvtToARGB() const;
 
     // some draw function only support 3 dims
     // mat default ordination is ncwh
@@ -748,8 +764,7 @@ public:
     IMGUI_API ImMat lowpass(float lambda);
     IMGUI_API ImMat highpass(float lambda);
     IMGUI_API ImMat threshold(float thres);
-    IMGUI_API ImMat resize(float factor);     // interpolate_linear
-    IMGUI_API ImMat resize(float w, float h); // interpolate_linear
+    IMGUI_API ImMat resize(float w, float h, int interpolate = 0) const; // interpolate_linear = 0 interpolate_nearest = 1
 
     // copy to
     IMGUI_API void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);
@@ -937,6 +952,9 @@ public:
     // 10 = YUVA
     // 11 = NV12
     // 12 = P010LE
+    // 13 = LAB
+    // 14 = HSV
+    // 15 = HLS
     ImColorFormat color_format;
 
     // range
@@ -2325,7 +2343,7 @@ template<typename T> ImMat& ImMat::clip(T v_min, T v_max)
 // matrix math simd
 // simd add
 #if __AVX__
-static inline __attribute__((unused)) void add_int8_avx(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void add_int8_avx(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     int i = 0;
     __m256i V = _mm256_set1_epi8(v);
@@ -2338,7 +2356,7 @@ static inline __attribute__((unused)) void add_int8_avx(int8_t* dst, const int8_
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) + v;
 }
-static inline __attribute__((unused)) void add_int16_avx(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void add_int16_avx(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     int i = 0;
     __m256i V = _mm256_set1_epi16(v);
@@ -2417,7 +2435,7 @@ static inline __attribute__((unused)) void add_float16_avx(uint16_t* dst, const 
 #define add_double_simd add_double_avx
 #define add_float16_simd add_float16_avx
 #elif __SSE__
-static inline __attribute__((unused)) void add_int8_sse(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void add_int8_sse(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     int i = 0;
     __m128i V = _mm_set1_epi8(v);
@@ -2430,7 +2448,7 @@ static inline __attribute__((unused)) void add_int8_sse(int8_t* dst, const int8_
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) + v;
 }
-static inline __attribute__((unused)) void add_int16_sse(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void add_int16_sse(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     int i = 0;
     __m128i V = _mm_set1_epi16(v);
@@ -2509,29 +2527,29 @@ static inline __attribute__((unused)) void add_float16_sse(uint16_t* dst, const 
 #define add_double_simd add_double_sse
 #define add_float16_simd add_float16_sse
 #elif __ARM_NEON
-static inline __attribute__((unused)) void add_int8_neon(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void add_int8_neon(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     int i = 0;
-    int8x16_t V = vdupq_n_s8(v);
+    int8x16_t V = vdupq_n_u8(v);
     int8x16_t X;
     for (i = 0; i < (long)len - 15; i += 16)
     {
-        X = vld1q_s8(src + i); // load chunk of 16 char
-        X = vaddq_s8(X, V);
-        vst1q_s8(dst + i, X);
+        X = vld1q_u8(src + i); // load chunk of 16 char
+        X = vaddq_u8(X, V);
+        vst1q_u8(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) + v;
 }
-static inline __attribute__((unused)) void add_int16_neon(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void add_int16_neon(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     int i = 0;
-    int16x8_t V = vdupq_n_s16(v);
+    int16x8_t V = vdupq_n_u16(v);
     int16x8_t X;
     for (i = 0; i < (long)len - 7; i += 8)
     {
-        X = vld1q_s16(src + i); // load chunk of 8 short
-        X = vaddq_s16(X, V);
-        vst1q_s16(dst + i, X);
+        X = vld1q_u16(src + i); // load chunk of 8 short
+        X = vaddq_u16(X, V);
+        vst1q_u16(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) + v;
 }
@@ -2593,12 +2611,12 @@ static inline __attribute__((unused)) void add_float16_neon(uint16_t* dst, const
 #define add_double_simd add_double_neon
 #define add_float16_simd add_float16_neon
 #else
-static inline __attribute__((unused)) void add_int8_c(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void add_int8_c(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) + v;
 }
-static inline __attribute__((unused)) void add_int16_c(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void add_int16_c(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) + v;
@@ -2640,7 +2658,7 @@ static inline __attribute__((unused)) void add_float16_c(uint16_t* dst, const ui
 
 // simd sub
 #if __AVX__
-static inline __attribute__((unused)) void sub_int8_avx(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void sub_int8_avx(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     int i = 0;
     __m256i V = _mm256_set1_epi8(v);
@@ -2653,7 +2671,7 @@ static inline __attribute__((unused)) void sub_int8_avx(int8_t* dst, const int8_
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
 }
-static inline __attribute__((unused)) void sub_int16_avx(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void sub_int16_avx(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     int i = 0;
     __m256i V = _mm256_set1_epi16(v);
@@ -2732,7 +2750,7 @@ static inline __attribute__((unused)) void sub_float16_avx(uint16_t* dst, const 
 #define sub_double_simd sub_double_avx
 #define sub_float16_simd sub_float16_avx
 #elif __SSE__
-static inline __attribute__((unused)) void sub_int8_sse(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void sub_int8_sse(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     int i = 0;
     __m128i V = _mm_set1_epi8(v);
@@ -2745,7 +2763,7 @@ static inline __attribute__((unused)) void sub_int8_sse(int8_t* dst, const int8_
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
 }
-static inline __attribute__((unused)) void sub_int16_sse(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void sub_int16_sse(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     int i = 0;
     __m128i V = _mm_set1_epi16(v);
@@ -2824,29 +2842,29 @@ static inline __attribute__((unused)) void sub_float16_sse(uint16_t* dst, const 
 #define sub_double_simd sub_double_sse
 #define sub_float16_simd sub_float16_sse
 #elif __ARM_NEON
-static inline __attribute__((unused)) void sub_int8_neon(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void sub_int8_neon(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     int i = 0;
-    int8x16_t V = vdupq_n_s8(v);
+    int8x16_t V = vdupq_n_u8(v);
     int8x16_t X;
     for (i = 0; i < (long)len - 15; i += 16)
     {
-        X = vld1q_s8(src + i); // load chunk of 16 char
+        X = vld1q_u8(src + i); // load chunk of 16 char
         X = vqsubq_u8(X, V);
-        vst1q_s8(dst + i, X);
+        vst1q_u8(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
 }
-static inline __attribute__((unused)) void sub_int16_neon(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void sub_int16_neon(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     int i = 0;
-    int16x8_t V = vdupq_n_s16(v);
+    int16x8_t V = vdupq_n_u16(v);
     int16x8_t X;
     for (i = 0; i < (long)len - 7; i += 8)
     {
-        X = vld1q_s16(src + i); // load chunk of 8 short
+        X = vld1q_u16(src + i); // load chunk of 8 short
         X = vqsubq_u16(X, V);
-        vst1q_s16(dst + i, X);
+        vst1q_u16(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
 }
@@ -2908,12 +2926,12 @@ static inline __attribute__((unused)) void sub_float16_neon(uint16_t* dst, const
 #define sub_double_simd sub_double_neon
 #define sub_float16_simd sub_float16_neon
 #else
-static inline __attribute__((unused)) void sub_int8_c(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void sub_int8_c(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) - v;
 }
-static inline __attribute__((unused)) void sub_int16_c(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void sub_int16_c(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) - v;
@@ -2955,13 +2973,13 @@ static inline __attribute__((unused)) void sub_float16_c(uint16_t* dst, const ui
 
 // simd mul
 #if __AVX__
-static inline __attribute__((unused)) void mul_int8_avx(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void mul_int8_avx(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     // TODO::Dicky need optimize int8 mul for avx
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
-static inline __attribute__((unused)) void mul_int16_avx(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void mul_int16_avx(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     int i = 0;
     __m256i V = _mm256_set1_epi16(v);
@@ -3033,13 +3051,13 @@ static inline __attribute__((unused)) void mul_float16_avx(uint16_t* dst, const 
 #define mul_double_simd mul_double_avx
 #define mul_float16_simd mul_float16_avx
 #elif __SSE__
-static inline __attribute__((unused)) void mul_int8_sse(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void mul_int8_sse(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     // TODO::Dicky need optimize nul int8 for sse
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
-static inline __attribute__((unused)) void mul_int16_sse(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void mul_int16_sse(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     int i = 0;
     __m128i V = _mm_set1_epi16(v);
@@ -3111,29 +3129,29 @@ static inline __attribute__((unused)) void mul_float16_sse(uint16_t* dst, const 
 #define mul_double_simd mul_double_sse
 #define mul_float16_simd mul_float16_sse
 #elif __ARM_NEON
-static inline __attribute__((unused)) void mul_int8_neon(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void mul_int8_neon(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     int i = 0;
-    int8x16_t V = vdupq_n_s8(v);
+    int8x16_t V = vdupq_n_u8(v);
     int8x16_t X;
     for (i = 0; i < (long)len - 15; i += 16)
     {
-        X = vld1q_s8(src + i); // load chunk of 16 char
-        X = vmulq_s8(X, V);
-        vst1q_s8(dst + i, X);
+        X = vld1q_u8(src + i); // load chunk of 16 char
+        X = vmulq_u8(X, V);
+        vst1q_u8(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) - v;
 }
-static inline __attribute__((unused)) void mul_int16_neon(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void mul_int16_neon(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     int i = 0;
-    int16x8_t V = vdupq_n_s16(v);
+    int16x8_t V = vdupq_n_u16(v);
     int16x8_t X;
     for (i = 0; i < (long)len - 7; i += 8)
     {
-        X = vld1q_s16(src + i); // load chunk of 8 short
-        X = vmulq_s16(X, V);
-        vst1q_s16(dst + i, X);
+        X = vld1q_u16(src + i); // load chunk of 8 short
+        X = vmulq_u16(X, V);
+        vst1q_u16(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
@@ -3187,12 +3205,12 @@ static inline __attribute__((unused)) void mul_float16_neon(uint16_t* dst, const
 #define mul_double_simd mul_double_neon
 #define mul_float16_simd mul_float16_neon
 #else
-static inline __attribute__((unused)) void mul_int8_c(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void mul_int8_c(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
 }
-static inline __attribute__((unused)) void mul_int16_c(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void mul_int16_c(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) * v;
@@ -3234,12 +3252,12 @@ static inline __attribute__((unused)) void mul_float16_c(uint16_t* dst, const ui
 
 // simd div
 #if __AVX__
-static inline __attribute__((unused)) void div_int8_avx(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void div_int8_avx(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) / v;
 }
-static inline __attribute__((unused)) void div_int16_avx(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void div_int16_avx(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) / v;
@@ -3294,12 +3312,12 @@ static inline __attribute__((unused)) void div_float16_avx(uint16_t* dst, const 
 #define div_double_simd div_double_avx
 #define div_float16_simd div_float16_avx
 #elif __SSE__
-static inline __attribute__((unused)) void div_int8_sse(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void div_int8_sse(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) / v;
 }
-static inline __attribute__((unused)) void div_int16_sse(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void div_int16_sse(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) / v;
@@ -3354,12 +3372,12 @@ static inline __attribute__((unused)) void div_float16_sse(uint16_t* dst, const 
 #define div_double_simd div_double_sse
 #define div_float16_simd div_float16_sse
 #else
-static inline __attribute__((unused)) void div_int8_c(int8_t* dst, const int8_t* src, const size_t len, const int8_t v)
+static inline __attribute__((unused)) void div_int8_c(uint8_t* dst, const uint8_t* src, const size_t len, const uint8_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) / v;
 }
-static inline __attribute__((unused)) void div_int16_c(int16_t* dst, const int16_t* src, const size_t len, const int16_t v)
+static inline __attribute__((unused)) void div_int16_c(uint16_t* dst, const uint16_t* src, const size_t len, const uint16_t v)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src + i) / v;
@@ -3401,7 +3419,7 @@ static inline __attribute__((unused)) void div_float16_c(uint16_t* dst, const ui
 
 // simd add mat
 #if __AVX__
-static inline __attribute__((unused)) void madd_int8_avx(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void madd_int8_avx(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     int i = 0;
     __m256i X, Y;
@@ -3414,7 +3432,7 @@ static inline __attribute__((unused)) void madd_int8_avx(int8_t* dst, const int8
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
 }
-static inline __attribute__((unused)) void madd_int16_avx(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void madd_int16_avx(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     int i = 0;
     __m256i X, Y;
@@ -3493,7 +3511,7 @@ static inline __attribute__((unused)) void madd_float16_avx(uint16_t* dst, const
 #define madd_double_simd    madd_double_avx
 #define madd_float16_simd   madd_float16_avx
 #elif __SSE__
-static inline __attribute__((unused)) void madd_int8_sse(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void madd_int8_sse(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     int i = 0;
     __m128i X, Y;
@@ -3506,7 +3524,7 @@ static inline __attribute__((unused)) void madd_int8_sse(int8_t* dst, const int8
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
 }
-static inline __attribute__((unused)) void madd_int16_sse(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void madd_int16_sse(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     int i = 0;
     __m128i X, Y;
@@ -3585,29 +3603,29 @@ static inline __attribute__((unused)) void madd_float16_sse(uint16_t* dst, const
 #define madd_double_simd    madd_double_sse
 #define madd_float16_simd   madd_float16_sse
 #elif __ARM_NEON
-static inline __attribute__((unused)) void madd_int8_neon(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void madd_int8_neon(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     int i = 0;
     int8x16_t X, Y;
     for (i = 0; i < (long)len - 15; i += 16)
     {
-        X = vld1q_s8(src1 + i); // load chunk of 16 char
-        Y = vld1q_s8(src2 + i); // load chunk of 16 char
-        X = vaddq_s8(X, Y);
-        vst1q_s8(dst + i, X);
+        X = vld1q_u8(src1 + i); // load chunk of 16 char
+        Y = vld1q_u8(src2 + i); // load chunk of 16 char
+        X = vaddq_u8(X, Y);
+        vst1q_u8(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
 }
-static inline __attribute__((unused)) void madd_int16_neon(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void madd_int16_neon(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     int i = 0;
     int16x8_t X, Y;
     for (i = 0; i < (long)len - 7; i += 8)
     {
-        X = vld1q_s16(src1 + i); // load chunk of 8 short
-        Y = vld1q_s16(src2 + i); // load chunk of 8 short
-        X = vaddq_s16(X, Y);
-        vst1q_s16(dst + i, X);
+        X = vld1q_u16(src1 + i); // load chunk of 8 short
+        Y = vld1q_u16(src2 + i); // load chunk of 8 short
+        X = vaddq_u16(X, Y);
+        vst1q_u16(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
 }
@@ -3669,12 +3687,12 @@ static inline __attribute__((unused)) void madd_float16_neon(uint16_t* dst, cons
 #define madd_double_simd    madd_double_neon
 #define madd_float16_simd   madd_float16_neon
 #else
-static inline __attribute__((unused)) void madd_int8_c(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void madd_int8_c(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
 }
-static inline __attribute__((unused)) void madd_int16_c(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void madd_int16_c(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) + *(src2 + i);
@@ -3716,7 +3734,7 @@ static inline __attribute__((unused)) void madd_float16_c(uint16_t* dst, const u
 
 // simd sub mat
 #if __AVX__
-static inline __attribute__((unused)) void msub_int8_avx(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void msub_int8_avx(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     int i = 0;
     __m256i X, Y;
@@ -3724,12 +3742,12 @@ static inline __attribute__((unused)) void msub_int8_avx(int8_t* dst, const int8
     {
         X = _mm256_loadu_si256((__m256i const *)(src1 + i)); // load chunk of 32 char
         Y = _mm256_loadu_si256((__m256i const *)(src2 + i)); // load chunk of 32 char
-        X = _mm256_sub_epi8(X, Y);
+        X = _mm256_sub_epi8(X, Y); // signed?
         _mm256_storeu_si256((__m256i *)(dst + i), X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
 }
-static inline __attribute__((unused)) void msub_int16_avx(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void msub_int16_avx(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     int i = 0;
     __m256i X, Y;
@@ -3737,7 +3755,7 @@ static inline __attribute__((unused)) void msub_int16_avx(int16_t* dst, const in
     {
         X = _mm256_loadu_si256((__m256i const *)(src1 + i)); // load chunk of 16 short
         Y = _mm256_loadu_si256((__m256i const *)(src2 + i)); // load chunk of 16 short
-        X = _mm256_sub_epi16(X, Y);
+        X = _mm256_sub_epi16(X, Y); // signed?
         _mm256_storeu_si256((__m256i *)(dst + i), X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
@@ -3808,7 +3826,7 @@ static inline __attribute__((unused)) void msub_float16_avx(uint16_t* dst, const
 #define msub_double_simd    msub_double_avx
 #define msub_float16_simd   msub_float16_avx
 #elif __SSE__
-static inline __attribute__((unused)) void msub_int8_sse(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void msub_int8_sse(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     int i = 0;
     __m128i X, Y;
@@ -3816,12 +3834,12 @@ static inline __attribute__((unused)) void msub_int8_sse(int8_t* dst, const int8
     {
         X = _mm_loadu_si128((__m128i const *)(src1 + i)); // load chunk of 16 char
         Y = _mm_loadu_si128((__m128i const *)(src2 + i)); // load chunk of 16 char
-        X = _mm_sub_epi8(X, Y);
+        X = _mm_sub_epi8(X, Y); // signed?
         _mm_storeu_si128((__m128i *)(dst + i), X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
 }
-static inline __attribute__((unused)) void msub_int16_sse(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void msub_int16_sse(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     int i = 0;
     __m128i X, Y;
@@ -3829,7 +3847,7 @@ static inline __attribute__((unused)) void msub_int16_sse(int16_t* dst, const in
     {
         X = _mm_loadu_si128((__m128i const *)(src1 + i)); // load chunk of 8 short
         Y = _mm_loadu_si128((__m128i const *)(src2 + i)); // load chunk of 8 short
-        X = _mm_sub_epi16(X, Y);
+        X = _mm_sub_epi16(X, Y); // signed?
         _mm_storeu_si128((__m128i *)(dst + i), X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
@@ -3900,29 +3918,29 @@ static inline __attribute__((unused)) void msub_float16_sse(uint16_t* dst, const
 #define msub_double_simd    msub_double_sse
 #define msub_float16_simd   msub_float16_sse
 #elif __ARM_NEON
-static inline __attribute__((unused)) void msub_int8_neon(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void msub_int8_neon(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     int i = 0;
     int8x16_t X, Y;
     for (i = 0; i < (long)len - 15; i += 16)
     {
-        X = vld1q_s8(src1 + i); // load chunk of 16 char
-        Y = vld1q_s8(src2 + i); // load chunk of 16 char
-        X = vsubq_s8(X, Y);
-        vst1q_s8(dst + i, X);
+        X = vld1q_u8(src1 + i); // load chunk of 16 char
+        Y = vld1q_u8(src2 + i); // load chunk of 16 char
+        X = vsubq_u8(X, Y);
+        vst1q_u8(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
 }
-static inline __attribute__((unused)) void msub_int16_neon(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void msub_int16_neon(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     int i = 0;
     int16x8_t X, Y;
     for (i = 0; i < (long)len - 7; i += 8)
     {
-        X = vld1q_s16(src1 + i); // load chunk of 8 short
-        Y = vld1q_s16(src2 + i); // load chunk of 8 short
-        X = vsubq_s16(X, Y);
-        vst1q_s16(dst + i, X);
+        X = vld1q_u16(src1 + i); // load chunk of 8 short
+        Y = vld1q_u16(src2 + i); // load chunk of 8 short
+        X = vsubq_u16(X, Y);
+        vst1q_u16(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
 }
@@ -3984,12 +4002,12 @@ static inline __attribute__((unused)) void msub_float16_neon(uint16_t* dst, cons
 #define msub_double_simd    msub_double_neon
 #define msub_float16_simd   msub_float16_neon
 #else
-static inline __attribute__((unused)) void msub_int8_c(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void msub_int8_c(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
 }
-static inline __attribute__((unused)) void msub_int16_c(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void msub_int16_c(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) - *(src2 + i);
@@ -4031,12 +4049,12 @@ static inline __attribute__((unused)) void msub_float16_c(uint16_t* dst, const u
 
 // simd div mat
 #if __AVX__
-static inline __attribute__((unused)) void mdiv_int8_avx(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void mdiv_int8_avx(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
 }
-static inline __attribute__((unused)) void mdiv_int16_avx(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void mdiv_int16_avx(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
@@ -4091,12 +4109,12 @@ static inline __attribute__((unused)) void mdiv_float16_avx(uint16_t* dst, const
 #define mdiv_double_simd     mdiv_double_avx
 #define mdiv_float16_simd    mdiv_float16_avx
 #elif __SSE__
-static inline __attribute__((unused)) void mdiv_int8_sse(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void mdiv_int8_sse(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
 }
-static inline __attribute__((unused)) void mdiv_int16_sse(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void mdiv_int16_sse(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
@@ -4153,12 +4171,12 @@ static inline __attribute__((unused)) void mdiv_float16_sse(uint16_t* dst, const
 //#elif __ARM_NEON
 // TODO::Dicky Add arm neon simd
 #else
-static inline __attribute__((unused)) void mdiv_int8_c(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void mdiv_int8_c(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
 }
-static inline __attribute__((unused)) void mdiv_int16_c(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void mdiv_int16_c(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
@@ -4200,12 +4218,12 @@ static inline __attribute__((unused)) void mdiv_float16_c(uint16_t* dst, const u
 
 // simd mul mat
 #if __AVX__
-static inline __attribute__((unused)) void mmul_int8_avx(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void mmul_int8_avx(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
 }
-static inline __attribute__((unused)) void mmul_int16_avx(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void mmul_int16_avx(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     int i = 0;
     __m256i X, Y;
@@ -4276,12 +4294,12 @@ static inline __attribute__((unused)) void mmul_float16_avx(uint16_t* dst, const
 #define mmul_double_simd     mmul_double_avx
 #define mmul_float16_simd    mmul_float16_avx
 #elif __SSE__
-static inline __attribute__((unused)) void mmul_int8_sse(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void mmul_int8_sse(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
 }
-static inline __attribute__((unused)) void mmul_int16_sse(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void mmul_int16_sse(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     int i = 0;
     __m128i X, Y;
@@ -4289,7 +4307,7 @@ static inline __attribute__((unused)) void mmul_int16_sse(int16_t* dst, const in
     {
         X = _mm_loadu_si128((__m128i const *)(src1 + i)); // load chunk of 8 short
         Y = _mm_loadu_si128((__m128i const *)(src2 + i)); // load chunk of 8 short
-        X = _mm_mullo_epi16(X, Y);
+        X = _mm_mullo_epi16(X, Y); // signed?
         _mm_storeu_si128((__m128i *)(dst + i), X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
@@ -4352,29 +4370,29 @@ static inline __attribute__((unused)) void mmul_float16_sse(uint16_t* dst, const
 #define mmul_double_simd     mmul_double_sse
 #define mmul_float16_simd    mmul_float16_sse
 #elif __ARM_NEON
-static inline __attribute__((unused)) void mmul_int8_neon(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void mmul_int8_neon(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     int i = 0;
     int8x16_t X, Y;
     for (i = 0; i < (long)len - 15; i += 16)
     {
-        X = vld1q_s8(src1 + i); // load chunk of 16 int8
-        Y = vld1q_s8(src2 + i); // load chunk of 16 int8
-        X = vmulq_s8(X, Y);
-        vst1q_s8(dst + i, X);
+        X = vld1q_u8(src1 + i); // load chunk of 16 int8
+        Y = vld1q_u8(src2 + i); // load chunk of 16 int8
+        X = vmulq_u8(X, Y);
+        vst1q_u8(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
 }
-static inline __attribute__((unused)) void mmul_int16_neon(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void mmul_int16_neon(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     int i = 0;
     int16x8_t X, Y;
     for (i = 0; i < (long)len - 7; i += 8)
     {
-        X = vld1q_s16(src1 + i); // load chunk of 8 short
-        Y = vld1q_s16(src2 + i); // load chunk of 8 short
-        X = vmulq_s16(X, Y);
-        vst1q_s16(dst + i, X);
+        X = vld1q_u16(src1 + i); // load chunk of 8 short
+        Y = vld1q_u16(src2 + i); // load chunk of 8 short
+        X = vmulq_u16(X, Y);
+        vst1q_u16(dst + i, X);
     }
     for (; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
 }
@@ -4484,8 +4502,8 @@ inline ImMat ImMat::operator+ (T v)
         return m;
     switch (type)
     {
-        case IM_DT_INT8:    add_int8_simd((int8_t *)m.data, (int8_t *) this->data, total(), static_cast<int8_t> (v)); break;
-        case IM_DT_INT16:   add_int16_simd((int16_t *)m.data, (int16_t *) this->data, total(), static_cast<int16_t> (v)); break;
+        case IM_DT_INT8:    add_int8_simd((uint8_t *)m.data, (uint8_t *) this->data, total(), static_cast<uint8_t> (v)); break;
+        case IM_DT_INT16:   add_int16_simd((uint16_t *)m.data, (uint16_t *) this->data, total(), static_cast<uint16_t> (v)); break;
         case IM_DT_INT32:   add_int32_simd((int32_t *)m.data, (int32_t *) this->data, total(), static_cast<int32_t> (v)); break;
         case IM_DT_INT64:   add_int64_simd((int64_t *)m.data, (int64_t *) this->data, total(), static_cast<int64_t> (v)); break;
         case IM_DT_FLOAT32: add_float_simd((float *)m.data, (float *) this->data, total(), static_cast<float> (v)); break;
@@ -4502,8 +4520,8 @@ inline ImMat& ImMat::operator+=(T v)
     assert(device == IM_DD_CPU);
     switch (type)
     {
-        case IM_DT_INT8:    add_int8_simd((int8_t *)this->data, (int8_t *) this->data, total(), static_cast<int8_t> (v)); break;
-        case IM_DT_INT16:   add_int16_simd((int16_t *)this->data, (int16_t *) this->data, total(), static_cast<int16_t> (v)); break;
+        case IM_DT_INT8:    add_int8_simd((uint8_t *)this->data, (uint8_t *) this->data, total(), static_cast<uint8_t> (v)); break;
+        case IM_DT_INT16:   add_int16_simd((uint16_t *)this->data, (uint16_t *) this->data, total(), static_cast<uint16_t> (v)); break;
         case IM_DT_INT32:   add_int32_simd((int32_t *)this->data, (int32_t *) this->data, total(), static_cast<int32_t> (v)); break;
         case IM_DT_INT64:   add_int64_simd((int64_t *)this->data, (int64_t *) this->data, total(), static_cast<int64_t> (v)); break;
         case IM_DT_FLOAT32: add_float_simd((float *)this->data, (float *) this->data, total(), static_cast<float> (v)); break;
@@ -4525,8 +4543,8 @@ inline ImMat ImMat::operator- (T v)
         return m;
     switch (type)
     {
-        case IM_DT_INT8:    sub_int8_simd((int8_t *)m.data, (int8_t *) this->data, total(), static_cast<int8_t> (v)); break;
-        case IM_DT_INT16:   sub_int16_simd((int16_t *)m.data, (int16_t *) this->data, total(), static_cast<int16_t> (v)); break;
+        case IM_DT_INT8:    sub_int8_simd((uint8_t *)m.data, (uint8_t *) this->data, total(), static_cast<uint8_t> (v)); break;
+        case IM_DT_INT16:   sub_int16_simd((uint16_t *)m.data, (uint16_t *) this->data, total(), static_cast<uint16_t> (v)); break;
         case IM_DT_INT32:   sub_int32_simd((int32_t *)m.data, (int32_t *) this->data, total(), static_cast<int32_t> (v)); break;
         case IM_DT_INT64:   sub_int64_simd((int64_t *)m.data, (int64_t *) this->data, total(), static_cast<int64_t> (v)); break;
         case IM_DT_FLOAT32: sub_float_simd((float *)m.data, (float *) this->data, total(), static_cast<float> (v)); break;
@@ -4543,8 +4561,8 @@ inline ImMat& ImMat::operator-=(T v)
     assert(device == IM_DD_CPU);
     switch (type)
     {
-        case IM_DT_INT8:    sub_int8_simd((int8_t *)this->data, (int8_t *) this->data, total(), static_cast<int8_t> (v)); break;
-        case IM_DT_INT16:   sub_int16_simd((int16_t *)this->data, (int16_t *) this->data, total(), static_cast<int16_t> (v)); break;
+        case IM_DT_INT8:    sub_int8_simd((uint8_t *)this->data, (uint8_t *) this->data, total(), static_cast<uint8_t> (v)); break;
+        case IM_DT_INT16:   sub_int16_simd((uint16_t *)this->data, (uint16_t *) this->data, total(), static_cast<uint16_t> (v)); break;
         case IM_DT_INT32:   sub_int32_simd((int32_t *)this->data, (int32_t *) this->data, total(), static_cast<int32_t> (v)); break;
         case IM_DT_INT64:   sub_int64_simd((int64_t *)this->data, (int64_t *) this->data, total(), static_cast<int64_t> (v)); break;
         case IM_DT_FLOAT32: sub_float_simd((float *)this->data, (float *) this->data, total(), static_cast<float> (v)); break;
@@ -4566,8 +4584,8 @@ inline ImMat ImMat::operator* (T v)
         return m;
     switch (type)
     {
-        case IM_DT_INT8:    mul_int8_simd((int8_t *)m.data, (int8_t *) this->data, total(), static_cast<int8_t> (v)); break;
-        case IM_DT_INT16:   mul_int16_simd((int16_t *)m.data, (int16_t *) this->data, total(), static_cast<int16_t> (v)); break;
+        case IM_DT_INT8:    mul_int8_simd((uint8_t *)m.data, (uint8_t *) this->data, total(), static_cast<uint8_t> (v)); break;
+        case IM_DT_INT16:   mul_int16_simd((uint16_t *)m.data, (uint16_t *) this->data, total(), static_cast<uint16_t> (v)); break;
         case IM_DT_INT32:   mul_int32_simd((int32_t *)m.data, (int32_t *) this->data, total(), static_cast<int32_t> (v)); break;
         case IM_DT_INT64:   mul_int64_simd((int64_t *)m.data, (int64_t *) this->data, total(), static_cast<int64_t> (v)); break;
         case IM_DT_FLOAT32: mul_float_simd((float *)m.data, (float *) this->data, total(), static_cast<float> (v)); break;
@@ -4584,8 +4602,8 @@ inline ImMat& ImMat::operator*=(T v)
     assert(device == IM_DD_CPU);
     switch (type)
     {
-        case IM_DT_INT8:    mul_int8_simd((int8_t *)this->data, (int8_t *) this->data, total(), static_cast<int8_t> (v)); break;
-        case IM_DT_INT16:   mul_int16_simd((int16_t *)this->data, (int16_t *) this->data, total(), static_cast<int16_t> (v)); break;
+        case IM_DT_INT8:    mul_int8_simd((uint8_t *)this->data, (uint8_t *) this->data, total(), static_cast<uint8_t> (v)); break;
+        case IM_DT_INT16:   mul_int16_simd((uint16_t *)this->data, (uint16_t *) this->data, total(), static_cast<uint16_t> (v)); break;
         case IM_DT_INT32:   mul_int32_simd((int32_t *)this->data, (int32_t *) this->data, total(), static_cast<int32_t> (v)); break;
         case IM_DT_INT64:   mul_int64_simd((int64_t *)this->data, (int64_t *) this->data, total(), static_cast<int64_t> (v)); break;
         case IM_DT_FLOAT32: mul_float_simd((float *)this->data, (float *) this->data, total(), static_cast<float> (v)); break;
@@ -4607,8 +4625,8 @@ inline ImMat ImMat::operator/ (T v)
         return m;
     switch (type)
     {
-        case IM_DT_INT8:    if (static_cast<int8_t> (v) != 0) div_int8_simd((int8_t *)m.data, (int8_t *) this->data, total(), static_cast<int8_t> (v)); break;
-        case IM_DT_INT16:   if (static_cast<int16_t>(v) != 0) div_int16_simd((int16_t *)m.data, (int16_t *) this->data, total(), static_cast<int16_t> (v)); break;
+        case IM_DT_INT8:    if (static_cast<uint8_t> (v) != 0) div_int8_simd((uint8_t *)m.data, (uint8_t *) this->data, total(), static_cast<uint8_t> (v)); break;
+        case IM_DT_INT16:   if (static_cast<uint16_t>(v) != 0) div_int16_simd((uint16_t *)m.data, (uint16_t *) this->data, total(), static_cast<uint16_t> (v)); break;
         case IM_DT_INT32:   if (static_cast<int32_t>(v) != 0) div_int32_simd((int32_t *)m.data, (int32_t *) this->data, total(), static_cast<int32_t> (v)); break;
         case IM_DT_INT64:   if (static_cast<int64_t>(v) != 0) div_int64_simd((int64_t *)m.data, (int64_t *) this->data, total(), static_cast<int64_t> (v)); break;
         case IM_DT_FLOAT32: if (static_cast<float>  (v) != 0) div_float_simd((float *)m.data, (float *) this->data, total(), static_cast<float> (v)); break;
@@ -4625,8 +4643,8 @@ inline ImMat& ImMat::operator/=(T v)
     assert(device == IM_DD_CPU);
     switch (type)
     {
-        case IM_DT_INT8:    if (static_cast<int8_t> (v) != 0) div_int8_simd((int8_t *)this->data, (int8_t *) this->data, total(), static_cast<int8_t> (v)); break;
-        case IM_DT_INT16:   if (static_cast<int16_t>(v) != 0) div_int16_simd((int16_t *)this->data, (int16_t *) this->data, total(), static_cast<int16_t> (v)); break;
+        case IM_DT_INT8:    if (static_cast<uint8_t> (v) != 0) div_int8_simd((uint8_t *)this->data, (uint8_t *) this->data, total(), static_cast<uint8_t> (v)); break;
+        case IM_DT_INT16:   if (static_cast<uint16_t>(v) != 0) div_int16_simd((uint16_t *)this->data, (uint16_t *) this->data, total(), static_cast<uint16_t> (v)); break;
         case IM_DT_INT32:   if (static_cast<int32_t>(v) != 0) div_int32_simd((int32_t *)this->data, (int32_t *) this->data, total(), static_cast<int32_t> (v)); break;
         case IM_DT_INT64:   if (static_cast<int64_t>(v) != 0) div_int64_simd((int64_t *)this->data, (int64_t *) this->data, total(), static_cast<int64_t> (v)); break;
         case IM_DT_FLOAT32: if (static_cast<float>  (v) != 0) div_float_simd((float *)this->data, (float *) this->data, total(), static_cast<float> (v)); break;
@@ -4649,8 +4667,8 @@ inline ImMat ImMat::operator+(const ImMat& mat)
     m.create_like(*this);
     switch (type)
     {
-        case IM_DT_INT8:    madd_int8_simd((int8_t *)m.data, (int8_t *) this->data, (int8_t *) mat.data, total()); break;
-        case IM_DT_INT16:   madd_int16_simd((int16_t *)m.data, (int16_t *) this->data, (int16_t *) mat.data, total()); break;
+        case IM_DT_INT8:    madd_int8_simd((uint8_t *)m.data, (uint8_t *) this->data, (uint8_t *) mat.data, total()); break;
+        case IM_DT_INT16:   madd_int16_simd((uint16_t *)m.data, (uint16_t *) this->data, (uint16_t *) mat.data, total()); break;
         case IM_DT_INT32:   madd_int32_simd((int32_t *)m.data, (int32_t *) this->data, (int32_t *) mat.data, total()); break;
         case IM_DT_INT64:   madd_int64_simd((int64_t *)m.data, (int64_t *) this->data, (int64_t *) mat.data, total()); break;
         case IM_DT_FLOAT32: madd_float_simd((float *)m.data, (float *) this->data, (float *) mat.data, total()); break;
@@ -4670,8 +4688,8 @@ inline ImMat& ImMat::operator+=(const ImMat& mat)
     assert(type == mat.type);
     switch (type)
     {
-        case IM_DT_INT8:    madd_int8_simd((int8_t *)this->data, (int8_t *) this->data, (int8_t *) mat.data, total()); break;
-        case IM_DT_INT16:   madd_int16_simd((int16_t *)this->data, (int16_t *) this->data, (int16_t *) mat.data, total()); break;
+        case IM_DT_INT8:    madd_int8_simd((uint8_t *)this->data, (uint8_t *) this->data, (uint8_t *) mat.data, total()); break;
+        case IM_DT_INT16:   madd_int16_simd((uint16_t *)this->data, (uint16_t *) this->data, (uint16_t *) mat.data, total()); break;
         case IM_DT_INT32:   madd_int32_simd((int32_t *)this->data, (int32_t *) this->data, (int32_t *) mat.data, total()); break;
         case IM_DT_INT64:   madd_int64_simd((int64_t *)this->data, (int64_t *) this->data, (int64_t *) mat.data, total()); break;
         case IM_DT_FLOAT32: madd_float_simd((float *)this->data, (float *) this->data, (float *) mat.data, total()); break;
@@ -4694,8 +4712,8 @@ inline ImMat ImMat::operator-(const ImMat& mat)
     m.create_like(*this);
     switch (type)
     {
-        case IM_DT_INT8:    msub_int8_simd((int8_t *)m.data, (int8_t *) this->data, (int8_t *) mat.data, total()); break;
-        case IM_DT_INT16:   msub_int16_simd((int16_t *)m.data, (int16_t *) this->data, (int16_t *) mat.data, total()); break;
+        case IM_DT_INT8:    msub_int8_simd((uint8_t *)m.data, (uint8_t *) this->data, (uint8_t *) mat.data, total()); break;
+        case IM_DT_INT16:   msub_int16_simd((uint16_t *)m.data, (uint16_t *) this->data, (uint16_t *) mat.data, total()); break;
         case IM_DT_INT32:   msub_int32_simd((int32_t *)m.data, (int32_t *) this->data, (int32_t *) mat.data, total()); break;
         case IM_DT_INT64:   msub_int64_simd((int64_t *)m.data, (int64_t *) this->data, (int64_t *) mat.data, total()); break;
         case IM_DT_FLOAT32: msub_float_simd((float *)m.data, (float *) this->data, (float *) mat.data, total()); break;
@@ -4715,8 +4733,8 @@ inline ImMat& ImMat::operator-=(const ImMat& mat)
     assert(type == mat.type);
     switch (type)
     {
-        case IM_DT_INT8:    msub_int8_simd((int8_t *)this->data, (int8_t *) this->data, (int8_t *) mat.data, total()); break;
-        case IM_DT_INT16:   msub_int16_simd((int16_t *)this->data, (int16_t *) this->data, (int16_t *) mat.data, total()); break;
+        case IM_DT_INT8:    msub_int8_simd((uint8_t *)this->data, (uint8_t *) this->data, (uint8_t *) mat.data, total()); break;
+        case IM_DT_INT16:   msub_int16_simd((uint16_t *)this->data, (uint16_t *) this->data, (uint16_t *) mat.data, total()); break;
         case IM_DT_INT32:   msub_int32_simd((int32_t *)this->data, (int32_t *) this->data, (int32_t *) mat.data, total()); break;
         case IM_DT_INT64:   msub_int64_simd((int64_t *)this->data, (int64_t *) this->data, (int64_t *) mat.data, total()); break;
         case IM_DT_FLOAT32: msub_float_simd((float *)this->data, (float *) this->data, (float *) mat.data, total()); break;
@@ -4739,8 +4757,8 @@ inline ImMat ImMat::operator/(const ImMat& mat)
     m.create_like(*this);
     switch (type)
     {
-        case IM_DT_INT8:    mdiv_int8_simd((int8_t *)m.data, (int8_t *) this->data, (int8_t *) mat.data, total()); break;
-        case IM_DT_INT16:   mdiv_int16_simd((int16_t *)m.data, (int16_t *) this->data, (int16_t *) mat.data, total()); break;
+        case IM_DT_INT8:    mdiv_int8_simd((uint8_t *)m.data, (uint8_t *) this->data, (uint8_t *) mat.data, total()); break;
+        case IM_DT_INT16:   mdiv_int16_simd((uint16_t *)m.data, (uint16_t *) this->data, (uint16_t *) mat.data, total()); break;
         case IM_DT_INT32:   mdiv_int32_simd((int32_t *)m.data, (int32_t *) this->data, (int32_t *) mat.data, total()); break;
         case IM_DT_INT64:   mdiv_int64_simd((int64_t *)m.data, (int64_t *) this->data, (int64_t *) mat.data, total()); break;
         case IM_DT_FLOAT32: mdiv_float_simd((float *)m.data, (float *) this->data, (float *) mat.data, total()); break;
@@ -4760,8 +4778,8 @@ inline ImMat& ImMat::operator/=(const ImMat& mat)
     assert(type == mat.type);
     switch (type)
     {
-        case IM_DT_INT8:    mdiv_int8_simd((int8_t *)this->data, (int8_t *) this->data, (int8_t *) mat.data, total()); break;
-        case IM_DT_INT16:   mdiv_int16_simd((int16_t *)this->data, (int16_t *) this->data, (int16_t *) mat.data, total()); break;
+        case IM_DT_INT8:    mdiv_int8_simd((uint8_t *)this->data, (uint8_t *) this->data, (uint8_t *) mat.data, total()); break;
+        case IM_DT_INT16:   mdiv_int16_simd((uint16_t *)this->data, (uint16_t *) this->data, (uint16_t *) mat.data, total()); break;
         case IM_DT_INT32:   mdiv_int32_simd((int32_t *)this->data, (int32_t *) this->data, (int32_t *) mat.data, total()); break;
         case IM_DT_INT64:   mdiv_int64_simd((int64_t *)this->data, (int64_t *) this->data, (int64_t *) mat.data, total()); break;
         case IM_DT_FLOAT32: mdiv_float_simd((float *)this->data, (float *) this->data, (float *) mat.data, total()); break;
@@ -4777,8 +4795,8 @@ inline ImMat& ImMat::square()
     assert(device == IM_DD_CPU);
     switch (type)
     {
-        case IM_DT_INT8:    mmul_int8_simd((int8_t *)this->data, (int8_t *) this->data, (int8_t *) this->data, total()); break;
-        case IM_DT_INT16:   mmul_int16_simd((int16_t *)this->data, (int16_t *) this->data, (int16_t *) this->data, total()); break;
+        case IM_DT_INT8:    mmul_int8_simd((uint8_t *)this->data, (uint8_t *) this->data, (uint8_t *) this->data, total()); break;
+        case IM_DT_INT16:   mmul_int16_simd((uint16_t *)this->data, (uint16_t *) this->data, (uint16_t *) this->data, total()); break;
         case IM_DT_INT32:   mmul_int32_simd((int32_t *)this->data, (int32_t *) this->data, (int32_t *) this->data, total()); break;
         case IM_DT_INT64:   mmul_int64_simd((int64_t *)this->data, (int64_t *) this->data, (int64_t *) this->data, total()); break;
         case IM_DT_FLOAT32: mmul_float_simd((float *)this->data, (float *) this->data, (float *) this->data, total()); break;
@@ -4799,8 +4817,8 @@ inline ImMat& ImMat::mul(const ImMat& mat)
     assert(type == mat.type);
     switch (type)
     {
-        case IM_DT_INT8:    mmul_int8_simd((int8_t *)this->data, (int8_t *) this->data, (int8_t *) mat.data, total()); break;
-        case IM_DT_INT16:   mmul_int16_simd((int16_t *)this->data, (int16_t *) this->data, (int16_t *) mat.data, total()); break;
+        case IM_DT_INT8:    mmul_int8_simd((uint8_t *)this->data, (uint8_t *) this->data, (uint8_t *) mat.data, total()); break;
+        case IM_DT_INT16:   mmul_int16_simd((uint16_t *)this->data, (uint16_t *) this->data, (uint16_t *) mat.data, total()); break;
         case IM_DT_INT32:   mmul_int32_simd((int32_t *)this->data, (int32_t *) this->data, (int32_t *) mat.data, total()); break;
         case IM_DT_INT64:   mmul_int64_simd((int64_t *)this->data, (int64_t *) this->data, (int64_t *) mat.data, total()); break;
         case IM_DT_FLOAT32: mmul_float_simd((float *)this->data, (float *) this->data, (float *) mat.data, total()); break;
@@ -4829,8 +4847,8 @@ inline ImMat ImMat::operator*(const ImMat& mat)
             {
                 switch (type)
                 {
-                    case IM_DT_INT8:    m.at<int8_t> (j, i) += this->at<int8_t> (k, i) * mat.at<int8_t> (j, k); break;
-                    case IM_DT_INT16:   m.at<int16_t>(j, i) += this->at<int16_t>(k, i) * mat.at<int16_t>(j, k); break;
+                    case IM_DT_INT8:    m.at<uint8_t> (j, i) += this->at<uint8_t> (k, i) * mat.at<uint8_t> (j, k); break;
+                    case IM_DT_INT16:   m.at<uint16_t>(j, i) += this->at<uint16_t>(k, i) * mat.at<uint16_t>(j, k); break;
                     case IM_DT_INT32:   m.at<int32_t>(j, i) += this->at<int32_t>(k, i) * mat.at<int32_t>(j, k); break;
                     case IM_DT_INT64:   m.at<int64_t>(j, i) += this->at<int64_t>(k, i) * mat.at<int64_t>(j, k); break;
                     case IM_DT_FLOAT32: m.at<float>  (j, i) += this->at<float>  (k, i) * mat.at<float>  (j, k); break;
@@ -4864,8 +4882,8 @@ inline ImMat& ImMat::operator*=(const ImMat& mat)
             {
                 switch (type)
                 {
-                    case IM_DT_INT8:    this->at<int8_t> (j, i) += m.at<int8_t> (k, i) * mat.at<int8_t> (j, k); break;
-                    case IM_DT_INT16:   this->at<int16_t>(j, i) += m.at<int16_t>(k, i) * mat.at<int16_t>(j, k); break;
+                    case IM_DT_INT8:    this->at<uint8_t> (j, i) += m.at<uint8_t> (k, i) * mat.at<uint8_t> (j, k); break;
+                    case IM_DT_INT16:   this->at<uint16_t>(j, i) += m.at<uint16_t>(k, i) * mat.at<uint16_t>(j, k); break;
                     case IM_DT_INT32:   this->at<int32_t>(j, i) += m.at<int32_t>(k, i) * mat.at<int32_t>(j, k); break;
                     case IM_DT_INT64:   this->at<int64_t>(j, i) += m.at<int64_t>(k, i) * mat.at<int64_t>(j, k); break;
                     case IM_DT_FLOAT32: this->at<float>  (j, i) += m.at<float>  (k, i) * mat.at<float>  (j, k); break;
@@ -4894,8 +4912,8 @@ inline ImMat ImMat::operator-()
     {
         switch (type)
         {
-            case IM_DT_INT8:    ((int8_t*)m.data)[i]  = - ((int8_t*)this->data)[i]; break;
-            case IM_DT_INT16:   ((int16_t*)m.data)[i] = - ((int16_t*)this->data)[i]; break;
+            case IM_DT_INT8:    ((uint8_t*)m.data)[i]  = - ((uint8_t*)this->data)[i]; break;
+            case IM_DT_INT16:   ((uint16_t*)m.data)[i] = - ((uint16_t*)this->data)[i]; break;
             case IM_DT_INT32:   ((int32_t*)m.data)[i] = - ((int32_t*)this->data)[i]; break;
             case IM_DT_INT64:   ((int64_t*)m.data)[i] = - ((int64_t*)this->data)[i]; break;
             case IM_DT_FLOAT32: ((float*)m.data)[i]   = - ((float*)this->data)[i]; break;
@@ -4920,8 +4938,8 @@ inline ImMat ImMat::mean()
         {
             switch (type)
             {
-                case IM_DT_INT8:    m.at<float>(0) += at<int8_t>(_w); break;
-                case IM_DT_INT16:   m.at<float>(0) += at<int16_t>(_w); break;
+                case IM_DT_INT8:    m.at<float>(0) += at<uint8_t>(_w); break;
+                case IM_DT_INT16:   m.at<float>(0) += at<uint16_t>(_w); break;
                 case IM_DT_INT32:   m.at<float>(0) += at<int32_t>(_w); break;
                 case IM_DT_INT64:   m.at<float>(0) += at<int64_t>(_w); break;
                 case IM_DT_FLOAT32: m.at<float>(0) += at<float>(_w); break;
@@ -4940,8 +4958,8 @@ inline ImMat ImMat::mean()
             {
                 switch (type)
                 {
-                    case IM_DT_INT8:    m.at<float>(0) += at<int8_t>(_w, _h); break;
-                    case IM_DT_INT16:   m.at<float>(0) += at<int16_t>(_w, _h); break;
+                    case IM_DT_INT8:    m.at<float>(0) += at<uint8_t>(_w, _h); break;
+                    case IM_DT_INT16:   m.at<float>(0) += at<uint16_t>(_w, _h); break;
                     case IM_DT_INT32:   m.at<float>(0) += at<int32_t>(_w, _h); break;
                     case IM_DT_INT64:   m.at<float>(0) += at<int64_t>(_w, _h); break;
                     case IM_DT_FLOAT32: m.at<float>(0) += at<float>(_w, _h); break;
@@ -4963,8 +4981,8 @@ inline ImMat ImMat::mean()
                 {
                     switch (type)
                     {
-                        case IM_DT_INT8:    m.at<float>(_c) += at<int8_t>(_w, _h, _c); break;
-                        case IM_DT_INT16:   m.at<float>(_c) += at<int16_t>(_w, _h, _c); break;
+                        case IM_DT_INT8:    m.at<float>(_c) += at<uint8_t>(_w, _h, _c); break;
+                        case IM_DT_INT16:   m.at<float>(_c) += at<uint16_t>(_w, _h, _c); break;
                         case IM_DT_INT32:   m.at<float>(_c) += at<int32_t>(_w, _h, _c); break;
                         case IM_DT_INT64:   m.at<float>(_c) += at<int64_t>(_w, _h, _c); break;
                         case IM_DT_FLOAT32: m.at<float>(_c) += at<float>(_w, _h, _c); break;
@@ -4992,10 +5010,10 @@ inline ImMat ImMat::absdiff(const ImMat& m) const
         switch (type)
         {
             case IM_DT_INT8:
-                ((int8_t*)dst.data)[i] = std::abs(((int8_t*)data)[i] - ((int8_t*)m.data)[i]);
+                ((uint8_t*)dst.data)[i] = std::abs(((uint8_t*)data)[i] - ((uint8_t*)m.data)[i]);
                 break;
             case IM_DT_INT16:
-                ((int16_t*)dst.data)[i] = std::abs(((int16_t*)data)[i] - ((int16_t*)m.data)[i]);
+                ((uint16_t*)dst.data)[i] = std::abs(((uint16_t*)data)[i] - ((uint16_t*)m.data)[i]);
                 break;
             case IM_DT_INT32:
                 ((int32_t*)dst.data)[i] = std::abs(((int32_t*)data)[i] - ((int32_t*)m.data)[i]);
@@ -5030,10 +5048,10 @@ inline ImMat ImMat::sqr() const
         switch (type)
         {
             case IM_DT_INT8:
-                ((float*)dst.data)[i] = std::pow(((int8_t*)data)[i], 2);
+                ((float*)dst.data)[i] = std::pow(((uint8_t*)data)[i], 2);
                 break;
             case IM_DT_INT16:
-                ((float*)dst.data)[i] = std::pow(((int16_t*)data)[i], 2);
+                ((float*)dst.data)[i] = std::pow(((uint16_t*)data)[i], 2);
                 break;
             case IM_DT_INT32:
                 ((float*)dst.data)[i] = std::pow(((int32_t*)data)[i], 2);
@@ -5069,8 +5087,8 @@ inline ImMat ImMat::sum()
         {
             switch (type)
             {
-                case IM_DT_INT8:    m.at<float>(0) += at<int8_t>(_w); break;
-                case IM_DT_INT16:   m.at<float>(0) += at<int16_t>(_w); break;
+                case IM_DT_INT8:    m.at<float>(0) += at<uint8_t>(_w); break;
+                case IM_DT_INT16:   m.at<float>(0) += at<uint16_t>(_w); break;
                 case IM_DT_INT32:   m.at<float>(0) += at<int32_t>(_w); break;
                 case IM_DT_INT64:   m.at<float>(0) += at<int64_t>(_w); break;
                 case IM_DT_FLOAT32: m.at<float>(0) += at<float>(_w); break;
@@ -5089,8 +5107,8 @@ inline ImMat ImMat::sum()
             {
                 switch (type)
                 {
-                    case IM_DT_INT8:    m.at<float>(0) += at<int8_t>(_w, _h); break;
-                    case IM_DT_INT16:   m.at<float>(0) += at<int16_t>(_w, _h); break;
+                    case IM_DT_INT8:    m.at<float>(0) += at<uint8_t>(_w, _h); break;
+                    case IM_DT_INT16:   m.at<float>(0) += at<uint16_t>(_w, _h); break;
                     case IM_DT_INT32:   m.at<float>(0) += at<int32_t>(_w, _h); break;
                     case IM_DT_INT64:   m.at<float>(0) += at<int64_t>(_w, _h); break;
                     case IM_DT_FLOAT32: m.at<float>(0) += at<float>(_w, _h); break;
@@ -5112,8 +5130,8 @@ inline ImMat ImMat::sum()
                 {
                     switch (type)
                     {
-                        case IM_DT_INT8:    m.at<float>(_c) += at<int8_t>(_w, _h, _c); break;
-                        case IM_DT_INT16:   m.at<float>(_c) += at<int16_t>(_w, _h, _c); break;
+                        case IM_DT_INT8:    m.at<float>(_c) += at<uint8_t>(_w, _h, _c); break;
+                        case IM_DT_INT16:   m.at<float>(_c) += at<uint16_t>(_w, _h, _c); break;
                         case IM_DT_INT32:   m.at<float>(_c) += at<int32_t>(_w, _h, _c); break;
                         case IM_DT_INT64:   m.at<float>(_c) += at<int64_t>(_w, _h, _c); break;
                         case IM_DT_FLOAT32: m.at<float>(_c) += at<float>(_w, _h, _c); break;
@@ -5142,8 +5160,8 @@ inline float ImMat::norm(int norm_type)
             {
                 switch (type)
                 {
-                    case IM_DT_INT8:    result += ((int8_t*)data)[i] * ((int8_t*)data)[i]; break;
-                    case IM_DT_INT16:   result += ((int16_t*)data)[i] * ((int16_t*)data)[i]; break;
+                    case IM_DT_INT8:    result += ((uint8_t*)data)[i] * ((uint8_t*)data)[i]; break;
+                    case IM_DT_INT16:   result += ((uint16_t*)data)[i] * ((uint16_t*)data)[i]; break;
                     case IM_DT_INT32:   result += ((int32_t*)data)[i] * ((int32_t*)data)[i]; break;  
                     case IM_DT_INT64:   result += ((int64_t*)data)[i] * ((int64_t*)data)[i]; break;
                     case IM_DT_FLOAT32: result += ((float*)data)[i] * ((float*)data)[i]; break;
@@ -5161,8 +5179,8 @@ inline float ImMat::norm(int norm_type)
             {
                 switch (type)
                 {
-                    case IM_DT_INT8:    result += std::abs(((int8_t*)data)[i]); break;
-                    case IM_DT_INT16:   result += std::abs(((int16_t*)data)[i]); break;
+                    case IM_DT_INT8:    result += ((uint8_t*)data)[i]; break;
+                    case IM_DT_INT16:   result += ((uint16_t*)data)[i]; break;
                     case IM_DT_INT32:   result += std::abs(((int32_t*)data)[i]); break;  
                     case IM_DT_INT64:   result += std::abs(((int64_t*)data)[i]); break;
                     case IM_DT_FLOAT32: result += std::abs(((float*)data)[i]); break;
@@ -5179,8 +5197,8 @@ inline float ImMat::norm(int norm_type)
             {
                 switch (type)
                 {
-                    case IM_DT_INT8:    result = std::max(result, (float)std::abs(((int8_t*)data)[i])); break;
-                    case IM_DT_INT16:   result = std::max(result, (float)std::abs(((int16_t*)data)[i])); break;
+                    case IM_DT_INT8:    result = std::max(result, (float)((uint8_t*)data)[i]); break;
+                    case IM_DT_INT16:   result = std::max(result, (float)((uint16_t*)data)[i]); break;
                     case IM_DT_INT32:   result = std::max(result, (float)std::abs(((int32_t*)data)[i])); break;  
                     case IM_DT_INT64:   result = std::max(result, (float)std::abs(((int64_t*)data)[i])); break;
                     case IM_DT_FLOAT32: result = std::max(result, (float)std::abs(((float*)data)[i])); break;
@@ -5211,8 +5229,8 @@ inline void ImMat::minmax(T* vmin, T* vmax, int* imin, int* imax)
                 if (((uint8_t*)data)[i] < _vmin) { _vmin = ((uint8_t*)data)[i]; if (imin) *imin = i; }
                 break;
             case IM_DT_INT16:
-                if (((int16_t*)data)[i] > _vmax) { _vmax = ((int16_t*)data)[i]; if (imax) *imax = i; }
-                if (((int16_t*)data)[i] < _vmin) { _vmin = ((int16_t*)data)[i]; if (imin) *imin = i; }
+                if (((uint16_t*)data)[i] > _vmax) { _vmax = ((uint16_t*)data)[i]; if (imax) *imax = i; }
+                if (((uint16_t*)data)[i] < _vmin) { _vmin = ((uint16_t*)data)[i]; if (imin) *imin = i; }
                 break;
             case IM_DT_INT32:
                 if (((int32_t*)data)[i] > _vmax) { _vmax = ((int32_t*)data)[i]; if (imax) *imax = i; }
@@ -5274,8 +5292,8 @@ inline void ImMat::normalize(T vmin, T vmax, int norm_type)
             {
                 switch (type)
                 {
-                    case IM_DT_INT8:    ((int8_t*)data)[i] = (int8_t)(((int8_t*)data)[i] * scale + shift); break;
-                    case IM_DT_INT16:   ((int16_t*)data)[i] = (int16_t)(((int16_t*)data)[i] * scale + shift); break;
+                    case IM_DT_INT8:    ((uint8_t*)data)[i] = (uint8_t)(((uint8_t*)data)[i] * scale + shift); break;
+                    case IM_DT_INT16:   ((uint16_t*)data)[i] = (uint16_t)(((uint16_t*)data)[i] * scale + shift); break;
                     case IM_DT_INT32:   ((int32_t*)data)[i] = (int32_t)(((int32_t*)data)[i] * scale + shift); break;
                     case IM_DT_INT64:   ((int64_t*)data)[i] = (int64_t)(((int64_t*)data)[i] * scale + shift); break;
                     case IM_DT_FLOAT32: ((float*)data)[i] = (float)(((float*)data)[i] * scale + shift); break;
@@ -5400,13 +5418,14 @@ inline ImMat ImMat::convert(ImDataType t, float scale) const
     assert(total() > 0);
     ImMat m;
     m.create_type(w, h, c, t);
+    m.elempack = elempack;
     for (int i = 0; i < total(); i++)
     {
         double value = 0;
         switch (type)
         {
-            case IM_DT_INT8: value = ((int8_t*)data)[i]; break;
-            case IM_DT_INT16: value = ((int16_t*)data)[i]; break;
+            case IM_DT_INT8: value = ((uint8_t*)data)[i]; break;
+            case IM_DT_INT16: value = ((uint16_t*)data)[i]; break;
             case IM_DT_INT32: value = ((int32_t*)data)[i]; break;
             case IM_DT_INT64: value = ((int64_t*)data)[i]; break;
             case IM_DT_FLOAT32: value = ((float*)data)[i]; break;
@@ -5417,8 +5436,8 @@ inline ImMat ImMat::convert(ImDataType t, float scale) const
         value *= scale;
         switch (t)
         {
-            case IM_DT_INT8: ((int8_t*)m.data)[i] = value; break;
-            case IM_DT_INT16: ((int16_t*)m.data)[i] = value; break;
+            case IM_DT_INT8: ((uint8_t*)m.data)[i] = value; break;
+            case IM_DT_INT16: ((uint16_t*)m.data)[i] = value; break;
             case IM_DT_INT32: ((int32_t*)m.data)[i] = value; break;
             case IM_DT_INT64:  ((int64_t*)m.data)[i] = value; break;
             case IM_DT_FLOAT32: ((float*)m.data)[i] = value; break;
