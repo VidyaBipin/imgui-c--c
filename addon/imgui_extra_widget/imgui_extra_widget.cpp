@@ -10120,7 +10120,7 @@ int ImGui::MsgBox::Draw(float wrap_width)
 
 void ImGui::MsgBox::Open()
 {
-    ImGui::OpenPopup(m_Title);
+    ImGui::OpenPopup(m_Title, ImGuiPopupFlags_AnyPopup);
 }
 
 // VirtualKeyboard Implementation
