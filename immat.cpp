@@ -631,7 +631,7 @@ ImMat ImMat::threshold(float thres)
     return ImMat();
 }
 
-ImMat ImMat::resize(float _w, float _h, int interpolate)
+ImMat ImMat::resize(float _w, float _h, int interpolate) const
 {
     assert(device == IM_DD_CPU);
     assert(dims == 2 || dims == 3);
@@ -900,6 +900,378 @@ void ImMat::clean(ImPixel color)
         break;
         default: break;
     }
+}
+
+static void RGB2XYZ(float R, float G, float B, float *X, float *Y, float *Z)
+{
+    
+	*X = 0.412453f * R + 0.357580f * G + 0.180423f * B;
+	*Y = 0.212671f * R + 0.715160f * G + 0.072169f * B;
+	*Z = 0.019334f * R + 0.119193f * G + 0.950227f * B;
+}
+
+
+static void XYZ2Lab(float X, float Y, float Z, float *L, float *a, float *b)
+{
+    const float param_13 = 1.0f / 3.0f;
+    const float param_16116 = 16.0f / 116.0f;
+    const float Xn = 0.950456f;
+    const float Yn = 1.0f;
+    const float Zn = 1.088754f;
+
+	float fX, fY, fZ;
+
+	X /= Xn;
+	Y /= Yn;
+	Z /= Zn;
+
+	if (Y > 0.008856f)
+		fY = pow(Y, param_13);
+	else
+		fY = 7.787f * Y + param_16116;
+
+	*L = 116.0f * fY - 16.0f;
+	*L = *L > 0.0f ? *L : 0.0f; 
+
+	if (X > 0.008856f)
+		fX = pow(X, param_13);
+	else
+		fX = 7.787f * X + param_16116;
+
+	if (Z > 0.008856)
+		fZ = pow(Z, param_13);
+	else
+		fZ = 7.787f * Z + param_16116;
+
+	*a = 500.0f * (fX - fY);
+	*b = 200.0f * (fY - fZ);
+}
+
+static void RGB2Lab(float R, float G, float B, float *L, float *a, float *b)
+{
+	float X = 0.0f, Y = 0.0f, Z = 0.0f;
+	RGB2XYZ(R, G, B, &X, &Y, &Z);
+	XYZ2Lab(X, Y, Z, L, a, b);
+}
+
+static void Lab2XYZ(float L, float a, float b, float *X, float *Y, float *Z)
+{
+	float fX, fY, fZ;
+    const float param_16116 = 16.0f / 116.0f;
+    const float Xn = 0.950456f;
+    const float Yn = 1.0f;
+    const float Zn = 1.088754f;
+
+	fY = (L + 16.0f) / 116.0f;
+	if (fY > 0.206893f)
+		*Y = fY * fY * fY;
+	else
+		*Y = (fY - param_16116) / 7.787f;
+
+	fX = a / 500.0f + fY;
+	if (fX > 0.206893f)
+		*X = fX * fX * fX;
+	else
+		*X = (fX - param_16116) / 7.787f;
+
+	fZ = fY - b / 200.0f;
+	if (fZ > 0.206893f)
+		*Z = fZ * fZ * fZ;
+	else
+		*Z = (fZ - param_16116) / 7.787f;
+
+	(*X) *= Xn;
+	(*Y) *=	Yn;
+	(*Z) *= Zn;
+}
+
+
+static void XYZ2RGB(float X, float Y, float Z, float *R, float *G, float *B)
+{
+	float RR, GG, BB;
+	RR =  3.240479f * X - 1.537150f * Y - 0.498535f * Z;
+	GG = -0.969256f * X + 1.875992f * Y + 0.041556f * Z;
+	BB =  0.055648f * X - 0.204043f * Y + 1.057311f * Z;
+
+	*R = std::min(1.f, std::max(RR, 0.0f));
+	*G = std::min(1.f, std::max(GG, 0.0f));
+	*B = std::min(1.f, std::max(BB, 0.0f));
+}
+
+static void Lab2RGB(float L, float a, float b, float *R, float *G, float *B)
+{
+	float X = 0.0f, Y = 0.0f, Z = 0.0f;
+	Lab2XYZ(L, a, b, &X, &Y, &Z);
+	XYZ2RGB(X, Y, Z, R, G, B);
+}
+
+ImMat ImMat::cvtToLAB() const
+{
+    assert(device == IM_DD_CPU);
+    assert(color_format == IM_CF_BGR || color_format == IM_CF_BGRA || color_format == IM_CF_ABGR);
+    assert(total() > 0);
+    ImMat m(w, h, 3, (size_t)4u);
+    for (int _h = 0; _h < h; _h++)
+    {
+        for (int _w = 0; _w < w; _w++)
+        {
+            auto pixel = get_pixel(_w, _h);
+            ImPixel lab;
+            RGB2Lab(pixel.r, pixel.g, pixel.b, &lab.r, &lab.g, &lab.b);
+            m.set_pixel(_w, _h, lab);
+        }
+    }
+    m.color_format = IM_CF_LAB;
+    return m;
+}
+
+ImMat ImMat::cvtToGray() const
+{
+    assert(device == IM_DD_CPU);
+    assert(color_format == IM_CF_BGR || color_format == IM_CF_BGRA || color_format == IM_CF_ABGR);
+    assert(total() > 0);
+    ImMat m(w, h, 1, (size_t)elemsize);
+    for (int _h = 0; _h < h; _h++)
+    {
+        for (int _w = 0; _w < w; _w++)
+        {
+            auto pixel = get_pixel(_w, _h);
+            ImPixel gray;
+            gray.r = 0.2989 * pixel.r + 0.5870 * pixel.g + 0.1140 * pixel.b; 
+            m.set_pixel(_w, _h, gray);
+        }
+    }
+    return m;
+}
+
+static void RGBtoHSV(float r, float g, float b, float& out_h, float& out_s, float& out_v)
+{
+    float K = 0.f;
+    if (g < b)
+    {
+        std::swap(g, b);
+        K = -1.f;
+    }
+    if (r < g)
+    {
+        std::swap(r, g);
+        K = -2.f / 6.f - K;
+    }
+
+    const float chroma = r - (g < b ? g : b);
+    out_h = std::abs(K + (g - b) / (6.f * chroma + 1e-20f));
+    out_s = chroma / (r + 1e-20f);
+    out_v = r;
+}
+
+static void HSVtoRGB(float h, float s, float v, float& out_r, float& out_g, float& out_b)
+{
+    if (s == 0.0f)
+    {
+        // gray
+        out_r = out_g = out_b = v;
+        return;
+    }
+
+    h = ImFmod(h, 1.0f) / (60.0f / 360.0f);
+    int   i = (int)h;
+    float f = h - (float)i;
+    float p = v * (1.0f - s);
+    float q = v * (1.0f - s * f);
+    float t = v * (1.0f - s * (1.0f - f));
+
+    switch (i)
+    {
+    case 0: out_r = v; out_g = t; out_b = p; break;
+    case 1: out_r = q; out_g = v; out_b = p; break;
+    case 2: out_r = p; out_g = v; out_b = t; break;
+    case 3: out_r = p; out_g = q; out_b = v; break;
+    case 4: out_r = t; out_g = p; out_b = v; break;
+    case 5: default: out_r = v; out_g = p; out_b = q; break;
+    }
+}
+
+static void RGB2HLS(float r, float g, float b, float *h, float *l, float *s)
+{
+    float cmax = std::max(r, std::max(g, b));
+    float cmin = std::min(r, std::min(g, b));
+    float cdes = cmax - cmin;
+    float hh, ll, ss;
+
+    ll = (cmax+cmin)/2;
+    if(cdes){
+        if(ll <= 0.5)
+            ss = (cmax-cmin)/(cmax+cmin);
+        else
+            ss = (cmax-cmin)/(2-cmax-cmin);
+
+        if(cmax == r)
+            hh = (0+(g-b)/cdes)*60;
+        else if(cmax == g)
+            hh = (2+(b-r)/cdes)*60;
+        else// if(cmax == b)
+            hh = (4+(r-g)/cdes)*60;
+        if(hh<0)
+            hh+=360;
+    }else
+        hh = ss = 0;
+
+    *h = hh;
+    *l = ll;
+    *s = ss;
+}
+
+static float HLS2RGBvalue(float n1, float n2, float hue)
+{
+    if(hue > 360)
+        hue -= 360;
+    else if(hue < 0)
+        hue += 360;
+    if(hue < 60)
+        return n1+(n2-n1)*hue/60;
+    else if(hue < 180)
+        return n2;
+    else if(hue < 240)
+        return n1+(n2-n1)*(240-hue)/60;
+    else
+        return n1;
+}
+
+static void HLS2RGB(float h, float l, float s, float *r, float *g, float *b)
+{
+    float cmax,cmin;
+
+    if(l <= 0.5)
+        cmax = l*(1+s);
+    else
+        cmax = l*(1-s)+s;
+    cmin = 2*l-cmax;
+
+    if(s == 0){
+        *r = *g = *b = l;
+    }else{
+        *r = HLS2RGBvalue(cmin,cmax,h+120);
+        *g = HLS2RGBvalue(cmin,cmax,h);
+        *b = HLS2RGBvalue(cmin,cmax,h-120);
+    }
+}
+
+ImMat ImMat::cvtToHSV() const
+{
+    assert(device == IM_DD_CPU);
+    assert(color_format == IM_CF_BGR || color_format == IM_CF_BGRA);
+    assert(total() > 0);
+    ImMat m(w, h, 3, (size_t)4u);
+    for (int _h = 0; _h < h; _h++)
+    {
+        for (int _w = 0; _w < w; _w++)
+        {
+            auto pixel = get_pixel(_w, _h);
+            ImPixel hsv;
+            RGBtoHSV(pixel.r, pixel.g, pixel.b, hsv.r, hsv.g, hsv.b);
+            m.set_pixel(_w, _h, hsv);
+        }
+    }
+    m.color_format = IM_CF_HSV;
+    return m;
+}
+
+ImMat ImMat::cvtToHLS() const
+{
+    assert(device == IM_DD_CPU);
+    assert(color_format == IM_CF_BGR || color_format == IM_CF_BGRA || color_format == IM_CF_ABGR);
+    assert(total() > 0);
+    ImMat m(w, h, 3, (size_t)4u);
+    for (int _h = 0; _h < h; _h++)
+    {
+        for (int _w = 0; _w < w; _w++)
+        {
+            auto pixel = get_pixel(_w, _h);
+            ImPixel hls;
+            RGB2HLS(pixel.r, pixel.g, pixel.b, &hls.r, &hls.g, &hls.b);
+            m.set_pixel(_w, _h, hls);
+        }
+    }
+    m.color_format = IM_CF_HLS;
+    return m;
+}
+
+ImMat ImMat::cvtToRGB() const
+{
+    assert(device == IM_DD_CPU);
+    assert(color_format != IM_CF_BGR && color_format != IM_CF_BGRA && color_format != IM_CF_ABGR);
+    assert(total() > 0);
+    ImMat m(w, h, 3, (size_t)1u, 3);
+    for (int _h = 0; _h < h; _h++)
+    {
+        for (int _w = 0; _w < w; _w++)
+        {
+            auto pixel = get_pixel(_w, _h);
+            ImPixel rgb;
+            switch (color_format)
+            {
+                case IM_CF_LAB:
+                    Lab2RGB(pixel.r, pixel.g, pixel.b, &rgb.r, &rgb.g, &rgb.b);
+                    break;
+                case IM_CF_GRAY:
+                    rgb.r = 
+                    rgb.g = 
+                    rgb.b = pixel.r;
+                    rgb.a = 1;
+                break;
+                case IM_CF_HSV:
+                    HSVtoRGB(pixel.r, pixel.g, pixel.b, rgb.r, rgb.g, rgb.b);
+                break;
+                case IM_CF_HLS:
+                    HLS2RGB(pixel.r, pixel.g, pixel.b, &rgb.r, &rgb.g, &rgb.b);
+                break;
+                default: break;
+            }
+            m.set_pixel(_w, _h, rgb);
+        }
+    }
+    return m;
+}
+
+ImMat ImMat::cvtToARGB() const
+{
+    assert(device == IM_DD_CPU);
+    assert(color_format != IM_CF_BGR && color_format != IM_CF_BGRA && color_format != IM_CF_ABGR);
+    assert(total() > 0);
+    ImMat m(w, h, 4, (size_t)1u, 4);
+    for (int _h = 0; _h < h; _h++)
+    {
+        for (int _w = 0; _w < w; _w++)
+        {
+            auto pixel = get_pixel(_w, _h);
+            ImPixel rgb;
+            switch (color_format)
+            {
+                case IM_CF_LAB:
+                    Lab2RGB(pixel.r, pixel.g, pixel.b, &rgb.r, &rgb.g, &rgb.b);
+                    rgb.a = 1;
+                    break;
+                case IM_CF_GRAY:
+                    rgb.r = 
+                    rgb.g = 
+                    rgb.b = pixel.r;
+                    rgb.a = 1;
+                break;
+                case IM_CF_HSV:
+                    HSVtoRGB(pixel.r, pixel.g, pixel.b, rgb.r, rgb.g, rgb.b);
+                    rgb.a = 1;
+                break;
+                case IM_CF_HLS:
+                    HLS2RGB(pixel.r, pixel.g, pixel.b, &rgb.r, &rgb.g, &rgb.b);
+                    rgb.a = 1;
+                break;
+                default: break;
+            }
+            m.set_pixel(_w, _h, rgb);
+        }
+    }
+
+    return m;
 }
 
 void ImMat::print(std::string name)
