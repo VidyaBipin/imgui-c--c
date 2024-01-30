@@ -255,7 +255,7 @@ if (Glslang_LIBRARY_RELEASE)
         ${GLSLANG_LIBRARY}
         ${Glslang_LIBRARY_RELEASE}
         ${Glslang_GenericCodeGen_LIBRARY_RELEASE}
-        ${Glslang_OGLCompiler_LIBRARY_RELEASE}
+        #${Glslang_OGLCompiler_LIBRARY_RELEASE}
         ${Glslang_OSDependent_LIBRARY_RELEASE}
         ${Glslang_SPIRV_LIBRARY_RELEASE}
     )
