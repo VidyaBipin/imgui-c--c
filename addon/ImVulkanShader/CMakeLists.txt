@@ -88,42 +88,50 @@ if (VULKAN_FOUND)
             ${Vulkan_LIBRARY}
         )
     endif()
+
+    find_library(Glslang_LIBRARY_RELEASE NAMES glslang)
     if (NOT "${Glslang_LIBRARY_RELEASE}" STREQUAL "Glslang_LIBRARY_RELEASE-NOTFOUND")
         set(GLSLANG_LIBRARY
             ${GLSLANG_LIBRARY}
             ${Glslang_LIBRARY_RELEASE}
         )
     endif()
+    find_library(Glslang_OGLCompiler_LIBRARY_RELEASE NAMES OGLCompiler)
     if (NOT "${Glslang_OGLCompiler_LIBRARY_RELEASE}" STREQUAL "Glslang_OGLCompiler_LIBRARY_RELEASE-NOTFOUND")
         set(GLSLANG_LIBRARY
             ${GLSLANG_LIBRARY}
             ${Glslang_OGLCompiler_LIBRARY_RELEASE}
         )
     endif()
+    find_library(Glslang_SPIRV_LIBRARY_RELEASE NAMES SPIRV)
     if (NOT "${Glslang_SPIRV_LIBRARY_RELEASE}" STREQUAL "Glslang_SPIRV_LIBRARY_RELEASE-NOTFOUND")
         set(GLSLANG_LIBRARY
             ${GLSLANG_LIBRARY}
             ${Glslang_SPIRV_LIBRARY_RELEASE}
         )
     endif()
+    find_library(Glslang_GenericCodeGen_LIBRARY_RELEASE NAMES GenericCodeGen)
     if (NOT "${Glslang_GenericCodeGen_LIBRARY_RELEASE}" STREQUAL "Glslang_GenericCodeGen_LIBRARY_RELEASE-NOTFOUND")
         set(GLSLANG_LIBRARY
             ${GLSLANG_LIBRARY}
             ${Glslang_GenericCodeGen_LIBRARY_RELEASE}
         )
     endif()
+    find_library(Glslang_OSDependent_LIBRARY_RELEASE NAMES OSDependent)
     if (NOT "${Glslang_OSDependent_LIBRARY_RELEASE}" STREQUAL "Glslang_OSDependent_LIBRARY_RELEASE-NOTFOUND")
         set(GLSLANG_LIBRARY
             ${GLSLANG_LIBRARY}
             ${Glslang_OSDependent_LIBRARY_RELEASE}
         )
     endif()
+    find_library(SpirvTools_LIBRARY NAMES SPIRV-Tools)
     if (NOT "${SpirvTools_LIBRARY}" STREQUAL "SpirvTools_LIBRARY-NOTFOUND")
         set(GLSLANG_LIBRARY
             ${GLSLANG_LIBRARY}
             ${SpirvTools_LIBRARY}
         )
     endif()
+    find_library(SpirvTools_Opt_LIBRARY NAMES SPIRV-Tools-opt)
     if (NOT "${SpirvTools_Opt_LIBRARY}" STREQUAL "SpirvTools_Opt_LIBRARY-NOTFOUND")
         set(GLSLANG_LIBRARY
             ${GLSLANG_LIBRARY}
@@ -131,6 +139,7 @@ if (VULKAN_FOUND)
         )
     endif()
     if(NOT WIN32 AND NOT MINGW)
+        find_library(Glslang_MachineIndependent_LIBRARY_RELEASE NAMES MachineIndependent)
         if (NOT "${Glslang_MachineIndependent_LIBRARY_RELEASE}" STREQUAL "Glslang_MachineIndependent_LIBRARY_RELEASE-NOTFOUND")
             set(GLSLANG_LIBRARY
                 ${GLSLANG_LIBRARY}
@@ -298,34 +307,6 @@ compile_shader(scopes/Waveform_shader.h ConvInt2Mat_data)
 add_custom_target(generate-comp DEPENDS ${SHADER_SPV_HEX_FILES})
 
 endif(VKSHADER_VULKAN_PREBUILD)
-
-#find_package(Glslang COMPONENTS Glslang SPIRV)
-#if (Glslang_LIBRARY_RELEASE)
-#    message(STATUS "VkShader Found system glslang library")
-#    set(GLSLANG_LIBRARY
-#        ${GLSLANG_LIBRARY}
-#        ${Glslang_LIBRARY_RELEASE}
-#        ${Glslang_GenericCodeGen_LIBRARY_RELEASE}
-#        ${Glslang_OGLCompiler_LIBRARY_RELEASE}
-#        ${Glslang_OSDependent_LIBRARY_RELEASE}
-#        ${Glslang_SPIRV_LIBRARY_RELEASE}
-#    )
-#    if(NOT WIN32 AND NOT MINGW)
-#        set(GLSLANG_LIBRARY
-#            ${GLSLANG_LIBRARY}
-#            ${Glslang_MachineIndependent_LIBRARY_RELEASE}
-#        )
-#    endif()
-#endif()
-#find_package(SpirvTools)
-#if (TARGET SpirvTools::SpirvTools)
-#    message(STATUS "VkShader Found system SPRIV-Tools library")
-#    set(GLSLANG_LIBRARY
-#        ${GLSLANG_LIBRARY}
-#        SpirvTools::SpirvTools
-#        SpirvTools::Opt
-#    )
-#endif()
 
 if(VKSHADER_VULKAN_BENCHMARK)
     add_definitions(-DVULKAN_SHADER_BENCHMARK)
