@@ -410,6 +410,7 @@ IMGUI_NODE_EDITOR_API void SetLinkChanged(LinkId linkId);
 IMGUI_NODE_EDITOR_API ImVec2 GetGroupSize(NodeId nodeId);
 IMGUI_NODE_EDITOR_API ImVec2 GetNodePosition(NodeId nodeId);
 IMGUI_NODE_EDITOR_API ImVec2 GetNodeSize(NodeId nodeId);
+IMGUI_NODE_EDITOR_API bool IsNodeChanged(NodeId nodeId);
 IMGUI_NODE_EDITOR_API void CenterNodeOnScreen(NodeId nodeId);
 IMGUI_NODE_EDITOR_API void SetNodeZPosition(NodeId nodeId, float z); // Sets node z position, nodes with higher value are drawn over nodes with lower value
 IMGUI_NODE_EDITOR_API float GetNodeZPosition(NodeId nodeId); // Returns node z position, defaults is 0.0f

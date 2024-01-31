@@ -676,6 +676,7 @@ struct NodeSettings
 
     void ClearDirty();
     void MakeDirty(SaveReasonFlags reason);
+    SaveReasonFlags IsDirty();
 };
 
 struct Settings
@@ -704,6 +705,7 @@ struct Settings
 
     void ClearDirty(Node* node = nullptr);
     void MakeDirty(SaveReasonFlags reason, Node* node = nullptr);
+    SaveReasonFlags IsDirty(Node* node = nullptr);
 };
 
 struct Control
@@ -1493,6 +1495,7 @@ struct IMGUI_API EditorContext
     ImVec2 GetGroupSize(NodeId nodeId);
     ImVec2 GetNodePosition(NodeId nodeId);
     ImVec2 GetNodeSize(NodeId nodeId);
+    bool IsNodeChanged(NodeId nodeId);
 
     void SetNodeZPosition(NodeId nodeId, float z);
     float GetNodeZPosition(NodeId nodeId);
@@ -1544,6 +1547,7 @@ struct IMGUI_API EditorContext
 
     void MakeDirty(SaveReasonFlags reason);
     void MakeDirty(SaveReasonFlags reason, Node* node);
+    SaveReasonFlags IsDirty(Node* node = nullptr);
 
     int CountLiveNodes() const;
     int CountLivePins() const;
