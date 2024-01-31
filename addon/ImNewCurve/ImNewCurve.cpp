@@ -903,16 +903,18 @@ void Editor::CurveUiObj::DrawCurve(ImDrawList* pDrawList, const ImVec2& v2Origin
     const auto itEnd = m_hCurve->GetKpIter(szKpCnt);
     bool bStartPoint = true;
     ImVec2 p1, p2;
-    while (true)
+    do
     {
         const auto& hKp = *itKp++;
-        if (itKp == itEnd)
-            break;
         p1 = p2;
         const auto& aCps = m_aCpTable.at(hKp);
         p2 = aCps[0];
         if (bStartPoint)
+        {
+            if (p2.x > 0)
+                pDrawList->AddLine(ImVec2(0, p2.y)+v2DrawOffset, p2+v2DrawOffset, u32CurveColor, fCurveWidth);
             bStartPoint = false;
+        }
         else
             pDrawList->AddLine(p1+v2DrawOffset, p2+v2DrawOffset, u32CurveColor, fCurveWidth);
 
@@ -923,7 +925,10 @@ void Editor::CurveUiObj::DrawCurve(ImDrawList* pDrawList, const ImVec2& v2Origin
             p2 = aCps[j];
             pDrawList->AddLine(p1+v2DrawOffset, p2+v2DrawOffset, u32CurveColor, fCurveWidth);
         }
-    }
+    } while (itKp != itEnd);
+    const auto fMaxX = m_pOwner->m_v2CurveAxisAreaSize.x;
+    if (p2.x < fMaxX)
+        pDrawList->AddLine(p2+v2DrawOffset, ImVec2(fMaxX, p2.y)+v2DrawOffset, u32CurveColor, fCurveWidth);
     // draw key points
     int iHoveredKpIdx = bIsHovering ? m_pOwner->m_iHoveredKeyPointIdx : -1;
     const auto fKeyPointRadius = m_pOwner->m_fKeyPointRadius;
@@ -1012,7 +1017,7 @@ void Editor::CurveUiObj::UpdateCurveAttributes()
 void Editor::CurveUiObj::UpdateContourPoints(int iKpIdx)
 {
     const auto szKpCnt = m_hCurve->GetKeyPointCount();
-    if (szKpCnt < 2)
+    if (szKpCnt < 1)
     {
         m_aCpTable.clear();
         return;
@@ -1023,9 +1028,9 @@ void Editor::CurveUiObj::UpdateContourPoints(int iKpIdx)
     if (iKpIdx < 0)
     { szStartIdx = 0; szStopIdx = szKpCnt-1; m_bNeedRefreshContour = false; }
     else if (iKpIdx == 0)
-    { szStartIdx = 0; szStopIdx = 1; }
+    { szStartIdx = 0; szStopIdx = szKpCnt > 1 ? 1 : 0; }
     else if (iKpIdx == szKpCnt-1)
-    { szStartIdx = iKpIdx-1; szStopIdx = iKpIdx; }
+    { szStartIdx = szKpCnt > 1 ? iKpIdx-1 : 0; szStopIdx = iKpIdx; }
     else
     { szStartIdx = iKpIdx-1; szStopIdx = iKpIdx+1; }
     auto itKp = m_hCurve->GetKpIter(szStartIdx);
@@ -1158,9 +1163,10 @@ void Editor::CurveUiObj::OnContourNeedUpdate(size_t szKpIdx)
 Editor::Editor()
 {}
 
-bool Editor::DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, uint32_t flags, ImDrawList* pDrawList)
+bool Editor::DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, uint32_t flags, bool* pCurveUpdated, ImDrawList* pDrawList)
 {
-    bool bCurveChanged = false;
+    bool bMouseCaptured = false;
+    if (pCurveUpdated) *pCurveUpdated = false;
     ImGuiIO& io = GetIO();
     const bool bDeleteMode = IsKeyDown(ImGuiKey_LeftShift) && io.KeyShift;
     PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
@@ -1294,10 +1300,15 @@ bool Editor::DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, uint32_t
     if (iCurveHoveringIdx >= 0)
         m_aCurveUiObjs[iCurveHoveringIdx]->DrawCurve(pDrawList, v2CurveOriginPos, true);
 
+    // handle mouse operation to manipulate curves
+    bool bCurveUpdated = false;
     if (IsMouseDown(ImGuiMouseButton_Left))
     {
         if (iPointHoveringIdx >= 0 || iCurveHoveringIdx >= 0)
+        {
             m_bIsDragging = true;
+            bMouseCaptured = true;
+        }
     }
     else if (IsMouseReleased(ImGuiMouseButton_Left))
     {
@@ -1307,10 +1318,16 @@ bool Editor::DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, uint32_t
     {
         // handle move key point
         if (iPointHoveringIdx >= 0)
+        {
             m_iHoveredKeyPointIdx = m_aCurveUiObjs[iCurveHoveringIdx]->MoveKeyPoint(iPointHoveringIdx, v2MousePosToCurveOrigin);
+            bCurveUpdated = true;
+        }
         // handle move curve
         else if (iCurveHoveringIdx >= 0 && (flags&IMNEWCURVE_EDITOR_FLAG_MOVE_CURVE_V) > 0)
+        {
             m_aCurveUiObjs[iCurveHoveringIdx]->MoveCurveVertically(v2MousePosToCurveOrigin);
+            bCurveUpdated = true;
+        }
     }
 
     if (m_bShowValueToolTip && iCurveHoveringIdx >= 0)
@@ -1332,7 +1349,8 @@ bool Editor::DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, uint32_t
     EndChildFrame();
     PopStyleColor(2);
     PopStyleVar();
-    return bCurveChanged;
+    if (pCurveUpdated) *pCurveUpdated = bCurveUpdated;
+    return bMouseCaptured;
 }
 
 bool Editor::AddCurve(Curve::Holder hCurve, ValueDimension eDim, ImU32 u32CurveColor)

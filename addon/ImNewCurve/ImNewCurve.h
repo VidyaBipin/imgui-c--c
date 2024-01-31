@@ -242,7 +242,7 @@ namespace ImNewCurve
 
         Editor(const Editor&) = delete;
 
-        bool DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, uint32_t flags, ImDrawList* pDrawList = nullptr);
+        bool DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, uint32_t flags, bool* pCurveUpdated = nullptr, ImDrawList* pDrawList = nullptr);
 
         bool AddCurve(Curve::Holder hCurve, ValueDimension eDim, ImU32 u32CurveColor);
         void ClearAll() { m_aCurveUiObjs.clear(); }
