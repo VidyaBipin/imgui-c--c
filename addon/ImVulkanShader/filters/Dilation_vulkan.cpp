@@ -75,7 +75,7 @@ double Dilation_vulkan::filter(const ImMat& src, ImMat& dst, int ksz)
     }
 
     VkMat dst_gpu;
-    dst_gpu.create_type(src.w, src.h, 4, dst.type, opt.blob_vkallocator);
+    dst_gpu.create_type(src.w, src.h, src.c, dst.type, opt.blob_vkallocator);
 
     VkMat src_gpu;
     if (src.device == IM_DD_VULKAN)
