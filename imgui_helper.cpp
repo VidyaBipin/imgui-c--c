@@ -661,9 +661,9 @@ void Grid::Begin(ImU32 id, int columns, float width)
     EnterCell(0, 0);
 }
 
-void Grid::NextColumn()
+void Grid::NextColumn(bool keep_max)
 {
-    LeaveCell();
+    LeaveCell(keep_max);
 
     int nextColumn = m_Column + 1;
     int nextRow    = 0;
@@ -738,7 +738,7 @@ void Grid::EnterCell(int column, int row)
     ImGui::BeginGroup();
 }
 
-void Grid::LeaveCell()
+void Grid::LeaveCell(bool keep_max)
 {
     ImGui::EndGroup();
 
@@ -746,7 +746,7 @@ void Grid::LeaveCell()
     m_Storage->SetFloat(ImGui::GetID("LastCellWidth"), itemSize.x);
     ImGui::PopID();
 
-    m_MaximumColumnWidthAcc = ImMax(m_MaximumColumnWidthAcc, itemSize.x);
+    m_MaximumColumnWidthAcc = keep_max ? ImMax(m_MaximumColumnWidthAcc, itemSize.x) : itemSize.x;
     ImGui::PushID(ColumnSeed());
     m_Storage->SetFloat(ImGui::GetID("MaximumColumnWidthAcc"), m_MaximumColumnWidthAcc);
     ImGui::PopID();
@@ -1584,7 +1584,7 @@ std::string path_filename(const std::string& path)
     auto pos = path.find_last_of(PATH_SEP);
     if (pos != std::string::npos)
         return path.substr(pos + 1);
-    return "";
+    return path;
 }
 
 std::string path_filename_prefix(const std::string& path)

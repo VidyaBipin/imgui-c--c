@@ -1648,8 +1648,8 @@ void ed::EditorContext::SetNodeSize(NodeId nodeId, const ImVec2& size)
         node->m_IsLive = false;
     }
 
-    if (node->m_Type != NodeType::Group)
-        return;
+    //if (node->m_Type != NodeType::Group)
+    //    return;
 
     if (node->m_Bounds.GetSize() != size)
     {
@@ -1692,6 +1692,25 @@ void ed::EditorContext::SetNodeChanged(NodeId nodeId)
     {
         MakeDirty(NodeEditor::SaveReasonFlags::Node, node);
     }
+}
+
+bool ed::EditorContext::IsNodeChanged(NodeId nodeId)
+{
+    bool changed = false;
+    auto node = FindNode(nodeId);
+    if (!node)
+    {
+        node = CreateNode(nodeId);
+        node->m_IsLive = false;
+    }
+    if (node)
+    {
+        //MakeDirty(NodeEditor::SaveReasonFlags::Node, node);
+        auto dirty_reason = IsDirty(node);
+        if (dirty_reason != NodeEditor::SaveReasonFlags::None)
+            changed = true;
+    }
+    return changed;
 }
 
 void ed::EditorContext::SetPinChanged(PinId pinId)
@@ -2530,6 +2549,11 @@ void ed::EditorContext::MakeDirty(SaveReasonFlags reason, Node* node)
     m_Settings.MakeDirty(reason, node);
 }
 
+ax::NodeEditor::SaveReasonFlags ed::EditorContext::IsDirty(Node* node)
+{
+    return m_Settings.IsDirty(node);
+}
+
 ed::Link* ed::EditorContext::FindLinkAt(const ImVec2& p)
 {
     for (auto& link : m_Links)
@@ -2985,9 +3009,6 @@ void ed::EditorContext::ShowMetrics(const Control& control)
     ImGui::EndGroup();
 }
 
-
-
-
 //------------------------------------------------------------------------------
 //
 // Node Settings
@@ -3005,8 +3026,10 @@ void ed::NodeSettings::MakeDirty(SaveReasonFlags reason)
     m_DirtyReason = m_DirtyReason | reason;
 }
 
-
-
+ax::NodeEditor::SaveReasonFlags ed::NodeSettings::IsDirty()
+{
+    return m_IsDirty ? m_DirtyReason : SaveReasonFlags::None;
+}
 
 //------------------------------------------------------------------------------
 //
@@ -3068,6 +3091,17 @@ void ed::Settings::MakeDirty(SaveReasonFlags reason, Node* node)
     }
 }
 
+ax::NodeEditor::SaveReasonFlags ed::Settings::IsDirty(Node* node)
+{
+    if (node)
+    {
+        auto settings = FindNode(node->m_ID);
+        IM_ASSERT(settings);
+        return settings->IsDirty();
+    }
+    else
+        return m_IsDirty ? m_DirtyReason : ax::NodeEditor::SaveReasonFlags::None;
+}
 
 
 

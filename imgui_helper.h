@@ -277,11 +277,11 @@ struct IMGUI_API Grid
 {
     void Begin(const char* id, int columns, float width = -1.0f);
     void Begin(ImU32 id, int columns, float width = -1.0f);
-    void NextColumn();
+    void NextColumn(bool keep_max = true);
     void NextRow();
     void SetColumnAlignment(float alignment);
     void End();
-
+    float GetColumnWidth() { return m_MaximumColumnWidthAcc > 0 ? m_MaximumColumnWidthAcc : 0; }
 private:
     int Seed(int column, int row) const { return column + row * m_Columns; }
     int Seed() const { return Seed(m_Column, m_Row); }
@@ -289,7 +289,7 @@ private:
     int ColumnSeed() const { return ColumnSeed(m_Column); }
 
     void EnterCell(int column, int row);
-    void LeaveCell();
+    void LeaveCell(bool keep_max = true);
 
     int m_Columns = 1;
     int m_Row = 0;

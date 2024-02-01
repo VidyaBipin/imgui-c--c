@@ -1,14 +1,6 @@
 #pragma once
 #include <imvk_mat_shader.h>
 
-#define SHADER_INPUT2_DATA \
-" \n\
-layout (binding = 8)  readonly buffer src2_int8       { uint8_t   src2_data_int8[]; };   \n\
-layout (binding = 9)  readonly buffer src2_int16      { uint16_t  src2_data_int16[]; };  \n\
-layout (binding = 10) readonly buffer src2_float16    { float16_t src2_data_float16[]; };\n\
-layout (binding = 11) readonly buffer src2_float32    { float     src2_data_float32[]; };\n\
-"
-
 // Load data as rgba
 #define SHADER_LOAD2_RGBA_INT8 \
 " \n\
