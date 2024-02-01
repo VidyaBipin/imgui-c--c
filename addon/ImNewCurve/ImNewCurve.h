@@ -182,6 +182,12 @@ namespace ImNewCurve
         float Tick2Time(float tick) const { if (m_bTimeBaseValid) return tick*1000*m_tTimeBase.first/m_tTimeBase.second; return tick; }
         float Time2Tick(float time) const { if (m_bTimeBaseValid) return time*m_tTimeBase.second/(m_tTimeBase.first*1000); return time; }
         float Time2TickAligned(float time) const { if (m_bTimeBaseValid) return roundf(time*m_tTimeBase.second/(m_tTimeBase.first*1000)); return time; }
+        void SetLimitTimeInRange(bool bEnable, bool bClipKeyPoints = false);
+        bool IsLimitTImeInRange() const { return m_bLimitTimeInRange; }
+        void SetLimitKeyPointValueInRange(bool bEnable, bool bClipKeyPoints = false);
+        bool IsLimitKeyPointValueInRange() const { return m_bLimitKeyPointValueInRange; }
+        void SetLimitOutputValueInRange(bool bEnable) { m_bLimitOutputValueInRange = bEnable; }
+        bool IsLimitOutputValueInRange() const { return m_bLimitOutputValueInRange; }
 
         void SetMinVal(const KeyPoint::ValType& minVal);  // only set the minimum key point value (i.e., min value for DIM X,Y,Z), do not change time range start point
         void SetMaxVal(const KeyPoint::ValType& maxVal);  // only set the maximum key point value (i.e., max value for DIM X,Y,Z), do not change time range end point
@@ -222,13 +228,16 @@ namespace ImNewCurve
     protected:
         std::string m_strName;
         std::list<KeyPoint::Holder> m_aKeyPoints;
-        CurveType m_eCurveType {Smooth};
+        CurveType m_eCurveType{Smooth};
         KeyPoint::ValType m_tMinVal;
         KeyPoint::ValType m_tMaxVal;
         KeyPoint::ValType m_tValRange;
         KeyPoint::ValType m_tDefaultVal;
         std::pair<uint32_t, uint32_t> m_tTimeBase;
         bool m_bTimeBaseValid;
+        bool m_bLimitTimeInRange{false};
+        bool m_bLimitKeyPointValueInRange{false};
+        bool m_bLimitOutputValueInRange{false};
         std::list<Callbacks*> m_aCallbacksArray;
     };
 
@@ -242,13 +251,15 @@ namespace ImNewCurve
 
         Editor(const Editor&) = delete;
 
-        bool DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, uint32_t flags, bool* pCurveUpdated = nullptr, ImDrawList* pDrawList = nullptr);
+        bool DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, float fViewScaleX, float fViewOffsetX, uint32_t flags, bool* pCurveUpdated = nullptr, ImDrawList* pDrawList = nullptr);
 
         bool AddCurve(Curve::Holder hCurve, ValueDimension eDim, ImU32 u32CurveColor);
         void ClearAll() { m_aCurveUiObjs.clear(); }
         size_t GetCurveCount() const;
         Curve::Holder GetCurveByIndex(int idx) const;
 
+        void SetGraticuleLineCount(size_t szLineCnt) { m_szGraticuleLineCnt = szLineCnt; }
+        size_t GetGraticuleLineCount() const { return m_szGraticuleLineCnt; }
         void SetBackgroundColor(ImU32 color) { m_u32BackgroundColor = color; }
         ImU32 GetBackgroundColor() const { return m_u32BackgroundColor; }
         void SetGraticuleColor(ImU32 color) { m_u32GraticuleColor = color; }
@@ -280,6 +291,7 @@ namespace ImNewCurve
             int MoveKeyPoint(int iKpIdx, const ImVec2& v2MousePos);
             void MoveCurveVertically(const ImVec2& v2MousePos);
             void UpdateCurveAttributes();
+            // void UpdateAllContourPoints(const ImVec2& tTimeRange);
             void UpdateContourPoints(int iKpIdx);
             bool CheckMouseHoverCurve(const ImVec2& v2MousePos) const;
             int CheckMouseHoverPoint(const ImVec2& v2MousePos) const;
@@ -320,7 +332,6 @@ namespace ImNewCurve
         ImVec2 m_v2UiScale{1.f, 1.f};
         float m_fMaxScale{10.f};
         ImVec2 m_v2PanOffset{0.f, 0.f};
-        float m_fGraticuleCount{10.f};
         float m_fCheckHoverDistanceThresh{8.f};
         int m_iHoveredCurveUiObjIdx{-1};
         int m_iHoveredKeyPointIdx{-1};
@@ -337,8 +348,8 @@ namespace ImNewCurve
         ImU32 m_u32KeyPointEdgeColor{IM_COL32(255, 128, 0, 255)};
         float m_fKeyPointRadius{3.5f};
         float m_fCurveAreaTopMargin{0.05f}, m_fCurveAreaBottomMargin{0.05f};
-        ImU32 m_u32MaxValLineColor{IM_COL32(220, 140, 140, 255)};
-        ImU32 m_u32MinValLineColor{IM_COL32(160, 160, 220, 255)};
+        ImU32 m_u32MaxValLineColor{IM_COL32(220, 140, 140, 180)};
+        ImU32 m_u32MinValLineColor{IM_COL32(160, 160, 220, 180)};
         float m_fMinMaxLineThickness{1.5f};
     };
 

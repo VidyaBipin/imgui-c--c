@@ -220,6 +220,9 @@ Curve::Holder Curve::Clone() const
     auto& aClonedKeyPoints = hNewInstance->m_aKeyPoints;
     for (const auto& hKp : m_aKeyPoints)
         aClonedKeyPoints.push_back(KeyPoint::Holder(new KeyPoint(*hKp)));
+    hNewInstance->m_bLimitTimeInRange = m_bLimitTimeInRange;
+    hNewInstance->m_bLimitKeyPointValueInRange = m_bLimitKeyPointValueInRange;
+    hNewInstance->m_bLimitOutputValueInRange = m_bLimitOutputValueInRange;
     return hNewInstance;
 }
 
@@ -294,6 +297,59 @@ int Curve::GetKeyPointIndex(float t) const
     return idx;
 }
 
+void Curve::SetLimitTimeInRange(bool bEnable, bool bClipKeyPoints)
+{
+    if (m_bLimitTimeInRange == bEnable && !bClipKeyPoints)
+        return;
+    m_bLimitTimeInRange = bEnable;
+    if (m_aKeyPoints.empty())
+        return;
+    if (bEnable && bClipKeyPoints)
+    {
+        if (m_aKeyPoints.front()->t < m_tMinVal.w)
+        {
+            const auto tTimeRangeStartVal = CalcPointVal(m_tMinVal.w);
+            while (!m_aKeyPoints.empty() && m_aKeyPoints.front()->t < m_tMinVal.w)
+                m_aKeyPoints.pop_front();
+            auto hHeadKp = KeyPoint::CreateInstance(tTimeRangeStartVal, m_eCurveType);
+            if (m_aKeyPoints.empty())
+                m_aKeyPoints.push_back(hHeadKp);
+            else if (m_aKeyPoints.front()->t > m_tMinVal.w)
+                m_aKeyPoints.push_front(hHeadKp);
+        }
+        if (m_aKeyPoints.back()->t > m_tMaxVal.w)
+        {
+            const auto tTimeRangeEndVal = CalcPointVal(m_tMaxVal.w);
+            while (!m_aKeyPoints.empty() && m_aKeyPoints.back()->t > m_tMaxVal.w)
+                m_aKeyPoints.pop_back();
+            auto hTailKp = KeyPoint::CreateInstance(tTimeRangeEndVal, m_eCurveType);
+            if (m_aKeyPoints.empty())
+                m_aKeyPoints.push_back(hTailKp);
+            else if (m_aKeyPoints.back()->t < m_tMaxVal.w)
+                m_aKeyPoints.push_front(hTailKp);
+        }
+    }
+}
+
+void Curve::SetLimitKeyPointValueInRange(bool bEnable, bool bClipKeyPoints)
+{
+    if (m_bLimitKeyPointValueInRange == bEnable && !bClipKeyPoints)
+        return;
+    m_bLimitKeyPointValueInRange = bEnable;
+    if (m_aKeyPoints.empty())
+        return;
+    if (bEnable && bClipKeyPoints)
+    {
+        for (auto& hKp : m_aKeyPoints)
+        {
+            auto& tVal = hKp->val;
+            if (tVal.x < m_tMinVal.x) tVal.x = m_tMinVal.x; else if (tVal.x > m_tMaxVal.x) tVal.x = m_tMaxVal.x;
+            if (tVal.y < m_tMinVal.y) tVal.y = m_tMinVal.y; else if (tVal.y > m_tMaxVal.y) tVal.y = m_tMaxVal.y;
+            if (tVal.z < m_tMinVal.z) tVal.z = m_tMinVal.z; else if (tVal.z > m_tMaxVal.z) tVal.z = m_tMaxVal.z;
+        }
+    }
+}
+
 void Curve::SetMinVal(const KeyPoint::ValType& minVal)
 {
     const ImVec2 v2TimeRange(m_tMinVal.w, m_tMaxVal.w);
@@ -316,6 +372,11 @@ void Curve::SetMaxVal(const KeyPoint::ValType& maxVal)
 
 int Curve::AddPoint(KeyPoint::Holder hKp, bool bOverwriteIfExists)
 {
+    if (m_bLimitTimeInRange)
+    {
+        auto& t = hKp->t;
+        if (t < m_tMinVal.w) t = m_tMinVal.w; else if (t > m_tMaxVal.w) t = m_tMaxVal.w;
+    }
     hKp->t = Time2TickAligned(hKp->t);
     auto iter = std::find_if(m_aKeyPoints.begin(), m_aKeyPoints.end(), [hKp] (const auto& elem) {
         return hKp->t == elem->t;
@@ -325,6 +386,13 @@ int Curve::AddPoint(KeyPoint::Holder hKp, bool bOverwriteIfExists)
 
     if (hKp->type == UnKnown)
         hKp->type = m_eCurveType;
+    if (m_bLimitKeyPointValueInRange)
+    {
+        auto& tVal = hKp->val;
+        if (tVal.x < m_tMinVal.x) tVal.x = m_tMinVal.x; else if (tVal.x > m_tMaxVal.x) tVal.x = m_tMaxVal.x;
+        if (tVal.y < m_tMinVal.y) tVal.y = m_tMinVal.y; else if (tVal.y > m_tMaxVal.y) tVal.y = m_tMaxVal.y;
+        if (tVal.z < m_tMinVal.z) tVal.z = m_tMinVal.z; else if (tVal.z > m_tMaxVal.z) tVal.z = m_tMaxVal.z;
+    }
     if (iter == m_aKeyPoints.end())
     {
         m_aKeyPoints.push_back(hKp);
@@ -360,6 +428,18 @@ int Curve::EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCur
         return -1;
 
     KeyPoint::ValType tKpVal_(tKpVal);
+    if (m_bLimitTimeInRange)
+    {
+        auto& t = tKpVal_.w;
+        if (t < m_tMinVal.w) t = m_tMinVal.w; else if (t > m_tMaxVal.w) t = m_tMaxVal.w;
+    }
+    if (m_bLimitKeyPointValueInRange)
+    {
+        auto& tVal = tKpVal_;
+        if (tVal.x < m_tMinVal.x) tVal.x = m_tMinVal.x; else if (tVal.x > m_tMaxVal.x) tVal.x = m_tMaxVal.x;
+        if (tVal.y < m_tMinVal.y) tVal.y = m_tMinVal.y; else if (tVal.y > m_tMaxVal.y) tVal.y = m_tMaxVal.y;
+        if (tVal.z < m_tMinVal.z) tVal.z = m_tMinVal.z; else if (tVal.z > m_tMaxVal.z) tVal.z = m_tMaxVal.z;
+    }
     tKpVal_.w = Time2TickAligned(tKpVal.w);
     auto hKp = GetKeyPoint(idx);
     if (eCurveType == UnKnown)
@@ -367,75 +447,62 @@ int Curve::EditPoint(size_t idx, const KeyPoint::ValType& tKpVal, CurveType eCur
     if (tKpVal_ == hKp->val && eCurveType == hKp->type)
         return -2;
 
-    float t;
-    if (idx == 0)
-        t = m_tMinVal.w;
-    else if (idx == szKpCnt-1)
-        t = m_tMaxVal.w;
-    else
+    float t = tKpVal_.w;
+    if (m_bTimeBaseValid)
     {
-        t = tKpVal_.w;
-        if (m_bTimeBaseValid)
-        {
-            if (t <= m_tMinVal.w) t = m_tMinVal.w+1;
-            else if (t >= m_tMaxVal.w) t = m_tMaxVal.w-1;
-            uint32_t step = 0;
-            float fTestTick;
-            bool bOutOfRange;
-            do {
-                bOutOfRange = true;
-                fTestTick = t-step;
-                if (fTestTick > m_tMinVal.w && fTestTick < m_tMaxVal.w)
+        if (t <= m_tMinVal.w) t = m_tMinVal.w+1;
+        else if (t >= m_tMaxVal.w) t = m_tMaxVal.w-1;
+        uint32_t step = 0;
+        float fTestTick;
+        bool bOutOfRange;
+        do {
+            bOutOfRange = true;
+            fTestTick = t-step;
+            if (fTestTick > m_tMinVal.w && fTestTick < m_tMaxVal.w)
+            {
+                bOutOfRange = false;
+                bool bFoundSame = false;
+                auto iter = m_aKeyPoints.begin();
+                while (iter != m_aKeyPoints.end())
                 {
-                    bOutOfRange = false;
-                    bool bFoundSame = false;
-                    auto iter = m_aKeyPoints.begin();
-                    while (iter != m_aKeyPoints.end())
+                    const auto& hKpCheck = *iter++;
+                    if (hKp != hKpCheck && hKpCheck->t == fTestTick)
                     {
-                        const auto& hKpCheck = *iter++;
-                        if (hKp != hKpCheck && hKpCheck->t == fTestTick)
-                        {
-                            bFoundSame = true;
-                            break;
-                        }
-                    }
-                    if (!bFoundSame)
-                    {
-                        t = fTestTick;
+                        bFoundSame = true;
                         break;
                     }
                 }
-                fTestTick = t+step;
-                if (fTestTick > m_tMinVal.w && fTestTick < m_tMaxVal.w)
+                if (!bFoundSame)
                 {
-                    bOutOfRange = false;
-                    bool bFoundSame = false;
-                    auto iter = m_aKeyPoints.begin();
-                    while (iter != m_aKeyPoints.end())
+                    t = fTestTick;
+                    break;
+                }
+            }
+            fTestTick = t+step;
+            if (fTestTick > m_tMinVal.w && fTestTick < m_tMaxVal.w)
+            {
+                bOutOfRange = false;
+                bool bFoundSame = false;
+                auto iter = m_aKeyPoints.begin();
+                while (iter != m_aKeyPoints.end())
+                {
+                    const auto& hKpCheck = *iter++;
+                    if (hKp != hKpCheck && hKpCheck->t == fTestTick)
                     {
-                        const auto& hKpCheck = *iter++;
-                        if (hKp != hKpCheck && hKpCheck->t == fTestTick)
-                        {
-                            bFoundSame = true;
-                            break;
-                        }
-                    }
-                    if (!bFoundSame)
-                    {
-                        t = fTestTick;
+                        bFoundSame = true;
                         break;
                     }
                 }
-                step++;
-            } while (!bOutOfRange);
-            if (bOutOfRange)
-                return -1;
-        }
-        else
-        {
-            if (t < m_tMinVal.w) t = m_tMinVal.w;
-            else if (t > m_tMaxVal.w) t = m_tMaxVal.w;
-        }
+                if (!bFoundSame)
+                {
+                    t = fTestTick;
+                    break;
+                }
+            }
+            step++;
+        } while (!bOutOfRange);
+        if (bOutOfRange)
+            return -1;
     }
 
     hKp->val = tKpVal_;
@@ -560,6 +627,13 @@ KeyPoint::ValType Curve::CalcPointVal(float t, bool bAlignTime) const
         res = ImLerp(p1->val, p2->val, rt);
     }
     res.w = Tick2Time(t);
+    if (m_bLimitOutputValueInRange)
+    {
+        auto& tVal = res;
+        if (tVal.x < m_tMinVal.x) tVal.x = m_tMinVal.x; else if (tVal.x > m_tMaxVal.x) tVal.x = m_tMaxVal.x;
+        if (tVal.y < m_tMinVal.y) tVal.y = m_tMinVal.y; else if (tVal.y > m_tMaxVal.y) tVal.y = m_tMaxVal.y;
+        if (tVal.z < m_tMinVal.z) tVal.z = m_tMinVal.z; else if (tVal.z > m_tMaxVal.z) tVal.z = m_tMaxVal.z;
+    }
     return res;
 }
 
@@ -578,42 +652,6 @@ bool Curve::SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds)
         m_tMaxVal.w = v2TimeRange.y;
     }
     m_tValRange.w = m_tMaxVal.w-m_tMinVal.w;
-    const auto szKpCnt = m_aKeyPoints.size();
-    if (szKpCnt < 1 || !bDockEnds)
-        return true;
-    if (szKpCnt == 1)
-    {
-        m_aKeyPoints.front()->t = m_tMinVal.w;
-        return true;
-    }
-    if (szKpCnt == 2)
-    {
-        m_aKeyPoints.front()->t = m_tMinVal.w;
-        m_aKeyPoints.back()->t = m_tMaxVal.w;
-        return true;
-    }
-    const auto eBeginCurveType = m_aKeyPoints.front()->type;
-    const auto eEndCurveType = m_aKeyPoints.back()->type;
-    auto tNewBeginVal = CalcPointVal(Tick2Time(m_tMinVal.w), false);
-    tNewBeginVal.w = m_tMinVal.w;
-    auto tNewEndVal = CalcPointVal(Tick2Time(m_tMaxVal.w), false);
-    tNewEndVal.w = m_tMaxVal.w;
-    std::list<KeyPoint::Holder> aNewPoints;
-    aNewPoints.push_back(KeyPoint::CreateInstance(tNewBeginVal, eBeginCurveType));
-    auto iter = m_aKeyPoints.begin(); iter++;
-    auto itEnd = m_aKeyPoints.end(); itEnd--;
-    const auto fMinTime = m_tMinVal.w;
-    const auto fMaxTime = m_tMaxVal.w;
-    while (iter != itEnd)
-    {
-        auto hKp = *iter++;
-        if (hKp->t >= fMaxTime)
-            break;
-        if (hKp->t > fMinTime)
-            aNewPoints.push_back(hKp);
-    }
-    aNewPoints.push_back(KeyPoint::CreateInstance(tNewEndVal, eEndCurveType));
-    m_aKeyPoints = std::move(aNewPoints);
     return true;
 }
 
@@ -626,20 +664,65 @@ bool Curve::ScaleKeyPoints(const KeyPoint::ValType& tScale, const KeyPoint::ValT
         {
             const auto tOff = hKp->val-tOrigin;
             hKp->val = tOrigin+tOff*tScale;
+            if (m_bLimitKeyPointValueInRange)
+            {
+                auto& tVal = hKp->val;
+                if (tVal.x < m_tMinVal.x) tVal.x = m_tMinVal.x; else if (tVal.x > m_tMaxVal.x) tVal.x = m_tMaxVal.x;
+                if (tVal.y < m_tMinVal.y) tVal.y = m_tMinVal.y; else if (tVal.y > m_tMaxVal.y) tVal.y = m_tMaxVal.y;
+                if (tVal.z < m_tMinVal.z) tVal.z = m_tMinVal.z; else if (tVal.z > m_tMaxVal.z) tVal.z = m_tMaxVal.z;
+            }
         }
     }
     else
     {
         for (auto& hKp : m_aKeyPoints)
+        {
             hKp->val *= tScale;
+            if (m_bLimitKeyPointValueInRange)
+            {
+                auto& tVal = hKp->val;
+                if (tVal.x < m_tMinVal.x) tVal.x = m_tMinVal.x; else if (tVal.x > m_tMaxVal.x) tVal.x = m_tMaxVal.x;
+                if (tVal.y < m_tMinVal.y) tVal.y = m_tMinVal.y; else if (tVal.y > m_tMaxVal.y) tVal.y = m_tMaxVal.y;
+                if (tVal.z < m_tMinVal.z) tVal.z = m_tMinVal.z; else if (tVal.z > m_tMaxVal.z) tVal.z = m_tMaxVal.z;
+            }
+        }
     }
     return true;
 }
 
 bool Curve::PanKeyPoints(const KeyPoint::ValType& tOffset)
 {
+    if (m_aKeyPoints.empty())
+        return true;
+    KeyPoint::ValType tOffset_(tOffset);
+    if (m_bLimitTimeInRange)
+    {
+        if (tOffset_.w < 0)
+        {
+            const auto& tHeadVal = m_aKeyPoints.front()->val;
+            if (tOffset_.w < m_tMinVal.w-tHeadVal.w)
+                tOffset_.w = m_tMinVal.w-tHeadVal.w;
+        }
+        else if (tOffset_.w > 0)
+        {
+            const auto& tTailVal = m_aKeyPoints.back()->val;
+            if (tOffset_.w > m_tMaxVal.w-tTailVal.w)
+                tOffset_.w = m_tMaxVal.w-tTailVal.w;
+        }
+    }
+    if (tOffset_ == KeyPoint::ValType(0, 0, 0, 0))
+        return true;
     for (auto& hKp : m_aKeyPoints)
-        hKp->val += tOffset;
+    {
+        hKp->val += tOffset_;
+        if (m_bLimitKeyPointValueInRange)
+        {
+            auto& tVal = hKp->val;
+            if (tVal.x < m_tMinVal.x) tVal.x = m_tMinVal.x; else if (tVal.x > m_tMaxVal.x) tVal.x = m_tMaxVal.x;
+            if (tVal.y < m_tMinVal.y) tVal.y = m_tMinVal.y; else if (tVal.y > m_tMaxVal.y) tVal.y = m_tMaxVal.y;
+            if (tVal.z < m_tMinVal.z) tVal.z = m_tMinVal.z; else if (tVal.z > m_tMaxVal.z) tVal.z = m_tMaxVal.z;
+        }
+    }
     return true;
 }
 
@@ -926,9 +1009,9 @@ void Editor::CurveUiObj::DrawCurve(ImDrawList* pDrawList, const ImVec2& v2Origin
             pDrawList->AddLine(p1+v2DrawOffset, p2+v2DrawOffset, u32CurveColor, fCurveWidth);
         }
     } while (itKp != itEnd);
-    const auto fMaxX = m_pOwner->m_v2CurveAxisAreaSize.x;
-    if (p2.x < fMaxX)
-        pDrawList->AddLine(p2+v2DrawOffset, ImVec2(fMaxX, p2.y)+v2DrawOffset, u32CurveColor, fCurveWidth);
+    const auto fMaxPosX = v2OriginPos.x+m_pOwner->m_v2CurveAxisAreaSize.x;
+    if (p2.x+v2DrawOffset.x < fMaxPosX)
+        pDrawList->AddLine(p2+v2DrawOffset, ImVec2(fMaxPosX, p2.y+v2DrawOffset.y), u32CurveColor, fCurveWidth);
     // draw key points
     int iHoveredKpIdx = bIsHovering ? m_pOwner->m_iHoveredKeyPointIdx : -1;
     const auto fKeyPointRadius = m_pOwner->m_fKeyPointRadius;
@@ -1013,6 +1096,35 @@ void Editor::CurveUiObj::UpdateCurveAttributes()
         m_bNeedRefreshContour = true;
     }
 }
+
+// void Editor::CurveUiObj::UpdateAllContourPoints(const ImVec2& v2TimeRange)
+// {
+//     if (v2TimeRange.y <= v2TimeRange.x)
+//         return;
+//     const ImVec2 v2DimValRange(v2TimeRange.y-v2TimeRange.x, m_v2DimValRange.y);
+//     const ImVec2 v2DimMinVal(v2TimeRange.x, m_v2DimMinVal.y);
+//     const auto szKpCnt = m_hCurve->GetKeyPointCount();
+//     if (szKpCnt < 1)
+//     {
+//         m_aCpTable.clear();
+//         return;
+//     }
+//     size_t szKpIdx = 0;
+//     auto itKp = m_hCurve->GetKpIter(0);
+//     auto itEnd = m_hCurve->GetKpIter(szKpCnt);
+//     while (itKp != itEnd && (*itKp)->t < v2TimeRange.x)
+//     { itKp++; szKpIdx++; }
+//     ImVec2 p1, p2, v2NormedKpDimVal;
+//     if ((*itKp)->t > v2TimeRange.x)
+//         v2NormedKpDimVal = ImVec2(0, KeyPoint::GetDimVal(m_hCurve->CalcPointVal(v2TimeRange.x), m_eDim)-v2DimMinVal.y)/v2DimValRange;
+//     else
+//         v2NormedKpDimVal = ImVec2(0, KeyPoint::GetDimVal((*itKp)->val, m_eDim)-v2DimMinVal.y)/v2DimValRange;
+//     p2 = m_pOwner->CvtPoint2Pos(v2NormedKpDimVal); p2.y = -p2.y;
+//     while (itKp != itEnd && (*itKp)->t < v2TimeRange.y)
+//     {
+//         p1 = p2;
+//     }
+// }
 
 void Editor::CurveUiObj::UpdateContourPoints(int iKpIdx)
 {
@@ -1163,7 +1275,7 @@ void Editor::CurveUiObj::OnContourNeedUpdate(size_t szKpIdx)
 Editor::Editor()
 {}
 
-bool Editor::DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, uint32_t flags, bool* pCurveUpdated, ImDrawList* pDrawList)
+bool Editor::DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, float fViewScaleX, float fViewOffsetX, uint32_t flags, bool* pCurveUpdated, ImDrawList* pDrawList)
 {
     bool bMouseCaptured = false;
     if (pCurveUpdated) *pCurveUpdated = false;
@@ -1171,7 +1283,7 @@ bool Editor::DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, uint32_t
     const bool bDeleteMode = IsKeyDown(ImGuiKey_LeftShift) && io.KeyShift;
     PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
     PushStyleColor(ImGuiCol_Border, 0);
-    PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.f, 0.f, 0.f, 0.f));
+    PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.f, 0.f, 0.f, 0.5f));
     BeginChildFrame(GetID(pcLabel), v2ViewSize);
     const ImVec2 v2CursorPos = GetCursorScreenPos();
     if (!pDrawList) pDrawList = GetWindowDrawList();
@@ -1182,29 +1294,35 @@ bool Editor::DrawContent(const char* pcLabel, const ImVec2& v2ViewSize, uint32_t
     const auto v2CurveOriginPos = v2CurveAreaPos+ImVec2(0, v2CurveAreaSize.y*(1-m_fCurveAreaBottomMargin));
     const auto v2MousePos = GetMousePos();
 
-    if (m_v2CurveAreaSize != v2CurveAreaSize)
+    if (m_v2CurveAreaSize != v2CurveAreaSize || fViewScaleX != m_v2UiScale.x)
     {
-        const auto v2Scale = v2CurveAreaSize/m_v2CurveAreaSize;
+        auto v2Scale = v2CurveAreaSize/m_v2CurveAreaSize;
+        v2Scale.x *= fViewScaleX/m_v2UiScale.x;
         for (auto& hCurveUiObj : m_aCurveUiObjs)
             hCurveUiObj->ScaleContour(v2Scale);
         m_v2CurveAreaSize = v2CurveAreaSize;
+        m_v2UiScale.x = fViewScaleX;
         m_v2CurveAxisAreaSize.x = m_v2CurveAreaSize.x;
         m_v2CurveAxisAreaSize.y = v2CurveAreaSize.y*(1-m_fCurveAreaBottomMargin-m_fCurveAreaBottomMargin);
     }
+    m_v2PanOffset.x = -fViewOffsetX;
 
     // draw graticule lines
-    const float fScaledGraticuleHeight = m_v2CurveAxisAreaSize.y*m_v2UiScale.y/m_fGraticuleCount;
-    for (auto i = 0; i <= m_szGraticuleLineCnt; i++)
+    if (m_szGraticuleLineCnt > 0)
     {
-        const float fYOffset = -fScaledGraticuleHeight*i;
-        const auto p1 = v2CurveOriginPos+m_v2PanOffset+ImVec2(0, fYOffset);
-        const auto p2 = v2CurveOriginPos+m_v2PanOffset+ImVec2(v2CurveAreaSize.x, fYOffset);
-        if (i == 0)
-            pDrawList->AddLine(p1, p2, m_u32MinValLineColor, m_fMinMaxLineThickness);
-        else if (i == m_szGraticuleLineCnt)
-            pDrawList->AddLine(p1, p2, m_u32MaxValLineColor, m_fMinMaxLineThickness);
-        else
-            pDrawList->AddLine(p1, p2, m_u32GraticuleColor, m_fGraticuleLineThickness);
+        const float fScaledGraticuleHeight = m_szGraticuleLineCnt > 1 ? m_v2CurveAxisAreaSize.y*m_v2UiScale.y/(m_szGraticuleLineCnt-1) : 0;
+        for (auto i = 0; i < m_szGraticuleLineCnt; i++)
+        {
+            const float fYOffset = -fScaledGraticuleHeight*i;
+            const auto p1 = v2CurveOriginPos+ImVec2(0, fYOffset+m_v2PanOffset.y);
+            const auto p2 = v2CurveOriginPos+ImVec2(v2CurveAreaSize.x, fYOffset+m_v2PanOffset.y);
+            if (i == 0)
+                pDrawList->AddLine(p1, p2, m_u32MinValLineColor, m_fMinMaxLineThickness);
+            else if (i == m_szGraticuleLineCnt-1)
+                pDrawList->AddLine(p1, p2, m_u32MaxValLineColor, m_fMinMaxLineThickness);
+            else
+                pDrawList->AddLine(p1, p2, m_u32GraticuleColor, m_fGraticuleLineThickness);
+        }
     }
 
     // handle zoom and scroll vertically

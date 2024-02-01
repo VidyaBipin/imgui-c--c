@@ -62,5 +62,5 @@ void ImGui::ImNewCurve::ShowDemo()
     uint32_t u32Flags = 0;
     if (bCanZoomV) u32Flags |= IMNEWCURVE_EDITOR_FLAG_ZOOM_V | IMNEWCURVE_EDITOR_FLAG_SCROLL_V;
     if (move_curve) u32Flags |= IMNEWCURVE_EDITOR_FLAG_MOVE_CURVE_V;
-    s_hCurveEditor->DrawContent("##curve_editor_view", ImVec2(size_x, 300), u32Flags);
+    s_hCurveEditor->DrawContent("##curve_editor_view", ImVec2(size_x, 300), 1.f, 0.f, u32Flags);
 }
