@@ -46,6 +46,13 @@ AlphaBlending_vulkan::AlphaBlending_vulkan(int gpu)
         spirv_data.clear();
     }
 
+    if (compile_spirv_module(AlphaBlending_alpha_mat_mask_data, opt, spirv_data) == 0)
+    {
+        pipe_alpha_mat_mask = new Pipeline(vkdev);
+        pipe_alpha_mat_mask->create(spirv_data.data(), spirv_data.size() * 4, specializations);
+        spirv_data.clear();
+    }
+
     if (compile_spirv_module(AlphaBlending_overlay_data, opt, spirv_data) == 0)
     {
         pipe_overlay = new Pipeline(vkdev);
@@ -63,6 +70,7 @@ AlphaBlending_vulkan::~AlphaBlending_vulkan()
         if (pipe_alpha) { delete pipe_alpha; pipe_alpha = nullptr; }
         if (pipe_alpha_mat) { delete pipe_alpha_mat; pipe_alpha_mat = nullptr; }
         if (pipe_alpha_mat_to) { delete pipe_alpha_mat_to; pipe_alpha_mat_to = nullptr; }
+        if (pipe_alpha_mat_mask) { delete pipe_alpha_mat_mask; pipe_alpha_mat_mask = nullptr; }
         if (pipe_overlay) { delete pipe_overlay; pipe_overlay = nullptr; }
         if (cmd) { delete cmd; cmd = nullptr; }
         if (opt.blob_vkallocator) { vkdev->reclaim_blob_allocator(opt.blob_vkallocator); opt.blob_vkallocator = nullptr; }
@@ -508,4 +516,65 @@ bool AlphaBlending_vulkan::overlay(const ImMat& baseImg, const ImMat& overlayImg
     return true;
 }
 
+void AlphaBlending_vulkan::upload_param_mask(const VkMat& src, const VkMat& alpha, VkMat& dst) const
+{
+    std::vector<VkMat> bindings(12);
+    if      (dst.type == IM_DT_INT8)     bindings[0] = dst;
+    else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)    bindings[1] = dst;
+    else if (dst.type == IM_DT_FLOAT16)  bindings[2] = dst;
+    else if (dst.type == IM_DT_FLOAT32)  bindings[3] = dst;
+
+    if      (src.type == IM_DT_INT8)      bindings[4] = src;
+    else if (src.type == IM_DT_INT16 || src.type == IM_DT_INT16_BE)     bindings[5] = src;
+    else if (src.type == IM_DT_FLOAT16)   bindings[6] = src;
+    else if (src.type == IM_DT_FLOAT32)   bindings[7] = src;
+
+    bindings[11] = alpha;
+
+    std::vector<vk_constant_type> constants(10);
+    constants[0].i = src.w;
+    constants[1].i = src.h;
+    constants[2].i = src.c;
+    constants[3].i = src.color_format;
+    constants[4].i = src.type;
+    constants[5].i = dst.w;
+    constants[6].i = dst.h;
+    constants[7].i = dst.c;
+    constants[8].i = dst.color_format;
+    constants[9].i = dst.type;
+    cmd->record_pipeline(pipe_alpha_mat_mask, bindings, constants, dst);
+}
+
+void AlphaBlending_vulkan::mask(const ImMat& src, const ImMat& alpha, ImMat& dst) const
+{
+    if (!vkdev || !pipe_alpha_mat_mask || !cmd)
+        throw std::runtime_error("glslang program is NOT READY!");
+    if (alpha.type != IM_DT_FLOAT32 || alpha.c != 1 || alpha.w != src.w || alpha.h != src.h)
+        throw std::runtime_error("Argument 'alpha' is INVALIDE!");
+
+    VkMat dst_gpu;
+    dst_gpu.create_type(src.w, src.h, src.c, src.type, opt.blob_vkallocator);
+
+    VkMat src_gpu;
+    if (src.device == IM_DD_VULKAN)
+        src_gpu = src;
+    else if (src.device == IM_DD_CPU)
+        cmd->record_clone(src, src_gpu, opt);
+    
+    VkMat alpha_gpu;
+    if (alpha.device == IM_DD_VULKAN)
+        alpha_gpu = alpha;
+    else if (alpha.device == IM_DD_CPU)
+        cmd->record_clone(alpha, alpha_gpu, opt);
+
+    upload_param_mask(src_gpu, alpha_gpu, dst_gpu);
+
+    // download
+    if (dst.device == IM_DD_CPU)
+        cmd->record_clone(dst_gpu, dst, opt);
+    else if (dst.device == IM_DD_VULKAN)
+        dst = dst_gpu;
+    cmd->submit_and_wait();
+    cmd->reset();
+}
 } //namespace ImGui 

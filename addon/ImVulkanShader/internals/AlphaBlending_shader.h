@@ -261,12 +261,8 @@ void main() \n\
         sfpvec4 rgba_src = load_rgba(uv.x - p.x_offset, uv.y - p.y_offset, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
         sfp alpha = load_gray_alpha(uv.x - p.x_offset, uv.y - p.y_offset, p.w, p.h, 1, 0, DT_FLOAT32, 1); \n\
         result = sfpvec4(mix(rgba_dst.rgb, rgba_src.rgb, alpha), rgba_dst.a); \n\
+        store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
     } \n\
-    else \n\
-    { \n\
-        result = rgba_dst; \n\
-    } \n\
-    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 
@@ -286,4 +282,54 @@ SHADER_LOAD_RGBA_NAME(dst)
 SHADER_LOAD_GRAY_NAME(alpha)
 SHADER_STORE_RGBA
 SHADER_ALPHA_WITH_ALPHA_MAT_TO
+;
+
+#define SHADER_PARAM_WITH_ALPHA_MAT_MASK \
+" \n\
+layout (push_constant) uniform parameter \n\
+{ \n\
+    int w; \n\
+    int h; \n\
+    int cstep; \n\
+    int in_format; \n\
+    int in_type; \n\
+\n\
+    int out_w; \n\
+    int out_h; \n\
+    int out_cstep; \n\
+    int out_format; \n\
+    int out_type; \n\
+} p; \
+"
+
+#define SHADER_ALPHA_WITH_ALPHA_MAT_MASK \
+" \n\
+void main() \n\
+{ \n\
+    ivec2 uv = ivec2(gl_GlobalInvocationID.xy); \n\
+    if (uv.x >= p.out_w || uv.y >= p.out_h) \n\
+        return; \n\
+    sfpvec4 result; \n\
+    sfpvec4 rgba_src = load_rgba(uv.x, uv.y, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfp alpha = load_gray_alpha(uv.x, uv.y, p.w, p.h, 1, 0, DT_FLOAT32, 1); \n\
+    result = sfpvec4(rgba_src.rgb, alpha); \n\
+    store_rgba(result, uv.x, uv.y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+} \
+"
+
+static const char AlphaBlending_alpha_mat_mask_data[] = 
+SHADER_HEADER
+SHADER_PARAM_WITH_ALPHA_MAT_MASK
+SHADER_OUTPUT_RDWR_DATA
+SHADER_INPUT_DATA
+R"(
+layout (binding = 8) readonly buffer alpha_int8      { uint8_t   alpha_data_int8[]; };
+layout (binding = 9) readonly buffer alpha_int16     { uint16_t  alpha_data_int16[]; };
+layout (binding = 10) readonly buffer alpha_float16   { float16_t alpha_data_float16[]; };
+layout (binding = 11) readonly buffer alpha_float32   { float     alpha_data_float32[]; };
+)"
+SHADER_LOAD_RGBA
+SHADER_LOAD_GRAY_NAME(alpha)
+SHADER_STORE_RGBA
+SHADER_ALPHA_WITH_ALPHA_MAT_MASK
 ;

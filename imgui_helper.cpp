@@ -1584,7 +1584,7 @@ std::string path_filename(const std::string& path)
     auto pos = path.find_last_of(PATH_SEP);
     if (pos != std::string::npos)
         return path.substr(pos + 1);
-    return "";
+    return path;
 }
 
 std::string path_filename_prefix(const std::string& path)
