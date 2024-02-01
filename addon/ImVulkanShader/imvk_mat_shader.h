@@ -259,6 +259,14 @@ layout (binding = 6) readonly buffer src_float16    { float16_t src_data_float16
 layout (binding = 7) readonly buffer src_float32    { float     src_data_float32[]; };\n\
 "
 
+#define SHADER_INPUT2_DATA \
+" \n\
+layout (binding =  8) readonly buffer src2_int8       { uint8_t   src2_data_int8[]; };   \n\
+layout (binding =  9) readonly buffer src2_int16      { uint16_t  src2_data_int16[]; };  \n\
+layout (binding = 10) readonly buffer src2_float16    { float16_t src2_data_float16[]; };\n\
+layout (binding = 11) readonly buffer src2_float32    { float     src2_data_float32[]; };\n\
+"
+
 #define SHADER_OUTPUT_DATA \
 " \n\
 layout (binding = 0) writeonly buffer dst_int8      { uint8_t   dst_data_int8[]; };   \n\
@@ -278,6 +286,11 @@ layout (binding = 3) buffer dst_float32   { float     dst_data_float32[]; };\n\
 // 8 lines
 #define SHADER_INPUT_OUTPUT_DATA \
 SHADER_INPUT_DATA \
+SHADER_OUTPUT_DATA
+
+#define SHADER_INPUT2_OUTPUT_DATA \
+SHADER_INPUT_DATA \
+SHADER_INPUT2_DATA \
 SHADER_OUTPUT_DATA
 
 // Load data as gray
@@ -1309,6 +1322,30 @@ layout (push_constant) uniform parameter \n\
     int cstep; \n\
     int in_format; \n\
     int in_type; \n\
+    \n\
+    int out_w; \n\
+    int out_h; \n\
+    int out_cstep; \n\
+    int out_format; \n\
+    int out_type; \n\
+    \n\
+"
+
+#define SHADER_DEFAULT_PARAM2_HEADER \
+" \n\
+layout (push_constant) uniform parameter \n\
+{ \n\
+    int w; \n\
+    int h; \n\
+    int cstep; \n\
+    int in_format; \n\
+    int in_type; \n\
+    \n\
+    int w2; \n\
+    int h2; \n\
+    int cstep2; \n\
+    int in_format2; \n\
+    int in_type2; \n\
     \n\
     int out_w; \n\
     int out_h; \n\
