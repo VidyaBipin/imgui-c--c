@@ -2484,7 +2484,5 @@ IGFD_C_API void ManageGPUThumbnails(  // must be call in gpu zone, possibly a th
 
 // Demo Window add By Dicky
 #if IMGUI_BUILD_EXAMPLE
-IMGUI_API void prepare_file_dialog_demo_window(ImGuiFileDialog * dlg, const char * bookmark_path);
-IMGUI_API void show_file_dialog_demo_window(ImGuiFileDialog * dlg, bool * open);
-IMGUI_API void end_file_dialog_demo_window(ImGuiFileDialog * dlg, const char * bookmark_path);
+IMGUI_API void show_file_dialog_demo_window(bool * open);
 #endif

@@ -165,11 +165,6 @@ int main(int, char**)
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != nullptr);
 
-    // load file dialog resource
-    ImGuiFileDialog filedialog;
-    std::string bookmark_path = std::string(DEFAULT_CONFIG_PATH) + "bookmark.ini";
-    prepare_file_dialog_demo_window(&filedialog, bookmark_path.c_str());
-
     // init memory edit
     MemoryEditor mem_edit;
     mem_edit.Open = false;
@@ -287,7 +282,7 @@ int main(int, char**)
         // Show FileDialog demo window
         if (show_file_dialog_window)
         {
-            show_file_dialog_demo_window(&filedialog, &show_file_dialog_window);
+            show_file_dialog_demo_window(&show_file_dialog_window);
         }
 
         // Show Memory Edit window
@@ -328,9 +323,6 @@ int main(int, char**)
         g_pSwapChain->Present(1, 0); // Present with vsync
         //g_pSwapChain->Present(0, 0); // Present without vsync
     }
-
-    // Store file dialog bookmark
-    end_file_dialog_demo_window(&filedialog, bookmark_path.c_str());
 
     // Cleanup memory edit resource
     if (data)

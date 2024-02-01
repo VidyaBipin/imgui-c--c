@@ -126,7 +126,6 @@ static std::vector<ImHotKey::HotKey> hotkeys =
 @property (nonatomic, strong) id <MTLCommandQueue> commandQueue;
 @end
 
-ImGuiFileDialog filedialog;
 MemoryEditor mem_edit;
 size_t data_size = 0x1000;
 void* data = nullptr;
@@ -182,10 +181,6 @@ ImGui::MarkdownConfig mdConfig;
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != nullptr);
-
-    // load file dialog resource
-    std::string bookmark_path = std::string(DEFAULT_CONFIG_PATH) + "bookmark.ini";
-    prepare_file_dialog_demo_window(&filedialog, bookmark_path.c_str());
 
     // init memory edit
     mem_edit.Open = false;
@@ -334,7 +329,7 @@ ImGui::MarkdownConfig mdConfig;
     // Show FileDialog demo window
     if (show_file_dialog_window)
     {
-        show_file_dialog_demo_window(&filedialog, &show_file_dialog_window);
+        show_file_dialog_demo_window(&show_file_dialog_window);
     }
 
     // Show Memory Edit window
