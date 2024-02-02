@@ -41,7 +41,10 @@
 #include <sys/system_properties.h> // __system_property_get()
 #include <dlfcn.h>
 #endif
+#include <ctype.h>
 #include <stdint.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/syscall.h>
 #include <unistd.h>
 #endif
@@ -52,6 +55,7 @@
 #include <mach/thread_act.h>
 #include <sys/sysctl.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include "TargetConditionals.h"
 #if TARGET_OS_IPHONE
 #define __IOS__ 1
@@ -144,6 +148,9 @@ static int g_hw_optional_arm_FEAT_I8MM;
 #endif
 
 #if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
+static int g_cpu_support_x86_mmx;
+static int g_cpu_support_x86_sse;
+static int g_cpu_support_x86_sse2;
 static int g_cpu_support_x86_sse3;
 static int g_cpu_support_x86_ssse3;
 static int g_cpu_support_x86_sse4_1;
@@ -170,6 +177,61 @@ static int g_cpu_is_arm_a53_a55;
 #endif // __aarch64__
 #endif // defined __ANDROID__ || defined __linux__
 
+static bool g_is_being_debugged = false;
+static bool is_being_debugged()
+{
+#if defined _WIN32
+    return IsDebuggerPresent();
+#elif defined __ANDROID__ || defined __linux__
+    // https://stackoverflow.com/questions/3596781/how-to-detect-if-the-current-process-is-being-run-by-gdb
+    int status_fd = open("/proc/self/status", O_RDONLY);
+    if (status_fd == -1)
+        return false;
+
+    char buf[4096];
+    ssize_t num_read = read(status_fd, buf, sizeof(buf) - 1);
+    close(status_fd);
+
+    if (num_read <= 0)
+        return false;
+
+    buf[num_read] = '\0';
+    const char tracerPidString[] = "TracerPid:";
+    const char* tracer_pid_ptr = strstr(buf, tracerPidString);
+    if (!tracer_pid_ptr)
+        return false;
+
+    for (const char* ch = tracer_pid_ptr + sizeof(tracerPidString) - 1; ch <= buf + num_read; ++ch)
+    {
+        if (isspace(*ch))
+            continue;
+
+        return isdigit(*ch) != 0 && *ch != '0';
+    }
+
+    return false;
+#elif defined __APPLE__
+    // https://stackoverflow.com/questions/2200277/detecting-debugger-on-mac-os-x
+    struct kinfo_proc info;
+    info.kp_proc.p_flag = 0;
+
+    int mib[4];
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROC;
+    mib[2] = KERN_PROC_PID;
+    mib[3] = getpid();
+
+    size_t size = sizeof(info);
+    sysctl(mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0);
+
+    return ((info.kp_proc.p_flag & P_TRACED) != 0);
+#else
+    // unknown platform :(
+    fprintf(stderr, "unknown platform!\n");
+    return false;
+#endif
+}
+
 #if defined _WIN32
 static int g_sigill_caught = 0;
 static jmp_buf g_jmpbuf;
@@ -187,6 +249,9 @@ static LONG CALLBACK catch_sigill(struct _EXCEPTION_POINTERS* ExceptionInfo)
 
 static int detectisa(const void* some_inst)
 {
+    if (g_is_being_debugged)
+        return 0;
+
     g_sigill_caught = 0;
 
     PVOID eh = AddVectoredExceptionHandler(1, catch_sigill);
@@ -233,6 +298,9 @@ static void catch_sigill(int /*signo*/, siginfo_t* /*si*/, void* /*data*/)
 
 static int detectisa(void (*some_inst)())
 {
+    if (g_is_being_debugged)
+        return 0;
+
     g_sigill_caught = 0;
 
     struct sigaction sa;
@@ -586,6 +654,54 @@ static inline int x86_get_xcr0()
     fprintf(stderr, "x86_get_xcr0 is unknown for current compiler");
     return 0xffffffff; // assume it will work
 #endif
+}
+
+static int get_cpu_support_x86_mmx()
+{
+    unsigned int cpu_info[4] = {0};
+    x86_cpuid(0, cpu_info);
+
+    int nIds = cpu_info[0];
+    if (nIds < 1)
+        return 0;
+
+    x86_cpuid(1, cpu_info);
+    if (!(cpu_info[3] & (1u << 23)))
+        return 0;
+
+    return 1;
+}
+
+static int get_cpu_support_x86_sse()
+{
+    unsigned int cpu_info[4] = {0};
+    x86_cpuid(0, cpu_info);
+
+    int nIds = cpu_info[0];
+    if (nIds < 1)
+        return 0;
+
+    x86_cpuid(1, cpu_info);
+    if (!(cpu_info[3] & (1u << 25)))
+        return 0;
+
+    return 1;
+}
+
+static int get_cpu_support_x86_sse2()
+{
+    unsigned int cpu_info[4] = {0};
+    x86_cpuid(0, cpu_info);
+
+    int nIds = cpu_info[0];
+    if (nIds < 1)
+        return 0;
+
+    x86_cpuid(1, cpu_info);
+    if (!(cpu_info[3] & (1u << 26)))
+        return 0;
+
+    return 1;
 }
 
 static int get_cpu_support_x86_sse3()
@@ -2018,6 +2134,8 @@ static void initialize_global_cpu_info()
     g_powersave = 0;
     initialize_cpu_thread_affinity_mask(g_cpu_affinity_mask_all, g_cpu_affinity_mask_little, g_cpu_affinity_mask_big);
 
+    g_is_being_debugged = is_being_debugged();
+
 #if defined _WIN32
 #if __arm__
     g_cpu_support_arm_neon = detectisa(some_neon);
@@ -2055,6 +2173,13 @@ static void initialize_global_cpu_info()
 #endif
 
 #if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
+    g_cpu_support_x86_mmx = get_cpu_support_x86_mmx();
+    g_cpu_support_x86_sse = get_cpu_support_x86_sse();
+    g_cpu_support_x86_sse2 = get_cpu_support_x86_sse2();
+    g_cpu_support_x86_sse3 = get_cpu_support_x86_sse3();
+    g_cpu_support_x86_ssse3 = get_cpu_support_x86_ssse3();
+    g_cpu_support_x86_sse4_1 = get_cpu_support_x86_sse4_1();
+    g_cpu_support_x86_sse4_2 = get_cpu_support_x86_sse4_2();
     g_cpu_support_x86_avx = get_cpu_support_x86_avx();
     g_cpu_support_x86_fma = get_cpu_support_x86_fma();
     g_cpu_support_x86_xop = get_cpu_support_x86_xop();
@@ -2518,6 +2643,36 @@ int cpu_support_arm_svef32mm()
 #endif
 }
 
+int cpu_support_x86_mmx()
+{
+    try_initialize_global_cpu_info();
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
+    return g_cpu_support_x86_mmx;
+#else
+    return 0;
+#endif
+}
+
+int cpu_support_x86_sse()
+{
+    try_initialize_global_cpu_info();
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
+    return g_cpu_support_x86_sse;
+#else
+    return 0;
+#endif
+}
+
+
+int cpu_support_x86_sse2()
+{
+    try_initialize_global_cpu_info();
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
+    return g_cpu_support_x86_sse2;
+#else
+    return 0;
+#endif
+}
 
 int cpu_support_x86_sse3()
 {
@@ -3078,6 +3233,9 @@ void CPUInfo()
 #if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
     ImGui::TextUnformatted("X86:");
     ImGui::Indent();
+    bool x86_mmx = ImGui::cpu_support_x86_mmx();
+    bool x86_sse = ImGui::cpu_support_x86_sse();
+    bool x86_sse2 = ImGui::cpu_support_x86_sse2();
     bool x86_sse3 = ImGui::cpu_support_x86_sse3();
     bool x86_ssse3 = ImGui::cpu_support_x86_ssse3();
     bool x86_sse41 = ImGui::cpu_support_x86_sse41();
@@ -3092,6 +3250,9 @@ void CPUInfo()
     bool x86_avx512_vnni = ImGui::cpu_support_x86_avx512_vnni();
     bool x86_avx512_bf16 = ImGui::cpu_support_x86_avx512_bf16();
     bool x86_avx512_fp16 = ImGui::cpu_support_x86_avx512_fp16();
+    ImGui::Checkbox("MMX", &x86_mmx);
+    ImGui::Checkbox("SSE", &x86_sse);
+    ImGui::Checkbox("SSE2", &x86_sse2);
     ImGui::Checkbox("SSE3", &x86_sse3);
     ImGui::Checkbox("SSSE3", &x86_ssse3);
     ImGui::Checkbox("SSE4.1", &x86_sse41);
