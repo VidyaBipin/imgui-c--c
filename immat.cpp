@@ -449,6 +449,46 @@ void ImMat::draw_circle(ImPoint p, float r, ImPixel color)
     draw_circle(p.x, p.y, r, color);
 }
 
+void ImMat::draw_circle_filled(float x, float y, float r, ImPixel color)
+{
+    // Bresenham circle
+    int tx = 0, ty = r, d = 3 - 2 * r, i;
+	while( tx < ty)
+	{
+		for (i = x - ty; i <= x + ty; i++)
+		{
+			set_pixel(i, y - tx, color);
+			if (tx != 0) set_pixel(i, y + tx, color);
+		}
+
+		if (d < 0) d += 4 * tx + 6;
+		else
+		{
+			for (i = x - tx; i <= x + tx; i++)
+			{
+				set_pixel(i, y - ty, color);
+				set_pixel(i, y + ty, color);
+			}
+			d += 4 * (tx - ty) + 10, ty--;
+		}
+		tx++;
+	}
+
+	if (tx == ty)
+    {
+		for (i = x - ty; i <= x + ty; i++)
+		{
+			set_pixel(i, y - tx, color);
+			set_pixel(i, y + tx, color);
+		}
+    }
+}
+
+void ImMat::draw_circle_filled(ImPoint p, float r, ImPixel color)
+{
+    draw_circle_filled(p.x, p.y, r, color);
+}
+
 void ImMat::draw_circle(float x1, float y1, float r, float t, ImPixel color)
 {
     float perimeter = 2 * M_PI * r;

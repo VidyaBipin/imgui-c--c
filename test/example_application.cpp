@@ -191,15 +191,6 @@ class Example
 public:
     Example() 
     {
-        // load file dialog resource
-#ifdef DEFAULT_CONFIG_PATH
-        std::string bookmark_path = std::string(DEFAULT_CONFIG_PATH) + "bookmark.ini";
-#else
-        std::string bookmark_path = "bookmark.ini";
-#endif
-
-        prepare_file_dialog_demo_window(&filedialog, bookmark_path.c_str());
-
         // init memory edit
         mem_edit.Open = false;
         mem_edit.OptShowDataPreview = true;
@@ -263,13 +254,6 @@ public:
         if (data)
             free(data); 
         ImGui::ReleaseTabWindow();
-        // Store file dialog bookmark
-#ifdef DEFAULT_CONFIG_PATH
-        std::string bookmark_path = std::string(DEFAULT_CONFIG_PATH) + "bookmark.ini";
-#else
-        std::string bookmark_path = "bookmark.ini";
-#endif
-        end_file_dialog_demo_window(&filedialog, bookmark_path.c_str());
         if (ImageTexture) { ImGui::ImDestroyTexture(ImageTexture); ImageTexture = 0; }
         if (DrawMatTexture) { ImGui::ImDestroyTexture(DrawMatTexture); DrawMatTexture = 0; }
         if (CustomDrawTexture) { ImGui::ImDestroyTexture(CustomDrawTexture); CustomDrawTexture = 0; }
@@ -292,9 +276,6 @@ public:
     }
 
 public:
-    // init file dialog
-    ImGuiFileDialog filedialog;
-
     // init memory edit
     MemoryEditor mem_edit;
     void* data = nullptr;
@@ -949,7 +930,7 @@ void Example_Initialize(void** handle)
     Example * example = (Example *)*handle;
     ImPlot::CreateContext();
 #ifdef USE_THUMBNAILS
-    example->filedialog.SetCreateThumbnailCallback([](IGFD_Thumbnail_Info *vThumbnail_Info) -> void
+    ImGuiFileDialog::Instance()->SetCreateThumbnailCallback([](IGFD_Thumbnail_Info *vThumbnail_Info) -> void
     {
         if (vThumbnail_Info && 
             vThumbnail_Info->isReadyToUpload && 
@@ -965,7 +946,7 @@ void Example_Initialize(void** handle)
             std::cout << "Thumbnail create texture" << std::endl;
         }
     });
-    example->filedialog.SetDestroyThumbnailCallback([](IGFD_Thumbnail_Info* vThumbnail_Info)
+    ImGuiFileDialog::Instance()->SetDestroyThumbnailCallback([](IGFD_Thumbnail_Info* vThumbnail_Info)
     {
         if (vThumbnail_Info && vThumbnail_Info->textureID)
         {
@@ -996,6 +977,11 @@ bool Example_Frame(void* handle, bool app_will_quit)
     Example * example = (Example *)handle;
     if (!example)
         return true;
+
+#ifdef USE_THUMBNAILS
+	ImGuiFileDialog::Instance()->ManageGPUThumbnails();
+#endif
+
     if (!example->ImageTexture) 
     {
         example->ImageTexture = ImGui::ImCreateTexture(example->image.data, example->image.w, example->image.h, example->image.c);
@@ -1132,7 +1118,7 @@ bool Example_Frame(void* handle, bool app_will_quit)
     // Show FileDialog demo window
     if (example->show_file_dialog_window)
     {
-        show_file_dialog_demo_window(&example->filedialog, &example->show_file_dialog_window);
+        show_file_dialog_demo_window(&example->show_file_dialog_window);
     }
 
     // Show Portable File Dialogs
@@ -1490,6 +1476,36 @@ bool Example_Splash_Screen(void* handle, bool app_will_quit)
     return true;
 }
 
+static void Example_SetupContext(ImGuiContext* ctx, void* handle, bool in_splash)
+{
+    if (!ctx)
+        return;
+#ifdef USE_BOOKMARK
+    ImGuiSettingsHandler bookmark_ini_handler;
+    bookmark_ini_handler.TypeName = "BookMark";
+    bookmark_ini_handler.TypeHash = ImHashStr("BookMark");
+    bookmark_ini_handler.ReadOpenFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, const char* name) -> void*
+    {
+        return ImGuiFileDialog::Instance();
+    };
+    bookmark_ini_handler.ReadLineFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, void* entry, const char* line) -> void
+    {
+        IGFD::FileDialog * dialog = (IGFD::FileDialog *)entry;
+        if (dialog) dialog->DeserializeBookmarks(line);
+    };
+    bookmark_ini_handler.WriteAllFn = [](ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* out_buf)
+    {
+        ImGuiContext& g = *ctx;
+        out_buf->reserve(out_buf->size() + g.SettingsWindows.size() * 6); // ballpark reserve
+        auto bookmark = ImGuiFileDialog::Instance()->SerializeBookmarks();
+        out_buf->appendf("[%s][##%s]\n", handler->TypeName, handler->TypeName);
+        out_buf->appendf("%s\n", bookmark.c_str());
+        out_buf->append("\n");
+    };
+    ctx->SettingsHandlers.push_back(bookmark_ini_handler);
+#endif
+}
+
 void Application_Setup(ApplicationWindowProperty& property)
 {
     property.name = "Application_Example";
@@ -1497,6 +1513,7 @@ void Application_Setup(ApplicationWindowProperty& property)
     property.splash_screen_width = 600;
     property.splash_screen_height = 300;
     property.splash_screen_alpha = 0.9;
+    property.application.Application_SetupContext = Example_SetupContext;
     property.application.Application_Initialize = Example_Initialize;
     property.application.Application_Finalize = Example_Finalize;
     property.application.Application_Frame = Example_Frame;

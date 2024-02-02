@@ -755,6 +755,8 @@ public:
     IMGUI_API void draw_rectangle(ImPoint p1, ImPoint p2, float t, ImPixel color);
     IMGUI_API void draw_circle(float x, float y, float r, ImPixel color);
     IMGUI_API void draw_circle(ImPoint p, float r, ImPixel color);
+    IMGUI_API void draw_circle_filled(float x, float y, float r, ImPixel color);
+    IMGUI_API void draw_circle_filled(ImPoint p, float r, ImPixel color);
     IMGUI_API void draw_circle(float x, float y, float r, float t, ImPixel color);
     IMGUI_API void draw_circle(ImPoint p, float r, float t, ImPixel color);
     IMGUI_API void draw_circle(float x, float y, float r, float t, std::function<ImPixel(float)> const &color);

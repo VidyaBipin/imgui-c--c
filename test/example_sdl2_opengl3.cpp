@@ -191,15 +191,6 @@ int main(int, char**)
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    // load file dialog resource
-    ImGuiFileDialog filedialog;
-#ifdef DEFAULT_CONFIG_PATH
-    std::string bookmark_path = std::string(DEFAULT_CONFIG_PATH) + "bookmark.ini";
-#else
-    std::string bookmark_path = "bookmark.ini";
-#endif
-    prepare_file_dialog_demo_window(&filedialog, bookmark_path.c_str());
-
     // init memory edit
     MemoryEditor mem_edit;
     mem_edit.Open = false;
@@ -320,7 +311,7 @@ int main(int, char**)
         // Show FileDialog demo window
         if (show_file_dialog_window)
         {
-            show_file_dialog_demo_window(&filedialog, &show_file_dialog_window);
+            show_file_dialog_demo_window(&show_file_dialog_window);
         }
 
         // Show Memory Edit window
@@ -376,9 +367,6 @@ int main(int, char**)
     // Cleanup memory edit resource
     if (data)
         free(data);
-
-    // Store file dialog bookmark
-    end_file_dialog_demo_window(&filedialog, bookmark_path.c_str());
 
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
