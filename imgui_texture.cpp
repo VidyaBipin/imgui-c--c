@@ -947,12 +947,13 @@ void ImTextureToMat(ImTextureID texture, ImGui::ImMat& mat, ImVec2 offset, ImVec
 void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTextureID texture2, ImVec2 pos, ImVec2 size, float& split, bool horizontal, float zoom_size, float* offset_x, float* offset_y, float* tf_x, float* tf_y, bool bLandscape, bool out_border)
 {
     ImGuiIO& io = ImGui::GetIO();
-    if (!texture1 || !texture2)
+    float img_split = split;
+    if (!texture1 && !texture2)
     {
         return;
     }
-    float texture_width = ImGui::ImGetTextureWidth(texture1);
-    float texture_height = ImGui::ImGetTextureHeight(texture1);
+    float texture_width = texture1 ? ImGui::ImGetTextureWidth(texture1) : size.x;
+    float texture_height = texture1 ? ImGui::ImGetTextureHeight(texture1) : size.y;
     float aspectRatioTexture = texture_width / texture_height;
     float aspectRatioView = size.x / size.y;
     bool bTextureisLandscape = aspectRatioTexture > 1.f ? true : false;
@@ -985,75 +986,91 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
     float _tf_y = (size.y - adj_h) / 2.0;
     float _offset_x = pos.x + _tf_x;
     float _offset_y = pos.y + _tf_y;
-
+    if (!texture1 || !texture2)
+    {
+        if (!texture1) img_split = 0.f;
+        else img_split = 1.0f;
+    }
     if (horizontal)
     {
-        draw_list->AddImage(
+        if (texture1)
+            draw_list->AddImage(
                             texture1,
                             ImVec2(_offset_x, _offset_y),
-                            ImVec2(_offset_x + adj_w * split, _offset_y + adj_h),
+                            ImVec2(_offset_x + adj_w * img_split, _offset_y + adj_h),
                             ImVec2(0, 0),
-                            ImVec2(split, 1)
+                            ImVec2(img_split, 1)
                             );
-        draw_list->AddImage(
+        if (texture2)
+            draw_list->AddImage(
                             texture2,
-                            ImVec2(_offset_x + adj_w * split, _offset_y),
+                            ImVec2(_offset_x + adj_w * img_split, _offset_y),
                             ImVec2(_offset_x + adj_w, _offset_y + adj_h),
-                            ImVec2(split, 0),
+                            ImVec2(img_split, 0),
                             ImVec2(1, 1)
                             );
-        draw_list->AddLine(ImVec2(_offset_x + adj_w * split, _offset_y), ImVec2(_offset_x + adj_w * split, _offset_y + adj_h / 2 - 32), IM_COL32_ALPHA(IM_COL32_WHITE, 192));
-        draw_list->AddLine(ImVec2(_offset_x + adj_w * split, _offset_y + adj_h / 2 + 32), ImVec2(_offset_x + adj_w * split, _offset_y + adj_h), IM_COL32_ALPHA(IM_COL32_WHITE, 192));
-        ImRect handle(ImVec2(_offset_x + adj_w * split - 6, _offset_y + adj_h / 2 - 32), ImVec2(_offset_x + adj_w * split + 6, _offset_y + adj_h / 2 + 32));
-        draw_list->AddRectFilled(handle.Min, handle.Max, IM_COL32_ALPHA(IM_COL32_WHITE, 96), 4);
-        for (int i = 2; i < 10; i+=2)
+        if (texture1 && texture2)
         {
-            draw_list->AddLine(handle.Min + ImVec2(i+1, 4), handle.Min + ImVec2(i+1, 60), IM_COL32_ALPHA(IM_COL32_WHITE, 224));
-            draw_list->AddLine(handle.Min + ImVec2(i+2, 4), handle.Min + ImVec2(i+2, 60), IM_COL32_ALPHA(IM_COL32_BLACK, 192));
-        }
-        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || handle.Contains(io.MousePos))
-        {
-            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-        }
-        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || (handle.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left)))
-        {
-            auto _split = (io.MousePos.x - _offset_x) / adj_w;
-            split = ImClamp(_split, 0.f, 1.f);
+            draw_list->AddLine(ImVec2(_offset_x + adj_w * img_split, _offset_y), ImVec2(_offset_x + adj_w * img_split, _offset_y + adj_h / 2 - 32), IM_COL32_ALPHA(IM_COL32_WHITE, 192));
+            draw_list->AddLine(ImVec2(_offset_x + adj_w * img_split, _offset_y + adj_h / 2 + 32), ImVec2(_offset_x + adj_w * img_split, _offset_y + adj_h), IM_COL32_ALPHA(IM_COL32_WHITE, 192));
+            ImRect handle(ImVec2(_offset_x + adj_w * img_split - 6, _offset_y + adj_h / 2 - 32), ImVec2(_offset_x + adj_w * img_split + 6, _offset_y + adj_h / 2 + 32));
+            draw_list->AddRectFilled(handle.Min, handle.Max, IM_COL32_ALPHA(IM_COL32_WHITE, 96), 4);
+            for (int i = 2; i < 10; i+=2)
+            {
+                draw_list->AddLine(handle.Min + ImVec2(i+1, 4), handle.Min + ImVec2(i+1, 60), IM_COL32_ALPHA(IM_COL32_WHITE, 224));
+                draw_list->AddLine(handle.Min + ImVec2(i+2, 4), handle.Min + ImVec2(i+2, 60), IM_COL32_ALPHA(IM_COL32_BLACK, 192));
+            }
+            if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || handle.Contains(io.MousePos))
+            {
+                ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+            }
+            if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || (handle.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left)))
+            {
+                auto _split = (io.MousePos.x - _offset_x) / adj_w;
+                img_split = ImClamp(_split, 0.f, 1.f);
+                split = img_split;
+            }
         }
     }
     else
     {
-        draw_list->AddImage(
+        if (texture1)
+            draw_list->AddImage(
                             texture1,
                             ImVec2(_offset_x, _offset_y),
-                            ImVec2(_offset_x + adj_w, _offset_y + adj_h * split),
+                            ImVec2(_offset_x + adj_w, _offset_y + adj_h * img_split),
                             ImVec2(0, 0),
-                            ImVec2(1, split)
+                            ImVec2(1, img_split)
                             );
-        draw_list->AddImage(
+        if (texture2)
+            draw_list->AddImage(
                             texture2,
-                            ImVec2(_offset_x, _offset_y + adj_h * split),
+                            ImVec2(_offset_x, _offset_y + adj_h * img_split),
                             ImVec2(_offset_x + adj_w, _offset_y + adj_h),
-                            ImVec2(0, split),
+                            ImVec2(0, img_split),
                             ImVec2(1, 1)
                             );
-        draw_list->AddLine(ImVec2(_offset_x, _offset_y + adj_h * split), ImVec2(_offset_x + adj_w / 2 - 32, _offset_y + adj_h * split), IM_COL32_ALPHA(IM_COL32_WHITE, 192));
-        draw_list->AddLine(ImVec2(_offset_x + adj_w / 2 + 32, _offset_y + adj_h * split), ImVec2(_offset_x + adj_w, _offset_y + adj_h * split), IM_COL32_ALPHA(IM_COL32_WHITE, 192));
-        ImRect handle(ImVec2(_offset_x + adj_w / 2 - 32, _offset_y + adj_h *split - 6), ImVec2(_offset_x + adj_w / 2 + 32, _offset_y + adj_h * split + 6));
-        draw_list->AddRectFilled(handle.Min, handle.Max, IM_COL32_ALPHA(IM_COL32_WHITE, 96), 4);
-        for (int i = 2; i < 10; i+=2)
+        if (texture1 && texture2)
         {
-            draw_list->AddLine(handle.Min + ImVec2(4, i+1), handle.Min + ImVec2(60, i+1), IM_COL32_ALPHA(IM_COL32_WHITE, 224));
-            draw_list->AddLine(handle.Min + ImVec2(4, i+2), handle.Min + ImVec2(60, i+2), IM_COL32_ALPHA(IM_COL32_BLACK, 192));
-        }
-        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || handle.Contains(io.MousePos))
-        {
-            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
-        }
-        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || (handle.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left)))
-        {
-            auto _split = (io.MousePos.y - _offset_y) / adj_h;
-            split = ImClamp(_split, 0.f, 1.f);
+            draw_list->AddLine(ImVec2(_offset_x, _offset_y + adj_h * img_split), ImVec2(_offset_x + adj_w / 2 - 32, _offset_y + adj_h * img_split), IM_COL32_ALPHA(IM_COL32_WHITE, 192));
+            draw_list->AddLine(ImVec2(_offset_x + adj_w / 2 + 32, _offset_y + adj_h * img_split), ImVec2(_offset_x + adj_w, _offset_y + adj_h * img_split), IM_COL32_ALPHA(IM_COL32_WHITE, 192));
+            ImRect handle(ImVec2(_offset_x + adj_w / 2 - 32, _offset_y + adj_h *img_split - 6), ImVec2(_offset_x + adj_w / 2 + 32, _offset_y + adj_h * img_split + 6));
+            draw_list->AddRectFilled(handle.Min, handle.Max, IM_COL32_ALPHA(IM_COL32_WHITE, 96), 4);
+            for (int i = 2; i < 10; i+=2)
+            {
+                draw_list->AddLine(handle.Min + ImVec2(4, i+1), handle.Min + ImVec2(60, i+1), IM_COL32_ALPHA(IM_COL32_WHITE, 224));
+                draw_list->AddLine(handle.Min + ImVec2(4, i+2), handle.Min + ImVec2(60, i+2), IM_COL32_ALPHA(IM_COL32_BLACK, 192));
+            }
+            if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || handle.Contains(io.MousePos))
+            {
+                ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+            }
+            if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || (handle.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left)))
+            {
+                auto _split = (io.MousePos.y - _offset_y) / adj_h;
+                img_split = ImClamp(_split, 0.f, 1.f);
+                split = img_split;
+            }
         }
     }
 
@@ -1087,9 +1104,9 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
             ImGui::Text("(%.2fx)", texture_zoom);
             ImVec2 uv0 = ImVec2((region_x) / texture_width, (region_y) / texture_height);
             ImVec2 uv1 = ImVec2((region_x + region_sz) / texture_width, (region_y + region_sz) / texture_height);
-            ImGui::Image(texture1, ImVec2(region_sz * texture_zoom, region_sz * texture_zoom), uv0, uv1);
+            if (texture1) ImGui::Image(texture1, ImVec2(region_sz * texture_zoom, region_sz * texture_zoom), uv0, uv1);
             ImGui::SameLine();
-            ImGui::Image(texture2, ImVec2(region_sz * texture_zoom, region_sz * texture_zoom), uv0, uv1);
+            if (texture2) ImGui::Image(texture2, ImVec2(region_sz * texture_zoom, region_sz * texture_zoom), uv0, uv1);
             ImGui::EndTooltip();
         }
         if (io.MouseWheel < -FLT_EPSILON)
