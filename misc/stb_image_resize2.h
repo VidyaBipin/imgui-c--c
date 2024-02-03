@@ -372,6 +372,7 @@ typedef uint64_t stbir_uint64;
 #endif
 #endif
 
+#if !defined(__EMSCRIPTEN__) // add by Dicky
 #if defined(_x86_64) || defined( __x86_64__ ) || defined( _M_X64 ) || defined(__x86_64) || defined(_M_AMD64) || defined(__SSE2__) || defined(STBIR_SSE) || defined(STBIR_SSE2)
   #ifndef STBIR_SSE2
     #define STBIR_SSE2
@@ -413,6 +414,7 @@ typedef uint64_t stbir_uint64;
 #undef STBIR_USE_FMA // no FMA for 32-bit arm on MSVC
 #endif
 #endif
+#endif // !defined(__EMSCRIPTEN__) // add by Dicky
 
 #if defined(__wasm__) && defined(__wasm_simd128__)
 #ifndef STBIR_WASM

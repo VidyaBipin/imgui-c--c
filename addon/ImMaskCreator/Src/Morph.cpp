@@ -13,9 +13,8 @@
 #include "Morph.h"
 #include "MatFilter.h"
 
-#include "SimdOpt.h"
 #if SIMD_ARCH_X86
-
+#include "SimdOpt.h"
 #define INTRIN_MODE AVX2
 #undef USE_AVX2
 #define USE_AVX2
@@ -54,9 +53,11 @@
 
 #endif // ~SIMD_ARCH_X86
 
+#if !defined(__EMSCRIPTEN__)
 #define INTRIN_MODE NONE
 #include "Morph.Simd.h"
 #undef INTRIN_MODE
+#endif
 
 using namespace std;
 using namespace MathUtils;
@@ -211,10 +212,12 @@ RowFilter::Holder GetMorphologyRowFilter(int op, ImDataType type, int ksize, int
         }
         else
 #endif // ~SIMD_ARCH_X86
+#if !defined(__EMSCRIPTEN__)
         {
             using namespace SimdOpt::NONE;
             GET_SIMD_ERODE_ROW_FILTER(type, ksize, anchor);
         }
+#endif
     }
     else
     {
@@ -288,10 +291,12 @@ RowFilter::Holder GetMorphologyRowFilter(int op, ImDataType type, int ksize, int
         }
         else
 #endif // ~SIMD_ARCH_X86
+#if !defined(__EMSCRIPTEN__)
         {
             using namespace SimdOpt::NONE;
             GET_SIMD_DILATE_ROW_FILTER(type, ksize, anchor);
         }
+#endif
     }
     return nullptr;
 }
@@ -373,10 +378,12 @@ ColumnFilter::Holder GetMorphologyColumnFilter(int op, ImDataType type, int ksiz
         }
         else
 #endif
+#if !defined(__EMSCRIPTEN__)
         {
             using namespace SimdOpt::NONE;
             GET_SIMD_ERODE_COLUMN_FILTER(type, ksize, anchor);
         }
+#endif
     }
     else
     {
@@ -450,10 +457,12 @@ ColumnFilter::Holder GetMorphologyColumnFilter(int op, ImDataType type, int ksiz
         }
         else
 #endif
+#if !defined(__EMSCRIPTEN__)
         {
             using namespace SimdOpt::NONE;
             GET_SIMD_DILATE_COLUMN_FILTER(type, ksize, anchor);
         }
+#endif
     }
     return nullptr;
 }
@@ -532,10 +541,12 @@ MatFilter::Holder GetMorphologyMatFilter(int op, ImDataType type, const ImGui::I
         }
         else
 #endif
+#if !defined(__EMSCRIPTEN__)
         {
             using namespace SimdOpt::NONE;
             GET_SIMD_ERODE_MAT_FILTER(_kernel, _anchor);
         }
+#endif
     }
     else
     {
@@ -609,10 +620,12 @@ MatFilter::Holder GetMorphologyMatFilter(int op, ImDataType type, const ImGui::I
         }
         else
 #endif
+#if !defined(__EMSCRIPTEN__)
         {
             using namespace SimdOpt::NONE;
             GET_SIMD_DILATE_MAT_FILTER(_kernel, _anchor);
         }
+#endif
     }
     return nullptr;
 }

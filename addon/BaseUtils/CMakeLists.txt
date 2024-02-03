@@ -3,6 +3,10 @@ project(BaseUtils VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+set(BaseUtils_STATIC ON)
+endif()
+
 if(NOT DEFINED BaseUtils_STATIC)
 option(BaseUtils_STATIC             "Build BaseUtils as static library" OFF)
 endif()
@@ -37,10 +41,12 @@ target_include_directories(BaseUtils PRIVATE
     ${LIB_SRC_DIR}
 )
 
+if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 if(SIMD_ARCH_X86)
 target_compile_definitions(BaseUtils PUBLIC SIMD_ARCH_X86)
 target_compile_options(BaseUtils PUBLIC -mavx2 -mavx -msse4.2 -msse4.1 -mssse3 -msse3 -msse2 -msse -mfma -mf16c)
 endif(SIMD_ARCH_X86)
+endif()
 
 if(!BaseUtils_STATIC)
 target_compile_definitions(BaseUtils PUBLIC BaseUtils_SHARED)
