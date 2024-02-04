@@ -19,6 +19,8 @@
 #elif __SSE__
 #define IM_MALLOC_ALIGN 16
 #include <immintrin.h>
+#elif __SSE4_1__
+#define IM_MALLOC_ALIGN 16
 #include <smmintrin.h>
 #elif __ARM_NEON
 #define IM_MALLOC_ALIGN 16

@@ -22,7 +22,7 @@
 
 // This example can also compile and run with Emscripten! See 'Makefile.emscripten' for details.
 #ifdef __EMSCRIPTEN__
-#include <emscripten/emscripten_mainloop_stub.h>
+#include "emscripten_mainloop_stub.h"
 #endif
 
 // Global WebGPU required states

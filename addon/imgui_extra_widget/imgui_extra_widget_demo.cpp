@@ -1203,7 +1203,11 @@ void ShowImFFTDemoWindow()
 
 void ShowImSTFTDemoWindow()
 {
-#define STFT_DATA_LENGTH (512*128)
+#if defined(__EMSCRIPTEN__)
+#define STFT_DATA_LENGTH (32*128)
+#else
+#define STFT_DATA_LENGTH (256*128)
+#endif
 #define STFT_SUB_LENGTH (STFT_DATA_LENGTH / 4)
     ImGuiIO &io = ImGui::GetIO();
     static float wave_scale = 1.0f;
@@ -1229,6 +1233,7 @@ void ShowImSTFTDemoWindow()
         spectrogram.release();
     }
     ImGui::PopItemWidth();
+
     // init time domain data
     switch (signal_type)
     {
@@ -1355,7 +1360,6 @@ void ShowImSTFTDemoWindow()
         process.istft((float *)short_time_domain.data, out_data);
         length += hope;
     }
-
     ImGui::BeginChild("STFT Result");
     // draw result
     ImVec2 channel_view_size = ImVec2(1024 * x_scale, 128);
@@ -1369,6 +1373,7 @@ void ShowImSTFTDemoWindow()
         ImPlot::PlotLine("##TimeDomain", (float *)time_domain.data, time_domain.w);
         ImPlot::EndPlot();
     }
+
     if (ImGui::IsItemHovered())
     {
         if (io.MouseWheel < -FLT_EPSILON) { wave_scale *= 0.9f; if (wave_scale < 0.1f) wave_scale = 0.1f; }
@@ -1420,6 +1425,7 @@ void ShowImSTFTDemoWindow()
         if (io.MouseWheelH >  FLT_EPSILON) { x_scale *= 1.1f; if (x_scale > 16.0f) x_scale = 16.0f; }
         if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) { wave_scale = 1.0; x_scale = 1.0; }
     }
+
     ImGui::PopStyleColor();
     ImGui::EndChild();
 }

@@ -260,7 +260,7 @@ public:
     bool show_coolbar_window = false;
     bool show_orient_widget = false;
 public:
-    void DrawLineDemo();
+    void DrawMatDemo();
     void DrawFishCircleDemo();
     void DrawRotateDemo();
     void WarpMatrixDemo();
@@ -392,7 +392,7 @@ void Example::ExampleMarkdownFormatCallback( const ImGui::MarkdownFormatInfo& ma
     }
 }
 
-void Example::DrawLineDemo()
+void Example::DrawMatDemo()
 {
     float t = (float)ImGui::GetTime();
     float h = abs(sin(t * 0.2));
@@ -1073,7 +1073,7 @@ bool Example_Frame(void* handle, bool app_will_quit)
     {
         ImGui::SetNextWindowSize(ImVec2(512, 512), ImGuiCond_FirstUseEver);
         ImGui::Begin("ImMat draw Demo", &example->show_mat_draw_window);
-        example->DrawLineDemo();
+        example->DrawMatDemo();
         ImGui::End();
     }
 
