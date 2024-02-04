@@ -1108,7 +1108,7 @@ public:
             for (const auto& cp : m_aRoutePointsForUi)
             {
                 for (auto i = 0; i < 3; i++)
-                    cp.m_ahCurves[i]->SetTimeRange(ImVec2(i64Start, i64End), true);
+                    cp.m_ahCurves[i]->SetTimeRange(ImVec2(i64Start, i64End));
             }
         }
         return true;

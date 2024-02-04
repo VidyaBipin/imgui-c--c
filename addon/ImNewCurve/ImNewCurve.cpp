@@ -637,7 +637,7 @@ KeyPoint::ValType Curve::CalcPointVal(float t, bool bAlignTime) const
     return res;
 }
 
-bool Curve::SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds)
+bool Curve::SetTimeRange(const ImVec2& v2TimeRange)
 {
     if (v2TimeRange.x >= v2TimeRange.y)
         return false;
@@ -723,6 +723,8 @@ bool Curve::PanKeyPoints(const KeyPoint::ValType& tOffset)
             if (tVal.z < m_tMinVal.z) tVal.z = m_tMinVal.z; else if (tVal.z > m_tMaxVal.z) tVal.z = m_tMaxVal.z;
         }
     }
+    for (const auto& pCb : m_aCallbacksArray)
+        pCb->OnPanKeyPoints(tOffset_);
     return true;
 }
 
@@ -1079,6 +1081,16 @@ void Editor::CurveUiObj::ScaleContour(const ImVec2& v2Scale)
     }
 }
 
+void Editor::CurveUiObj::PanContour(const ImVec2& v2Offset)
+{
+    for (auto& elem2 : m_aCpTable)
+    {
+        auto& aCps = elem2.second;
+        for (auto& v2Cp : aCps)
+            v2Cp += v2Offset;
+    }
+}
+
 void Editor::CurveUiObj::UpdateCurveAttributes()
 {
     const auto& tValRange = m_hCurve->GetValueRange();
@@ -1265,6 +1277,14 @@ void Editor::CurveUiObj::OnKeyPointRemoved(size_t szKpIdx, KeyPoint::Holder hKp)
 void Editor::CurveUiObj::OnKeyPointChanged(size_t szKpIdx, KeyPoint::Holder hKp)
 {
     UpdateContourPoints(szKpIdx);
+}
+
+void Editor::CurveUiObj::OnPanKeyPoints(const KeyPoint::ValType& tOffset)
+{
+    const ImVec2 v2DimOffset(tOffset.w, KeyPoint::GetDimVal(tOffset, m_eDim));
+    const auto v2NormedOffset = v2DimOffset/m_v2DimValRange;
+    const auto v2CpPanOffset = m_pOwner->CvtPoint2Pos(v2NormedOffset);
+    PanContour(v2CpPanOffset);
 }
 
 void Editor::CurveUiObj::OnContourNeedUpdate(size_t szKpIdx)

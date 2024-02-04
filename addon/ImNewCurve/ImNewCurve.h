@@ -200,7 +200,7 @@ namespace ImNewCurve
         virtual KeyPoint::Holder RemovePoint(float t);
         virtual void ClearAll();
         virtual float MoveVerticallyByDim(ValueDimension eDim, const ImVec2& v2SyncPoint);
-        virtual bool SetTimeRange(const ImVec2& v2TimeRange, bool bDockEnds);
+        virtual bool SetTimeRange(const ImVec2& v2TimeRange);
         virtual bool ScaleKeyPoints(const KeyPoint::ValType& tScale, const KeyPoint::ValType& tOrigin = KeyPoint::ValType(0, 0, 0, 0));
         virtual bool PanKeyPoints(const KeyPoint::ValType& tOffset);
 
@@ -215,6 +215,7 @@ namespace ImNewCurve
             virtual void OnKeyPointAdded(size_t szKpIdx, KeyPoint::Holder hKp) = 0;
             virtual void OnKeyPointRemoved(size_t szKpIdx, KeyPoint::Holder hKp) = 0;
             virtual void OnKeyPointChanged(size_t szKpIdx, KeyPoint::Holder hKp) = 0;
+            virtual void OnPanKeyPoints(const KeyPoint::ValType& tOffset) = 0;
             virtual void OnContourNeedUpdate(size_t szKpIdx) = 0;
         };
         void RigisterCallbacks(Callbacks* pCb);
@@ -296,6 +297,7 @@ namespace ImNewCurve
             bool CheckMouseHoverCurve(const ImVec2& v2MousePos) const;
             int CheckMouseHoverPoint(const ImVec2& v2MousePos) const;
             void ScaleContour(const ImVec2& v2Scale);
+            void PanContour(const ImVec2& v2Offset);
             void SetVisible(bool bVisible) { m_bVisible = bVisible; }
             bool IsVisible() const { return m_bVisible; }
             void SetRefreshContour() { m_bNeedRefreshContour = true; }
@@ -307,6 +309,7 @@ namespace ImNewCurve
             void OnKeyPointAdded(size_t szKpIdx, KeyPoint::Holder hKp) override;
             void OnKeyPointRemoved(size_t szKpIdx, KeyPoint::Holder hKp) override;
             void OnKeyPointChanged(size_t szKpIdx, KeyPoint::Holder hKp) override;
+            void OnPanKeyPoints(const KeyPoint::ValType& tOffset) override;
             void OnContourNeedUpdate(size_t szKpIdx) override;
 
         private:
