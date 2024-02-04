@@ -3,9 +3,16 @@
 #include <imgui_fft.h>
 #include <imgui_extra_widget.h>
 #include <implot.h>
-
+#if IMGUI_VULKAN_SHADER
+#include <ImVulkanShader.h>
+#endif
 #if !IMGUI_ICONS
 #define ICON_MD_WARNING "!"
+#define ICON_TRUE "T"
+#define ICON_FALSE "F"
+#else
+#define ICON_TRUE u8"\ue5ca"
+#define ICON_FALSE u8"\ue5cd"
 #endif
 
 namespace ImGui
@@ -1417,4 +1424,115 @@ void ShowImSTFTDemoWindow()
     ImGui::EndChild();
 }
 
+#if IMGUI_VULKAN_SHADER
+void  ImVulkanTestWindow(const char* name, bool* p_open, ImGuiWindowFlags flags)
+{
+    ImGui::Begin(name, p_open, flags);
+    static int loop_count = 200;
+    static int block_count = 20;
+    static int cmd_count = 1;
+    static float fp32[8] = {0.f};
+    static float fp32v4[8] = {0.f};
+    static float fp32v8[8] = {0.f};
+    static float fp16pv4[8] = {0.f};
+    static float fp16pv8[8] = {0.f};
+    static float fp16s[8] = {0.f};
+    static float fp16sv4[8] = {0.f};
+    static float fp16sv8[8] = {0.f};
+    int device_count = ImGui::get_gpu_count();
+    auto print_result = [](float gflops)
+    {
+        std::string result;
+        if (gflops == -1)
+            result = "  error";
+        if (gflops == -233)
+            result = "  not supported";
+        if (gflops == 0)
+            result = "  not tested";
+        if (gflops > 1000)
+            result = "  " + std::to_string(gflops / 1000.0) + " TFLOPS";
+        else
+            result = "  " + std::to_string(gflops) + " GFLOPS";
+        return result;
+    };
+    for (int i = 0; i < device_count; i++)
+    {
+        ImGui::VulkanDevice* vkdev = ImGui::get_gpu_device(i);
+        uint32_t driver_version = vkdev->info.driver_version();
+        uint32_t api_version = vkdev->info.api_version();
+        int device_type = vkdev->info.type();
+        std::string driver_ver = std::to_string(VK_VERSION_MAJOR(driver_version)) + "." + 
+                                std::to_string(VK_VERSION_MINOR(driver_version)) + "." +
+                                std::to_string(VK_VERSION_PATCH(driver_version));
+        std::string api_ver =   std::to_string(VK_VERSION_MAJOR(api_version)) + "." + 
+                                std::to_string(VK_VERSION_MINOR(api_version)) + "." +
+                                std::to_string(VK_VERSION_PATCH(api_version));
+        std::string device_name = vkdev->info.device_name();
+        uint32_t gpu_memory_budget = vkdev->get_heap_budget();
+        uint32_t gpu_memory_usage = vkdev->get_heap_usage();
+        ImGui::Text("Device[%d]", i);
+        ImGui::Text("Driver:%s", driver_ver.c_str());
+        ImGui::Text("   API:%s", api_ver.c_str());
+        ImGui::Text("  Name:%s", device_name.c_str());
+        ImGui::Text("Memory:%uMB/%uMB", gpu_memory_usage, gpu_memory_budget);
+        ImGui::Text("Device Type:%s", device_type == 0 ? "Discrete" : device_type == 1 ? "Integrated" : device_type == 2 ? "Virtual" : "CPU");
+        ImGui::PushID(i);
+        if (ImGui::TreeNode("GPU Caps"))
+        {
+            ImGui::Text("fp16 packed: %s", vkdev->info.support_fp16_packed() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("fp16 storage: %s", vkdev->info.support_fp16_storage() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("fp16 uniform: %s", vkdev->info.support_fp16_uniform() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("fp16 arithmetic: %s", vkdev->info.support_fp16_arithmetic() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("int8 packed: %s", vkdev->info.support_int8_packed() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("int8 storage: %s", vkdev->info.support_int8_storage() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("int8 uniform: %s", vkdev->info.support_int8_uniform() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("int8 arithmetic: %s", vkdev->info.support_int8_arithmetic() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Separator();
+            ImGui::Text("ycbcr conversion: %s", vkdev->info.support_ycbcr_conversion() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("cooperative matrix: %s", vkdev->info.support_cooperative_matrix() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("cooperative matrix 8/8/16: %s", vkdev->info.support_cooperative_matrix_8_8_16() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("cooperative matrix 16/8/8: %s", vkdev->info.support_cooperative_matrix_16_8_8() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("cooperative matrix 16/8/16: %s", vkdev->info.support_cooperative_matrix_16_8_16() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("cooperative matrix 16/16/16: %s", vkdev->info.support_cooperative_matrix_16_16_16() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Separator();
+            ImGui::Text("subgroup basic: %s", vkdev->info.support_subgroup_basic() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("subgroup vote: %s", vkdev->info.support_subgroup_vote() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("subgroup ballot: %s", vkdev->info.support_subgroup_ballot() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("subgroup shuffle: %s", vkdev->info.support_subgroup_shuffle() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Separator();
+            ImGui::Text("buggy storage buffer no l1: %s", vkdev->info.bug_storage_buffer_no_l1() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("buggy corrupted online pipeline cache: %s", vkdev->info.bug_corrupted_online_pipeline_cache() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("buggy buffer image load zero: %s", vkdev->info.bug_buffer_image_load_zero() ? ICON_TRUE : ICON_FALSE);
+            ImGui::Text("buggy implicit fp16 arithmetic: %s", vkdev->info.bug_implicit_fp16_arithmetic() ? ICON_TRUE : ICON_FALSE);
+            ImGui::TreePop();
+        }
+        ImGui::PopID();
+
+        std::string buffon_label = "Perf Test##" + std::to_string(i);
+        if (ImGui::Button(buffon_label.c_str(), ImVec2(120, 20)))
+        {
+            int _loop_count = device_type == 0 ? loop_count : loop_count / 5;
+            fp32[i]     = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 0, 0, 0);
+            fp32v4[i]   = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 0, 0, 1);
+            fp32v8[i]   = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 0, 0, 2);
+            fp16pv4[i]  = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 1, 1, 1);
+            fp16pv8[i]  = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 1, 1, 2);
+            fp16s[i]    = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 2, 1, 0);
+            fp16sv4[i]  = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 2, 1, 1);
+            fp16sv8[i]  = ImGui::ImVulkanPeak(vkdev, _loop_count, block_count, cmd_count, 2, 1, 2);
+        }
+        ImGui::Text(" FP32 Scalar :%s", print_result(fp32[i]).c_str());
+        ImGui::Text("   FP32 Vec4 :%s", print_result(fp32v4[i]).c_str());
+        ImGui::Text("   FP32 Vec8 :%s", print_result(fp32v8[i]).c_str());
+        ImGui::Text("  FP16p Vec4 :%s", print_result(fp16pv4[i]).c_str());
+        ImGui::Text("  FP16p Vec8 :%s", print_result(fp16pv8[i]).c_str());
+        ImGui::Text("FP16s Scalar :%s", print_result(fp16s[i]).c_str());
+        ImGui::Text("  FP16s Vec4 :%s", print_result(fp16sv4[i]).c_str());
+        ImGui::Text("  FP16s Vec8 :%s", print_result(fp16sv8[i]).c_str());
+        
+        ImGui::Separator();
+    }
+    ImGui::End();
+}
+#endif
 } // namespace ImGui

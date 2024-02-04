@@ -4,9 +4,8 @@
 #include "MathUtils.h"
 #include "MatMath.h"
 
-#include "SimdOpt.h"
 #if SIMD_ARCH_X86
-
+#include "SimdOpt.h"
 #define INTRIN_MODE AVX2
 #undef USE_AVX2
 #define USE_AVX2
@@ -45,9 +44,11 @@
 
 #endif // ~SIMD_ARCH_X86
 
+#if !defined(__EMSCRIPTEN__)
 #define INTRIN_MODE NONE
 #include "MatMath.Simd.h"
 #undef INTRIN_MODE
+#endif
 
 using namespace std;
 using namespace MathUtils;
@@ -128,11 +129,12 @@ void Max(ImGui::ImMat& dst, const ImGui::ImMat& src)
     }
     else
 #endif // ~SIMD_ARCH_X86
+#if !defined(__EMSCRIPTEN__)
     {
         using namespace SimdOpt::NONE;
         GET_MAT_MAX_OP(type);
     }
-
+#endif
     if (hOp2)
         (*hOp2)(src, dst, dst);
     else
@@ -203,11 +205,12 @@ void Copy(ImGui::ImMat& dst, const ImGui::ImMat& src)
     }
     else
 #endif // ~SIMD_ARCH_X86
+#if !defined(__EMSCRIPTEN__)
     {
         using namespace SimdOpt::NONE;
         GET_MAT_COPY_OP(srcType);
     }
-
+#endif
     if (hOp1)
         (*hOp1)(src, dst);
 }
@@ -275,10 +278,12 @@ void Convert(ImGui::ImMat& dst, const ImGui::ImMat& src, DataTypeConvType convTy
             }
             else
 #endif // ~SIMD_ARCH_X86
+#if !defined(__EMSCRIPTEN__)
             {
                 using namespace SimdOpt::NONE;
                 GET_MAT_CONV_TO_FLOAT_OP(srcType, dstType);
             }
+#endif
         }
         else if (convType == DataTypeConvType_Round)
         {
@@ -323,10 +328,12 @@ void Convert(ImGui::ImMat& dst, const ImGui::ImMat& src, DataTypeConvType convTy
             }
             else
 #endif // ~SIMD_ARCH_X86
+#if !defined(__EMSCRIPTEN__)
             {
                 using namespace SimdOpt::NONE;
                 GET_MAT_ROUND_OP(srcType, dstType);
             }
+#endif
         }
     }
     else if (srcElemSize < dstElemSize) // int->int or float->float, size expand
@@ -420,10 +427,12 @@ void Convert(ImGui::ImMat& dst, const ImGui::ImMat& src, DataTypeConvType convTy
         }
         else
 #endif // ~SIMD_ARCH_X86
+#if !defined(__EMSCRIPTEN__)
         {
             using namespace SimdOpt::NONE;
             GET_MAT_EXPAND_OP(srcType, dstType);
         }
+#endif
     }
     else // int->int or float->float, size pack
     {
@@ -510,10 +519,12 @@ void Convert(ImGui::ImMat& dst, const ImGui::ImMat& src, DataTypeConvType convTy
         }
         else
 #endif // ~SIMD_ARCH_X86
+#if !defined(__EMSCRIPTEN__)
         {
             using namespace SimdOpt::NONE;
             GET_MAT_PACK_OP(srcType, dstType);
         }
+#endif
     }
 
     if (hOp1)
@@ -591,10 +602,12 @@ void ConvertColorDepth(ImGui::ImMat& dst, const ImGui::ImMat& src)
         }
         else
 #endif // ~SIMD_ARCH_X86
+#if !defined(__EMSCRIPTEN__)
         {
             using namespace SimdOpt::NONE;
             GET_MAT_COLDEP_EXPAND_OP(srcType, dstType);
         }
+#endif
     }
     else if (dstElemSize < srcElemSize) // f32->u16, f32->u8, u16->u8
     {
@@ -657,10 +670,12 @@ void ConvertColorDepth(ImGui::ImMat& dst, const ImGui::ImMat& src)
         }
         else
 #endif // ~SIMD_ARCH_X86
+#if !defined(__EMSCRIPTEN__)
         {
             using namespace SimdOpt::NONE;
             GET_MAT_COLDEP_PACK_OP(srcType, dstType);
         }
+#endif
     }
     else
     {
@@ -750,10 +765,12 @@ void GrayToRgba(ImGui::ImMat& dst, const ImGui::ImMat& src, double alphaVal)
         }
         else
 #endif // ~SIMD_ARCH_X86
+#if !defined(__EMSCRIPTEN__)
         {
             using namespace SimdOpt::NONE;
             GET_MAT_GRAY_TO_RGBA_COPY_OP(srcType);
         }
+#endif
     }
     else if (dstElemSize < srcElemSize)
     {
@@ -808,10 +825,12 @@ void GrayToRgba(ImGui::ImMat& dst, const ImGui::ImMat& src, double alphaVal)
         }
         else
 #endif // ~SIMD_ARCH_X86
+#if !defined(__EMSCRIPTEN__)
         {
             using namespace SimdOpt::NONE;
             GET_MAT_GRAY_TO_RGBA_PACK_OP(srcType, dstType);
         }
+#endif
     }
     else
     {

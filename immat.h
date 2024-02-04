@@ -4448,12 +4448,12 @@ static inline __attribute__((unused)) void mmul_float16_neon(uint16_t* dst, cons
 #define mmul_double_simd     mmul_double_neon
 #define mmul_float16_simd    mmul_float16_neon
 #else
-static inline __attribute__((unused)) void mmul_int8_c(int8_t* dst, const int8_t* src1, const int8_t* src2, const size_t len)
+static inline __attribute__((unused)) void mmul_int8_c(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
 }
-static inline __attribute__((unused)) void mmul_int16_c(int16_t* dst, const int16_t* src1, const int16_t* src2, const size_t len)
+static inline __attribute__((unused)) void mmul_int16_c(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) * *(src2 + i);
