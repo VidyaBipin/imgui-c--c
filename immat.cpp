@@ -102,6 +102,10 @@ void ImMat::set_pixel(int x, int y, ImPixel color)
     assert(dims == 3 || dims == 2);
     x = std::max(0, std::min(x, w - 1));
     y = std::max(0, std::min(y, h - 1));
+    color.r = std::max(0.f, std::min(color.r, 1.f));
+    color.g = std::max(0.f, std::min(color.g, 1.f));
+    color.b = std::max(0.f, std::min(color.b, 1.f));
+    color.a = std::max(0.f, std::min(color.a, 1.f));
     if (dims == 3)
     {
         switch (type)
@@ -557,6 +561,84 @@ void ImMat::draw_circle(ImPoint p, float r, float t, std::function<ImPixel(float
     draw_circle(p.x, p.y, r, t, color);
 }
 
+ImMat ImMat::blur(int kernel_size, float sigma)
+{
+    assert(device == IM_DD_CPU);
+    assert(w > 0 && h > 0);
+    std::vector<std::vector<double>> kernel(kernel_size, std::vector<double>(kernel_size));
+    double sum = 0.0;
+    int halfSize = kernel_size / 2;
+    for (int i = -halfSize; i <= halfSize; i++) {
+        for (int j = -halfSize; j <= halfSize; j++) {
+            double exponent = -(i * i + j * j) / (2.0 * sigma * sigma);
+            double value = (1.0 / (2.0 * 3.14159 * sigma * sigma)) * exp(exponent);
+            kernel[i + halfSize][j + halfSize] = value;
+            sum += value;
+        }
+    }
+    // normaliza kernel
+    for (int i = 0; i < kernel_size; i++) {
+        for (int j = 0; j < kernel_size; j++) {
+            kernel[i][j] /= sum;
+        }
+    }
+
+    ImGui::ImMat dst;
+    dst.create_type(w, h, c, type);
+    dst.elempack = elempack;
+    //Gaussian blur
+    for (int i = 0; i < h; i++) {
+        for (int j = 0; j < w; j++) {
+            //double sum = 0.0;
+            ImPixel sum(0, 0, 0, 0);
+            for (int k = -halfSize; k <= halfSize; k++) {
+                for (int l = -halfSize; l <= halfSize; l++) {
+                    int rowIndex = std::min(std::max(i + k, 0), (int)h - 1);
+                    int colIndex = std::min(std::max(j + l, 0), (int)w - 1);
+
+                    double weight = kernel[k + halfSize][l + halfSize];
+                    auto p = get_pixel(colIndex, rowIndex);
+                    sum = sum + p * weight;
+                }
+            }
+            dst.set_pixel(j, i, sum);
+        }
+    }
+    return dst;
+}
+
+ImMat ImMat::adaptive_threshold(float maxValue, int kernel_size, float delta)
+{
+    assert(device == IM_DD_CPU);
+    assert(w > 0 && h > 0);
+    ImGui::ImMat dst;
+    dst.create_type(w, h, c, type);
+    dst.elempack = elempack;
+    maxValue = std::max(0.f, std::min(maxValue, 1.0f));
+    delta = std::max(0.f, std::min(delta, 1.0f));
+    ImMat mean = blur(kernel_size);
+    int idelta = std::ceil(delta * 255);
+    uint8_t tab[768];
+    for(int i = 0; i < 768; i++ )
+        tab[i] = (uint8_t)(i - 255 > -idelta ? maxValue * 255 : 0);
+
+    for(int i = 0; i < h; i++ )
+    {
+        for(int j = 0; j < w; j++ )
+        {
+            auto ps = get_pixel(j, i);
+            auto ms = mean.get_pixel(j, i);
+            ImPixel ds;
+            ds.r = tab[(int)(ps.r * 255 - ms.r * 255) + 255] / 255.f;
+            ds.g = tab[(int)(ps.g * 255 - ms.g * 255) + 255] / 255.f;
+            ds.b = tab[(int)(ps.b * 255 - ms.b * 255) + 255] / 255.f;
+            ds.a = ps.a;
+            dst.set_pixel(j, i, ds);
+        }
+    }
+    return dst;
+}
+
 ImMat ImMat::lowpass(float lambda)
 {
     assert(device == IM_DD_CPU);
@@ -829,6 +911,11 @@ ImMat ImMat::crop(ImPoint p1, ImPoint p2) const
         }
     }
     return dst;
+}
+
+ImMat ImMat::crop(ImBox box) const
+{
+    return crop(box.Min, box.Max);
 }
 
 ImMat ImMat::repeat(int nx, int ny)
@@ -1502,6 +1589,34 @@ ImMat getPerspectiveTransform(const ImPoint src[], const ImPoint dst[])
         a[i + 4][7] = -src[i].y * dst[i].y;
         b[i] = dst[i].x;
         b[i + 4] = dst[i].y;
+    }
+    ImGui::ImMat A, B;
+    A.create_type(8, 8, a, IM_DT_FLOAT32);
+    B.create_type(1, 8, b, IM_DT_FLOAT32);
+    ImGui::ImMat M, X;
+    M.create_type(3, 3, IM_DT_FLOAT32);
+    solve(A, B, X);
+    memcpy(M.data, X.data, sizeof(float) * X.total());
+    M.at<float>(2, 2) = 1.f;
+    return M;
+}
+
+ImMat getPerspectiveTransform(const ImMat src, const ImMat dst)
+{
+    float a[8][8], b[8];
+    for (int i = 0; i < 4; ++i)
+    {
+        a[i][0] = a[i + 4][3] = src.at<float>(0, i);
+        a[i][1] = a[i + 4][4] = src.at<float>(1, i);
+        a[i][2] = a[i + 4][5] = 1;
+        a[i][3] = a[i][4] = a[i][5] =
+        a[i + 4][0] = a[i + 4][1] = a[i + 4][2] = 0;
+        a[i][6] = -src.at<float>(0, i) * dst.at<float>(0, i);
+        a[i][7] = -src.at<float>(1, i) * src.at<float>(0, i);
+        a[i + 4][6] = -src.at<float>(0, i) * dst.at<float>(1, i);
+        a[i + 4][7] = -src.at<float>(1, i) * dst.at<float>(1, i);
+        b[i] = dst.at<float>(0, i);
+        b[i + 4] = dst.at<float>(1, i);
     }
     ImGui::ImMat A, B;
     A.create_type(8, 8, a, IM_DT_FLOAT32);
@@ -4882,4 +4997,105 @@ ImMat MatWarpAffine(const ImMat& mat, const ImMat& M, ImSize dsize)
     }
     return dst;
 }
+
+static inline void interpolateCubic(float x, float* coeffs)
+{
+    const float A = -0.75f;
+    coeffs[0] = ((A * (x + 1.f) - 5.0f * A) * (x + 1.f) + 8.0f * A) * (x + 1.f) - 4.0f * A;
+    coeffs[1] = ((A + 2.f) * x - (A + 3.f)) * x * x + 1.f;
+    coeffs[2] = ((A + 2.f) * (1.f - x) - (A + 3.f)) * (1.f - x) * (1.f - x) + 1.f;
+    coeffs[3] = 1.f - coeffs[0] - coeffs[1] - coeffs[2];
+}
+
+ImMat MatWarpPerspective(const ImMat& src, const ImMat& M, ImSize dsize, ImInterpolateMode mode)
+{
+#define INTER_BITS 5
+#define INTER_TAB_SIZE (1 << INTER_BITS)
+#define INTER_SCALE (1.f / INTER_TAB_SIZE)
+    ImMat dst;
+    if (src.empty() || M.empty())
+        return dst;
+    ImPixel pixel_fill(0, 0, 0, 0);
+    dst.create(dsize.w, dsize.h, src.c, 1u, src.elempack);
+    float * transform_matrix = (float *)M.data;
+    for (int y = 0; y < dsize.h; y++)
+    {
+        for (int x = 0; x < dsize.w; x++)
+        {
+            
+            float X0 = transform_matrix[0] * (float)x + transform_matrix[1] * (float)y + transform_matrix[2];
+            float Y0 = transform_matrix[3] * (float)x + transform_matrix[4] * (float)y + transform_matrix[5];
+            float W  = transform_matrix[6] * (float)x + transform_matrix[7] * (float)y + transform_matrix[8];
+            if (mode == IM_INTERPOLATE_NEAREST)
+            {
+                W = W != 0.0f ? 1.f / W : 0.0f;
+                int sx = (int)(X0 * W);
+                int sy = (int)(Y0 * W);
+                if (sx >= 0 && sx < src.w && sy >= 0 && sy < src.h)
+                {
+                    dst.set_pixel(x, y, src.get_pixel(sx, sy));
+                }
+                else
+                {
+                    dst.set_pixel(x, y, pixel_fill);
+                }
+            }
+            else if (mode == IM_INTERPOLATE_BILINEAR)
+            {
+                W = W != 0.0f ? INTER_TAB_SIZE / W : 0.0f;
+                int X = (int)(X0 * W), Y = (int)(Y0 * W);
+                int sx = (int)(X >> INTER_BITS);
+                int sy = (int)(Y >> INTER_BITS);
+                int ay = (int)(Y & (INTER_TAB_SIZE - 1));
+                int ax = (int)(X & (INTER_TAB_SIZE - 1));
+                ImPixel p0 = (sx >= 0 && sx < src.w && sy >= 0 && sy < src.h) ? src.get_pixel(sx, sy) : pixel_fill;
+                ImPixel p1 = (sx + 1 >= 0 && sx + 1 < src.w && sy >= 0 && sy < src.h) ? src.get_pixel(sx + 1, sy) : pixel_fill;
+                ImPixel p2 = (sx >= 0 && sx < src.w && sy + 1 >= 0 && sy + 1 < src.h) ? src.get_pixel(sx, sy + 1) : pixel_fill;
+                ImPixel p3 = (sx + 1 >= 0 && sx + 1 < src.w && sy + 1 >= 0 && sy + 1 < src.h) ? src.get_pixel(sx + 1, sy + 1) : pixel_fill;
+                float taby = 1.f / INTER_TAB_SIZE * ay;
+                float tabx = 1.f / INTER_TAB_SIZE * ax;
+                float tabx2 = 1.0f - tabx, taby2 = 1.0f - taby;
+                ImPixel v = p0 * tabx2 * taby2 +  p1 * tabx * taby2 + p2 * tabx2 * taby + p3 * tabx * taby;
+                dst.set_pixel(x, y, v);
+            }
+            else if (mode == IM_INTERPOLATE_BICUBIC)
+            {
+                W = W != 0.0f ? INTER_TAB_SIZE / W : 0.0f;
+                int X = (int)(X0 * W), Y = (int)(Y0 * W);
+                int sx = (int)(X >> INTER_BITS) - 1;
+                int sy = (int)(Y >> INTER_BITS) - 1;
+                int ay = (int)(Y & (INTER_TAB_SIZE - 1));
+                int ax = (int)(X & (INTER_TAB_SIZE - 1));
+                ImPixel v[16];
+                v[ 0] = (sx + 0 >= 0 && sx + 0 < src.w && sy + 0 >= 0 && sy + 0 < src.h) ? src.get_pixel(sx + 0, sy + 0) : pixel_fill;
+                v[ 1] = (sx + 1 >= 0 && sx + 1 < src.w && sy + 0 >= 0 && sy + 0 < src.h) ? src.get_pixel(sx + 1, sy + 0) : pixel_fill;
+                v[ 2] = (sx + 2 >= 0 && sx + 2 < src.w && sy + 0 >= 0 && sy + 0 < src.h) ? src.get_pixel(sx + 2, sy + 0) : pixel_fill;
+                v[ 3] = (sx + 3 >= 0 && sx + 3 < src.w && sy + 0 >= 0 && sy + 0 < src.h) ? src.get_pixel(sx + 3, sy + 0) : pixel_fill;
+                v[ 4] = (sx + 0 >= 0 && sx + 0 < src.w && sy + 1 >= 0 && sy + 1 < src.h) ? src.get_pixel(sx + 0, sy + 1) : pixel_fill;
+                v[ 5] = (sx + 1 >= 0 && sx + 1 < src.w && sy + 1 >= 0 && sy + 1 < src.h) ? src.get_pixel(sx + 1, sy + 1) : pixel_fill;
+                v[ 6] = (sx + 2 >= 0 && sx + 2 < src.w && sy + 1 >= 0 && sy + 1 < src.h) ? src.get_pixel(sx + 2, sy + 1) : pixel_fill;
+                v[ 7] = (sx + 3 >= 0 && sx + 3 < src.w && sy + 1 >= 0 && sy + 1 < src.h) ? src.get_pixel(sx + 3, sy + 1) : pixel_fill;
+                v[ 8] = (sx + 0 >= 0 && sx + 0 < src.w && sy + 2 >= 0 && sy + 2 < src.h) ? src.get_pixel(sx + 0, sy + 2) : pixel_fill;
+                v[ 9] = (sx + 1 >= 0 && sx + 1 < src.w && sy + 2 >= 0 && sy + 2 < src.h) ? src.get_pixel(sx + 1, sy + 2) : pixel_fill;
+                v[10] = (sx + 2 >= 0 && sx + 2 < src.w && sy + 2 >= 0 && sy + 2 < src.h) ? src.get_pixel(sx + 2, sy + 2) : pixel_fill;
+                v[11] = (sx + 3 >= 0 && sx + 3 < src.w && sy + 2 >= 0 && sy + 2 < src.h) ? src.get_pixel(sx + 3, sy + 2) : pixel_fill;
+                v[12] = (sx + 0 >= 0 && sx + 0 < src.w && sy + 3 >= 0 && sy + 3 < src.h) ? src.get_pixel(sx + 0, sy + 3) : pixel_fill;
+                v[13] = (sx + 1 >= 0 && sx + 1 < src.w && sy + 3 >= 0 && sy + 3 < src.h) ? src.get_pixel(sx + 1, sy + 3) : pixel_fill;
+                v[14] = (sx + 2 >= 0 && sx + 2 < src.w && sy + 3 >= 0 && sy + 3 < src.h) ? src.get_pixel(sx + 2, sy + 3) : pixel_fill;
+                v[15] = (sx + 3 >= 0 && sx + 3 < src.w && sy + 3 >= 0 && sy + 3 < src.h) ? src.get_pixel(sx + 3, sy + 3) : pixel_fill;
+                float tab1y[4], tab1x[4];
+                float ayy = (float)(INTER_SCALE * ay);
+                float axx = (float)(INTER_SCALE * ax);
+                interpolateCubic(ayy, tab1y);
+                interpolateCubic(axx, tab1x);
+                ImPixel p(0, 0, 0, 0);
+                for (int i = 0; i < 16; i++)
+                    p = p + v[i] * tab1y[(i >> 2)] * tab1x[(i & 3)];
+                dst.set_pixel(x, y, p);
+            }
+        }
+    }
+    return dst;
+}
+
 } // namespace ImGui
