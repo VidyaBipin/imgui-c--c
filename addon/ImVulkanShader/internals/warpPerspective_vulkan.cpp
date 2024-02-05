@@ -85,7 +85,7 @@ double warpPerspective_vulkan::warp(const ImMat& src, ImMat& dst, const ImMat& M
     }
 
     VkMat dst_gpu;
-    dst_gpu.create_type(src.w, src.h, 4, dst.type, opt.blob_vkallocator);
+    dst_gpu.create_type(dst.w > 0 ? dst.w : src.w, dst.h > 0 ? dst.h : src.h, 4, dst.type, opt.blob_vkallocator);
 
     VkMat src_gpu;
     if (src.device == IM_DD_VULKAN)
