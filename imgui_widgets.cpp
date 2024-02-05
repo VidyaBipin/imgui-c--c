@@ -3351,7 +3351,17 @@ bool ImGui::VSliderScalar(const char* label, const ImVec2& size, ImGuiDataType d
     char value_buf[64];
     const char* value_buf_end = value_buf + DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_buf), data_type, p_data, format);
     // modify by dicky for Stick style value
-    if (flags & ImGuiSliderFlags_Stick || flags & ImGuiSliderFlags_Mark)
+    if (flags & ImGuiSliderFlags_Stick)
+    {
+        SetWindowFontScale(0.8);
+        auto value_str_size = CalcTextSize(value_buf, value_buf_end);
+        ImVec2 value_str_pos = grab_bb.GetCenter() - ImVec2(value_str_size.x / 2, 14);
+        value_str_pos.x = std::max(value_str_pos.x, frame_bb.Min.x);
+        if (value_str_pos.x + value_str_size.x > frame_bb.Max.x) value_str_pos.x = frame_bb.Max.x - value_str_size.x;
+        RenderTextClipped(value_str_pos, value_str_pos + value_str_size, value_buf, value_buf_end, NULL, ImVec2(0.5f, 0.5f));
+        SetWindowFontScale(1.0);
+    }
+    else if (flags & ImGuiSliderFlags_Mark)
     {
         if (hovered && BeginTooltip())
         {
