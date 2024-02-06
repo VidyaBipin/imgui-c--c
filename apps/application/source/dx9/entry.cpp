@@ -265,7 +265,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
             app_done = done;
         
         if (app_done)
+        {
             ::PostQuitMessage(0);
+            break;
+        }
 
         // Rendering
         ImGui::EndFrame();

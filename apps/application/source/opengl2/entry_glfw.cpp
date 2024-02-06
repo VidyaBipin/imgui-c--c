@@ -115,6 +115,9 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         if (frame_count > 1) splash_done = _splash_done;
 
         ImGui::EndFrame();
+
+        if (splash_done) break;
+
         // Rendering
         ImGui::Render();
         glfwMakeContextCurrent(window);
@@ -325,6 +328,9 @@ int main(int argc, char** argv)
             app_done = done;
 
         ImGui::EndFrame();
+
+        if (app_done) break;
+
         // Rendering
         ImGui::Render();
         glfwMakeContextCurrent(window);

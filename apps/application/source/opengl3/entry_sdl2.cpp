@@ -141,6 +141,8 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
 
         ImGui::EndFrame();
 
+        if (splash_done) break;
+
         // Rendering
         ImGui::Render();
         SDL_GL_MakeCurrent(window, gl_context);
@@ -422,6 +424,8 @@ int main(int argc, char** argv)
 
         ImGui::EndFrame();
 
+        if (app_done) break;
+    
         // Rendering
         ImGui::Render();
         SDL_GL_MakeCurrent(window, gl_context);

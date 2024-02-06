@@ -208,6 +208,9 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         if (frame_count > 1) splash_done = _splash_done;
 
         ImGui::EndFrame();
+
+        if (splash_done) break;
+
         // Rendering
         ImGui::Render();
         FrameRendering(wd);
@@ -429,6 +432,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
             ::PostQuitMessage(0);
 
         ImGui::EndFrame();
+
+        if (app_done) break;
+        
         // Rendering
         ImGui::Render();
         FrameRendering(wd);

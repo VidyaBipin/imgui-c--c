@@ -38,6 +38,10 @@ void glut_display_func()
         app_done = done;
     
     ImGui::EndFrame();
+
+    if (app_done)
+        exit(0);
+
     // Rendering
     ImGui::Render();
 
@@ -48,8 +52,6 @@ void glut_display_func()
     ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
     glutSwapBuffers();
     glutPostRedisplay();
-    if (app_done)
-        exit(0);
 }
 
 void Application_FullScreen(bool on)

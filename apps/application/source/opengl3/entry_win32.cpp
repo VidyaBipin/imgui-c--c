@@ -284,6 +284,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
         ImGui::EndFrame();
 
+        if (app_done) break;
+        
         // Rendering
         ImGui::Render();
         ImGui_ImplOpenGL3_ClearScreen(ImVec2(0, 0), io.DisplaySize, clear_color);
