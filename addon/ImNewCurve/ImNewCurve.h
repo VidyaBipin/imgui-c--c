@@ -174,20 +174,29 @@ namespace ImNewCurve
         const KeyPoint::ValType& GetValueRange() const { return m_tValRange; }
         const std::pair<uint32_t, uint32_t>& GetTimeBase() const { return m_tTimeBase; }
         size_t GetKeyPointCount() const { return m_aKeyPoints.size(); }
-        std::vector<float> GetTicks() const;
+        std::vector<float> GetKeyTimes() const;
         const KeyPoint::Holder GetKeyPoint(size_t idx) const;
         int GetKeyPointIndex(const KeyPoint::Holder& hKp) const;
+        int GetKeyPointIndexByTick(float fTick) const;
         int GetKeyPointIndex(float t) const;
         KeyPoint::ValType CalcPointVal(float t, bool bAlignTime = true) const;
+        void SetTimeBase(const std::pair<uint32_t, uint32_t>& tTimeBase);
         float Tick2Time(float tick) const { if (m_bTimeBaseValid) return tick*1000*m_tTimeBase.first/m_tTimeBase.second; return tick; }
         float Time2Tick(float time) const { if (m_bTimeBaseValid) return time*m_tTimeBase.second/(m_tTimeBase.first*1000); return time; }
         float Time2TickAligned(float time) const { if (m_bTimeBaseValid) return roundf(time*m_tTimeBase.second/(m_tTimeBase.first*1000)); return time; }
-        void SetLimitTimeInRange(bool bEnable, bool bClipKeyPoints = false);
-        bool IsLimitTImeInRange() const { return m_bLimitTimeInRange; }
-        void SetLimitKeyPointValueInRange(bool bEnable, bool bClipKeyPoints = false);
-        bool IsLimitKeyPointValueInRange() const { return m_bLimitKeyPointValueInRange; }
-        void SetLimitOutputValueInRange(bool bEnable) { m_bLimitOutputValueInRange = bEnable; }
-        bool IsLimitOutputValueInRange() const { return m_bLimitOutputValueInRange; }
+
+        enum {
+            FLAGS_NO_CLIP = 0,
+            FLAGS_CLIP_MIN = 1,
+            FLAGS_CLIP_MAX = 2,
+            FLAGS_CLIP_MINMAX = FLAGS_CLIP_MIN | FLAGS_CLIP_MAX,
+        };
+        void SetClipKeyPointTime(uint8_t u8Flags, bool bClipKeyPoints = false);
+        bool IsClipKeyPointTIme(uint8_t u8TestFlags) const { return (m_u8ClipKpTimeFlags&u8TestFlags) == u8TestFlags; }
+        void SetClipKeyPointValue(uint8_t u8Flags, bool bClipKeyPoints = false);
+        bool IsClipKeyPointValue(uint8_t u8TestFlags) const { return (m_u8ClipKpValueFlags&u8TestFlags) == u8TestFlags; }
+        void SetClipOutputValue(uint8_t u8Flags) { m_u8ClipOutValueFlags = u8Flags; }
+        bool IsClipOutputValue(uint8_t u8TestFlags) const { return (m_u8ClipOutValueFlags&u8TestFlags) == u8TestFlags; }
 
         void SetMinVal(const KeyPoint::ValType& minVal);  // only set the minimum key point value (i.e., min value for DIM X,Y,Z), do not change time range start point
         void SetMaxVal(const KeyPoint::ValType& maxVal);  // only set the maximum key point value (i.e., max value for DIM X,Y,Z), do not change time range end point
@@ -236,13 +245,13 @@ namespace ImNewCurve
         KeyPoint::ValType m_tDefaultVal;
         std::pair<uint32_t, uint32_t> m_tTimeBase;
         bool m_bTimeBaseValid;
-        bool m_bLimitTimeInRange{false};
-        bool m_bLimitKeyPointValueInRange{false};
-        bool m_bLimitOutputValueInRange{false};
+        uint8_t m_u8ClipKpTimeFlags{0};
+        uint8_t m_u8ClipKpValueFlags{0};
+        uint8_t m_u8ClipOutValueFlags{0};
         std::list<Callbacks*> m_aCallbacksArray;
     };
 
-    IMGUI_API bool DrawCurveArraySimpleView(float fViewWidth, const std::vector<Curve::Holder>& aCurves, float& fCurrTick, const ImVec2& v2TickRange = ImVec2(0,0), ImGuiKey eRemoveKey = ImGuiKey_LeftAlt);
+    IMGUI_API bool DrawCurveArraySimpleView(float fViewWidth, const std::vector<Curve::Holder>& aCurves, float& fCurrTime, const ImVec2& v2TimeRange = ImVec2(0,0), ImGuiKey eRemoveKey = ImGuiKey_LeftAlt);
 
     class IMGUI_API Editor
     {
@@ -256,8 +265,8 @@ namespace ImNewCurve
 
         bool AddCurve(Curve::Holder hCurve, ValueDimension eDim, ImU32 u32CurveColor);
         void ClearAll() { m_aCurveUiObjs.clear(); }
-        size_t GetCurveCount() const;
-        Curve::Holder GetCurveByIndex(int idx) const;
+        size_t GetCurveCount() const { return m_aCurveUiObjs.size(); }
+        Curve::Holder GetCurveByIndex(size_t idx) const;
 
         void SetGraticuleLineCount(size_t szLineCnt) { m_szGraticuleLineCnt = szLineCnt; }
         size_t GetGraticuleLineCount() const { return m_szGraticuleLineCnt; }
@@ -267,10 +276,8 @@ namespace ImNewCurve
         ImU32 GetGraticuleColor() const { return m_u32GraticuleColor; }
         void SetShowValueToolTip(bool bShow) { m_bShowValueToolTip = bShow; }
         bool IsShowValueToolTip() const { return m_bShowValueToolTip; }
-        bool SetCurveVisible(int iCurveIdx, bool bVisible);
-        bool IsCurveVisible(int iCurveIdx) const;
-        bool SetCurveDimVisible(int iCurveIdx, ValueDimension eDim, bool bVisible);
-        bool IsCurveDimVisible(int iCurveIdx, ValueDimension eDim);
+        bool SetCurveVisible(size_t idx, bool bVisible);
+        bool IsCurveVisible(size_t idx) const;
 
         inline ImVec2 CvtPoint2Pos(const ImVec2& v2NormedPointVal) const
         { return v2NormedPointVal*m_v2UiScale*m_v2CurveAxisAreaSize; }
@@ -278,8 +285,8 @@ namespace ImNewCurve
         inline ImVec2 CvtPos2Point(const ImVec2& v2Pos) const
         { return v2Pos/(m_v2CurveAxisAreaSize*m_v2UiScale); }
 
-        // imgui_json::value SaveAsJson() const;
-        // void LoadFromJson(const imgui_json::value& j);
+        imgui_json::value SaveStateAsJson() const;
+        void RestoreStateFromJson(const imgui_json::value& j);
 
     private:
         class CurveUiObj : public Curve::Callbacks
@@ -289,10 +296,10 @@ namespace ImNewCurve
             CurveUiObj(Editor* pOwner, Curve::Holder hCurve, ValueDimension eDim, ImU32 u32CurveColor);
             ~CurveUiObj();
             void DrawCurve(ImDrawList* pDrawList, const ImVec2& v2OriginPos, bool bIsHovering) const;
+            Curve::Holder GetCurve() const { return m_hCurve; }
             int MoveKeyPoint(int iKpIdx, const ImVec2& v2MousePos);
             void MoveCurveVertically(const ImVec2& v2MousePos);
             void UpdateCurveAttributes();
-            // void UpdateAllContourPoints(const ImVec2& tTimeRange);
             void UpdateContourPoints(int iKpIdx);
             bool CheckMouseHoverCurve(const ImVec2& v2MousePos) const;
             int CheckMouseHoverPoint(const ImVec2& v2MousePos) const;
@@ -305,6 +312,8 @@ namespace ImNewCurve
             std::string GetCurveName() const { return m_hCurve->GetName(); }
             ValueDimension GetDim() const { return m_eDim; }
             ImVec2 CalcPointValue(const ImVec2& v2MousePos) const;
+            void SetCurveColor(ImU32 u32CurveColor);
+            ImU32 GetCurveColor() const { return m_u32CurveColor; }
 
             void OnKeyPointAdded(size_t szKpIdx, KeyPoint::Holder hKp) override;
             void OnKeyPointRemoved(size_t szKpIdx, KeyPoint::Holder hKp) override;
