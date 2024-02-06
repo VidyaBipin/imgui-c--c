@@ -54,6 +54,7 @@
 #endif // ~SIMD_ARCH_X86
 
 #if !defined(__EMSCRIPTEN__)
+#include "SimdOpt.h"
 #define INTRIN_MODE NONE
 #include "Morph.Simd.h"
 #undef INTRIN_MODE

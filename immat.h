@@ -768,6 +768,10 @@ public:
     IMGUI_API ImMat lowpass(float lambda);
     IMGUI_API ImMat highpass(float lambda);
     IMGUI_API ImMat threshold(float thres);
+
+    // simple filters
+    IMGUI_API ImMat blur(int kernel_size, float sigma = 1.0f); // Gaussian Blur
+    IMGUI_API ImMat adaptive_threshold(float maxValue, int kernel_size, float delta);
     IMGUI_API ImMat resize(float w, float h, int interpolate = 0) const; // interpolate_linear = 0 interpolate_nearest = 1
 
     // copy to
@@ -775,6 +779,7 @@ public:
 
     // crop
     IMGUI_API ImMat crop(ImPoint p1, ImPoint p2) const;
+    IMGUI_API ImMat crop(ImBox box) const;
 
     // repeat
     IMGUI_API ImMat repeat(int nx, int ny);
@@ -5484,14 +5489,17 @@ public:
 };
 
 IMGUI_API ImMat getPerspectiveTransform(const ImPoint src[], const ImPoint dst[]);
+IMGUI_API ImMat getPerspectiveTransform(const ImMat src, const ImMat dst);
 IMGUI_API ImMat getAffineTransform(const ImPoint src[], const ImPoint dst[]);
 IMGUI_API ImMat getAffineTransform(int sw, int sh, int dw, int dh, float x_offset, float y_offset, float x_scale, float y_scale, float angle);
 IMGUI_API void  getAffineParam(const ImMat& M, float& x_offset, float& y_offset, float& x_scale, float& y_scale, float& angle);
 IMGUI_API ImMat similarTransform(const ImMat& src, const ImMat& dst);
+
 // draw utils
 IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);
 IMGUI_API ImMat MatRotate(const ImMat& mat, float angle);
 IMGUI_API ImMat MatWarpAffine(const ImMat& mat, const ImMat& M, ImSize dsize);
+IMGUI_API ImMat MatWarpPerspective(const ImMat& src, const ImMat& M, ImSize dsize, ImInterpolateMode mode = IM_INTERPOLATE_NEAREST);
 IMGUI_API ImMat GrayToImage(const ImMat& mat);
 IMGUI_API ImMat CreateTextMat(const char* str, const ImPixel& color, float scale, bool square = false);
 IMGUI_API void  DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, const ImPixel& color, float scale);

@@ -468,7 +468,7 @@ void Example::DrawMatDemo()
     draw_mat.draw_rectangle(ImPoint(draw_mat.w - 112, draw_mat.h - 112), ImPoint(draw_mat.w, draw_mat.h), ImPixel(1, 1, 1, 1));
 
     // ImMat.resize
-    ImGui::ImMat resize_img2 = crop_img.resize(112, 112);//ImGui::MatResize(crop_img, ImSize(112, 112));
+    ImGui::ImMat resize_img2 = crop_img.resize(112, 112);
     ImGui::ImageMatCopyTo(resize_img2, draw_mat, ImPoint(draw_mat.w - 224, draw_mat.h - 224));
     draw_mat.draw_rectangle(ImPoint(draw_mat.w - 224, draw_mat.h - 224), ImPoint(draw_mat.w - 112, draw_mat.h - 112), ImPixel(1, 1, 0, 1));
 
@@ -490,9 +490,35 @@ void Example::DrawMatDemo()
     draw_mat.draw_rectangle(ImPoint(0, draw_mat.h - o_size), ImPoint(o_size, draw_mat.h), ImPixel(1, 0, 0, 1));
     draw_mat.draw_rectangle(ImPoint(128, 128), ImPoint(256, 256), ImPixel(1, 0, 0, 1));
 
+    // ImMat WarpPerspective
+    ImGui::ImMat src_matrix_p(2,4);
+    src_matrix_p.at<float>(0,0) = 0.0 * resize_img2.w; src_matrix_p.at<float>(1, 0) = 0.0 * resize_img2.h;
+    src_matrix_p.at<float>(0,1) = 1.0 * resize_img2.w; src_matrix_p.at<float>(1, 1) = 0.0 * resize_img2.h;
+    src_matrix_p.at<float>(0,2) = 1.0 * resize_img2.w; src_matrix_p.at<float>(1, 2) = 1.0 * resize_img2.h;
+    src_matrix_p.at<float>(0,3) = 0.0 * resize_img2.w; src_matrix_p.at<float>(1, 3) = 1.0 * resize_img2.h;
+    ImGui::ImMat dst_matrix_p(2,4);
+    dst_matrix_p.at<float>(0, 0) = 0.2 * resize_img2.w; dst_matrix_p.at<float>(1, 0) = 0.1 * resize_img2.h;
+    dst_matrix_p.at<float>(0, 1) = 0.8 * resize_img2.w; dst_matrix_p.at<float>(1, 1) = 0.1 * resize_img2.h;
+    dst_matrix_p.at<float>(0, 2) = 0.9 * resize_img2.w; dst_matrix_p.at<float>(1, 2) = 0.9 * resize_img2.h;
+    dst_matrix_p.at<float>(0, 3) = 0.1 * resize_img2.w; dst_matrix_p.at<float>(1, 3) = 0.8 * resize_img2.h;
+    ImGui::ImMat M_p = ImGui::getPerspectiveTransform(dst_matrix_p, src_matrix_p);
+    ImGui::ImMat affine_img_p = ImGui::MatWarpPerspective(resize_img2, M_p, ImSize(resize_img2.w, resize_img2.h), IM_INTERPOLATE_BICUBIC);
+    ImGui::ImageMatCopyTo(affine_img_p, draw_mat, ImPoint(draw_mat.w - resize_img2.w, 0));
+    draw_mat.draw_rectangle(ImPoint(draw_mat.w - resize_img2.w, 0), ImPoint(draw_mat.w, resize_img2.h), ImPixel(1, 0, 0, 1));
+
+    // ImMat blur
+    ImGui::ImMat blur_mat = affine_img.blur(3);
+    ImGui::ImageMatCopyTo(blur_mat, draw_mat, ImPoint(o_size, draw_mat.h - o_size));
+
+    // ImMat adaptive_threshold
+    ImGui::ImMat gray_mat = affine_img.cvtToGray();
+    ImGui::ImMat gray_threshold_mat = gray_mat.adaptive_threshold(1.0, gray_mat.w / 10, 0.1);
+    ImGui::ImMat threshold_mat = gray_threshold_mat.cvtToARGB();
+    ImGui::ImageMatCopyTo(threshold_mat, draw_mat, ImPoint(0, draw_mat.h - o_size * 2));
+
     draw_mat.draw_rectangle(ImPoint(0, 0), ImPoint(draw_mat.w, draw_mat.h), ImPixel(0, 0, 1, 1));
     ImGui::ImMatToTexture(draw_mat, DrawMatTexture);
-
+    
     // mat copy to texture
 #if IMGUI_VULKAN_SHADER
     ImGui::ImCopyToTexture(DrawMatTexture, (unsigned char*)&float_vkmat, float_vkmat.w, float_vkmat.h, float_vkmat.c, offset_x, offset_y, true);
