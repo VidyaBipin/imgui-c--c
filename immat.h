@@ -651,6 +651,10 @@ public:
     inline void fill(int16_t _v);
     inline void fill(int32_t _v);
     inline void fill(int64_t _v);
+    inline void fill(uint8_t _v);
+    inline void fill(uint16_t _v);
+    inline void fill(uint32_t _v);
+    inline void fill(uint64_t _v);
     inline void fill(float _v);
     inline void fill(double _v);
     // scalar add
@@ -1804,7 +1808,7 @@ inline const float& ImMat::operator[](size_t i) const
 template<typename T>
 inline void ImMat::fill(T _v)
 {
-    int size = (int)total();
+    int size = (int)total() * elemsize / sizeof(T);
     T* ptr = (T*)data;
     for (int i = 0; i < size; i++)
     {
@@ -1814,7 +1818,7 @@ inline void ImMat::fill(T _v)
 
 inline void ImMat::fill(int8_t _v)
 {
-    int size = (int)total(), i = 0;
+    int size = (int)total() * elemsize / sizeof(int8_t), i = 0;
     int8_t* ptr = (int8_t*)data;
 #if __AVX__
     __m256i V = _mm256_set1_epi8(_v);
@@ -1822,13 +1826,16 @@ inline void ImMat::fill(int8_t _v)
 #elif __SSE__
     __m128i V = _mm_set1_epi8(_v);
     for (i = 0; i < size - 15; i += 16) _mm_storeu_si128((__m128i *)(ptr + i), V);
+#elif __ARM_NEON 
+    int8x16_t V = vdupq_n_s8(_v);
+    for (i = 0; i < size - 15; i += 16) vst1q_s8((int8_t *)(ptr + i), V);
 #endif
     for (; i < size; ++i) *(ptr + i) = _v;
 }
 
 inline void ImMat::fill(int16_t _v)
 {
-    int size = (int)total(), i = 0;
+    int size = (int)total() * elemsize / sizeof(int16_t), i = 0;
     int16_t* ptr = (int16_t*)data;
 #if __AVX__
     __m256i V = _mm256_set1_epi16(_v);
@@ -1836,13 +1843,16 @@ inline void ImMat::fill(int16_t _v)
 #elif __SSE__
     __m128i V = _mm_set1_epi16(_v);
     for (i = 0; i < size - 7; i += 8) _mm_storeu_si128((__m128i *)(ptr + i), V);
+#elif __ARM_NEON 
+    int16x8_t V = vdupq_n_s16(_v);
+    for (i = 0; i < size - 7; i += 8) vst1q_s16((int16_t *)(ptr + i), V);
 #endif
     for (; i < size; ++i) *(ptr + i) = _v;
 }
 
 inline void ImMat::fill(int32_t _v)
 {
-    int size = (int)total(), i = 0;
+    int size = (int)total() * elemsize / sizeof(int32_t), i = 0;
     int32_t* ptr = (int32_t*)data;
 #if __AVX__
     __m256i V = _mm256_set1_epi32(_v);
@@ -1850,13 +1860,16 @@ inline void ImMat::fill(int32_t _v)
 #elif __SSE__
     __m128i V = _mm_set1_epi32(_v);
     for (i = 0; i < size - 3; i += 4) _mm_storeu_si128((__m128i *)(ptr + i), V);
+#elif __ARM_NEON 
+    int32x4_t V = vdupq_n_s32(_v);
+    for (i = 0; i < size - 3; i += 4) vst1q_s32((int32_t *)(ptr + i), V);
 #endif
     for (; i < size; ++i) *(ptr + i) = _v;
 }
 
 inline void ImMat::fill(int64_t _v)
 {
-    int size = (int)total(), i = 0;
+    int size = (int)total() * elemsize / sizeof(int64_t), i = 0;
     int64_t* ptr = (int64_t*)data;
 #if __AVX__
     __m256i V = _mm256_set1_epi64x(_v);
@@ -1864,13 +1877,36 @@ inline void ImMat::fill(int64_t _v)
 #elif __SSE__
     __m128i V = _mm_set1_epi32(_v);
     for (i = 0; i < size - 1; i += 2) _mm_storeu_si128((__m128i *)(ptr + i), V);
+#elif __ARM_NEON 
+    int64x2_t V = vdupq_n_s64(_v);
+    for (i = 0; i < size - 1; i += 2) vst1q_s64((int64_t *)(ptr + i), V);
 #endif
     for (; i < size; ++i) *(ptr + i) = _v;
 }
 
+inline void ImMat::fill(uint8_t _v)
+{
+    fill((int8_t)_v);
+}
+
+inline void ImMat::fill(uint16_t _v)
+{
+    fill((int16_t)_v);
+}
+
+inline void ImMat::fill(uint32_t _v)
+{
+    fill((int32_t)_v);
+}
+
+inline void ImMat::fill(uint64_t _v)
+{
+    fill((int64_t)_v);
+}
+
 inline void ImMat::fill(float _v)
 {
-    int size = (int)total(), i = 0;
+    int size = (int)total() * elemsize / sizeof(float), i = 0;
     float* ptr = (float*)data;
 #if __AVX__
     __m256 V = _mm256_set1_ps(_v);
@@ -1878,13 +1914,16 @@ inline void ImMat::fill(float _v)
 #elif __SSE__
     __m128 V = _mm_set1_ps(_v);
     for (i = 0; i < size - 3; i += 4) _mm_storeu_ps(ptr + i, V);
+#elif __ARM_NEON 
+    float32x4_t V = vld1q_dup_f32(_v);
+    for (i = 0; i < size - 3; i += 4) vst1q_f32((float *)(ptr + i), V);
 #endif
     for (; i < size; ++i) *(ptr + i) = _v;
 }
 
 inline void ImMat::fill(double _v)
 {
-    int size = (int)total(), i = 0;
+    int size = (int)total() * elemsize / sizeof(double), i = 0;
     double* ptr = (double*)data;
 #if __AVX__
     __m256d V = _mm256_set1_pd(_v);
