@@ -690,7 +690,7 @@ public:
     // diag dim = 2 only
     template<typename T> ImMat diag() const;
     // rand
-    template<typename T> ImMat& randn(T mean, T stddev);
+    template<typename T> ImMat& randn(T mean, T stddev, int seed = -1);
     // clip
     template<typename T> ImMat& clip(T v_min, T v_max);
     // mat add
@@ -2358,13 +2358,13 @@ inline ImMat& ImMat::eye(T scale)
 
 // rand
 template<typename T> 
-inline ImMat& ImMat::randn(T mean, T stddev)
+inline ImMat& ImMat::randn(T mean, T stddev, int seed)
 {
     assert(device == IM_DD_CPU);
     assert(total() > 0);
 
-    unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
-    std::default_random_engine gen(seed);
+    unsigned int useed = seed < 0 ? std::chrono::system_clock::now().time_since_epoch().count() : seed;
+    std::default_random_engine gen(useed);
     std::normal_distribution<T> dis(mean, stddev);
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int i = 0; i < total(); i++)
