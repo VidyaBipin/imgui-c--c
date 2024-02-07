@@ -173,7 +173,7 @@ static void ImGui_ImplSDL2_SetClipboardText(void*, const char* text)
 // Note: native IME will only display if user calls SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1") _before_ SDL_CreateWindow().
 static void ImGui_ImplSDL2_SetPlatformImeData(ImGuiViewport* viewport, ImGuiPlatformImeData* data)
 {
- // modify by Dicky
+    // modify by Dicky
     if (data->WantVisible)
     {
         SDL_Rect r;
@@ -182,7 +182,21 @@ static void ImGui_ImplSDL2_SetPlatformImeData(ImGuiViewport* viewport, ImGuiPlat
         r.w = 1;
         r.h = (int)data->InputLineHeight;
         SDL_SetTextInputRect(&r);
+#ifdef _WIN32
+        SDL_Window* window = (SDL_Window*)viewport->PlatformHandle;
+        if (window)
+        {
+            SDL_SysWMinfo wmInfo;
+            SDL_VERSION(&wmInfo.version);
+            SDL_GetWindowWMInfo(window, &wmInfo);
+            HIMC himc = ImmGetContext(wmInfo.info.win.window);
+            ImmAssociateContextEx((HWND)wmInfo.info.win.window, 0, IACE_DEFAULT);
+            COMPOSITIONFORM cf = { CFS_FORCE_POSITION, { (LONG)(r.x), (LONG)(r.y) }, { 0, 0, 0, 0 } };
+            ImmSetCompositionWindow(himc, &cf);
+        }
+#endif
     }
+    // modify by Dicky end
 }
 
 static ImGuiKey ImGui_ImplSDL2_KeycodeToImGuiKey(int keycode)
@@ -451,22 +465,8 @@ bool ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event)
             }
             if (window_event == SDL_WINDOWEVENT_LEAVE)
                 bd->PendingMouseLeaveFrame = ImGui::GetFrameCount() + 1;
-            // Modify By Dicky
             if (window_event == SDL_WINDOWEVENT_FOCUS_GAINED)
-            {
                 io.AddFocusEvent(true);
-#ifdef _WIN32
-                SDL_Window* window = SDL_GetWindowFromID(event->window.windowID);
-                if (window)
-                {
-                    SDL_SysWMinfo wmInfo;
-                    SDL_VERSION(&wmInfo.version);
-                    SDL_GetWindowWMInfo(window, &wmInfo);
-                    ImmAssociateContextEx((HWND)wmInfo.info.win.window, 0, IACE_DEFAULT);
-                }
-#endif
-            }
-            // Modify By Dicky end
             else if (window_event == SDL_WINDOWEVENT_FOCUS_LOST)
                 io.AddFocusEvent(false);
             if (window_event == SDL_WINDOWEVENT_CLOSE || window_event == SDL_WINDOWEVENT_MOVED || window_event == SDL_WINDOWEVENT_RESIZED)
@@ -1181,50 +1181,6 @@ void ImGui_ImplSDL2_FullScreen(ImGuiViewport* viewport, bool on)
         ImGui_ImplSDL2_Data* bd = ImGui_ImplSDL2_GetBackendData();
         SDL_SetWindowFullscreen(bd->Window, on ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
     }
-}
-
-#ifdef _WIN32
-static LRESULT CALLBACK ImGui_ImplSDL2_HookIme_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    WNDPROC wndProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    switch (msg)
-    {
-    case WM_KEYDOWN:
-    case WM_SYSKEYDOWN:
-    case WM_KEYUP:
-    case WM_SYSKEYUP:
-        if (wParam == VK_PROCESSKEY)
-        {
-            wndProc = DefWindowProc;
-        }
-    }
-    return CallWindowProc(wndProc, hwnd, msg, wParam, lParam);
-}
-#endif
-
-void ImGui_ImplSDL2_InitIme()
-{
-#ifdef _WIN32
-    SDL_EventState(SDL_TEXTINPUT, SDL_DISABLE);
-#endif
-}
-
-void ImGui_ImplSDL2_HookIme(SDL_Window* window)
-{
-#ifdef _WIN32
-    SDL_SysWMinfo wmInfo;
-    SDL_VERSION(&wmInfo.version);
-    SDL_GetWindowWMInfo(window, &wmInfo);
-    HWND hwnd = (HWND)wmInfo.info.win.window;
-    if (!GetWindowLongPtr(hwnd, GWLP_USERDATA)) {
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, GetWindowLongPtr(hwnd, GWLP_WNDPROC));
-        SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)ImGui_ImplSDL2_HookIme_WndProc);
-    }
-    ImmAssociateContext(hwnd, 0);
-    SDL_StartTextInput();
-    ImmAssociateContextEx(hwnd, 0, IACE_DEFAULT);
-    SDL_EventState(SDL_TEXTINPUT, SDL_ENABLE);
-#endif
 }
 
 void ImGui_ImplSDL2_SetWindowIcon(SDL_Window* window, const char * icon_path)

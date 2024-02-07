@@ -41,8 +41,6 @@ IMGUI_IMPL_API bool     ImGui_ImplSDL2_ProcessEvent(const SDL_Event* event);
 // Add By Dicky
 IMGUI_IMPL_API void     ImGui_ImplSDL2_WaitForEvent();
 IMGUI_IMPL_API void     ImGui_ImplSDL2_FullScreen(ImGuiViewport* viewport, bool on);
-IMGUI_IMPL_API void     ImGui_ImplSDL2_InitIme();
-IMGUI_IMPL_API void     ImGui_ImplSDL2_HookIme(SDL_Window* window);
 IMGUI_IMPL_API void     ImGui_ImplSDL2_SetWindowIcon(SDL_Window* window, const char * icon_path);
 // Add By Dicky end
 

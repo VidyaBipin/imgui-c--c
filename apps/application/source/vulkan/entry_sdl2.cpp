@@ -188,9 +188,6 @@ int main(int argc, char** argv)
     ApplicationWindowProperty property(argc, argv);
     Application_Setup(property);
 
-    // Init IME effect windows only
-    ImGui_ImplSDL2_InitIme();
-
     int window_flags = SDL_WINDOW_VULKAN | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_INPUT_FOCUS;
     if (property.resizable) window_flags |= SDL_WINDOW_RESIZABLE;
     if (property.full_size)

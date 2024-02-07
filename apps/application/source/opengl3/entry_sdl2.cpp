@@ -197,8 +197,6 @@ int main(int argc, char** argv)
 
     ApplicationWindowProperty property(argc, argv);
     Application_Setup(property);
-    // Init IME effect windows only
-    ImGui_ImplSDL2_InitIme();
 
     // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)

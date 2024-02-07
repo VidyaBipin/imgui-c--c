@@ -157,8 +157,6 @@ int main(int argc, char** argv)
 
     ApplicationWindowProperty property(argc, argv);
     Application_Setup(property);
-    // Init IME effect windows only
-    ImGui_ImplSDL2_InitIme();
 
     // Create window with graphics context
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
