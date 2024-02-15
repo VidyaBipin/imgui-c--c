@@ -178,7 +178,7 @@ static int g_cpu_is_arm_a53_a55;
 static bool g_is_being_debugged = false;
 static bool is_being_debugged()
 {
-#if defined _WIN32
+#if defined _WIN32 && !defined(__MINGW32__)
     return IsDebuggerPresent();
 #elif defined __ANDROID__ || defined __linux__
     // https://stackoverflow.com/questions/3596781/how-to-detect-if-the-current-process-is-being-run-by-gdb
