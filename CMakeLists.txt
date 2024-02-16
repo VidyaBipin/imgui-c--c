@@ -1771,6 +1771,18 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
         SUFFIX ".html"
         LINK_FLAGS "--shell-file ${IMGUI_SHELL_FILE}"
     )
+    set(IMGUI_WEB_OBJ_DIR ${PROJECT_BINARY_DIR}/web_obj/)
+    set(IMGUI_TEST_FILE ${PROJECT_SOURCE_DIR}/test/test.obj)
+    set_target_properties(
+        obj_viewer
+        PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${IMGUI_WEB_OBJ_DIR}
+        RUNTIME_OUTPUT_DIRECTORY ${IMGUI_WEB_OBJ_DIR}
+        OUTPUT_NAME "index"
+        PREFIX ""
+        SUFFIX ".html"
+        LINK_FLAGS "--shell-file ${IMGUI_SHELL_FILE} --preload-file ${IMGUI_TEST_FILE}@/tmp/test.obj"
+    )
 endif()
 endif(IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
 
