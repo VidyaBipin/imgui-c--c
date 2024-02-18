@@ -105,9 +105,9 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         if (frame_count > 1) splash_done = _splash_done;
 
         ImGui::EndFrame();
-
+#ifndef __EMSCRIPTEN__
         if (splash_done) break;
-
+#endif
         // Rendering
         ImGui::Render();
         SDL_GL_MakeCurrent(window, gl_context);
@@ -350,9 +350,9 @@ int main(int argc, char** argv)
             app_done = done;
 
         ImGui::EndFrame();
-
+#ifndef __EMSCRIPTEN__
         if (app_done) break;
-
+#endif
         // Rendering
         ImGui::Render();
         SDL_GL_MakeCurrent(window, gl_context);

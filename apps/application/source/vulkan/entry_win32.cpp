@@ -171,12 +171,13 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     init_info.Queue = g_Queue;
     init_info.PipelineCache = g_PipelineCache;
     init_info.DescriptorPool = g_DescriptorPool;
+    init_info.RenderPass = wd->RenderPass;
     init_info.Allocator = g_Allocator;
     init_info.MinImageCount = g_MinImageCount;
     init_info.ImageCount = wd->ImageCount;
     init_info.CheckVkResultFn = check_vk_result;
     // Setup ImGui binding
-    ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
+    ImGui_ImplVulkan_Init(&init_info);
 
     UINT flags = SWP_SHOWWINDOW;
     flags |= SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED;
@@ -371,12 +372,13 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     init_info.Queue = g_Queue;
     init_info.PipelineCache = g_PipelineCache;
     init_info.DescriptorPool = g_DescriptorPool;
+    init_info.RenderPass = wd->RenderPass;
     init_info.Allocator = g_Allocator;
     init_info.MinImageCount = g_MinImageCount;
     init_info.ImageCount = wd->ImageCount;
     init_info.CheckVkResultFn = check_vk_result;
     // Setup ImGui binding
-    ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
+    ImGui_ImplVulkan_Init(&init_info);
 
 #if IMGUI_VULKAN_SHADER
     ImGui::ImVulkanShaderInit();
