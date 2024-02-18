@@ -39,6 +39,8 @@ public:
         m_v2PointSizeHalf = m_v2PointSize/2;
         m_itMorphCtrlVt = m_itHoveredVertex = m_itSelectedVertex = m_aRoutePointsForUi.end();
         m_mMorphKernel = MatUtils::GetStructuringElement(MatUtils::MORPH_ELLIPSE, {5, 5});
+        m_aWarpAffineMatrix[0][0] = 1; m_aWarpAffineMatrix[0][1] = 0; m_aWarpAffineMatrix[0][2] = 0;
+        m_aWarpAffineMatrix[1][0] = 0; m_aWarpAffineMatrix[1][1] = 1; m_aWarpAffineMatrix[1][2] = 0;
     }
 
     string GetName() const override
@@ -62,8 +64,26 @@ public:
             return false;
         }
         m_rWorkArea = bb;
-        m_v2UiScale.x = v2ViewSize.x/(float)m_szMaskSize.x;
-        m_v2UiScale.y = v2ViewSize.y/(float)m_szMaskSize.y;
+        const ImVec2 v2UiScaleNew(v2ViewSize.x/(float)m_szMaskSize.x, v2ViewSize.y/(float)m_szMaskSize.y);
+        if (m_v2UiScale != v2UiScaleNew || m_bWarpAffineMatrixChanged)
+        {
+            m_aFinalWarpAffineMatrix[0][0] = m_aWarpAffineMatrix[0][0]*v2UiScaleNew.x;
+            m_aFinalWarpAffineMatrix[0][1] = m_aWarpAffineMatrix[0][1]*v2UiScaleNew.x;
+            m_aFinalWarpAffineMatrix[0][2] = m_aWarpAffineMatrix[0][2]*v2UiScaleNew.x;
+            m_aFinalWarpAffineMatrix[1][0] = m_aWarpAffineMatrix[1][0]*v2UiScaleNew.y;
+            m_aFinalWarpAffineMatrix[1][1] = m_aWarpAffineMatrix[1][1]*v2UiScaleNew.y;
+            m_aFinalWarpAffineMatrix[1][2] = m_aWarpAffineMatrix[1][2]*v2UiScaleNew.y;
+            const auto fRevScaleX = 1/v2UiScaleNew.x;
+            const auto fRevScaleY = 1/v2UiScaleNew.y;
+            m_aFinalRevWarpAffineMatrix[0][0] = m_aRevWarpAffineMatrix[0][0]*fRevScaleX;
+            m_aFinalRevWarpAffineMatrix[0][1] = m_aRevWarpAffineMatrix[0][1]*fRevScaleY;
+            m_aFinalRevWarpAffineMatrix[0][2] = m_aRevWarpAffineMatrix[0][2];
+            m_aFinalRevWarpAffineMatrix[1][0] = m_aRevWarpAffineMatrix[1][0]*fRevScaleX;
+            m_aFinalRevWarpAffineMatrix[1][1] = m_aRevWarpAffineMatrix[1][1]*fRevScaleY;
+            m_aFinalRevWarpAffineMatrix[1][2] = m_aRevWarpAffineMatrix[1][2];
+        }
+        m_v2UiScale = v2UiScaleNew;
+        m_bWarpAffineMatrixChanged = false;
 
         if (m_bKeyFrameEnabled && UpdateContourByKeyFrame(i64Tick, true))
             m_bRouteChanged = true;
@@ -74,9 +94,7 @@ public:
 
         // reactions
         const auto v2MousePosAbs = GetMousePos();
-        const auto& origin = m_rWorkArea.Min;
-        const auto temp = v2MousePosAbs-origin;
-        const ImVec2 v2MousePos(temp.x/m_v2UiScale.x, temp.y/m_v2UiScale.y);
+        const ImVec2 v2MousePos = FromUiPos(v2MousePosAbs);
         const bool bMouseInWorkArea = m_rWorkArea.Contains(v2MousePosAbs);
         const bool bRemoveKeyDown = IsKeyDown(m_eRemoveVertexKey);
         const bool bInsertKeyDown = IsKeyDown(m_eInsertVertexKey);
@@ -610,7 +628,7 @@ public:
             // draw hovering point on contour
             if (!bIsMouseDragging && HasHoveredVertex() && m_itHoveredVertex->m_iHoverType == 4 && bInsertKeyDown)
             {
-                const auto pointPos = origin+m_itHoveredVertex->m_v2HoverPointOnContour*m_v2UiScale;
+                const auto pointPos = ToUiPos(m_itHoveredVertex->m_v2HoverPointOnContour);
                 const auto& offsetSize1 = m_v2PointSizeHalf;
                 pDrawList->AddRectFilled(pointPos-offsetSize1, pointPos+offsetSize1, m_u32PointBorderHoverColor);
                 const ImVec2 offsetSize2(m_v2PointSizeHalf.x-m_fPointBorderThickness, m_v2PointSizeHalf.y-m_fPointBorderThickness);
@@ -859,6 +877,41 @@ public:
         return true;
     }
 
+    void SetUiWarpAffineMatrix(float aWarpAffineMatrix[2][3], float aRevWarpAffineMatrix[2][3]) override
+    {
+        if (memcmp(m_aWarpAffineMatrix, aWarpAffineMatrix, sizeof(m_aWarpAffineMatrix)))
+        {
+            memcpy(m_aWarpAffineMatrix, aWarpAffineMatrix, sizeof(m_aWarpAffineMatrix));
+            m_bWarpAffineMatrixChanged = true;
+        }
+        if (memcmp(m_aRevWarpAffineMatrix, aRevWarpAffineMatrix, sizeof(m_aRevWarpAffineMatrix)))
+        {
+            memcpy(m_aRevWarpAffineMatrix, aRevWarpAffineMatrix, sizeof(m_aRevWarpAffineMatrix));
+            m_bWarpAffineMatrixChanged = true;
+        }
+    }
+
+    void SetUiWarpAffineParameters(const ImVec2& v2Offset, const ImVec2& v2Scale, float fRotationAngle, const ImVec2& v2Anchor) override
+    {
+        const auto fRotationRadian = fRotationAngle*M_PI/180.f;
+        const auto fSinA = (float)sin(fRotationRadian);
+        const auto fCosA = (float)cos(fRotationRadian);
+        float aWarpAffineMatrix[2][3], aRevWarpAffineMatrix[2][3];
+        aWarpAffineMatrix[0][0] = fCosA*v2Scale.x;
+        aWarpAffineMatrix[0][1] = fSinA*v2Scale.x;
+        aWarpAffineMatrix[1][0] = -fSinA*v2Scale.y;
+        aWarpAffineMatrix[1][1] = fCosA*v2Scale.y;
+        aWarpAffineMatrix[0][2] = v2Offset.x+(1-aWarpAffineMatrix[0][0])*v2Anchor.x-aWarpAffineMatrix[0][1]*v2Anchor.y;
+        aWarpAffineMatrix[1][2] = v2Offset.y-aWarpAffineMatrix[1][0]*v2Anchor.x+(1-aWarpAffineMatrix[1][1])*v2Anchor.y;
+        aRevWarpAffineMatrix[0][0] = fCosA/v2Scale.x;
+        aRevWarpAffineMatrix[0][1] = -fSinA/v2Scale.y;
+        aRevWarpAffineMatrix[0][2] = -aWarpAffineMatrix[0][2]*aRevWarpAffineMatrix[0][0]-aWarpAffineMatrix[1][2]*aRevWarpAffineMatrix[0][1];
+        aRevWarpAffineMatrix[1][0] = fSinA/v2Scale.x;
+        aRevWarpAffineMatrix[1][1] = fCosA/v2Scale.y;
+        aRevWarpAffineMatrix[1][2] = -aWarpAffineMatrix[0][2]*aRevWarpAffineMatrix[1][0]-aWarpAffineMatrix[1][2]*aRevWarpAffineMatrix[1][1];
+        SetUiWarpAffineMatrix(aWarpAffineMatrix, aRevWarpAffineMatrix);
+    }
+
     bool ChangeMaskSize(const MatUtils::Size2i& size, bool bScaleMask) override
     {
         if (m_szMaskSize != size)
@@ -1063,12 +1116,9 @@ public:
 
     ImVec4 GetContourContainBox() const override
     {
-        ImRect rBox(m_rContianBox);
-        rBox.Min *= m_v2UiScale;
-        rBox.Max *= m_v2UiScale;
-        rBox.Min += m_rWorkArea.Min;
-        rBox.Max += m_rWorkArea.Min;
-        return ImVec4(rBox.Min.x, rBox.Min.y, rBox.Max.x, rBox.Max.y);
+        const auto v2UiBoxMin = ToUiPos(m_rContianBox.Min);
+        const auto v2UiBoxMax = ToUiPos(m_rContianBox.Max);
+        return ImVec4(v2UiBoxMin.x, v2UiBoxMin.y, v2UiBoxMax.x, v2UiBoxMax.y);
     }
 
     ImVec2 GetUiScale() const override
@@ -1650,13 +1700,12 @@ private:
             m_iHoverType = -1;
         }
 
-        void DrawPoint(ImDrawList* pDrawList, const ImVec2& origin) const
+        void DrawPoint(ImDrawList* pDrawList) const
         {
             const auto bKeyFrameEnabled = m_owner->m_bKeyFrameEnabled;
             const auto v2Pos = bKeyFrameEnabled ? MatUtils::ToImVec2(m_ptCurrPos) : m_v2Pos;
             const auto v2Grabber0Offset = bKeyFrameEnabled ? MatUtils::ToImVec2(m_ptCurrGrabber0Offset) : m_v2Grabber0Offset;
             const auto v2Grabber1Offset = bKeyFrameEnabled ? MatUtils::ToImVec2(m_ptCurrGrabber1Offset) : m_v2Grabber1Offset;
-            const auto& v2UiScale = m_owner->m_v2UiScale;
             const auto& pointSizeHalf = m_owner->m_v2PointSizeHalf;
             const auto& pointColor = m_owner->m_u32PointColor;
             const auto& pointBorderThickness = m_owner->m_bKeyFrameEnabled && m_bSelected ? m_owner->m_fPointBorderSelectedThickness : m_owner->m_fPointBorderThickness;
@@ -1670,13 +1719,13 @@ private:
             const auto& grabberColorHoverOutter = m_owner->m_u32GrabberBorderHoverColor;
             const auto& lineThickness = m_owner->m_fGrabberLineThickness;
             const auto& lineColor = m_owner->m_u32GrabberLineColor;
-            const auto pointPos = origin+v2Pos*v2UiScale;
+            const auto vPoint2UiPos = m_owner->ToUiPos(v2Pos);
             if (m_bEnableBezier)
             {
-                const auto grabber0Center = pointPos+v2Grabber0Offset*v2UiScale;
-                const auto grabber1Center = pointPos+v2Grabber1Offset*v2UiScale;
-                pDrawList->AddLine(pointPos, grabber0Center, lineColor, lineThickness);
-                pDrawList->AddLine(pointPos, grabber1Center, lineColor, lineThickness);
+                const auto grabber0Center = m_owner->ToUiPos(v2Pos+v2Grabber0Offset);
+                const auto grabber1Center = m_owner->ToUiPos(v2Pos+v2Grabber1Offset);
+                pDrawList->AddLine(vPoint2UiPos, grabber0Center, lineColor, lineThickness);
+                pDrawList->AddLine(vPoint2UiPos, grabber1Center, lineColor, lineThickness);
                 auto borderColor = m_bHovered && m_iHoverType==1 ? grabberColorHoverOutter : grabberColorOutter;
                 pDrawList->AddCircleFilled(grabber0Center, grabberRadiusOutter, borderColor);
                 pDrawList->AddCircleFilled(grabber0Center, grabberRadiusInner, grabberColorInner);
@@ -1686,9 +1735,9 @@ private:
             }
             const ImVec2 offsetSize1(pointSizeHalf.x+pointBorderThickness, pointSizeHalf.y+pointBorderThickness);
             auto borderColor = m_bHovered && m_iHoverType==0 ? pointBorderHoverColor : (m_owner->m_bKeyFrameEnabled && m_bSelected ? pointBorderSelectedColor : pointBorderColor);
-            pDrawList->AddRectFilled(pointPos-offsetSize1, pointPos+offsetSize1-ImVec2(1,1), borderColor);
+            pDrawList->AddRectFilled(vPoint2UiPos-offsetSize1, vPoint2UiPos+offsetSize1-ImVec2(1,1), borderColor);
             const auto& offsetSize2 = pointSizeHalf;
-            pDrawList->AddRectFilled(pointPos-offsetSize2, pointPos+offsetSize2, pointColor);
+            pDrawList->AddRectFilled(vPoint2UiPos-offsetSize2, vPoint2UiPos+offsetSize2, pointColor);
         }
 
         void CalcEdgeVertices(const RoutePointImpl& prevVt)
@@ -1738,9 +1787,8 @@ private:
             m_rEdgeContBox = rContainBox;
         }
 
-        void DrawContour(ImDrawList* pDrawList, const ImVec2& origin, const RoutePointImpl& prevVt) const
+        void DrawContour(ImDrawList* pDrawList, const RoutePointImpl& prevVt) const
         {
-            const auto& v2UiScale = m_owner->m_v2UiScale;
             const auto& contourColor = m_owner->m_u32ContourColor;
             const auto& contourThickness = m_owner->m_fContourThickness;
             if (!m_aEdgeVertices.empty())
@@ -1749,8 +1797,8 @@ private:
                 auto itVt1 = itVt0; itVt1++;
                 while (itVt1 != m_aEdgeVertices.end())
                 {
-                    const auto v0 = origin+(*itVt0++)*v2UiScale;
-                    const auto v1 = origin+(*itVt1++)*v2UiScale;
+                    const auto v0 = m_owner->ToUiPos(*itVt0++);
+                    const auto v1 = m_owner->ToUiPos(*itVt1++);
                     pDrawList->AddLine(v0, v1, contourColor, contourThickness);
                 }
             }
@@ -1759,8 +1807,8 @@ private:
                 const auto bKeyFrameEnabled = m_owner->m_bKeyFrameEnabled;
                 const auto v2Pos = bKeyFrameEnabled ? MatUtils::ToImVec2(m_ptCurrPos) : m_v2Pos;
                 const auto v2PrevPos = bKeyFrameEnabled ? MatUtils::ToImVec2(prevVt.m_ptCurrPos) : prevVt.m_v2Pos;
-                const auto v0 = origin+v2PrevPos*v2UiScale;
-                const auto v1 = origin+    v2Pos*v2UiScale;
+                const auto v0 = m_owner->ToUiPos(v2PrevPos);
+                const auto v1 = m_owner->ToUiPos(v2Pos);
                 pDrawList->AddLine(v0, v1, contourColor, contourThickness);
             }
         }
@@ -2105,13 +2153,12 @@ private:
             m_bIsHovered = false;
         }
 
-        void Draw(ImDrawList* pDrawList, const ImVec2& origin) const
+        void Draw(ImDrawList* pDrawList) const
         {
-            const auto& v2UiScale = m_owner->m_v2UiScale;
-            const ImVec2 rootPos = origin+m_ptRootPos*v2UiScale;
-            ImVec2 grabberPos = origin+m_ptFeatherGrabberPos*v2UiScale;
+            const ImVec2 rootPos = m_owner->ToUiPos(m_ptRootPos);
+            ImVec2 grabberPos = m_owner->ToUiPos(m_ptFeatherGrabberPos);
             pDrawList->AddLine(rootPos, grabberPos, m_owner->m_u32FeatherGrabberColor, m_owner->m_fContourThickness);
-            grabberPos = origin+m_ptGrabberPos*v2UiScale;
+            grabberPos = m_owner->ToUiPos(m_ptGrabberPos);
             pDrawList->AddLine(rootPos, grabberPos, m_owner->m_u32ContourColor, m_owner->m_fContourThickness);
             const auto& offsetSize1 = m_owner->m_v2PointSizeHalf;
             auto borderColor = m_iHoverType == 0 ? m_owner->m_u32PointBorderHoverColor : m_owner->m_u32PointBorderColor;
@@ -2121,7 +2168,7 @@ private:
             borderColor = m_iHoverType == 1 ? m_owner->m_u32GrabberBorderHoverColor : m_owner->m_u32GrabberBorderColor;
             pDrawList->AddCircleFilled(grabberPos, m_owner->m_fGrabberRadius, borderColor);
             pDrawList->AddCircleFilled(grabberPos, m_owner->m_fGrabberRadius-m_owner->m_fGrabberBorderThickness, m_owner->m_u32GrabberColor);
-            grabberPos = origin+m_ptFeatherGrabberPos*v2UiScale;
+            grabberPos = m_owner->ToUiPos(m_ptFeatherGrabberPos);
             borderColor = m_iHoverType == 2 ? m_owner->m_u32GrabberBorderHoverColor : m_owner->m_u32GrabberBorderColor;
             pDrawList->AddCircleFilled(grabberPos, m_owner->m_fGrabberRadius, borderColor);
             pDrawList->AddCircleFilled(grabberPos, m_owner->m_fGrabberRadius-m_owner->m_fGrabberBorderThickness, m_owner->m_u32FeatherGrabberColor);
@@ -2430,20 +2477,33 @@ private:
 private:
     void DrawPoint(ImDrawList* pDrawList, const RoutePointImpl& v) const
     {
-        const auto& origin = m_rWorkArea.Min;
-        v.DrawPoint(pDrawList, origin);
+        v.DrawPoint(pDrawList);
     }
 
     void DrawContour(ImDrawList* pDrawList, const RoutePointImpl& v0, const RoutePointImpl& v1) const
     {
-        const auto& origin = m_rWorkArea.Min;
-        v1.DrawContour(pDrawList, origin, v0);
+        v1.DrawContour(pDrawList, v0);
     }
 
     void DrawMorphController(ImDrawList* pDrawList) const
     {
-        const auto& origin = m_rWorkArea.Min;
-        m_tMorphCtrl.Draw(pDrawList, origin);
+        m_tMorphCtrl.Draw(pDrawList);
+    }
+
+    ImVec2 ToUiPos(const ImVec2& v2Pos, bool bAddOrigin = true) const
+    {
+        ImVec2 v2UiPos(v2Pos.x*m_aFinalWarpAffineMatrix[0][0]+v2Pos.y*m_aFinalWarpAffineMatrix[0][1]+m_aFinalWarpAffineMatrix[0][2],
+                      v2Pos.x*m_aFinalWarpAffineMatrix[1][0]+v2Pos.y*m_aFinalWarpAffineMatrix[1][1]+m_aFinalWarpAffineMatrix[1][2]);
+        if (bAddOrigin) v2UiPos += m_rWorkArea.Min;
+        return std::move(v2UiPos);
+    }
+
+    ImVec2 FromUiPos(const ImVec2& _v2UiPos, bool bSubOrigin = true) const
+    {
+        const auto v2UiPos = bSubOrigin ? _v2UiPos-m_rWorkArea.Min : _v2UiPos;
+        ImVec2 v2Pos(v2UiPos.x*m_aFinalRevWarpAffineMatrix[0][0]+v2UiPos.y*m_aFinalRevWarpAffineMatrix[0][1]+m_aFinalRevWarpAffineMatrix[0][2],
+                      v2UiPos.x*m_aFinalRevWarpAffineMatrix[1][0]+v2UiPos.y*m_aFinalRevWarpAffineMatrix[1][1]+m_aFinalRevWarpAffineMatrix[1][2]);
+        return std::move(v2Pos);
     }
 
     void UpdateContainBox()
@@ -3143,8 +3203,12 @@ private:
 private:
     string m_strMaskName;
     MatUtils::Size2i m_szMaskSize;
-    ImVec2 m_v2UiScale{1.0f, 1.0f};
     ImRect m_rWorkArea{{-1, -1}, {-1, -1}};
+    ImVec2 m_v2UiScale{1.0f, 1.0f};
+    float m_aWarpAffineMatrix[2][3], m_aFinalWarpAffineMatrix[2][3];
+    float m_aRevWarpAffineMatrix[2][3], m_aFinalRevWarpAffineMatrix[2][3];
+    bool m_bWarpAffineMatrixChanged{true};
+    bool m_bWarpAffinePassThrough{true}, m_bWarpAffineOnlyPan{false};
     list<RoutePointImpl> m_aRoutePointsForUi;
     list<ImVec2> m_aContourVerticesForUi;
     list<RoutePointImpl> m_aRoutePointsForMask;
