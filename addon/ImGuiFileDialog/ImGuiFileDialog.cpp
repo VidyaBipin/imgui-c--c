@@ -4742,12 +4742,12 @@ bool IGFD::FileDialog::m_Confirm_Or_OpenOverWriteFileDialog_IfNeeded(bool vLastA
 
         bool res = false;
 
-        ImGui::OpenPopup(name.c_str());
         // modify by dicky, if using multiviewport, make sure we display on top
+        ImGui::OpenPopup(name.c_str(), ImGuiPopupFlags_AnyPopup);
         ImGuiIO& io = ImGui::GetIO(); (void)io;
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
-            const ImGuiViewportP* viewport = (ImGuiViewportP*) ImGui::GetWindowViewport();
+            const ImGuiViewportP* viewport = (ImGuiViewportP*) ImGui::GetMainViewport();
             ImGui::SetNextWindowViewport(viewport->ID);
         }
         // modify by dicky end
