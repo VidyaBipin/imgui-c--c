@@ -1915,7 +1915,7 @@ inline void ImMat::fill(float _v)
     __m128 V = _mm_set1_ps(_v);
     for (i = 0; i < size - 3; i += 4) _mm_storeu_ps(ptr + i, V);
 #elif __ARM_NEON 
-    float32x4_t V = vld1q_dup_f32(_v);
+    float32x4_t V = vdupq_n_f32(_v);
     for (i = 0; i < size - 3; i += 4) vst1q_f32((float *)(ptr + i), V);
 #endif
     for (; i < size; ++i) *(ptr + i) = _v;
