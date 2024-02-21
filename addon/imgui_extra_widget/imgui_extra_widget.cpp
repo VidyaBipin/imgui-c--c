@@ -851,7 +851,6 @@ bool ImGui::Splitter(bool split_vertically, float thickness, float* size1, float
 }
 
 // Based on the code from: https://github.com/benoitjacquier/imgui
-// Based on the code from: https://github.com/benoitjacquier/imgui
 inline static bool ColorChooserInternal(ImVec4 *pColorOut,bool supportsAlpha,bool showSliders,ImGuiWindowFlags extra_flags=0,bool* pisAnyItemActive=NULL,float windowWidth = 180/*,bool isCombo = false*/)
 {
     bool colorSelected = false;
