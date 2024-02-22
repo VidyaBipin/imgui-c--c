@@ -41,6 +41,8 @@ public:
         m_mMorphKernel = MatUtils::GetStructuringElement(MatUtils::MORPH_ELLIPSE, {5, 5});
         m_aWarpAffineMatrix[0][0] = 1; m_aWarpAffineMatrix[0][1] = 0; m_aWarpAffineMatrix[0][2] = 0;
         m_aWarpAffineMatrix[1][0] = 0; m_aWarpAffineMatrix[1][1] = 1; m_aWarpAffineMatrix[1][2] = 0;
+        m_aRevWarpAffineMatrix[0][0] = 1; m_aRevWarpAffineMatrix[0][1] = 0; m_aRevWarpAffineMatrix[0][2] = 0;
+        m_aRevWarpAffineMatrix[1][0] = 0; m_aRevWarpAffineMatrix[1][1] = 1; m_aRevWarpAffineMatrix[1][2] = 0;
     }
 
     string GetName() const override

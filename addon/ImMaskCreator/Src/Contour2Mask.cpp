@@ -677,7 +677,7 @@ static void CollectPolyEdges(ImGui::ImMat& img, const vector<Point2l>& vertices,
 
         if (lineType < 2)
         {
-            Point2l t0, t1;
+            Point2i t0, t1;
             t0.y = pt0.y; t1.y = pt1.y;
             t0.x = (pt0.x+(XY_ONE>>1)) >> XY_SHIFT;
             t1.x = (pt1.x+(XY_ONE>>1)) >> XY_SHIFT;
