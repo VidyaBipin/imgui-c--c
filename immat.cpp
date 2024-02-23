@@ -855,13 +855,15 @@ ImMat ImMat::crop(ImPoint p1, ImPoint p2) const
     assert(device == IM_DD_CPU);
     assert(!empty());
     assert((p2.x - p1.x) > 0 && (p2.y - p1.y) > 0);
-    if (p1.x < 0) p1.x = 0;
-    if (p1.y < 0) p1.y = 0;
-    if (p1.x > w) p1.x = w;
-    if (p1.y > h) p1.y = h;
-    if (p2.x > w) p2.x = w;
-    if (p2.y > h) p2.y = h;
-    ImMat dst(p2.x - p1.x, p2.y - p1.y, c, elemsize, elempack);
+    int x1 = p1.x, x2 = p2.x;
+    int y1 = p1.y, y2 = p2.y;
+    if (x1 < 0) x1 = 0;
+    if (y1 < 0) y1 = 0;
+    if (x1 >= w) x1 = w - 1;
+    if (y1 >= h) y1 = h - 1;
+    if (x2 >= w) x2 = w - 1;
+    if (y2 >= h) y2 = h - 1;
+    ImMat dst(x2 - x1, y2 - y1, c, elemsize, elempack);
 
     if (dims == 1)
     {
@@ -869,19 +871,19 @@ ImMat ImMat::crop(ImPoint p1, ImPoint p2) const
     }
     if (dims == 2)
     {
-        for (int i = p1.y; i < p2.y; i++)
+        for (int i = y1; i < y2; i++)
         {
-            for (int j = p1.x; j < p2.x; j++)
+            for (int j = x1; j < x2; j++)
             {
                 switch (type)
                 {
-                    case IM_DT_INT8:    dst.at<uint8_t>(j - p1.x, i - p1.y) = at<uint8_t>(j, i); break;
-                    case IM_DT_INT16:   dst.at<uint16_t>(j - p1.x, i - p1.y) = at<uint16_t>(j, i); break;
-                    case IM_DT_INT32:   dst.at<uint32_t>(j - p1.x, i - p1.y) = at<uint32_t>(j, i); break;
-                    case IM_DT_INT64:   dst.at<uint64_t>(j - p1.x, i - p1.y) = at<uint64_t>(j, i); break;
-                    case IM_DT_FLOAT16: dst.at<uint16_t>(j - p1.x, i - p1.y) = at<uint16_t>(j, i); break;
-                    case IM_DT_FLOAT32: dst.at<float>(j - p1.x, i - p1.y) = at<float>(j, i); break;
-                    case IM_DT_FLOAT64: dst.at<double>(j - p1.x, i - p1.y) = at<double>(j, i); break;
+                    case IM_DT_INT8:    dst.at<uint8_t> (j - x1, i - y1) = at<uint8_t> (j, i); break;
+                    case IM_DT_INT16:   dst.at<uint16_t>(j - x1, i - y1) = at<uint16_t>(j, i); break;
+                    case IM_DT_INT32:   dst.at<uint32_t>(j - x1, i - y1) = at<uint32_t>(j, i); break;
+                    case IM_DT_INT64:   dst.at<uint64_t>(j - x1, i - y1) = at<uint64_t>(j, i); break;
+                    case IM_DT_FLOAT16: dst.at<uint16_t>(j - x1, i - y1) = at<uint16_t>(j, i); break;
+                    case IM_DT_FLOAT32: dst.at<float>   (j - x1, i - y1) = at<float>   (j, i); break;
+                    case IM_DT_FLOAT64: dst.at<double>  (j - x1, i - y1) = at<double>  (j, i); break;
                     default: break;
                 }
             }
@@ -891,19 +893,19 @@ ImMat ImMat::crop(ImPoint p1, ImPoint p2) const
     {
         for (int _c = 0; _c < c; _c++)
         {
-            for (int i = p1.y; i < p2.y; i++)
+            for (int i = y1; i < y2; i++)
             {
-                for (int j = p1.x; j < p2.x; j++)
+                for (int j = x1; j < x2; j++)
                 {
                     switch (type)
                     {
-                        case IM_DT_INT8:    dst.at<uint8_t>(j - p1.x, i - p1.y, _c) = at<uint8_t>(j, i, _c); break;
-                        case IM_DT_INT16:   dst.at<uint16_t>(j - p1.x, i - p1.y, _c) = at<uint16_t>(j, i, _c); break;
-                        case IM_DT_INT32:   dst.at<uint32_t>(j - p1.x, i - p1.y, _c) = at<uint32_t>(j, i, _c); break;
-                        case IM_DT_INT64:   dst.at<uint64_t>(j - p1.x, i - p1.y, _c) = at<uint64_t>(j, i, _c); break;
-                        case IM_DT_FLOAT16: dst.at<uint16_t>(j - p1.x, i - p1.y, _c) = at<uint16_t>(j, i, _c); break;
-                        case IM_DT_FLOAT32: dst.at<float>(j - p1.x, i - p1.y, _c) = at<float>(j, i, _c); break;
-                        case IM_DT_FLOAT64: dst.at<double>(j - p1.x, i - p1.y, _c) = at<double>(j, i, _c); break;
+                        case IM_DT_INT8:    dst.at<uint8_t> (j - x1, i - y1, _c) = at<uint8_t> (j, i, _c); break;
+                        case IM_DT_INT16:   dst.at<uint16_t>(j - x1, i - y1, _c) = at<uint16_t>(j, i, _c); break;
+                        case IM_DT_INT32:   dst.at<uint32_t>(j - x1, i - y1, _c) = at<uint32_t>(j, i, _c); break;
+                        case IM_DT_INT64:   dst.at<uint64_t>(j - x1, i - y1, _c) = at<uint64_t>(j, i, _c); break;
+                        case IM_DT_FLOAT16: dst.at<uint16_t>(j - x1, i - y1, _c) = at<uint16_t>(j, i, _c); break;
+                        case IM_DT_FLOAT32: dst.at<float>   (j - x1, i - y1, _c) = at<float>   (j, i, _c); break;
+                        case IM_DT_FLOAT64: dst.at<double>  (j - x1, i - y1, _c) = at<double>  (j, i, _c); break;
                         default: break;
                     }
                 }

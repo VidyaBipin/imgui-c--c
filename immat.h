@@ -95,7 +95,7 @@ inline size_t Im_AlignSize(size_t sz, int n)
 }
 inline void* Im_FastMalloc(size_t size)
 {
-#if _MSC_VER
+#ifdef _WIN32
     void* ptr = _aligned_malloc(size, IM_MALLOC_ALIGN);
     if (ptr) memset(ptr, 0, size);
     return ptr;
@@ -124,7 +124,7 @@ inline void Im_FastFree(void* ptr)
 {
     if (ptr)
     {
-#if _MSC_VER
+#ifdef _WIN32
         _aligned_free(ptr);
 #elif (defined(__unix__) || defined(__APPLE__)) && _POSIX_C_SOURCE >= 200112L || (__ANDROID__ && __ANDROID_API__ >= 17)
         free(ptr);
