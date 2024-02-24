@@ -1737,6 +1737,13 @@ void ImDrawList::AddTextComplex(const ImVec2 pos, const char * str, float font_s
         AddText(ImVec2(pos.x, pos.y - outline_w), outline_color, str);
         AddText(ImVec2(pos.x + outline_w, pos.y), outline_color, str);
         AddText(ImVec2(pos.x, pos.y + outline_w), outline_color, str);
+        if (outline_w >= 4)
+        {
+            AddText(ImVec2(pos.x - outline_w, pos.y - outline_w), outline_color, str);
+            AddText(ImVec2(pos.x + outline_w, pos.y - outline_w), outline_color, str);
+            AddText(ImVec2(pos.x + outline_w, pos.y - outline_w), outline_color, str);
+            AddText(ImVec2(pos.x - outline_w, pos.y + outline_w), outline_color, str);
+        }
     }
     AddText(pos, text_color, str);
     ImGui::PopStyleColor();
