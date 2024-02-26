@@ -18,7 +18,7 @@
 #include "ImMaskCreator.h"
 #include "Contour2Mask.h"
 #include "MatMath.h"
-#include "Morph.h"
+#include "MatFilter.h"
 #include "MatUtilsImVecHelper.h"
 #include "CpuUtils.h"
 #include "Logger.h"
@@ -38,7 +38,7 @@ public:
         m_pLogger = GetLogger("MaskCreator");
         m_v2PointSizeHalf = m_v2PointSize/2;
         m_itMorphCtrlVt = m_itHoveredVertex = m_itSelectedVertex = m_aRoutePointsForUi.end();
-        m_mMorphKernel = MatUtils::GetStructuringElement(MatUtils::MORPH_ELLIPSE, {5, 5});
+        // m_mMorphKernel = MatUtils::GetStructuringElement(MatUtils::MORPH_ELLIPSE, {5, 5});
         m_aWarpAffineMatrix[0][0] = 1; m_aWarpAffineMatrix[0][1] = 0; m_aWarpAffineMatrix[0][2] = 0;
         m_aWarpAffineMatrix[1][0] = 0; m_aWarpAffineMatrix[1][1] = 1; m_aWarpAffineMatrix[1][2] = 0;
         m_aRevWarpAffineMatrix[0][0] = 1; m_aRevWarpAffineMatrix[0][1] = 0; m_aRevWarpAffineMatrix[0][2] = 0;
@@ -1077,10 +1077,9 @@ public:
                 {
                     if (iFeatherIters > 0)
                     {
-                        const auto iOutterMorphIters = iMorphIters+iFeatherIters;
-                        aMorphContourVertices = iOutterMorphIters < 0 ? ErodeContour(-iOutterMorphIters) : DilateContour(iOutterMorphIters);
-                        const auto iFeatherSize = 2*iFeatherIters+1;
-                        m_mMorphMask = MatUtils::Contour2Mask(m_szMaskSize, aMorphContourVertices, {0, 0}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled, iFeatherSize);
+                        aMorphContourVertices = iMorphIters < 0 ? ErodeContour(-iMorphIters) : DilateContour(iMorphIters);
+                        const auto iFeatherKsize = 2*iFeatherIters+1;
+                        m_mMorphMask = MatUtils::Contour2Mask(m_szMaskSize, aMorphContourVertices, {0, 0}, eDataType, dMaskValue, dNonMaskValue, iLineType, bFilled, iFeatherKsize);
                     }
                     else
                     {
@@ -3256,7 +3255,7 @@ private:
     ImDataType m_eLastMaskDataType{IM_DT_UNDEFINED};
     double m_dLastMaskValue{0}, m_dLastNonMaskValue{0};
     ImGui::ImMat m_mMask, m_mMorphMask;
-    ImGui::ImMat m_mMorphKernel;
+    // ImGui::ImMat m_mMorphKernel;
     int m_iLastMorphIters{0}, m_iLastFeatherIters{0};
     bool m_bKeyFrameEnabled{false};
     int64_t m_i64PrevUiTick{0}, m_i64PrevMaskTick{0};

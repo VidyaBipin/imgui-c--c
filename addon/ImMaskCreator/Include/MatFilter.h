@@ -51,7 +51,8 @@ struct FilterEngine
     using Holder = std::shared_ptr<FilterEngine>;
     static Holder CreateInstance();
 
-    virtual void Init(MatFilter::Holder hMatFilter, RowFilter::Holder hRowFilter, ColumnFilter::Holder hColumnFilter, ImDataType eSrcDtype, int iCh,
+    virtual void Init(MatFilter::Holder hMatFilter, RowFilter::Holder hRowFilter, ColumnFilter::Holder hColumnFilter,
+            ImDataType eSrcDtype, ImDataType eDstDtype, ImDataType eBufDtype, int iCh,
             BorderTypes eRowBorderType = BORDER_CONSTANT, BorderTypes eColumnBorderType = BORDER_CONSTANT, const ImGui::ImMat& mBorderValue = ImGui::ImMat()) = 0;
     virtual int Start(const Size2i& szWholeSize, const Size2i& szSize, const Point2i& ptOfs) = 0;
     virtual int Proceed(const uint8_t* p8uSrc, int iSrcStep, int iSrcCount, uint8_t* p8uDst, int iDstStep) = 0;
@@ -63,4 +64,17 @@ int CountNonZero(const ImGui::ImMat& m);
 void Preprocess2DKernel(const ImGui::ImMat& kernel, std::vector<Point2i>& coords, std::vector<uint8_t>& coeffs);
 int BorderInterpolate(int p, int iLen, BorderTypes eBorderType);
 void FillMatWithValue(ImGui::ImMat& mDst, const ImGui::ImMat& mVal, const Recti& rFillArea);
+
+enum MorphShape
+{
+    MORPH_RECT = 0,
+    MORPH_CROSS,
+    MORPH_ELLIPSE,
+};
+ImGui::ImMat GetStructuringElement(MorphShape eShape, const Size2i& szKsize, const Point2i& ptAnchor = Point2i(-1, -1));
+
+ImGui::ImMat Erode(const ImGui::ImMat& mInput, const ImGui::ImMat& mKernel, const Point2i& ptAnchor, int iIterations = 1);
+ImGui::ImMat Dilate(const ImGui::ImMat& mInput, const ImGui::ImMat& mKernel, const Point2i& ptAnchor, int iIterations = 1);
+
+ImGui::ImMat Blur(const ImGui::ImMat& mInput, const Size2i& szKsize, const Point2i& ptAnchor = Point2i(-1, -1));
 }

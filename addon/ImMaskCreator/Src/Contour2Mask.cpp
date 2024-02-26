@@ -5,6 +5,7 @@
 #include <functional>
 #include "Contour2Mask.h"
 #include "MatMath.h"
+#include "MatFilter.h"
 #include "MatUtilsImVecHelper.h"
 
 using namespace std;
@@ -1174,7 +1175,7 @@ void DrawPolygon(ImGui::ImMat& img, const std::vector<Point2l>& aPolygonVertices
 template<template<class T, class Alloc = std::allocator<T>> class Container>
 ImGui::ImMat _Contour2Mask(
         const Size2i& szMaskSize, const Container<Point2f>& aPolygonVertices, const Point2f& ptOffset,
-        ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled, float fFeatherSize)
+        ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled, int iFeatherKsize)
 {
     ImGui::ImMat mask;
     mask.create_type((int)szMaskSize.x, (int)szMaskSize.y, dtMaskDataType);
@@ -1229,36 +1230,29 @@ ImGui::ImMat _Contour2Mask(
     const MatUtils::Point2l ptOffset_((int64_t)((double)ptOffset.x*dFixPointScale), (int64_t)((double)ptOffset.y*dFixPointScale));
     vector<_PolyEdge> edges;
     mask.dims = 3; // wyvern: to pass the assertion in ImMat::draw_line()
-    if (fFeatherSize <= 0)
-        CollectPolyEdges(mask, aPolygonVertices_, edges, color.data, iLineType, ptOffset_, iFixPointShift);
-    else
-    {
-        ImGui::ImMat nonMaskColor = MakeColor(mask.type, dNonMaskValue);
-        CollectPolyEdges(mask, aPolygonVertices_, edges, nonMaskColor.data, iLineType, ptOffset_, iFixPointShift);
-    }
+    CollectPolyEdges(mask, aPolygonVertices_, edges, color.data, iLineType, ptOffset_, iFixPointShift);
     mask.dims = 2;
     if (bFilled)
     {
-        if (fFeatherSize <= 0)
-            FillEdgeCollection(mask, edges, color.data);
-        else
-            FillEdgeCollectionWithFeatherEffect(mask, edges, color.data, aPolygonVertices, fFeatherSize);
+        FillEdgeCollection(mask, edges, color.data);
+        if (iFeatherKsize > 0)
+            mask = MatUtils::Blur(mask, {iFeatherKsize, iFeatherKsize});
     }
     return mask;
 }
 
 ImGui::ImMat Contour2Mask(
         const Size2i& szMaskSize, const vector<Point2f>& aPolygonVertices, const Point2f& ptOffset,
-        ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled, float fFeatherSize)
+        ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled, int iFeatherKsize)
 {
-    return _Contour2Mask(szMaskSize, aPolygonVertices, ptOffset, dtMaskDataType, dMaskValue, dNonMaskValue, iLineType, bFilled, fFeatherSize);
+    return _Contour2Mask(szMaskSize, aPolygonVertices, ptOffset, dtMaskDataType, dMaskValue, dNonMaskValue, iLineType, bFilled, iFeatherKsize);
 }
 
 ImGui::ImMat Contour2Mask(
         const Size2i& szMaskSize, const list<Point2f>& aPolygonVertices, const Point2f& ptOffset,
-        ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled, float fFeatherSize)
+        ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled, int iFeatherKsize)
 {
-    return _Contour2Mask(szMaskSize, aPolygonVertices, ptOffset, dtMaskDataType, dMaskValue, dNonMaskValue, iLineType, bFilled, fFeatherSize);
+    return _Contour2Mask(szMaskSize, aPolygonVertices, ptOffset, dtMaskDataType, dMaskValue, dNonMaskValue, iLineType, bFilled, iFeatherKsize);
 }
 
 template<template<class T, class Alloc = std::allocator<T>> class Container>

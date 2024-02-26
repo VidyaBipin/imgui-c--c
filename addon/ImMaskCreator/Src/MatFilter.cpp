@@ -431,10 +431,13 @@ public:
     {
     }
 
-    void Init(MatFilter::Holder hMatFilter, RowFilter::Holder hRowFilter, ColumnFilter::Holder hColumnFilter, ImDataType eSrcDtype, int iCh,
+    void Init(MatFilter::Holder hMatFilter, RowFilter::Holder hRowFilter, ColumnFilter::Holder hColumnFilter,
+            ImDataType eSrcDtype, ImDataType eDstDtype, ImDataType eBufDtype, int iCh,
             BorderTypes eRowBorderType, BorderTypes eColumnBorderType, const ImGui::ImMat& mBorderValue) override
     {
         m_eSrcDtype = eSrcDtype;
+        m_eDstDtype = eDstDtype;
+        m_eBufDtype = eBufDtype;
         m_iCh = iCh;
         int srcElemSize = GetElementSize(eSrcDtype);
 
@@ -454,6 +457,7 @@ public:
         }
         else
         {
+            assert(eBufDtype == eSrcDtype);
             m_szKsize = m_hMatFilter->ksize;
             m_ptAnchor = m_hMatFilter->anchor;
         }
@@ -486,7 +490,7 @@ public:
                 m_rRoi.rightBottom().x <= szWholeSize.x && m_rRoi.rightBottom().y <= szWholeSize.y);
 
         int esz = GetElementSize(m_eSrcDtype);
-        int bufElemSize = GetElementSize(m_eSrcDtype);
+        int bufElemSize = GetElementSize(m_eBufDtype);
         const uint8_t* constVal = !m_mConstBorderValue.empty() ? (const uint8_t*)m_mConstBorderValue.data : nullptr;
 
         int _maxBufRows = std::max(
@@ -501,7 +505,7 @@ public:
             if (m_eColumnBorderType == BORDER_CONSTANT)
             {
                 assert(constVal != NULL);
-                m_au8ConstBorderRow.resize(GetElementSize(m_eSrcDtype)*(m_iMaxWidth + m_szKsize.x-1 + VEC_ALIGN));
+                m_au8ConstBorderRow.resize(GetElementSize(m_eBufDtype)*(m_iMaxWidth + m_szKsize.x-1 + VEC_ALIGN));
                 uint8_t *dst = AlignPtr(&m_au8ConstBorderRow[0], VEC_ALIGN);
                 int n = m_mConstBorderValue.w;
                 int N = (m_iMaxWidth+m_szKsize.x-1)*esz;
@@ -671,7 +675,7 @@ public:
     ImGui::ImMat Apply(const ImGui::ImMat& mSrc, const Size2i& szSize, const Point2i& ptOfs) override
     {
         ImGui::ImMat mDst;
-        mDst.create_like(mSrc);
+        mDst.create_type(mSrc.w, mSrc.h, mSrc.c, m_eDstDtype);
 
         Start(szSize, Size2i(mSrc.w, mSrc.h), ptOfs);
         int y = m_iStartY-ptOfs.y;
@@ -703,7 +707,7 @@ private:
     }
 
 private:
-    ImDataType m_eSrcDtype;
+    ImDataType m_eSrcDtype, m_eDstDtype, m_eBufDtype;
     int m_iCh;
     Size2i m_szKsize;
     Point2i m_ptAnchor;

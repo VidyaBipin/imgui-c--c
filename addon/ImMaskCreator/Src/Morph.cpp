@@ -1,16 +1,7 @@
 #include <cassert>
-#include <limits>
 #include <list>
-#include <vector>
-#include <future>
-#include <chrono>
-#include <thread>
-#include <memory>
-#include <functional>
-#include <cmath>
 #include "MathUtils.h"
 #include "ThreadUtils.h"
-#include "Morph.h"
 #include "MatFilter.h"
 
 #if SIMD_ARCH_X86
@@ -699,7 +690,7 @@ FilterEngine::Holder CreateMorphologyFilter(
     }
 
     FilterEngine::Holder hFilterEngine = FilterEngine::CreateInstance();
-    hFilterEngine->Init(hMatFilter, hRowFilter, hColumnFilter, dtype, iCh, eRowBorderType, eColumnBorderType, mBorderValue);
+    hFilterEngine->Init(hMatFilter, hRowFilter, hColumnFilter, dtype, dtype, dtype, iCh, eRowBorderType, eColumnBorderType, mBorderValue);
     return hFilterEngine;
 }
 

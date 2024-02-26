@@ -23,8 +23,8 @@ endif(ImMaskCreator_STATIC)
 
 
 set(ImMaskCreator_VERSION_MAJOR 1)
-set(ImMaskCreator_VERSION_MINOR 0)
-set(ImMaskCreator_VERSION_PATCH 1)
+set(ImMaskCreator_VERSION_MINOR 1)
+set(ImMaskCreator_VERSION_PATCH 0)
 string(TIMESTAMP ImMaskCreator_VERSION_BUILD "%y%m%d")
 set(ImMaskCreator_VERSION_STRING ${ImMaskCreator_VERSION_MAJOR}.${ImMaskCreator_VERSION_MINOR}.${ImMaskCreator_VERSION_PATCH})
 add_definitions(-DImMaskCreator_VERSION_MAJOR=${ImMaskCreator_VERSION_MAJOR})
@@ -40,6 +40,7 @@ add_library(ImMaskCreator ${LIBRARY_TYPE}
     ${LIB_SRC_DIR}/MatIo.cpp
     ${LIB_SRC_DIR}/MatMath.cpp
     ${LIB_SRC_DIR}/Morph.cpp
+    ${LIB_SRC_DIR}/BoxFilter.cpp
 )
 target_include_directories(ImMaskCreator PRIVATE
     ${LIB_SRC_DIR}

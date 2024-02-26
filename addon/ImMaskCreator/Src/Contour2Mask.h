@@ -11,10 +11,10 @@ ImGui::ImMat MakeColor(ImDataType eDtype, double dColorVal);
 
 ImGui::ImMat Contour2Mask(
         const Size2i& szMaskSize, const std::vector<Point2f>& aPolygonVertices, const Point2f& ptOffset,
-        ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled = true, float fFeatherSize = 0.f);
+        ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled = true, int iFeatherKsize = 0);
 ImGui::ImMat Contour2Mask(
         const Size2i& szMaskSize, const std::list<Point2f>& aPolygonVertices, const Point2f& ptOffset,
-        ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled = true, float fFeatherSize = 0.f);
+        ImDataType dtMaskDataType, double dMaskValue, double dNonMaskValue, int iLineType, bool bFilled = true, int iFeatherKsize = 0);
 
 void DrawMask(
         ImGui::ImMat& mMask, const std::vector<Point2f>& aPolygonVertices, const Point2f& ptOffset,
