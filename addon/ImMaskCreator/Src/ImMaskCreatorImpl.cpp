@@ -449,7 +449,6 @@ public:
                         {
                             m_tMorphCtrl.m_fMorphCtrlLength = l;
                             auto iMorphIters = (int)floor(l-MorphController::MIN_CTRL_LENGTH);
-                            // auto iMorphIters = (int)std::ceil(tmp*2/(m_mMorphKernel.w-1));
                             if (iMorphIters != m_tMorphCtrl.m_iMorphIterations)
                             {
                                 m_tMorphCtrl.m_iMorphIterations = iMorphIters;
@@ -939,8 +938,8 @@ public:
                 RefreshAllEdgeVertices(m_aRoutePointsForUi);
                 if (IsMorphCtrlShown())
                 {
-                    m_tMorphCtrl.m_fDistant *= v2Scale.x;
-                    m_tMorphCtrl.SetPosAndSlope(m_itMorphCtrlVt, m_tMorphCtrl.m_fDistant);
+                    m_tMorphCtrl.m_fDistance *= v2Scale.x;
+                    m_tMorphCtrl.SetPosAndSlope(m_itMorphCtrlVt, m_tMorphCtrl.m_fDistance);
                 }
             }
             m_i64PrevUiTick = INT64_MIN;
@@ -1282,7 +1281,7 @@ public:
             for (int i = 0; i < cpidx; i++)
                 it++;
             m_itMorphCtrlVt = it;
-            m_tMorphCtrl.SetPosAndSlope(it, m_tMorphCtrl.m_fDistant);
+            m_tMorphCtrl.SetPosAndSlope(it, m_tMorphCtrl.m_fDistance);
         }
     }
 
@@ -1823,7 +1822,7 @@ private:
         bool m_bInsidePoly{false};
         float m_fCtrlSlope;
         float m_fMorphCtrlLength;
-        float m_fDistant{0.f};
+        float m_fDistance{0.f};
         int m_iMorphIterations{0};
         ImVec2 m_ptFeatherGrabberPos;
         float m_fFeatherCtrlLength{0};
@@ -1841,24 +1840,30 @@ private:
         json::value ToJson() const
         {
             json::value j;
-            j["ctrl_lendth"] = json::number(m_fMorphCtrlLength);
+            j["ctrl_length"] = json::number(m_fMorphCtrlLength);
             j["iterations"] = json::number(m_iMorphIterations);
             j["inside_polygon"] = m_bInsidePoly;
+            j["distance"] = json::number(m_fDistance);
+            j["feather_ctrl_length"] = json::number(m_fFeatherCtrlLength);
+            j["feather_iterations"] = json::number(m_iFeatherIterations);
             return std::move(j);
         }
 
         void FromJson(const json::value& j)
         {
-            m_fMorphCtrlLength = j["ctrl_lendth"].get<json::number>();
+            m_fMorphCtrlLength = j["ctrl_length"].get<json::number>();
             m_iMorphIterations = j["iterations"].get<json::number>();
             m_bInsidePoly = j["inside_polygon"].get<json::boolean>();
+            m_fDistance = j["distance"].get<json::number>();
+            m_fFeatherCtrlLength = j["feather_ctrl_length"].get<json::number>();
+            m_iFeatherIterations = j["feather_iterations"].get<json::number>();
         }
 
         void Reset()
         {
             m_ptRootPos = {-1, -1};
             m_fCtrlSlope = 0;
-            m_fDistant = 0;
+            m_fDistance = 0;
             m_bIsHovered = false;
             m_iHoverType = -1;
         }
@@ -1924,7 +1929,7 @@ private:
 
             m_ptRootPos = ptRootPos;
             m_fCtrlSlope = fCtrlSlope;
-            m_fDistant =  v2Dist.x;
+            m_fDistance =  v2Dist.x;
             CalcGrabberPos();
             return itCp;
         }
@@ -1978,7 +1983,7 @@ private:
 
             m_ptRootPos = ptRootPos;
             m_fCtrlSlope = fCtrlSlope;
-            m_fDistant = v2Dist.x;
+            m_fDistance = v2Dist.x;
             CalcGrabberPos();
             return itCp;
         }
@@ -2618,7 +2623,7 @@ private:
             m_itMorphCtrlVt = m_aRoutePointsForUi.end();
             return;
         }
-        m_itMorphCtrlVt = m_tMorphCtrl.SetPosAndSlope(iterVt, m_tMorphCtrl.m_fDistant);
+        m_itMorphCtrlVt = m_tMorphCtrl.SetPosAndSlope(iterVt, m_tMorphCtrl.m_fDistance);
     }
 
     bool HasHoveredVertex() const
