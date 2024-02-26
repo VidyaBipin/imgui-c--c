@@ -1,4 +1,4 @@
-// dear imgui, v1.90.4 WIP
+// dear imgui, v1.90.4
 // (drawing and font code)
 
 /*
@@ -1737,6 +1737,13 @@ void ImDrawList::AddTextComplex(const ImVec2 pos, const char * str, float font_s
         AddText(ImVec2(pos.x, pos.y - outline_w), outline_color, str);
         AddText(ImVec2(pos.x + outline_w, pos.y), outline_color, str);
         AddText(ImVec2(pos.x, pos.y + outline_w), outline_color, str);
+        if (outline_w >= 4)
+        {
+            AddText(ImVec2(pos.x - outline_w, pos.y - outline_w), outline_color, str);
+            AddText(ImVec2(pos.x + outline_w, pos.y - outline_w), outline_color, str);
+            AddText(ImVec2(pos.x + outline_w, pos.y - outline_w), outline_color, str);
+            AddText(ImVec2(pos.x - outline_w, pos.y + outline_w), outline_color, str);
+        }
     }
     AddText(pos, text_color, str);
     ImGui::PopStyleColor();
@@ -4332,8 +4339,8 @@ void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const ImRect& rect, Im
     }
     else
     {
-        draw_list->PathArcTo(ImVec2(x0, p1.y - rounding), rounding, IM_PI - arc0_e, IM_PI - arc0_b, 3); // BL
-        draw_list->PathArcTo(ImVec2(x0, p0.y + rounding), rounding, IM_PI + arc0_b, IM_PI + arc0_e, 3); // TR
+        draw_list->PathArcTo(ImVec2(x0, p1.y - rounding), rounding, IM_PI - arc0_e, IM_PI - arc0_b); // BL
+        draw_list->PathArcTo(ImVec2(x0, p0.y + rounding), rounding, IM_PI + arc0_b, IM_PI + arc0_e); // TR
     }
     if (p1.x > rect.Min.x + rounding)
     {
@@ -4352,8 +4359,8 @@ void ImGui::RenderRectFilledRangeH(ImDrawList* draw_list, const ImRect& rect, Im
         }
         else
         {
-            draw_list->PathArcTo(ImVec2(x1, p0.y + rounding), rounding, -arc1_e, -arc1_b, 3); // TR
-            draw_list->PathArcTo(ImVec2(x1, p1.y - rounding), rounding, +arc1_b, +arc1_e, 3); // BR
+            draw_list->PathArcTo(ImVec2(x1, p0.y + rounding), rounding, -arc1_e, -arc1_b); // TR
+            draw_list->PathArcTo(ImVec2(x1, p1.y - rounding), rounding, +arc1_b, +arc1_e); // BR
         }
     }
     draw_list->PathFillConvex(col);

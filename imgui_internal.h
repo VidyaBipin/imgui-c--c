@@ -1,4 +1,4 @@
-// dear imgui, v1.90.4 WIP
+// dear imgui, v1.90.4
 // (internal structures/api)
 
 // You may use this file to debug, understand or extend Dear ImGui features but we don't provide any guarantee of forward compatibility.
@@ -2806,6 +2806,7 @@ struct IMGUI_API ImGuiWindowTempData
     int                     CurrentTableIdx;        // Current table index (into g.Tables)
     ImGuiLayoutType         LayoutType;
     ImGuiLayoutType         ParentLayoutType;       // Layout type of parent window at the time of Begin()
+    ImU32                   ModalDimBgColor;
 
     // stack layout add By Dicky
     ImGuiLayout*            CurrentLayout;
@@ -3904,7 +3905,6 @@ namespace ImGui
     IMGUI_API void          DebugBreakClearData();
     IMGUI_API bool          DebugBreakButton(const char* label, const char* description_of_location);
     IMGUI_API void          DebugBreakButtonTooltip(bool keyboard_only, const char* description_of_location);
-    inline void             DebugStartItemPicker()                                  { ImGuiContext& g = *GImGui; g.DebugItemPickerActive = true; }
     IMGUI_API void          ShowFontAtlas(ImFontAtlas* atlas);
     IMGUI_API void          DebugHookIdInfo(ImGuiID id, ImGuiDataType data_type, const void* data_id, const void* data_id_end);
     IMGUI_API void          DebugNodeColumns(ImGuiOldColumns* columns);
