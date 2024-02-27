@@ -422,7 +422,7 @@ public:
                         if (v2MousePos != m_itHoveredVertex->m_v2MoveOriginMousePos)
                         {
                             const auto v2MoveOffset = v2MousePos-m_itHoveredVertex->m_v2MoveOriginMousePos;
-                            MoveRoute(v2MoveOffset);
+                            MoveRoute(v2MoveOffset, i64Tick);
                             m_bRouteChanged = true;
                             m_itHoveredVertex->m_v2MoveOriginMousePos = v2MousePos;
                         }
@@ -2580,17 +2580,25 @@ private:
         }
     }
 
-    void MoveRoute(const ImVec2& v2MoveOffset)
+    void MoveRoute(const ImVec2& v2MoveOffset, int64_t i64Tick)
     {
         if (fabs(v2MoveOffset.x) < FLT_EPSILON && fabs(v2MoveOffset.y) < FLT_EPSILON)
             return;
         const bool bKeyFrameEnabled = m_bKeyFrameEnabled;
         const LibCurve::KeyPoint::ValType tPanOffset(v2MoveOffset.x, v2MoveOffset.y, 0, 0);
-        for (auto& rp : m_aRoutePointsForUi)
+        if (!bKeyFrameEnabled || i64Tick <= 0)
         {
-            rp.m_v2Pos += v2MoveOffset;
-            if (bKeyFrameEnabled)
-                rp.m_ahCurves[0]->PanKeyPoints(tPanOffset);
+            for (auto& rp : m_aRoutePointsForUi)
+                rp.m_v2Pos += v2MoveOffset;
+        }
+        else
+        {
+            for (auto& rp : m_aRoutePointsForUi)
+            {
+                auto tKpVal = rp.m_ahCurves[0]->CalcPointVal(i64Tick);
+                tKpVal += tPanOffset;
+                rp.AddKeyPoint(0, LibCurve::KeyPoint::CreateInstance(tKpVal));
+            }
         }
         RefreshAllEdgeVertices(m_aRoutePointsForUi);
         if (bKeyFrameEnabled)

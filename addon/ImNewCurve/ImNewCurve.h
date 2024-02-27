@@ -175,6 +175,7 @@ namespace ImNewCurve
         const std::pair<uint32_t, uint32_t>& GetTimeBase() const { return m_tTimeBase; }
         size_t GetKeyPointCount() const { return m_aKeyPoints.size(); }
         std::vector<float> GetKeyTimes() const;
+        std::vector<float> GetKeyTicks() const;
         const KeyPoint::Holder GetKeyPoint(size_t idx) const;
         int GetKeyPointIndex(const KeyPoint::Holder& hKp) const;
         int GetKeyPointIndexByTick(float fTick) const;
@@ -231,7 +232,7 @@ namespace ImNewCurve
         void UnrigsterCallbacks(Callbacks* pCb);
 
     protected:
-        Curve() {}
+        Curve() : m_bTimeBaseValid(false), m_tTimeBase(0, 0) {}
         void SortKeyPoints();
         KeyPoint::Holder GetKeyPoint_(size_t idx) const;
 

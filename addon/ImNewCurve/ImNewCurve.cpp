@@ -235,6 +235,15 @@ std::vector<float> Curve::GetKeyTimes() const
     return std::move(aKeyTimes);
 }
 
+std::vector<float> Curve::GetKeyTicks() const
+{
+    std::vector<float> aKeyTicks;
+    aKeyTicks.reserve(m_aKeyPoints.size());
+    for (const auto& hKp : m_aKeyPoints)
+        aKeyTicks.push_back(hKp->t);
+    return std::move(aKeyTicks);
+}
+
 const KeyPoint::Holder Curve::GetKeyPoint(size_t idx) const
 {
     if (idx >= m_aKeyPoints.size())
