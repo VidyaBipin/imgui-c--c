@@ -4794,6 +4794,12 @@ bool IGFD::FileDialog::IsOk() const {
     return m_FileDialogInternal.isOk;
 }
 
+// add by Dicky
+bool IGFD::FileDialog::IsOkWithOverWrite() const {
+    return m_FileDialogInternal.isOverWrite;
+}
+// add by Dicky end
+
 void IGFD::FileDialog::SetFileStyle(const IGFD_FileStyleFlags& vFlags, const char* vCriteria, const FileStyle& vInfos) {
     m_FileDialogInternal.filterManager.SetFileStyle(vFlags, vCriteria, vInfos);
 }
@@ -4850,6 +4856,7 @@ bool IGFD::FileDialog::m_Confirm_Or_OpenOverWriteFileDialog_IfNeeded(bool vLastA
 
     // if IsOk == true && no check of overwrite => return true for confirm the dialog
     if (m_FileDialogInternal.isOk && vLastAction && !(m_FileDialogInternal.getDialogConfig().flags & ImGuiFileDialogFlags_ConfirmOverwrite)) {
+        m_FileDialogInternal.isOverWrite = false; // add by Dicky
         m_QuitFrame();
         return true;
     }
@@ -4860,6 +4867,7 @@ bool IGFD::FileDialog::m_Confirm_Or_OpenOverWriteFileDialog_IfNeeded(bool vLastA
         {
             if (!m_FileDialogInternal.fileManager.GetFileSystemInstance()->IsFileExist(GetFilePathName()))  // not existing => quit dialog
             {
+                m_FileDialogInternal.isOverWrite = false; // add by Dicky
                 m_QuitFrame();
                 return true;
             } else  // existing => confirm dialog to open
@@ -4891,6 +4899,7 @@ bool IGFD::FileDialog::m_Confirm_Or_OpenOverWriteFileDialog_IfNeeded(bool vLastA
                 m_FileDialogInternal.okResultToConfirm = false;
                 m_FileDialogInternal.isOk              = true;
                 res                                    = true;
+                m_FileDialogInternal.isOverWrite       = true; // add by Dicky
                 ImGui::CloseCurrentPopup();
             }
 
@@ -4900,6 +4909,7 @@ bool IGFD::FileDialog::m_Confirm_Or_OpenOverWriteFileDialog_IfNeeded(bool vLastA
                 m_FileDialogInternal.okResultToConfirm = false;
                 m_FileDialogInternal.isOk              = false;
                 res                                    = false;
+                m_FileDialogInternal.isOverWrite       = false; // add by Dicky
                 ImGui::CloseCurrentPopup();
             }
 

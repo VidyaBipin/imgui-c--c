@@ -1951,6 +1951,7 @@ public:
     bool canWeContinue = true;                                  // events
     bool okResultToConfirm = false;                             // to confim if ok for OverWrite
     bool isOk = false;                                          // is dialog ok button click
+    bool isOverWrite = false;                                   // add by Dicky, is dialog ok button click with OverWrite
     bool fileInputIsActive = false;                             // when input text for file or directory is active
     bool fileListViewIsActive = false;                          // when list view is active
     std::string dLGkey;                                         // the dialog key
@@ -2209,6 +2210,7 @@ public:
 
     // get result
     bool IsOk() const;  // true => Dialog Closed with Ok result / false : Dialog closed with cancel result
+    bool IsOkWithOverWrite() const; // add by Dicky true => Dialog Closed with Ok and OverWrite / false : Dialog closed with cancel result
     std::map<std::string, std::string> GetSelection(
         IGFD_ResultMode vFlag = IGFD_ResultMode_KeepInputFile);  // Open File behavior : will return selection via a
                                                                  // map<FileName, FilePathName>
