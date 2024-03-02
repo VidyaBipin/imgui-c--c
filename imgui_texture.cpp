@@ -1,5 +1,6 @@
 #include "imgui_texture.h"
 #include "imgui_helper.h"
+#include "ImGuiFileDialog.h"
 #include <thread>
 #if IMGUI_VULKAN_SHADER
 #include "ImVulkanShader.h"
@@ -961,6 +962,7 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
     {
         return;
     }
+    std::string dialog_id = "##TextureFileDlgKey" + std::to_string((long long)(texture1 ? texture1 : texture2));
     float texture_width = texture1 ? ImGui::ImGetTextureWidth(texture1) : size.x;
     float texture_height = texture1 ? ImGui::ImGetTextureHeight(texture1) : size.y;
     float aspectRatioTexture = texture_width / texture_height;
@@ -1128,6 +1130,34 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
             texture_zoom *= 1.1;
             if (texture_zoom > scale_range.y) texture_zoom = scale_range.y;
         }
+    }
+    if (texture2 && ImGui::BeginPopupContextItem())
+    {
+        if (ImGui::MenuItem((std::string(ICON_FA_IMAGE) + " Save Texture to File").c_str()))
+        {
+            IGFD::FileDialogConfig config;
+            config.path = ".";
+            config.countSelectionMax = 1;
+            config.flags = ImGuiFileDialogFlags_ShowBookmark |
+                            ImGuiFileDialogFlags_CaseInsensitiveExtention |
+                            ImGuiFileDialogFlags_ConfirmOverwrite |
+                            ImGuiFileDialogFlags_Modal;
+            ImGuiFileDialog::Instance()->OpenDialog(dialog_id.c_str(), ICON_IGFD_FOLDER_OPEN " Choose File", 
+                                                    image_filter.c_str(),
+                                                    config);
+        }
+        ImGui::EndPopup();
+    }
+    ImVec2 minSize = ImVec2(600, 300);
+    ImVec2 maxSize = ImVec2(FLT_MAX, FLT_MAX);
+    if (ImGuiFileDialog::Instance()->Display(dialog_id.c_str(), ImGuiWindowFlags_NoCollapse, minSize, maxSize))
+    {
+        if (ImGuiFileDialog::Instance()->IsOk() == true)
+        {
+            std::string file_path = ImGuiFileDialog::Instance()->GetFilePathName();
+            ImGui::ImTextureToFile(texture2, file_path);
+        }
+        ImGuiFileDialog::Instance()->Close();
     }
 }
 

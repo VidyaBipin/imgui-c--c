@@ -861,8 +861,8 @@ ImMat ImMat::crop(ImPoint p1, ImPoint p2) const
     if (y1 < 0) y1 = 0;
     if (x1 >= w) x1 = w - 1;
     if (y1 >= h) y1 = h - 1;
-    if (x2 >= w) x2 = w - 1;
-    if (y2 >= h) y2 = h - 1;
+    if (x2 > w) x2 = w;
+    if (y2 > h) y2 = h;
     ImMat dst(x2 - x1, y2 - y1, c, elemsize, elempack);
 
     if (dims == 1)

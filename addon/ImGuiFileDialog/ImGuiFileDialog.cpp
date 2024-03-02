@@ -110,7 +110,18 @@ SOFTWARE.
 #pragma endregion
 
 #pragma region Common defines
-
+// add by dicky
+std::string video_file_dis = "*.mp4 *.mov *.mkv *.avi *.webm *.ts";
+std::string video_file_suffix = ".mp4,.mov,.mkv,.avi,.webm,.ts";
+std::string image_file_dis = "*.png *.gif *.jpg *.jpeg *.tiff *.webp";
+std::string image_file_suffix = ".png,.gif,.jpg,.jpeg,.tiff,.webp";
+std::string audio_file_dis = "*.wav *.mp3 *.ogg *.m4a *.flac *.pcm";
+std::string audio_file_suffix = ".wav,.mp3,.ogg,.m4a,.flac,.pcm";
+std::string video_filter = "Video files (" + video_file_dis + "){" + video_file_suffix + "}";
+std::string image_filter = "Image files (" + image_file_dis + "){" + image_file_suffix + "}";
+std::string audio_filter = "Audio files (" + audio_file_dis + "){" + audio_file_suffix + "}";
+std::string media_filter = "Media files (" + video_file_dis + " " + image_file_dis + ")" + "{" + video_file_suffix + "," + image_file_suffix + "}" + "," + video_filter + "," + image_filter + "," + ".*";
+// add by dicky end
 /*
 // disable by dicky because we already include stb_image/stb_image_resize at imgui.h
 #ifdef USE_THUMBNAILS

@@ -171,3 +171,14 @@
 // #define PLACES_DEVICES_DEFAULT_OPEPEND true
 // #define placesDevicesGroupName "Devices"
 // #define placesDevicesDisplayOrder 10  // to the end
+
+extern std::string video_file_dis;
+extern std::string video_file_suffix;
+extern std::string image_file_dis;
+extern std::string image_file_suffix;
+extern std::string audio_file_dis;
+extern std::string audio_file_suffix;
+extern std::string video_filter;
+extern std::string image_filter;
+extern std::string audio_filter;
+extern std::string media_filter;
