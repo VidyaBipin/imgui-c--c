@@ -172,13 +172,16 @@
 // #define placesDevicesGroupName "Devices"
 // #define placesDevicesDisplayOrder 10  // to the end
 
-extern std::string video_file_dis;
-extern std::string video_file_suffix;
-extern std::string image_file_dis;
-extern std::string image_file_suffix;
-extern std::string audio_file_dis;
-extern std::string audio_file_suffix;
-extern std::string video_filter;
-extern std::string image_filter;
-extern std::string audio_filter;
-extern std::string media_filter;
+extern const std::string video_file_dis;
+extern const std::string video_file_suffix;
+extern const std::string image_file_dis;
+extern const std::string image_file_suffix;
+extern const std::string audio_file_dis;
+extern const std::string audio_file_suffix;
+extern const std::string text_file_dis;
+extern const std::string text_file_suffix;
+extern const std::string video_filter;
+extern const std::string image_filter;
+extern const std::string audio_filter;
+extern const std::string text_filter;
+extern const std::string media_filter;
