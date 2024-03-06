@@ -893,7 +893,7 @@ double ColorConvert_vulkan::Conv(const ImMat& im, ImMat & om) const
     }
 
     VkMat dst_gpu;
-    dst_gpu.create_type(im.dw > 0 ? im.dw : im.w, im.dh > 0 ? im.dh : im.h, 4, om.type, opt.blob_vkallocator);
+    dst_gpu.create_type(im.dw > 0 ? im.dw : im.w, im.dh > 0 ? im.dh : im.h, om.c > 0 ? om.c : im.c, om.type, opt.blob_vkallocator);
     om.copy_attribute(im);
 
     VkMat src_gpu;

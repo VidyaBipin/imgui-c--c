@@ -799,7 +799,10 @@ void main() \n\
         rgba = sfpvec4(load_rgb(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type), sfp(1.0f)); \n\
     else \n\
         rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
-    store_rgba(rgba, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+    if (p.out_format == CF_BGR || p.out_format == CF_RGB) \n\
+        store_rgb(rgba.rgb, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+    else \n\
+        store_rgba(rgba, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
 } \
 "
 
@@ -810,5 +813,6 @@ SHADER_PARAM_CONV
 SHADER_LOAD_RGBA
 SHADER_LOAD_RGB
 SHADER_STORE_RGBA
+SHADER_STORE_RGB
 SHADER_CONV_MAIN
 ;
