@@ -99,7 +99,6 @@ _OPTION(IMGUI_DX12                  "Build ImGui Direct12 backends(Windows only)
 _OPTION(IMGUI_FREETYPE              "Build ImGui with FreeType support" OFF)
 _OPTION(IMGUI_ICONS                 "Internal Icons build in library" ON)
 _OPTION(IMGUI_APPS                  "build apps base on imgui" ON)
-_OPTION(IMGUI_APPLE_APP             "build apple app base on imgui(Apple only)" OFF IF APPLE)
 _OPTION(IMGUI_SKIP_INSTALL          "Skip imgui install" ON)
 
 if(IOS AND CMAKE_OSX_ARCHITECTURES MATCHES "arm")
@@ -211,7 +210,6 @@ set(IMGUI_DX11 OFF CACHE BOOL "Disable ImGui Windows DX11 support" FORCE)
 set(IMGUI_DX12 OFF CACHE BOOL "Disable ImGui Windows DX12 support" FORCE)
 set(IMGUI_FREETYPE OFF CACHE BOOL "Disable ImGui with FreeType support" FORCE)
 set(IMGUI_APPS ON CACHE BOOL "Enable apps base on imgui" FORCE)
-set(IMGUI_APPLE_APP OFF CACHE BOOL "Disable apple app base on imgui" FORCE)
 set(IMGUI_EMSCRIPTEN ON CACHE BOOL "Set Emscripten on by force" FORCE)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=2  -s USE_GLFW=3 -s USE_WEBGPU=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s DISABLE_EXCEPTION_CATCHING=1 -s EXIT_RUNTIME=1 -s ASSERTIONS=1 -Wno-unused-command-line-argument")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s USE_SDL=2  -s USE_GLFW=3 -s USE_WEBGPU=1 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s DISABLE_EXCEPTION_CATCHING=1 -s EXIT_RUNTIME=1 -s ASSERTIONS=1 -Wno-unused-command-line-argument")
@@ -1452,7 +1450,7 @@ endif(IMGUI_STATIC)
 
 set(IMGUI_VERSION_MAJOR 1)
 set(IMGUI_VERSION_MINOR 90)
-set(IMGUI_VERSION_PATCH 42)
+set(IMGUI_VERSION_PATCH 44)
 string(TIMESTAMP IMGUI_VERSION_BUILD "%y%m%d")
 set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH})
 add_definitions(-DIMGUI_VERSION_MAJOR=${IMGUI_VERSION_MAJOR})
@@ -1595,60 +1593,6 @@ if (IMGUI_BUILD_EXAMPLE AND GLFW_FOUND AND IMGUI_GLFW AND BACKEND_RENDERING MATC
 endif(IMGUI_BUILD_EXAMPLE AND GLFW_FOUND AND IMGUI_GLFW AND BACKEND_RENDERING MATCHES OPENGL3)
 
 if (IMGUI_BUILD_EXAMPLE AND APPLE AND IMGUI_MATAL AND BACKEND_RENDERING MATCHES MATAL)
-    if (IMGUI_APPLE_APP)
-        add_executable(
-            example_apple_metal
-            MACOSX_BUNDLE
-            test/example_apple_metal.mm
-            test/metal.icns
-        )
-        set_target_properties(
-            example_apple_metal
-            PROPERTIES
-            OUTPUT_NAME "example_apple_metal"
-            MACOSX_BUNDLE_EXECUTABLE_NAME "example_apple_metal"
-            MACOSX_BUNDLE_BUNDLE_NAME "example_apple_metal"
-            FOLDER "example_apple_metal"
-            MACOSX_BUNDLE_ICON_FILE "metal"
-            MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0"
-            MACOSX_BUNDLE_LONG_VERSION_STRING "sample 1.0"
-            MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/test/Info-macOS.plist.in
-        )
-        target_link_libraries(
-            example_apple_metal
-            imgui
-            "-framework Metal"
-            "-framework MetalKit"
-            "-framework Cocoa"
-            "-framework QuartzCore"
-        )
-        if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        target_compile_options(
-            example_apple_metal 
-            PUBLIC "-fobjc-arc"
-        )
-        endif()
-        set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/test/metal.icns PROPERTIES
-                MACOSX_PACKAGE_LOCATION "Resources"
-        )
-        # Handle the Storyboard ourselves
-        if(NOT ${CMAKE_GENERATOR} MATCHES "^Xcode.*")
-            # Compile the storyboard file with the ibtool.
-            add_custom_command(TARGET example_apple_metal POST_BUILD
-                COMMAND ibtool --errors --warnings --notices --output-format human-readable-text
-                    --compile ${CMAKE_CURRENT_BINARY_DIR}/example_apple_metal.app/Contents/Resources/MainMenu.storyboardc
-                    ${CMAKE_CURRENT_SOURCE_DIR}/test/MainMenu.storyboard
-                    COMMENT "Compiling storyboard"
-            )
-            # Fix up the library search path in the executable to find (loader) libraries in the bundle.
-            install(CODE "
-                include(BundleUtilities)
-                fixup_bundle(${CMAKE_INSTALL_PREFIX}/example_apple_metal.app \"\" \"\")
-                " COMPONENT Runtime
-            )
-        endif()
-    endif(IMGUI_APPLE_APP)
-
     if (IMGUI_GLFW AND GLFW_FOUND)
         add_executable(
             example_glfw_metal

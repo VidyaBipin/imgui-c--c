@@ -11,10 +11,6 @@
 
 #include <iostream>
 
-const std::string image_file_dis = "*.png *.gif *.jpg *.jpeg *.tiff *.webp";
-const std::string image_file_suffix = ".png,.gif,.jpg,.jpeg,.tiff,.webp";
-const std::string image_filter = "Image files (" + image_file_dis + "){" + image_file_suffix + "}";
-
 namespace ImGuiTexInspect
 {
 struct Texture
