@@ -1073,7 +1073,7 @@ if (IMGUI_BUILD_EXAMPLE)
 endif(IMGUI_BUILD_EXAMPLE)
 
 # ImMaskCreator
-set(ImMaskCreator_STATIC ON)
+set(ImMaskCreator_STATIC OFF)
 add_subdirectory(addon/ImMaskCreator)
 set(IMGUI_INC_DIRS
     ${IMGUI_INC_DIRS}

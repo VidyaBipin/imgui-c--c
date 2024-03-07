@@ -7,6 +7,7 @@
 #include "imvk_image_mat.h"
 
 #define BINDING_MAX 32
+#define SHADER_BUFFER
 
 namespace ImGui 
 {

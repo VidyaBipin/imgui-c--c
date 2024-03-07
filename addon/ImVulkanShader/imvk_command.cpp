@@ -1843,7 +1843,11 @@ void VkCompute::record_pipeline(const Pipeline* pipeline, const std::vector<VkMa
     {
         uint32_t group_count_x = (dispatcher.w + pipeline->local_size_x() - 1) / pipeline->local_size_x();
         uint32_t group_count_y = (dispatcher.h + pipeline->local_size_y() - 1) / pipeline->local_size_y();
+#ifdef SHADER_BUFFER
+        uint32_t group_count_z = 1;
+#else
         uint32_t group_count_z = (dispatcher.c + pipeline->local_size_z() - 1) / pipeline->local_size_z();
+#endif
 
         if (vkdev->info.support_VK_KHR_push_descriptor())
         {
