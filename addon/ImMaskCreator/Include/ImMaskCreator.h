@@ -35,6 +35,8 @@ struct MaskCreator
     virtual void SetName(const std::string& name) = 0;
     virtual bool DrawContent(const ImVec2& v2Pos, const ImVec2& v2ViewSize, bool bEditable = true, int64_t i64Tick = 0) = 0;
     virtual bool DrawContourPointKeyFrames(int64_t& i64Tick, const RoutePoint* ptContourPoint = nullptr, uint32_t u32Width = 0) = 0;
+    virtual void SetMaskWarpAffineMatrix(float aWarpAffineMatrix[2][3], float aRevWarpAffineMatrix[2][3]) = 0;
+    virtual void SetMaskWarpAffineParameters(const ImVec2& v2Offset, const ImVec2& v2Scale, float fRotationAngle, const ImVec2& v2Anchor = ImVec2(0,0)) = 0;
     virtual void SetUiWarpAffineMatrix(float aWarpAffineMatrix[2][3], float aRevWarpAffineMatrix[2][3]) = 0;
     virtual void SetUiWarpAffineParameters(const ImVec2& v2Offset, const ImVec2& v2Scale, float fRotationAngle, const ImVec2& v2Anchor = ImVec2(0,0)) = 0;
     virtual bool ChangeMaskSize(const MatUtils::Size2i& size, bool bScaleMask = false) = 0;

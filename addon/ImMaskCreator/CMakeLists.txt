@@ -24,7 +24,7 @@ endif(ImMaskCreator_STATIC)
 
 set(ImMaskCreator_VERSION_MAJOR 1)
 set(ImMaskCreator_VERSION_MINOR 1)
-set(ImMaskCreator_VERSION_PATCH 0)
+set(ImMaskCreator_VERSION_PATCH 1)
 string(TIMESTAMP ImMaskCreator_VERSION_BUILD "%y%m%d")
 set(ImMaskCreator_VERSION_STRING ${ImMaskCreator_VERSION_MAJOR}.${ImMaskCreator_VERSION_MINOR}.${ImMaskCreator_VERSION_PATCH})
 add_definitions(-DImMaskCreator_VERSION_MAJOR=${ImMaskCreator_VERSION_MAJOR})

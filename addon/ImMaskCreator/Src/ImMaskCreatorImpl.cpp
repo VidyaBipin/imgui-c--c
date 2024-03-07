@@ -38,11 +38,14 @@ public:
         m_pLogger = GetLogger("MaskCreator");
         m_v2PointSizeHalf = m_v2PointSize/2;
         m_itMorphCtrlVt = m_itHoveredVertex = m_itSelectedVertex = m_aRoutePointsForUi.end();
-        // m_mMorphKernel = MatUtils::GetStructuringElement(MatUtils::MORPH_ELLIPSE, {5, 5});
-        m_aWarpAffineMatrix[0][0] = 1; m_aWarpAffineMatrix[0][1] = 0; m_aWarpAffineMatrix[0][2] = 0;
-        m_aWarpAffineMatrix[1][0] = 0; m_aWarpAffineMatrix[1][1] = 1; m_aWarpAffineMatrix[1][2] = 0;
-        m_aRevWarpAffineMatrix[0][0] = 1; m_aRevWarpAffineMatrix[0][1] = 0; m_aRevWarpAffineMatrix[0][2] = 0;
-        m_aRevWarpAffineMatrix[1][0] = 0; m_aRevWarpAffineMatrix[1][1] = 1; m_aRevWarpAffineMatrix[1][2] = 0;
+        m_aUiWarpAffineMatrix[0][0] = 1; m_aUiWarpAffineMatrix[0][1] = 0; m_aUiWarpAffineMatrix[0][2] = 0;
+        m_aUiWarpAffineMatrix[1][0] = 0; m_aUiWarpAffineMatrix[1][1] = 1; m_aUiWarpAffineMatrix[1][2] = 0;
+        m_aUiRevWarpAffineMatrix[0][0] = 1; m_aUiRevWarpAffineMatrix[0][1] = 0; m_aUiRevWarpAffineMatrix[0][2] = 0;
+        m_aUiRevWarpAffineMatrix[1][0] = 0; m_aUiRevWarpAffineMatrix[1][1] = 1; m_aUiRevWarpAffineMatrix[1][2] = 0;
+        m_aMaskWarpAffineMatrix[0][0] = 1; m_aMaskWarpAffineMatrix[0][1] = 0; m_aMaskWarpAffineMatrix[0][2] = 0;
+        m_aMaskWarpAffineMatrix[1][0] = 0; m_aMaskWarpAffineMatrix[1][1] = 1; m_aMaskWarpAffineMatrix[1][2] = 0;
+        m_aMaskRevWarpAffineMatrix[0][0] = 1; m_aMaskRevWarpAffineMatrix[0][1] = 0; m_aMaskRevWarpAffineMatrix[0][2] = 0;
+        m_aMaskRevWarpAffineMatrix[1][0] = 0; m_aMaskRevWarpAffineMatrix[1][1] = 1; m_aMaskRevWarpAffineMatrix[1][2] = 0;
     }
 
     string GetName() const override
@@ -67,25 +70,30 @@ public:
         }
         m_rWorkArea = bb;
         const ImVec2 v2UiScaleNew(v2ViewSize.x/(float)m_szMaskSize.x, v2ViewSize.y/(float)m_szMaskSize.y);
-        if (m_v2UiScale != v2UiScaleNew || m_bWarpAffineMatrixChanged)
+        if (m_v2UiScale != v2UiScaleNew || m_bUiWarpAffineMatrixChanged || m_bMaskWarpAffineMatrixChanged)
         {
-            m_aFinalWarpAffineMatrix[0][0] = m_aWarpAffineMatrix[0][0]*v2UiScaleNew.x;
-            m_aFinalWarpAffineMatrix[0][1] = m_aWarpAffineMatrix[0][1]*v2UiScaleNew.x;
-            m_aFinalWarpAffineMatrix[0][2] = m_aWarpAffineMatrix[0][2]*v2UiScaleNew.x;
-            m_aFinalWarpAffineMatrix[1][0] = m_aWarpAffineMatrix[1][0]*v2UiScaleNew.y;
-            m_aFinalWarpAffineMatrix[1][1] = m_aWarpAffineMatrix[1][1]*v2UiScaleNew.y;
-            m_aFinalWarpAffineMatrix[1][2] = m_aWarpAffineMatrix[1][2]*v2UiScaleNew.y;
+            const auto& fScaleX = v2UiScaleNew.x;
+            const auto& fScaleY = v2UiScaleNew.y;
+            float (*A)[3] = m_aUiWarpAffineMatrix, (*B)[3] = m_aMaskWarpAffineMatrix;
+            m_aUiFinalWarpAffineMatrix[0][0] = fScaleX*(A[0][0]*B[0][0]+A[0][1]*B[1][0]);
+            m_aUiFinalWarpAffineMatrix[0][1] = fScaleX*(A[0][0]*B[0][1]+A[0][1]*B[1][1]);
+            m_aUiFinalWarpAffineMatrix[0][2] = fScaleX*(A[0][0]*B[0][2]+A[0][1]*B[1][2]+A[0][2]);
+            m_aUiFinalWarpAffineMatrix[1][0] = fScaleY*(A[1][0]*B[0][0]+A[1][1]*B[1][0]);
+            m_aUiFinalWarpAffineMatrix[1][1] = fScaleY*(A[1][0]*B[0][1]+A[1][1]*B[1][1]);
+            m_aUiFinalWarpAffineMatrix[1][2] = fScaleY*(A[1][0]*B[0][2]+A[1][1]*B[1][2]+A[1][2]);
             const auto fRevScaleX = 1/v2UiScaleNew.x;
             const auto fRevScaleY = 1/v2UiScaleNew.y;
-            m_aFinalRevWarpAffineMatrix[0][0] = m_aRevWarpAffineMatrix[0][0]*fRevScaleX;
-            m_aFinalRevWarpAffineMatrix[0][1] = m_aRevWarpAffineMatrix[0][1]*fRevScaleY;
-            m_aFinalRevWarpAffineMatrix[0][2] = m_aRevWarpAffineMatrix[0][2];
-            m_aFinalRevWarpAffineMatrix[1][0] = m_aRevWarpAffineMatrix[1][0]*fRevScaleX;
-            m_aFinalRevWarpAffineMatrix[1][1] = m_aRevWarpAffineMatrix[1][1]*fRevScaleY;
-            m_aFinalRevWarpAffineMatrix[1][2] = m_aRevWarpAffineMatrix[1][2];
+            A = m_aUiRevWarpAffineMatrix; B = m_aMaskRevWarpAffineMatrix;
+            m_aUiFinalRevWarpAffineMatrix[0][0] = fRevScaleX*(A[0][0]*B[0][0]+A[1][0]*B[0][1]);
+            m_aUiFinalRevWarpAffineMatrix[0][1] = fRevScaleY*(A[0][1]*B[0][0]+A[1][1]*B[0][1]);
+            m_aUiFinalRevWarpAffineMatrix[0][2] = A[0][2]*B[0][0]+A[1][2]*B[0][1]+B[0][2];
+            m_aUiFinalRevWarpAffineMatrix[1][0] = fRevScaleX*(A[0][0]*B[1][0]+A[1][0]*B[1][1]);
+            m_aUiFinalRevWarpAffineMatrix[1][1] = fRevScaleY*(A[0][1]*B[1][0]+A[1][1]*B[1][1]);
+            m_aUiFinalRevWarpAffineMatrix[1][2] = A[0][2]*B[1][0]+A[1][2]*B[1][1]+B[1][2];
         }
         m_v2UiScale = v2UiScaleNew;
-        m_bWarpAffineMatrixChanged = false;
+        m_bUiWarpAffineMatrixChanged = false;
+        m_bMaskWarpAffineMatrixChanged = false;
 
         if (m_bKeyFrameEnabled && UpdateContourByKeyFrame(i64Tick, true))
             m_bRouteChanged = true;
@@ -878,17 +886,54 @@ public:
         return true;
     }
 
+    void SetMaskWarpAffineMatrix(float aWarpAffineMatrix[2][3], float aRevWarpAffineMatrix[2][3]) override
+    {
+        if (memcmp(m_aMaskWarpAffineMatrix, aWarpAffineMatrix, sizeof(m_aMaskWarpAffineMatrix)))
+        {
+            memcpy(m_aMaskWarpAffineMatrix, aWarpAffineMatrix, sizeof(m_aMaskWarpAffineMatrix));
+            m_bMaskWarpAffineMatrixChanged = true;
+        }
+        if (memcmp(m_aMaskRevWarpAffineMatrix, aRevWarpAffineMatrix, sizeof(m_aMaskRevWarpAffineMatrix)))
+        {
+            memcpy(m_aMaskRevWarpAffineMatrix, aRevWarpAffineMatrix, sizeof(m_aMaskRevWarpAffineMatrix));
+            m_bMaskWarpAffineMatrixChanged = true;
+        }
+        if (m_bMaskWarpAffineMatrixChanged)
+            m_bNeedRebuildMaskContourVtx = true;
+    }
+
+    void SetMaskWarpAffineParameters(const ImVec2& v2Offset, const ImVec2& v2Scale, float fRotationAngle, const ImVec2& v2Anchor) override
+    {
+        const auto fRotationRadian = fRotationAngle*M_PI/180.f;
+        const auto fSinA = (float)sin(fRotationRadian);
+        const auto fCosA = (float)cos(fRotationRadian);
+        float aWarpAffineMatrix[2][3], aRevWarpAffineMatrix[2][3];
+        aWarpAffineMatrix[0][0] = fCosA*v2Scale.x;
+        aWarpAffineMatrix[0][1] = fSinA*v2Scale.y;
+        aWarpAffineMatrix[1][0] = -fSinA*v2Scale.x;
+        aWarpAffineMatrix[1][1] = fCosA*v2Scale.y;
+        aWarpAffineMatrix[0][2] = v2Offset.x+(1-aWarpAffineMatrix[0][0])*v2Anchor.x-aWarpAffineMatrix[0][1]*v2Anchor.y;
+        aWarpAffineMatrix[1][2] = v2Offset.y-aWarpAffineMatrix[1][0]*v2Anchor.x+(1-aWarpAffineMatrix[1][1])*v2Anchor.y;
+        aRevWarpAffineMatrix[0][0] = fCosA/v2Scale.x;
+        aRevWarpAffineMatrix[0][1] = -fSinA/v2Scale.x;
+        aRevWarpAffineMatrix[0][2] = -aWarpAffineMatrix[0][2]*aRevWarpAffineMatrix[0][0]-aWarpAffineMatrix[1][2]*aRevWarpAffineMatrix[0][1];
+        aRevWarpAffineMatrix[1][0] = fSinA/v2Scale.y;
+        aRevWarpAffineMatrix[1][1] = fCosA/v2Scale.y;
+        aRevWarpAffineMatrix[1][2] = -aWarpAffineMatrix[0][2]*aRevWarpAffineMatrix[1][0]-aWarpAffineMatrix[1][2]*aRevWarpAffineMatrix[1][1];
+        SetMaskWarpAffineMatrix(aWarpAffineMatrix, aRevWarpAffineMatrix);
+    }
+
     void SetUiWarpAffineMatrix(float aWarpAffineMatrix[2][3], float aRevWarpAffineMatrix[2][3]) override
     {
-        if (memcmp(m_aWarpAffineMatrix, aWarpAffineMatrix, sizeof(m_aWarpAffineMatrix)))
+        if (memcmp(m_aUiWarpAffineMatrix, aWarpAffineMatrix, sizeof(m_aUiWarpAffineMatrix)))
         {
-            memcpy(m_aWarpAffineMatrix, aWarpAffineMatrix, sizeof(m_aWarpAffineMatrix));
-            m_bWarpAffineMatrixChanged = true;
+            memcpy(m_aUiWarpAffineMatrix, aWarpAffineMatrix, sizeof(m_aUiWarpAffineMatrix));
+            m_bUiWarpAffineMatrixChanged = true;
         }
-        if (memcmp(m_aRevWarpAffineMatrix, aRevWarpAffineMatrix, sizeof(m_aRevWarpAffineMatrix)))
+        if (memcmp(m_aUiRevWarpAffineMatrix, aRevWarpAffineMatrix, sizeof(m_aUiRevWarpAffineMatrix)))
         {
-            memcpy(m_aRevWarpAffineMatrix, aRevWarpAffineMatrix, sizeof(m_aRevWarpAffineMatrix));
-            m_bWarpAffineMatrixChanged = true;
+            memcpy(m_aUiRevWarpAffineMatrix, aRevWarpAffineMatrix, sizeof(m_aUiRevWarpAffineMatrix));
+            m_bUiWarpAffineMatrixChanged = true;
         }
     }
 
@@ -994,6 +1039,9 @@ public:
         if (m_bKeyFrameEnabled && UpdateContourByKeyFrame(i64Tick, false))
             bContourChanged = true;
 
+        if (m_bNeedRebuildMaskContourVtx.exchange(false))
+            bContourChanged = true;
+
         if (bContourChanged)
         {
             // refresh contour vertices
@@ -1011,7 +1059,7 @@ public:
                         auto itVt1 = itVt0; itVt1++;
                         while (itVt1 != v.m_aEdgeVertices.end())
                         {
-                            aContourVertices.push_back(MatUtils::FromImVec2<float>(*itVt0++));
+                            aContourVertices.push_back(MatUtils::FromImVec2<float>(ToMaskPos(*itVt0++)));
                             itVt1++;
                         }
                     }
@@ -2498,8 +2546,8 @@ private:
 
     ImVec2 ToUiPos(const ImVec2& v2Pos, bool bAddOrigin = true) const
     {
-        ImVec2 v2UiPos(v2Pos.x*m_aFinalWarpAffineMatrix[0][0]+v2Pos.y*m_aFinalWarpAffineMatrix[0][1]+m_aFinalWarpAffineMatrix[0][2],
-                      v2Pos.x*m_aFinalWarpAffineMatrix[1][0]+v2Pos.y*m_aFinalWarpAffineMatrix[1][1]+m_aFinalWarpAffineMatrix[1][2]);
+        ImVec2 v2UiPos(v2Pos.x*m_aUiFinalWarpAffineMatrix[0][0]+v2Pos.y*m_aUiFinalWarpAffineMatrix[0][1]+m_aUiFinalWarpAffineMatrix[0][2],
+                      v2Pos.x*m_aUiFinalWarpAffineMatrix[1][0]+v2Pos.y*m_aUiFinalWarpAffineMatrix[1][1]+m_aUiFinalWarpAffineMatrix[1][2]);
         if (bAddOrigin) v2UiPos += m_rWorkArea.Min;
         return std::move(v2UiPos);
     }
@@ -2507,8 +2555,22 @@ private:
     ImVec2 FromUiPos(const ImVec2& _v2UiPos, bool bSubOrigin = true) const
     {
         const auto v2UiPos = bSubOrigin ? _v2UiPos-m_rWorkArea.Min : _v2UiPos;
-        ImVec2 v2Pos(v2UiPos.x*m_aFinalRevWarpAffineMatrix[0][0]+v2UiPos.y*m_aFinalRevWarpAffineMatrix[0][1]+m_aFinalRevWarpAffineMatrix[0][2],
-                      v2UiPos.x*m_aFinalRevWarpAffineMatrix[1][0]+v2UiPos.y*m_aFinalRevWarpAffineMatrix[1][1]+m_aFinalRevWarpAffineMatrix[1][2]);
+        ImVec2 v2Pos(v2UiPos.x*m_aUiFinalRevWarpAffineMatrix[0][0]+v2UiPos.y*m_aUiFinalRevWarpAffineMatrix[0][1]+m_aUiFinalRevWarpAffineMatrix[0][2],
+                      v2UiPos.x*m_aUiFinalRevWarpAffineMatrix[1][0]+v2UiPos.y*m_aUiFinalRevWarpAffineMatrix[1][1]+m_aUiFinalRevWarpAffineMatrix[1][2]);
+        return std::move(v2Pos);
+    }
+
+    ImVec2 ToMaskPos(const ImVec2& v2Pos) const
+    {
+        ImVec2 v2MaskPos(v2Pos.x*m_aMaskWarpAffineMatrix[0][0]+v2Pos.y*m_aMaskWarpAffineMatrix[0][1]+m_aMaskWarpAffineMatrix[0][2],
+                      v2Pos.x*m_aMaskWarpAffineMatrix[1][0]+v2Pos.y*m_aMaskWarpAffineMatrix[1][1]+m_aMaskWarpAffineMatrix[1][2]);
+        return std::move(v2MaskPos);
+    }
+
+    ImVec2 FromMaskPos(const ImVec2& v2MaskPos) const
+    {
+        ImVec2 v2Pos(v2MaskPos.x*m_aMaskRevWarpAffineMatrix[0][0]+v2MaskPos.y*m_aMaskRevWarpAffineMatrix[0][1]+m_aMaskRevWarpAffineMatrix[0][2],
+                      v2MaskPos.x*m_aMaskRevWarpAffineMatrix[1][0]+v2MaskPos.y*m_aMaskRevWarpAffineMatrix[1][1]+m_aMaskRevWarpAffineMatrix[1][2]);
         return std::move(v2Pos);
     }
 
@@ -3219,15 +3281,15 @@ private:
     MatUtils::Size2i m_szMaskSize;
     ImRect m_rWorkArea{{-1, -1}, {-1, -1}};
     ImVec2 m_v2UiScale{1.0f, 1.0f};
-    float m_aWarpAffineMatrix[2][3], m_aFinalWarpAffineMatrix[2][3];
-    float m_aRevWarpAffineMatrix[2][3], m_aFinalRevWarpAffineMatrix[2][3];
-    bool m_bWarpAffineMatrixChanged{true};
+    float m_aMaskWarpAffineMatrix[2][3], m_aUiWarpAffineMatrix[2][3], m_aUiFinalWarpAffineMatrix[2][3];
+    float m_aMaskRevWarpAffineMatrix[2][3], m_aUiRevWarpAffineMatrix[2][3], m_aUiFinalRevWarpAffineMatrix[2][3];
+    bool m_bMaskWarpAffineMatrixChanged{true}, m_bUiWarpAffineMatrixChanged{true};
     bool m_bWarpAffinePassThrough{true}, m_bWarpAffineOnlyPan{false};
     list<RoutePointImpl> m_aRoutePointsForUi;
     list<ImVec2> m_aContourVerticesForUi;
     list<RoutePointImpl> m_aRoutePointsForMask;
     list<MatUtils::Point2f> m_aContourVerticesForMask;
-    atomic_bool m_bRouteNeedSync{true};
+    atomic_bool m_bRouteNeedSync{true}, m_bNeedRebuildMaskContourVtx{false};
     mutex m_mtxRouteLock;
     ImVec2 m_v2PointSize{5.f, 5.f}, m_v2PointSizeHalf;
     ImU32 m_u32PointColor{IM_COL32(40, 170, 40, 255)};
