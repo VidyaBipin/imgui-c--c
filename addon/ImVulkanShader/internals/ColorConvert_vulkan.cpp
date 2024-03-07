@@ -402,7 +402,7 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGBA, ImInt
     int dst_width = im_RGBA.w > 0 ? im_RGBA.w : im_YUV.w;
     int dst_height = im_RGBA.h > 0 ? im_RGBA.h : im_YUV.h;
     dst_gpu.create_type(dst_width, dst_height, 4, im_RGBA.type, opt.blob_vkallocator);
-    im_RGBA.copy_attribute(im_YUV);
+    dst_gpu.elempack = 4;
     dst_gpu.color_format = im_RGBA.color_format;
     dst_gpu.color_range = IM_CR_FULL_RANGE;
     dst_gpu.color_space = im_YUV.color_space;
@@ -439,6 +439,8 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_YUV, ImMat & im_RGBA, ImInt
     ret = 1.f;
 #endif
     cmd->reset();
+
+    im_RGBA.copy_attribute(im_YUV);
     return ret;
 }
 
@@ -454,7 +456,7 @@ double ColorConvert_vulkan::YUV2RGB(const ImMat& im_YUV, ImMat & im_RGB, ImInter
     int dst_width = im_RGB.w > 0 ? im_RGB.w : im_YUV.w;
     int dst_height = im_RGB.h > 0 ? im_RGB.h : im_YUV.h;
     dst_gpu.create_type(dst_width, dst_height, 3, im_RGB.type, opt.blob_vkallocator);
-    im_RGB.copy_attribute(im_YUV);
+    dst_gpu.elempack = 3;
     dst_gpu.color_format = im_RGB.color_format;
     dst_gpu.color_range = IM_CR_FULL_RANGE;
     dst_gpu.color_space = im_YUV.color_space;
@@ -491,6 +493,8 @@ double ColorConvert_vulkan::YUV2RGB(const ImMat& im_YUV, ImMat & im_RGB, ImInter
     ret = 1.f;
 #endif
     cmd->reset();
+
+    im_RGB.copy_attribute(im_YUV);
     return ret;
 }
 
@@ -565,7 +569,7 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const
     int dst_width = im_RGBA.w > 0 ? im_RGBA.w : (im_Y.dw > 0 ? im_Y.dw : im_Y.w);
     int dst_height = im_RGBA.h > 0 ? im_RGBA.h : (im_Y.dh > 0 ? im_Y.dh : im_Y.h);
     dst_gpu.create_type(dst_width, dst_height, 4, im_RGBA.type, opt.blob_vkallocator);
-    im_RGBA.copy_attribute(im_Y);
+    dst_gpu.elempack = 4;
     dst_gpu.color_format = im_RGBA.color_format;
     dst_gpu.color_range = IM_CR_FULL_RANGE;
     dst_gpu.color_space = im_Y.color_space;
@@ -623,6 +627,8 @@ double ColorConvert_vulkan::YUV2RGBA(const ImMat& im_Y, const ImMat& im_U, const
     ret = 1.f;
 #endif
     cmd->reset();
+
+    im_RGBA.copy_attribute(im_Y);
     return ret;
 }
 
@@ -638,7 +644,7 @@ double ColorConvert_vulkan::YUV2RGB(const ImMat& im_Y, const ImMat& im_U, const 
     int dst_width = im_RGB.w > 0 ? im_RGB.w : (im_Y.dw > 0 ? im_Y.dw : im_Y.w);
     int dst_height = im_RGB.h > 0 ? im_RGB.h : (im_Y.dh > 0 ? im_Y.dh : im_Y.h);
     dst_gpu.create_type(dst_width, dst_height, 3, im_RGB.type, opt.blob_vkallocator);
-    im_RGB.copy_attribute(im_Y);
+    dst_gpu.elempack = 3;
     dst_gpu.color_format = im_RGB.color_format;
     dst_gpu.color_range = IM_CR_FULL_RANGE;
     dst_gpu.color_space = im_Y.color_space;
@@ -696,6 +702,8 @@ double ColorConvert_vulkan::YUV2RGB(const ImMat& im_Y, const ImMat& im_U, const 
     ret = 1.f;
 #endif
     cmd->reset();
+
+    im_RGB.copy_attribute(im_Y);
     return ret;
 }
 
@@ -894,7 +902,7 @@ double ColorConvert_vulkan::Conv(const ImMat& im, ImMat & om) const
 
     VkMat dst_gpu;
     dst_gpu.create_type(im.dw > 0 ? im.dw : im.w, im.dh > 0 ? im.dh : im.h, 4, om.type, opt.blob_vkallocator);
-    om.copy_attribute(im);
+    dst_gpu.elempack = 4;
 
     VkMat src_gpu;
     if (im.device == IM_DD_VULKAN)
@@ -928,6 +936,8 @@ double ColorConvert_vulkan::Conv(const ImMat& im, ImMat & om) const
     ret = 1.f;
 #endif
     cmd->reset();
+
+    om.copy_attribute(im);
     return ret;
 }
 } // namespace ImGui 

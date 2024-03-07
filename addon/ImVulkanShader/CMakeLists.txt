@@ -453,6 +453,7 @@ set(VKSHADER_SRCS
     internals/Substract_mean_normalize.cpp
     internals/Copy_make_border.cpp
     internals/Binary_vulkan.cpp
+    internals/OpacityFilter_vulkan.cpp
 )
 
 set(VKSHADER_INCS

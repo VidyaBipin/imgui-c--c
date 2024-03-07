@@ -375,6 +375,32 @@ sfp load_gray(int x, int y, int w, int h, int cstep, int format, int type, float
 } \n\
 " // 46 lines
 
+#define SHADER_LOAD_GRAY_2 \
+SHADER_LOAD_GRAY_INT8 \
+SHADER_LOAD_GRAY_INT16 \
+SHADER_LOAD_GRAY_INT16_BE \
+SHADER_LOAD_GRAY_FLOAT16 \
+SHADER_LOAD_GRAY_FLOAT32 \
+" \n\
+sfp load_gray_2(int x, int y, int w, int h, int cstep, int format, int type) \n\
+{ \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
+    if (type == DT_INT8) \n\
+        return load_gray_int8(x, y, w, cstep, format, 255.f); \n\
+    else if (type == DT_INT16) \n\
+        return load_gray_int16(x, y, w, cstep, format, 65535.f); \n\
+    else if (type == DT_INT16_BE) \n\
+        return load_gray_int16be(x, y, w, cstep, format, 65535.f); \n\
+    else if (type == DT_FLOAT16) \n\
+        return load_gray_float16(x, y, w, cstep, format); \n\
+    else if (type == DT_FLOAT32) \n\
+        return load_gray_float32(x, y, w, cstep, format); \n\
+    else \n\
+        return sfp(0.f); \n\
+} \n\
+"
+
 // Load data as rgb, if cstep is 4, means input is rgba
 #define SHADER_LOAD_RGB_INT8 \
 " \n\
@@ -564,6 +590,78 @@ sfpvec4 load_rgba(int x, int y, int w, int h, int cstep, int format, int type) \
 } \n\
 " // 58 lines
 
+// Load only the specific channel (located by 'ch_offset') from rgba
+#define SHADER_LOAD_RGBA_CHANNEL_INT8 \
+" \n\
+sfp load_rgba_channel_int8(int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int i_offset = (y * w + x) * cstep + ch_offset; \n\
+    return sfp(uint(src_data_int8[i_offset])) / sfp(255.f); \n\
+} \n\
+"
+
+#define SHADER_LOAD_RGBA_CHANNEL_INT16 \
+" \n\
+sfp load_rgba_channel_int16(int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int i_offset = (y * w + x) * cstep + ch_offset; \n\
+    return sfp(uint(src_data_int16[i_offset])) / sfp(65535.f); \n\
+} \n\
+"
+
+#define SHADER_LOAD_RGBA_CHANNEL_INT16_BE \
+" \n\
+sfp load_rgba_channel_int16be(int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int i_offset = (y * w + x) * cstep + ch_offset; \n\
+    return sfp(uint(BE2LE_16BIT(src_data_int16[i_offset]))) / sfp(65535.f); \n\
+} \n\
+"
+
+#define SHADER_LOAD_RGBA_CHANNEL_FLOAT16 \
+" \n\
+sfp load_rgba_channel_float16(int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int i_offset = (y * w + x) * cstep + ch_offset; \n\
+    return sfp(src_data_float16[i_offset]); \n\
+} \n\
+"
+
+#define SHADER_LOAD_RGBA_CHANNEL_FLOAT32 \
+" \n\
+sfp load_rgba_channel_float32(int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int i_offset = (y * w + x) * cstep + ch_offset; \n\
+    return sfp(src_data_float32[i_offset]); \n\
+} \n\
+"
+
+#define SHADER_LOAD_RGBA_CHANNEL \
+SHADER_LOAD_RGBA_CHANNEL_INT8 \
+SHADER_LOAD_RGBA_CHANNEL_INT16 \
+SHADER_LOAD_RGBA_CHANNEL_INT16_BE \
+SHADER_LOAD_RGBA_CHANNEL_FLOAT16 \
+SHADER_LOAD_RGBA_CHANNEL_FLOAT32 \
+" \n\
+sfp load_rgba_channel(int x, int y, int w, int h, int cstep, int ch_offset, int type) \n\
+{ \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
+    if (type == DT_INT8) \n\
+        return load_rgba_channel_int8(x, y, w, cstep, ch_offset); \n\
+    else if (type == DT_INT16) \n\
+        return load_rgba_channel_int16(x, y, w, cstep, ch_offset); \n\
+    else if (type == DT_INT16_BE) \n\
+        return load_rgba_channel_int16be(x, y, w, cstep, ch_offset); \n\
+    else if (type == DT_FLOAT16) \n\
+        return load_rgba_channel_float16(x, y, w, cstep, ch_offset); \n\
+    else if (type == DT_FLOAT32) \n\
+        return load_rgba_channel_float32(x, y, w, cstep, ch_offset); \n\
+    else \n\
+        return sfp(0.f); \n\
+} \n\
+"
+
 #define SHADER_LOAD_RGBA_NAME_INT8(src) \
 " \n\
 sfpvec4 load_rgba_int8_"#src"(int x, int y, int w, int cstep, int format) \n\
@@ -660,15 +758,85 @@ sfpvec4 load_rgba_"#src"(int x, int y, int w, int h, int cstep, int format, int 
 } \n\
 "
 
+// Load only the specific channel (located by 'ch_offset') from rgba
+#define SHADER_LOAD_RGBA_NAME_CHANNEL_INT8(src) \
+" \n\
+sfp load_rgba_"#src"_channel_int8(int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int i_offset = (y * w + x) * cstep + ch_offset; \n\
+    return sfp(uint("#src"_data_int8[i_offset])) / sfp(255.f); \n\
+} \n\
+"
+
+#define SHADER_LOAD_RGBA_NAME_CHANNEL_INT16(src) \
+" \n\
+sfp load_rgba_"#src"_channel_int16(int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int i_offset = (y * w + x) * cstep + ch_offset; \n\
+    return sfp(uint("#src"_data_int16[i_offset])) / sfp(65535.f); \n\
+} \n\
+"
+
+#define SHADER_LOAD_RGBA_NAME_CHANNEL_INT16_BE(src) \
+" \n\
+sfp load_rgba_"#src"_channel_int16be(int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int i_offset = (y * w + x) * cstep + ch_offset; \n\
+    return sfp(uint(BE2LE_16BIT("#src"_data_int16[i_offset]))) / sfp(65535.f); \n\
+} \n\
+"
+
+#define SHADER_LOAD_RGBA_NAME_CHANNEL_FLOAT16(src) \
+" \n\
+sfp load_rgba_"#src"_channel_float16(int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int i_offset = (y * w + x) * cstep + ch_offset; \n\
+    return sfp("#src"_data_float16[i_offset]); \n\
+} \n\
+"
+
+#define SHADER_LOAD_RGBA_NAME_CHANNEL_FLOAT32(src) \
+" \n\
+sfp load_rgba_"#src"_channel_float32(int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int i_offset = (y * w + x) * cstep + ch_offset; \n\
+    return sfp("#src"_data_float32[i_offset]); \n\
+} \n\
+"
+
+#define SHADER_LOAD_RGBA_NAME_CHANNEL(src) \
+SHADER_LOAD_RGBA_NAME_CHANNEL_INT8(src) \
+SHADER_LOAD_RGBA_NAME_CHANNEL_INT16(src) \
+SHADER_LOAD_RGBA_NAME_CHANNEL_INT16_BE(src) \
+SHADER_LOAD_RGBA_NAME_CHANNEL_FLOAT16(src) \
+SHADER_LOAD_RGBA_NAME_CHANNEL_FLOAT32(src) \
+" \n\
+sfp load_rgba_"#src"_channel(int x, int y, int w, int h, int cstep, int ch_offset, int type) \n\
+{ \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
+    if (type == DT_INT8) \n\
+        return load_rgba_"#src"_channel_int8(x, y, w, cstep, ch_offset); \n\
+    else if (type == DT_INT16) \n\
+        return load_rgba_"#src"_channel_int16(x, y, w, cstep, ch_offset); \n\
+    else if (type == DT_INT16_BE) \n\
+        return load_rgba_"#src"_channel_int16be(x, y, w, cstep, ch_offset); \n\
+    else if (type == DT_FLOAT16) \n\
+        return load_rgba_"#src"_channel_float16(x, y, w, cstep, ch_offset); \n\
+    else if (type == DT_FLOAT32) \n\
+        return load_rgba_"#src"_channel_float32(x, y, w, cstep, ch_offset); \n\
+    else \n\
+        return sfp(0.f); \n\
+} \n\
+"
+
 // Load gray data with name
 #define SHADER_LOAD_GRAY_NAME_INT8(src) \
 " \n\
 sfp load_gray_int8_"#src"(int x, int y, int w, int cstep, int format, float scale) \n\
 { \n\
-    sfp rgb_in = sfp(0.f); \n\
-    ivec3 i_offset = (y * w + x) * cstep + ivec3(0, 0, 0); \n\
-    rgb_in = sfp(uint("#src"_data_int8[i_offset.x])) / sfp(scale); \n\
-    return rgb_in; \n\
+    int i_offset = (y * w + x) * cstep; \n\
+    return sfp(uint("#src"_data_int8[i_offset])) / sfp(scale); \n\
 } \n\
 "
 
@@ -676,21 +844,17 @@ sfp load_gray_int8_"#src"(int x, int y, int w, int cstep, int format, float scal
 " \n\
 sfp load_gray_int16_"#src"(int x, int y, int w, int cstep, int format, float scale) \n\
 { \n\
-    sfp rgb_in = sfp(0.f); \n\
-    ivec3 i_offset = (y * w + x) * cstep + ivec3(0, 0, 0); \n\
-    rgb_in = sfp(uint("#src"_data_int16[i_offset.x])) / sfp(scale); \n\
-    return rgb_in; \n\
+    int i_offset = (y * w + x) * cstep; \n\
+    return sfp(uint("#src"_data_int16[i_offset])) / sfp(scale); \n\
 } \n\
 "
 
 #define SHADER_LOAD_GRAY_NAME_INT16_BE(src) \
 " \n\
-sfp load_gray_int16_"#src"be(int x, int y, int w, int cstep, int format, float scale) \n\
+sfp load_gray_int16be_"#src"(int x, int y, int w, int cstep, int format, float scale) \n\
 { \n\
-    sfp rgb_in = sfp(0.f); \n\
-    ivec3 i_offset = (y * w + x) * cstep + ivec3(0, 0, 0); \n\
-    rgb_in = sfp(uint(BE2LE_16BIT("#src"_data_int16[i_offset.x]))) / sfp(scale); \n\
-    return rgb_in; \n\
+    int i_offset = (y * w + x) * cstep; \n\
+    return sfp(uint(BE2LE_16BIT("#src"_data_int16[i_offset]))) / sfp(scale); \n\
 } \n\
 "
 
@@ -698,10 +862,8 @@ sfp load_gray_int16_"#src"be(int x, int y, int w, int cstep, int format, float s
 " \n\
 sfp load_gray_float16_"#src"(int x, int y, int w, int cstep, int format) \n\
 { \n\
-    sfp rgb_in = sfp(0.f); \n\
-    ivec3 i_offset = (y * w + x) * cstep + ivec3(0, 0, 0); \n\
-    rgb_in = sfp("#src"_data_float16[i_offset.x]); \n\
-    return rgb_in; \n\
+    int i_offset = (y * w + x) * cstep; \n\
+    return sfp("#src"_data_float16[i_offset]); \n\
 } \n\
 "
 
@@ -709,10 +871,8 @@ sfp load_gray_float16_"#src"(int x, int y, int w, int cstep, int format) \n\
 " \n\
 sfp load_gray_float32_"#src"(int x, int y, int w, int cstep, int format) \n\
 { \n\
-    sfp rgb_in = sfp(0.f); \n\
-    ivec3 i_offset = (y * w + x) * cstep + ivec3(0, 0, 0); \n\
-    rgb_in = sfp("#src"_data_float32[i_offset.x]); \n\
-    return rgb_in; \n\
+    int i_offset = (y * w + x) * cstep; \n\
+    return sfp("#src"_data_float32[i_offset]); \n\
 } \n\
 "
 
@@ -732,7 +892,33 @@ sfp load_gray_"#src"(int x, int y, int w, int h, int cstep, int format, int type
     else if (type == DT_INT16) \n\
         return load_gray_int16_"#src"(x, y, w, cstep, format, scale); \n\
     else if (type == DT_INT16_BE) \n\
-        return load_gray_int16_"#src"be(x, y, w, cstep, format, scale); \n\
+        return load_gray_int16be_"#src"(x, y, w, cstep, format, scale); \n\
+    else if (type == DT_FLOAT16) \n\
+        return load_gray_float16_"#src"(x, y, w, cstep, format); \n\
+    else if (type == DT_FLOAT32) \n\
+        return load_gray_float32_"#src"(x, y, w, cstep, format); \n\
+    else \n\
+        return sfp(0.f); \n\
+} \n\
+"
+
+#define SHADER_LOAD_GRAY_NAME_2(src) \
+SHADER_LOAD_GRAY_NAME_INT8(src) \
+SHADER_LOAD_GRAY_NAME_INT16(src) \
+SHADER_LOAD_GRAY_NAME_INT16_BE(src) \
+SHADER_LOAD_GRAY_NAME_FLOAT16(src) \
+SHADER_LOAD_GRAY_NAME_FLOAT32(src) \
+" \n\
+sfp load_gray_"#src"_2(int x, int y, int w, int h, int cstep, int format, int type) \n\
+{ \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
+    if (type == DT_INT8) \n\
+        return load_gray_int8_"#src"(x, y, w, cstep, format, 255.f); \n\
+    else if (type == DT_INT16) \n\
+        return load_gray_int16_"#src"(x, y, w, cstep, format, 65535.f); \n\
+    else if (type == DT_INT16_BE) \n\
+        return load_gray_int16be_"#src"(x, y, w, cstep, format, 65535.f); \n\
     else if (type == DT_FLOAT16) \n\
         return load_gray_float16_"#src"(x, y, w, cstep, format); \n\
     else if (type == DT_FLOAT32) \n\
@@ -1072,6 +1258,76 @@ void store_rgba(sfpvec4 val, int x, int y, int w, int h, int cstep, int format, 
         store_rgba_float16(val, x, y, w, cstep, format); \n\
     else if (type == DT_FLOAT32) \n\
         store_rgba_float32(val, x, y, w, cstep, format); \n\
+} \n\
+" // 48 lines
+
+// Store only the specific channel (located by 'ch_offset') to rgba buffer
+#define SHADER_STORE_RGBA_CHANNEL_INT8 \
+" \n\
+void store_rgba_channel_int8(sfp val, int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int o_offset = (y * w + x) * cstep + ch_offset; \n\
+    dst_data_int8[o_offset] = uint8_t(clamp(uint(floor(val * sfp(255.0f))), 0, 255)); \n\
+} \n\
+"
+
+#define SHADER_STORE_RGBA_CHANNEL_INT16 \
+" \n\
+void store_rgba_channel_int16(sfp val, int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int o_offset = (y * w + x) * cstep + ch_offset; \n\
+    dst_data_int16[o_offset] = uint16_t(clamp(uint(floor(val * sfp(65535.0f))), 0, 65535)); \n\
+} \n\
+"
+
+#define SHADER_STORE_RGBA_CHANNEL_INT16_BE \
+" \n\
+void store_rgba_channel_int16be(sfp val, int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int o_offset = (y * w + x) * cstep + ch_offset; \n\
+    dst_data_int16[o_offset] = BE2LE_16BIT(uint16_t(clamp(uint(floor(val * sfp(65535.0f))), 0, 65535))); \n\
+} \n\
+"
+
+#define SHADER_STORE_RGBA_CHANNEL_FLOAT16 \
+" \n\
+void store_rgba_channel_float16(sfp val, int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int o_offset = (y * w + x) * cstep + ch_offset; \n\
+    dst_data_float16[o_offset] = float16_t(clamp(val, sfp(0.f), sfp(1.f))); \n\
+} \n\
+"
+
+#define SHADER_STORE_RGBA_CHANNEL_FLOAT32 \
+" \n\
+void store_rgba_channel_float32(sfp val, int x, int y, int w, int cstep, int ch_offset) \n\
+{ \n\
+    int o_offset = (y * w + x) * cstep + ch_offset; \n\
+    dst_data_float32[o_offset] = float(clamp(val, sfp(0.f), sfp(1.f))); \n\
+} \n\
+"
+
+#define SHADER_STORE_RGBA_CHANNEL \
+SHADER_STORE_RGBA_CHANNEL_INT8 \
+SHADER_STORE_RGBA_CHANNEL_INT16 \
+SHADER_STORE_RGBA_CHANNEL_INT16_BE \
+SHADER_STORE_RGBA_CHANNEL_FLOAT16 \
+SHADER_STORE_RGBA_CHANNEL_FLOAT32 \
+" \n\
+void store_rgba_channel(sfp val, int x, int y, int w, int h, int cstep, int ch_offset, int type) \n\
+{ \n\
+    x = clamp(x, 0, w - 1); \n\
+    y = clamp(y, 0, h - 1); \n\
+    if (type == DT_INT8) \n\
+        store_rgba_channel_int8(val, x, y, w, cstep, ch_offset); \n\
+    else if (type == DT_INT16) \n\
+        store_rgba_channel_int16(val, x, y, w, cstep, ch_offset); \n\
+    else if (type == DT_INT16_BE) \n\
+        store_rgba_channel_int16be(val, x, y, w, cstep, ch_offset); \n\
+    else if (type == DT_FLOAT16) \n\
+        store_rgba_channel_float16(val, x, y, w, cstep, ch_offset); \n\
+    else if (type == DT_FLOAT32) \n\
+        store_rgba_channel_float32(val, x, y, w, cstep, ch_offset); \n\
 } \n\
 " // 48 lines
 
