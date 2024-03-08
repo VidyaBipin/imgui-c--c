@@ -49,6 +49,7 @@ struct MaskCreator
     virtual bool IsKeyFrameEnabled() const = 0;
     virtual void EnableKeyFrames(bool bEnable) = 0;
     virtual bool SetTickRange(int64_t i64Start, int64_t i64End) = 0;
+    virtual bool IsMaskReady() const = 0;
 
     virtual bool SaveAsJson(imgui_json::value& j) const = 0;
     virtual bool SaveAsJson(const std::string& filePath) const = 0;

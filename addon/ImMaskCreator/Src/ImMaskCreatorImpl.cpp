@@ -1212,6 +1212,11 @@ public:
         return true;
     }
 
+    bool IsMaskReady() const override
+    {
+        return m_bRouteCompleted;
+    }
+
     bool SaveAsJson(imgui_json::value& j) const override
     {
         j = imgui_json::value();
