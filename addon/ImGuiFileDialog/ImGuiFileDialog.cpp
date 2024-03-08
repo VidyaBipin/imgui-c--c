@@ -1103,7 +1103,14 @@ void IGFD::FilterInfos::addCollectionFilter(const std::string& vFilter, const bo
             filters.try_add(vFilter);
             filters_regex.emplace_back(rx);
         } catch (std::exception& e) {
+// modify by Dicky
+#ifdef USE_STD_FILESYSTEM 
+			const std::string msg = "IGFD : The regex \"" + vFilter + "\" parsing was failed with msg : " + e.what();
+			throw std::exception(msg.c_str());
+#else
             std::cout << "IGFD : The regex \"" << vFilter << "\" parsing was failed with msg : " << e.what() << std::endl;
+#endif
+// modify by Dicky end
         }
     }
 }
