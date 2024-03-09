@@ -20,6 +20,7 @@ Resize_vulkan::Resize_vulkan(int gpu)
     if (compile_spirv_module(Resize_data, opt, spirv_data) == 0)
     {
         pipe = new Pipeline(vkdev);
+        pipe->set_optimal_local_size_xyz(8, 16, 1);
         pipe->create(spirv_data.data(), spirv_data.size() * 4, specializations);
     }
     

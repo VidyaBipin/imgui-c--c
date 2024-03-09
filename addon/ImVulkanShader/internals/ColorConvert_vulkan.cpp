@@ -138,7 +138,7 @@ double ColorConvert_vulkan::ConvertColorFormat(const ImMat& srcMat, ImMat& dstMa
         dstVkMat.create_type(dst_width, dst_height, GetChannelCountByColorFormat(dstMat.color_format), dstMat.type, opt.blob_vkallocator);
         dstVkMat.color_format = dstMat.color_format;
         dstVkMat.color_range = dstMat.color_range;
-        dstVkMat.color_space = srcMat.color_space;
+        dstVkMat.color_space = dstMat.color_space;
         dstMat = dstVkMat;
     }
     else
