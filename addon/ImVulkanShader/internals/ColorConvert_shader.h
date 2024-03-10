@@ -63,7 +63,7 @@ sfpvec3 load_src_yuv(int x, int y) \n\
 { \n\
     sfpvec3 yuv_in = {sfp(0.f), sfp(0.5f), sfp(0.5f)}; \n\
     int uv_scale_w = p.in_format == CF_YUV420 || p.in_format == CF_YUV422 ? 2 : 1; \n\
-    int uv_scale_h = p.in_format == CF_YUV420 || p.in_format == CF_NV12 || p.in_format == CF_P010LE ? 2 : 1; \n\
+    int uv_scale_h = p.in_format == CF_YUV420 || p.in_format == CF_YUV440 || p.in_format == CF_NV12 || p.in_format == CF_P010LE ? 2 : 1; \n\
     int y_offset = y * p.w + x; \n\
     int u_offset = p.w * p.h + (y / uv_scale_h) * p.w / uv_scale_w + x / uv_scale_w; \n\
     int v_offset = (p.in_format == CF_YUV444 ? p.w * p.h * 2 : p.w * p.h + (p.w / uv_scale_w) * (p.h / uv_scale_h)) \n\
@@ -674,7 +674,7 @@ SHADER_STORE_YUV_FLOAT32 \
 void store_dst_yuv(sfpvec3 v, int x, int y) \n\
 { \n\
     int uv_scale_w = p.out_format == CF_YUV420 || p.out_format == CF_YUV422 ? 2 : 1; \n\
-    int uv_scale_h = p.out_format == CF_YUV420 || p.out_format == CF_NV12 ? 2 : 1; \n\
+    int uv_scale_h = p.out_format == CF_YUV420 || p.out_format == CF_YUV440 || p.out_format == CF_NV12 || p.out_format == CF_P010LE ? 2 : 1; \n\
     int y_offset = y * p.w + x; \n\
     int u_offset = p.out_cstep + (y / uv_scale_h) * p.w / uv_scale_w + x / uv_scale_w; \n\
     int v_offset = (p.out_format == CF_YUV444 ? p.out_cstep * 2 : p.out_cstep + (p.w / uv_scale_w) * (p.h / uv_scale_h)) \n\
