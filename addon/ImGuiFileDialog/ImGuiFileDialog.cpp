@@ -429,6 +429,26 @@ inline bool inToggleButton(const char* vLabel, bool* vToggled) {
 
 #pragma region INTERNAL
 
+#pragma region EXCEPTION
+
+class IGFDException : public std::exception {
+private:
+    char const* m_msg{};
+
+public:
+    IGFDException() : std::exception() {}
+    explicit IGFDException(char const* const vMsg) : 
+        std::exception(), // std::exception(msg) is not availaiable on linux it seems... but on windos yes
+          m_msg(vMsg) {
+    }
+    virtual ~IGFDException() = default;
+    char const* what() const noexcept override {
+        return m_msg;
+    }
+};
+
+#pragma endregion
+
 #pragma region FILE SYSTEM INTERFACE
 
 #ifndef CUSTOM_FILESYSTEM_INCLUDE
@@ -1103,14 +1123,8 @@ void IGFD::FilterInfos::addCollectionFilter(const std::string& vFilter, const bo
             filters.try_add(vFilter);
             filters_regex.emplace_back(rx);
         } catch (std::exception& e) {
-// modify by Dicky
-#ifdef USE_STD_FILESYSTEM 
 			const std::string msg = "IGFD : The regex \"" + vFilter + "\" parsing was failed with msg : " + e.what();
-			throw std::exception(msg.c_str());
-#else
-            std::cout << "IGFD : The regex \"" << vFilter << "\" parsing was failed with msg : " << e.what() << std::endl;
-#endif
-// modify by Dicky end
+            throw IGFDException(msg.c_str());
         }
     }
 }

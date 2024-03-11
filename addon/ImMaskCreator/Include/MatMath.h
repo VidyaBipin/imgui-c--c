@@ -259,7 +259,7 @@ struct MatOp2
     virtual void operator()(const ImGui::ImMat& src1, const ImGui::ImMat& src2, ImGui::ImMat& dst) = 0;
 };
 
-void Max(ImGui::ImMat& dst, const ImGui::ImMat& src);
+IMGUI_API void Max(ImGui::ImMat& dst, const ImGui::ImMat& src);
 void Copy(ImGui::ImMat& dst, const ImGui::ImMat& src);
 
 enum DataTypeConvType
@@ -275,7 +275,7 @@ enum DataTypeConvType
 void Convert(ImGui::ImMat& dst, const ImGui::ImMat& src, DataTypeConvType convType);
 void ConvertColorDepth(ImGui::ImMat& dst, const ImGui::ImMat& src);
 
-void GrayToRgba(ImGui::ImMat& dst, const ImGui::ImMat& src, double alphaVal);
+IMGUI_API void GrayToRgba(ImGui::ImMat& dst, const ImGui::ImMat& src, double alphaVal);
 
 // channelMap: for index in [0,3], copy value from 'src' to 'dst'; for [4,7], copy value from 'constVals' [0,3]
 // void MapChannel(ImGui::ImMat& dst, const ImGui::ImMat& src, int channelMap[4], double constVals[4], DataTypeConvType convType);

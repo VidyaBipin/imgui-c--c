@@ -6,7 +6,9 @@
 #include <strings.h>
 #include <getopt.h>
 #include <math.h>
-
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include "potracelib.h"
 #include "backend.h"
 #include "bitmap_io.h"
