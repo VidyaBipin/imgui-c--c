@@ -3143,7 +3143,7 @@ bool IGFD::PlacesFeature::m_DrawPlacesPane(FileDialogInternal& vFileDialogIntern
                         ImGui::SameLine();
                         if (IMGUI_BUTTON(removePlaceButtonString "##ImGuiFileDialogRemovePlace")) {
                             group_ptr->places.erase(group_ptr->places.begin() + group_ptr->selectedPlaceForEdition);
-                            if (group_ptr->selectedPlaceForEdition == (int)group_ptr->places.size()) {
+                            if (group_ptr->selectedPlaceForEdition <= (int)group_ptr->places.size()) { // modify by Dicky, fixed delete issue
                                 --group_ptr->selectedPlaceForEdition;
                             }
                         }
