@@ -4,5 +4,5 @@
 
 namespace MatUtils
 {
-    bool SaveAsPng(const ImGui::ImMat& m, const std::string& savePath);
+    IMGUI_API bool SaveAsPng(const ImGui::ImMat& m, const std::string& savePath);
 }

@@ -4100,22 +4100,22 @@ static inline __attribute__((unused)) void msub_float16_c(uint16_t* dst, const u
 static inline __attribute__((unused)) void mdiv_int8_avx(uint8_t* dst, const uint8_t* src1, const uint8_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
-    for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
+    for (int i = 0; i < len; ++i) *(dst + i) = *(src2 + i) != 0 ? *(src1 + i) / *(src2 + i) : UINT8_MAX;
 }
 static inline __attribute__((unused)) void mdiv_int16_avx(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
-    for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
+    for (int i = 0; i < len; ++i) *(dst + i) = *(src2 + i) != 0 ? *(src1 + i) / *(src2 + i) : UINT16_MAX;
 }
 static inline __attribute__((unused)) void mdiv_int32_avx(int32_t* dst, const int32_t* src1, const int32_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
-    for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
+    for (int i = 0; i < len; ++i) *(dst + i) = *(src2 + i) != 0 ? *(src1 + i) / *(src2 + i) : INT32_MAX;
 }
 static inline __attribute__((unused)) void mdiv_int64_avx(int64_t* dst, const int64_t* src1, const int64_t* src2, const size_t len)
 {
     #pragma omp parallel for num_threads(OMP_THREADS)
-    for (int i = 0; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
+    for (int i = 0; i < len; ++i) *(dst + i) = *(src2 + i) != 0 ? *(src1 + i) / *(src2 + i) : INT64_MAX;
 }
 static inline __attribute__((unused)) void mdiv_float_avx(float* dst, const float* src1, const float* src2, const size_t len)
 {
@@ -4128,7 +4128,7 @@ static inline __attribute__((unused)) void mdiv_float_avx(float* dst, const floa
         X = _mm256_div_ps(X, Y);
         _mm256_storeu_ps(dst + i, X);
     }
-    for (; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) / (*(src2 + i) + FLT_EPSILON);
 }
 static inline __attribute__((unused)) void mdiv_double_avx(double* dst, const double* src1, const double* src2, const size_t len)
 {
@@ -4141,7 +4141,7 @@ static inline __attribute__((unused)) void mdiv_double_avx(double* dst, const do
         X = _mm256_div_pd(X, Y);
         _mm256_storeu_pd(dst + i, X);
     }
-    for (; i < len; ++i) *(dst + i) = *(src1 + i) / *(src2 + i);
+    for (; i < len; ++i) *(dst + i) = *(src1 + i) / (*(src2 + i) + DBL_EPSILON);
 }
 static inline __attribute__((unused)) void mdiv_float16_avx(uint16_t* dst, const uint16_t* src1, const uint16_t* src2, const size_t len)
 {
