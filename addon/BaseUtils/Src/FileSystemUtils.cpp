@@ -32,6 +32,8 @@ namespace fs = std::filesystem;
 #else
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdio.h>
+#include <string.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -52,6 +54,11 @@ static const char _PATH_SEPARATOR = '\\';
 static const char _PATH_SEPARATOR = '/';
 #endif
 static const char _FILE_EXT_SEPARATOR = '.';
+
+bool IsPathSeparator(char c)
+{
+    return c == _PATH_SEPARATOR;
+}
 
 string ExtractFileBaseName(const string& path)
 {
@@ -133,6 +140,24 @@ string ExtractDirectoryPath(const string& path)
     {
         return path.substr(0, lastSlashPos+1);
     }
+}
+
+string PopLastComponent(const string& path)
+{
+    if (path.empty())
+        return "";
+    auto searchPos = path.length()-1;
+    while (searchPos >= 0)
+    {
+        auto lastSlashPos = path.rfind(_PATH_SEPARATOR, searchPos);
+        if (lastSlashPos == searchPos)
+            searchPos--;
+        else if (lastSlashPos == string::npos)
+            return path.substr(0, searchPos);
+        else
+            return path.substr(lastSlashPos+1, searchPos);
+    }
+    return "";
 }
 
 string JoinPath(const string& path1, const string& path2)
@@ -229,7 +254,7 @@ static string GetErrnoStr()
 }
 #endif
 
-bool Exists(const std::string& path)
+bool Exists(const string& path)
 {
 #ifdef USE_CPP_FS
     return fs::exists(path);
@@ -274,7 +299,7 @@ bool IsFile(const string& path)
 #endif
 }
 
-bool CreateDirectoryCstm(const string& _path, bool createParentIfNotExists)
+bool CreateDirectoryAt(const string& _path, bool createParentIfNotExists)
 {
     if (_path.empty())
         return false;
@@ -289,7 +314,7 @@ bool CreateDirectoryCstm(const string& _path, bool createParentIfNotExists)
         {
             if (!Exists(parentDir))
             {
-                if (!CreateDirectory(parentDir, true))
+                if (!CreateDirectoryAt(parentDir, true))
                     return false;
             }
             else if (!IsDirectory(parentDir))
@@ -319,16 +344,16 @@ static int _DeleteDirectory_nftwCb(const char *filename, const struct stat *stat
 }
 #endif
 
-bool DeleteDirectory(const string& path, bool recursiveDelete)
+bool DeleteDirectoryAt(const string& path, bool recursiveDelete)
 {
     if (path.empty())
     {
-        Log(Error) << "FAILED to run 'DeleteDirectory()',  argument 'path' is EMPTY!" << endl;
+        Log(Error) << "FAILED to run 'DeleteDirectoryAt()',  argument 'path' is EMPTY!" << endl;
         return false;
     }
     if (!IsDirectory(path))
     {
-        Log(Error) << "FAILED to run 'DeleteDirectory()' on '" << path << "'! Target is NOT a DIRECTORY." << endl;
+        Log(Error) << "FAILED to run 'DeleteDirectoryAt()' on '" << path << "'! Target is NOT a DIRECTORY." << endl;
         return false;
     }
 #ifdef USE_CPP_FS
@@ -336,16 +361,16 @@ bool DeleteDirectory(const string& path, bool recursiveDelete)
     if (recursiveDelete)
     {
         const auto cnt = fs::remove_all(path, ec);
-        const bool ret = cnt != static_cast<std::uintmax_t>(-1);
+        const bool ret = cnt != static_cast<uintmax_t>(-1);
         if (!ret)
-            Log(Error) << "FAILED to run 'DeleteDirectory(recursiveDelete=true)' on '" << path << "'! Error is '" << ec << "'." << endl;
+            Log(Error) << "FAILED to run 'DeleteDirectoryAt(recursiveDelete=true)' on '" << path << "'! Error is '" << ec << "'." << endl;
         return ret;
     }
     else
     {
         const auto ret = fs::remove(path, ec);
         if (!ret)
-            Log(Error) << "FAILED to run 'DeleteDirectory(recursiveDelete=false)' on '" << path << "'! Error is '" << ec << "'." << endl;
+            Log(Error) << "FAILED to run 'DeleteDirectoryAt(recursiveDelete=false)' on '" << path << "'! Error is '" << ec << "'." << endl;
         return ret;
     }
 #else
@@ -354,7 +379,7 @@ bool DeleteDirectory(const string& path, bool recursiveDelete)
         const auto ret = nftw(path.c_str(), _DeleteDirectory_nftwCb, 128, FTW_DEPTH|FTW_PHYS);
         if (ret != 0)
         {
-            Log(Error) << "FAILED to run 'DeleteDirectory(recursiveDelete=true)' on '" << path << "'! Error is '" << GetErrnoStr() << "'." << endl;
+            Log(Error) << "FAILED to run 'DeleteDirectoryAt(recursiveDelete=true)' on '" << path << "'! Error is '" << GetErrnoStr() << "'." << endl;
             return false;
         }
     }
@@ -362,11 +387,74 @@ bool DeleteDirectory(const string& path, bool recursiveDelete)
     {
         if (rmdir(path.c_str()) != 0)
         {
-            Log(Error) << "FAILED to run 'DeleteDirectory(recursiveDelete=false)' on '" << path << "'! Error is '" << GetErrnoStr() << "'." << endl;
+            Log(Error) << "FAILED to run 'DeleteDirectoryAt(recursiveDelete=false)' on '" << path << "'! Error is '" << GetErrnoStr() << "'." << endl;
             return false;
         }
     }
     return true;
+#endif
+}
+
+bool RenameFile(const string& fromPath, const string& toPath)
+{
+    if (fromPath.empty() || toPath.empty())
+    {
+        Log(Error) << "'RenameFile()' FAILED, argument 'fromPath' or 'toPath' is EMPTY!" << endl;
+        return false;
+    }
+
+#ifdef USE_CPP_FS
+    error_code ec;
+    fs::rename(fromPath, toPath, ec);
+    if (ec)
+    {
+        Log(Error) << "'RenameFile(" << fromPath << ", " << toPath << ")' FAILED! 'std::filesystem::rename()' returns error code '" << ec << "'." << endl;
+        return false;
+    }
+#else
+    const auto ret = rename(fromPath.c_str(), toPath.c_str());
+    if (ret)
+    {
+        Log(Error) << "'RenameFile(" << fromPath << ", " << toPath << ")' FAILED! 'errno' is " << errno << "(" << strerror(errno) << ")." << endl;
+        return false;
+    }
+#endif
+    return true;
+}
+
+bool DeleteFileAt(const string& path)
+{
+    if (path.empty())
+    {
+        Log(Error) << "'RenameFile()' FAILED, argument 'fromPath' or 'toPath' is EMPTY!" << endl;
+        return false;
+    }
+
+#ifdef USE_CPP_FS
+    error_code ec;
+    const auto ret = fs::remove(path, ec);
+    if (!ret)
+        Log(Error) << "FAILED to run 'DeleteFileAt()' on '" << path << "'! Error is '" << ec << "'." << endl;
+    return ret;
+#else
+    if (remove(path.c_str()) != 0)
+    {
+        Log(Error) << "FAILED to run 'DeleteFileAt()' on '" << path << "'! Error is '" << GetErrnoStr() << "'." << endl;
+        return false;
+    }
+    return true;
+#endif
+}
+
+bool CheckEquivalent(const string& path1, const string& path2)
+{
+#ifdef USE_CPP_FS
+    error_code ec;
+    return fs::equivalent(path1, path2, ec);
+#else
+    stat s1 = stat(path1.c_str());
+    stat s2 = stat(path2.c_str());
+    return s1.st_dev == s2.st_dev && s1.st_ino == s2.st_ino;
 #endif
 }
 
@@ -451,7 +539,7 @@ public:
         StartParseThread();
     }
 
-    std::string GetQuickSample() override
+    string GetQuickSample() override
     {
         if (!m_isQuickSampleReady && !m_isParsed)
         {
@@ -714,6 +802,7 @@ public:
             }
         }
 #elif defined(_WIN32) && !defined(__MINGW64__)
+        throw runtime_error("Unimplemented!");
 #else
         string dirFullPath = JoinBaseDirPath(subDirPath);
         DIR* pSubDir = opendir(dirFullPath.c_str());

@@ -24,17 +24,21 @@
 
 namespace SysUtils
 {
+BASEUTILS_API bool IsPathSeparator(char c);
 BASEUTILS_API std::string ExtractFileBaseName(const std::string& path);
 BASEUTILS_API std::string ExtractFileExtName(const std::string& path);
 BASEUTILS_API std::string ExtractFileName(const std::string& path);
 BASEUTILS_API std::string ExtractDirectoryPath(const std::string& path);
+BASEUTILS_API std::string PopLastComponent(const std::string& path);
 BASEUTILS_API std::string JoinPath(const std::string& path1, const std::string& path2);
 BASEUTILS_API bool Exists(const std::string& path);
 BASEUTILS_API bool IsDirectory(const std::string& path);
 BASEUTILS_API bool IsFile(const std::string& path);
-BASEUTILS_API bool CreateDirectoryCstm(const std::string& path, bool createParentIfNotExists);
-BASEUTILS_API bool DeleteDirectory(const std::string& path, bool recursiveDelete = true);
-
+BASEUTILS_API bool CreateDirectoryAt(const std::string& path, bool createParentIfNotExists);
+BASEUTILS_API bool DeleteDirectoryAt(const std::string& path, bool recursiveDelete = true);
+BASEUTILS_API bool RenameFile(const std::string& fromPath, const std::string& toPath);
+BASEUTILS_API bool DeleteFileAt(const std::string& path);
+BASEUTILS_API bool CheckEquivalent(const std::string& path1, const std::string& path2);
 
 struct FileIterator
 {

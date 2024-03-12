@@ -2635,12 +2635,12 @@ void IGFD::FileManager::m_SetCurrentPath(std::vector<std::string>::iterator vPat
 }
 
 std::string IGFD::FileManager::GetResultingPath() {
-    if (dLGDirectoryMode && m_SelectedFileNames.size() == 1) {  // if directory mode with selection 1
-        std::string selectedDirectory = fileNameBuffer;
-        std::string path              = m_CurrentPath;
-        if (!selectedDirectory.empty() && selectedDirectory != ".") {
-            path += IGFD::Utils::GetPathSeparator() + selectedDirectory;
-        }
+    std::string inputText = fileNameBuffer;
+    if (inputText == "." || inputText == "..") inputText.clear();
+    if (dLGDirectoryMode && !inputText.empty()) {  // if directory mode with selection 1
+        // modified by wyvern: to return the correct directory path
+        std::string path = m_CurrentPath;
+        path += IGFD::Utils::GetPathSeparator() + inputText;
         return path;
     }
     return m_CurrentPath;  // if file mode
