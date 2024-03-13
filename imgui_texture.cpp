@@ -732,6 +732,19 @@ ImTextureID ImLoadTexture(const char* path)
         return nullptr;
 }
 
+ImTextureID ImLoadTexture(const unsigned int * data, size_t size)
+{
+    int width = 0, height = 0, component = 0;
+    if (auto img_data = stbi_load_from_memory((const stbi_uc *)data, size, &width, &height, &component, 4))
+    {
+        auto texture = ImCreateTexture(img_data, width, height, component);
+        stbi_image_free(img_data);
+        return texture;
+    }
+    else
+        return nullptr;
+}
+
 void ImLoadImageToMat(const char* path, ImMat& mat, bool gray)
 {
     int width = 0, height = 0, component = 0;
