@@ -71,7 +71,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
     const GLFWvidmode * mode = glfwGetVideoMode(pMonitor);
     glfwSetWindowPos(window, (mode->width - property.splash_screen_width) / 2, (mode->height - property.splash_screen_height) / 2);
-
+    glfwSetDropCallback(window, DropCallback);
     // Setup Vulkan
     if (!glfwVulkanSupported())
     {

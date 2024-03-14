@@ -76,6 +76,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     glfwSetWindowOpacity(window, property.splash_screen_alpha);
 
     glfwMakeContextCurrent(window);
+    glfwSetDropCallback(window, DropCallback);
     glfwSwapInterval(1); // Enable vsync
 
     GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();

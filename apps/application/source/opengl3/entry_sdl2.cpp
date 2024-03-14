@@ -101,6 +101,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         ImGui::ImUpdateTextures();
         ImGui_ImplSDL2_WaitForEvent();
         SDL_Event event;
+        std::vector<std::string> paths;
         while (SDL_PollEvent(&event))
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
@@ -121,6 +122,12 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
             {
                 show = true;
             }
+            if (event.type == SDL_DROPFILE)
+            {
+                // file path in event.drop.file
+                paths.push_back(event.drop.file);
+                show = true;
+            }
         }
 #ifndef __EMSCRIPTEN__
         if (!show && !(io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable))
@@ -134,6 +141,13 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
+        if (!paths.empty())
+        {
+            if (property.application.Application_DropFromSystem)
+                property.application.Application_DropFromSystem(paths);
+            paths.clear();
+        }
+        
         auto _splash_done = property.application.Application_SplashScreen(property.handle, done);
         // work around with context assert frame_count
         frame_count ++;

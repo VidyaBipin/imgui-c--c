@@ -96,6 +96,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         ImGui::ImUpdateTextures();
         ImGui_ImplSDL2_WaitForEvent();
         SDL_Event event;
+        std::vector<std::string> paths;
         while (SDL_PollEvent(&event))
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
@@ -113,6 +114,12 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
             }
             if (event.type == SDL_WINDOWEVENT && (event.window.event == SDL_WINDOWEVENT_EXPOSED || event.window.event == SDL_WINDOWEVENT_RESTORED))
             {
+                show = true;
+            }
+            if (event.type == SDL_DROPFILE)
+            {
+                // file path in event.drop.file
+                paths.push_back(event.drop.file);
                 show = true;
             }
         }
@@ -143,6 +150,13 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
         
+        if (!paths.empty())
+        {
+            if (property.application.Application_DropFromSystem)
+                property.application.Application_DropFromSystem(paths);
+            paths.clear();
+        }
+
         auto _splash_done = property.application.Application_SplashScreen(property.handle, done);
         
         // work around with context assert frame_count
@@ -388,12 +402,6 @@ int main(int argc, char** argv)
             ImGui::sleep(10);
             continue;
         }
-        if (!paths.empty())
-        {
-            if (property.application.Application_DropFromSystem)
-                property.application.Application_DropFromSystem(paths);
-            paths.clear();
-        }
 
         // Resize swap chain?
         int width, height;
@@ -415,6 +423,13 @@ int main(int argc, char** argv)
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
+
+        if (!paths.empty())
+        {
+            if (property.application.Application_DropFromSystem)
+                property.application.Application_DropFromSystem(paths);
+            paths.clear();
+        }
 
         if (property.application.Application_Frame)
             app_done = property.application.Application_Frame(property.handle, done);
