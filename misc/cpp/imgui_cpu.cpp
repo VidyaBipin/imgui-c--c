@@ -3195,7 +3195,7 @@ int get_omp_thread_num()
 
 int get_kmp_blocktime()
 {
-#if defined(_OPENMP) && __clang__
+#if defined(_OPENMP) && (__clang__ || defined(_OPENMP_LLVM_RUNTIME))
     return kmp_get_blocktime();
 #else
     return 0;
@@ -3204,7 +3204,7 @@ int get_kmp_blocktime()
 
 void set_kmp_blocktime(int time_ms)
 {
-#if defined(_OPENMP) && __clang__
+#if defined(_OPENMP) && (__clang__ || defined(_OPENMP_LLVM_RUNTIME))
     kmp_set_blocktime(time_ms);
 #else
     (void)time_ms;
