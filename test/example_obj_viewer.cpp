@@ -22,7 +22,7 @@ static std::string g_resource_path = "";
  *
  ***************************************************************************************/
 /*
-static bool App_Splash_Screen(void* handle, bool app_will_quit)
+static bool App_Splash_Screen(void* handle, bool& app_will_quit)
 {
 }
 

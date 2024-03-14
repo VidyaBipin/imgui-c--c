@@ -724,7 +724,7 @@ ImTextureID ImLoadTexture(const char* path)
     int width = 0, height = 0, component = 0;
     if (auto data = stbi_load(path, &width, &height, &component, 4))
     {
-        auto texture = ImCreateTexture(data, width, height, component);
+        auto texture = ImCreateTexture(data, width, height, 4 /*component*/);
         stbi_image_free(data);
         return texture;
     }
@@ -737,7 +737,7 @@ ImTextureID ImLoadTexture(const unsigned int * data, size_t size)
     int width = 0, height = 0, component = 0;
     if (auto img_data = stbi_load_from_memory((const stbi_uc *)data, size, &width, &height, &component, 4))
     {
-        auto texture = ImCreateTexture(img_data, width, height, component);
+        auto texture = ImCreateTexture(img_data, width, height, 4 /*component*/);
         stbi_image_free(img_data);
         return texture;
     }

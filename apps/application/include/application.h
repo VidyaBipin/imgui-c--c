@@ -6,7 +6,7 @@
 typedef void (*APP_SETUPCONTEXT)(ImGuiContext* ctx, void* handle, bool in_splash);
 typedef void (*APP_INITIALIZE)(void** handle);
 typedef void (*APP_FINALIZE)(void** handle);
-typedef bool (*APP_SPLASHSCREEN)(void* handle, bool app_will_quit);
+typedef bool (*APP_SPLASHSCREEN)(void* handle, bool& app_will_quit);
 typedef void (*APP_SPLASHFINALIZE)(void** handle);
 typedef bool (*APP_FRAME)(void* handle, bool app_will_quit);
 typedef void (*APP_DROPFROMSYSTEM)(std::vector<std::string>& drops);

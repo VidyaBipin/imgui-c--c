@@ -1258,7 +1258,7 @@ bool Example_Frame(void* handle, bool app_will_quit)
     return app_done;
 }
 
-bool Example_Splash_Screen(void* handle, bool app_will_quit)
+bool Example_Splash_Screen(void* handle, bool& app_will_quit)
 {
     const int delay = 20;
     static int x = 0;

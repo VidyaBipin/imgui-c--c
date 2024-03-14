@@ -109,7 +109,7 @@ void Application_FullScreen(bool on)
     ImGui_ImplWin32_FullScreen(ImGui::GetMainViewport(), on);
 }
 
-static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext* ctx)
+static bool Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext* ctx)
 {
     const auto c_ClassName  = _T("Imgui Splash Class");
     # if defined(_DEBUG)
@@ -138,7 +138,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     if (hwnd == nullptr)
     {
         fprintf(stderr, "Failed to Open Splash window! %s\n", c_WindowName.c_str());
-        return;
+        return false;
     }
     ::SetWindowLong(hwnd, GWL_STYLE, WS_BORDER); 
     // Setup Vulkan
@@ -210,7 +210,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
 
         ImGui::EndFrame();
 
-        if (splash_done) break;
+        if (splash_done | done) break;
 
         // Rendering
         ImGui::Render();
@@ -229,6 +229,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     ::DestroyWindow(hwnd);
     ::UnregisterClass(wc.lpszClassName, wc.hInstance);
     ImGui::UpdatePlatformWindows();
+    return done;
 }
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
@@ -297,8 +298,14 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         property.splash_screen_width > 0 &&
         property.splash_screen_height > 0)
     {
-        Show_Splash_Window(property, ctx);
+        auto app_will_quit = Show_Splash_Window(property, ctx);
         splash_done = true;
+        if (app_will_quit)
+        {
+            ImGui::ImDestroyTextures();
+            ImGui::DestroyContext();
+            return 0;
+        }
     }
 #endif
 

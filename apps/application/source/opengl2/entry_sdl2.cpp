@@ -20,7 +20,7 @@ void Application_FullScreen(bool on)
     ImGui_ImplSDL2_FullScreen(ImGui::GetMainViewport(), on);
 }
 
-static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext* ctx)
+static bool Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext* ctx)
 {
     std::string title = property.name + " Splash";
     int window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
@@ -32,7 +32,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     if (!window)
     {
         fprintf(stderr, "Failed to Create Splash Window: %s\n", SDL_GetError());
-        return;
+        return false;
     }
 
     // Set window icon
@@ -120,7 +120,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
 
         ImGui::EndFrame();
 #ifndef __EMSCRIPTEN__
-        if (splash_done) break;
+        if (splash_done | done) break;
 #endif
         // Rendering
         ImGui::Render();
@@ -151,6 +151,7 @@ static void Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     SDL_GL_DeleteContext(gl_context);
     SDL_DestroyWindow(window);
     ImGui::UpdatePlatformWindows();
+    return done;
 }
 
 int main(int argc, char** argv)
@@ -252,8 +253,15 @@ int main(int argc, char** argv)
         property.splash_screen_width > 0 &&
         property.splash_screen_height > 0)
     {
-        Show_Splash_Window(property, ctx);
+        auto app_will_quit = Show_Splash_Window(property, ctx);
         splash_done = true;
+        if (app_will_quit)
+        {
+            ImGui::ImDestroyTextures();
+            ImGui::DestroyContext();
+            SDL_Quit();
+            return 0;
+        }
     }
 #endif
 
