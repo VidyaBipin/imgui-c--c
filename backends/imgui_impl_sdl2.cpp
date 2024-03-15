@@ -601,6 +601,10 @@ static bool ImGui_ImplSDL2_Init(SDL_Window* window, SDL_Renderer* renderer, void
     if ((io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) && (io.BackendFlags & ImGuiBackendFlags_PlatformHasViewports))
         ImGui_ImplSDL2_InitPlatformInterface(window, sdl_gl_context);
 
+    // add by Dicky
+    ImGui::GetPlatformIO().Platform_OnTop = ImGui_ImplSDL2_SetWindowOnTop;
+    ImGui::GetPlatformIO().Platform_FullScreen = ImGui_ImplSDL2_FullScreen;
+    // add by Dicky end
     return true;
 }
 
@@ -1192,9 +1196,6 @@ static void ImGui_ImplSDL2_InitPlatformInterface(SDL_Window* window, void* sdl_g
 #if SDL_HAS_VULKAN
     platform_io.Platform_CreateVkSurface = ImGui_ImplSDL2_CreateVkSurface;
 #endif
-    // add By Dicky
-    platform_io.Platform_FullScreen = ImGui_ImplSDL2_FullScreen;
-    // add By Dicky end
 
     // Register main window handle (which is owned by the main application, not by us)
     // This is mostly for simplicity and consistency, so that our code (e.g. mouse handling etc.) can use same logic for main and secondary viewports.
@@ -1260,6 +1261,20 @@ void ImGui_ImplSDL2_FullScreen(ImGuiViewport* viewport, bool on)
     {
         ImGui_ImplSDL2_Data* bd = ImGui_ImplSDL2_GetBackendData();
         SDL_SetWindowFullscreen(bd->Window, on ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+    }
+}
+
+void ImGui_ImplSDL2_SetWindowOnTop(ImGuiViewport* viewport, bool on)
+{
+    if ((ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable))
+    {
+        ImGui_ImplSDL2_ViewportData* vd = (ImGui_ImplSDL2_ViewportData*)viewport->PlatformUserData;
+        SDL_SetWindowAlwaysOnTop(vd->Window, on ? SDL_TRUE : SDL_FALSE);
+    }
+    else
+    {
+        ImGui_ImplSDL2_Data* bd = ImGui_ImplSDL2_GetBackendData();
+        SDL_SetWindowAlwaysOnTop(bd->Window, on ? SDL_TRUE : SDL_FALSE);
     }
 }
 

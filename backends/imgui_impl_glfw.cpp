@@ -659,6 +659,11 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         ImGui_ImplGlfw_InitPlatformInterface();
 
+    // Add By Dicky
+    ImGui::GetPlatformIO().Platform_FullScreen = ImGui_ImplGlfw_FullScreen;
+    ImGui::GetPlatformIO().Platform_OnTop = ImGui_ImplGlfw_SetWindowOnTop;
+    // Add By Dicky end
+
     // Windows: register a WndProc hook so we can intercept some messages.
 #ifdef _WIN32
     bd->PrevWndProc = (WNDPROC)::GetWindowLongPtrW((HWND)main_viewport->PlatformHandleRaw, GWLP_WNDPROC);
@@ -1305,10 +1310,6 @@ static void ImGui_ImplGlfw_InitPlatformInterface()
     platform_io.Platform_CreateVkSurface = ImGui_ImplGlfw_CreateVkSurface;
 #endif
 
-    // Add By Dicky
-    platform_io.Platform_FullScreen = ImGui_ImplGlfw_FullScreen;
-    // Add By Dicky end
-
     // Register main window handle (which is owned by the main application, not by us)
     // This is mostly for simplicity and consistency, so that our code (e.g. mouse handling etc.) can use same logic for main and secondary viewports.
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
@@ -1424,6 +1425,20 @@ void ImGui_ImplGlfw_FullScreen(ImGuiViewport* viewport, bool on)
         ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
         if (on) glfwMaximizeWindow(bd->Window);
         else glfwRestoreWindow(bd->Window);
+    }
+}
+
+void ImGui_ImplGlfw_SetWindowOnTop(ImGuiViewport* viewport, bool on)
+{
+    if ((ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable))
+    {
+        ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
+        glfwSetWindowAttrib(vd->Window, GLFW_FLOATING, on ? GLFW_TRUE : GLFW_FALSE);
+    }
+    else
+    {
+        ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
+        glfwSetWindowAttrib(bd->Window, GLFW_FLOATING, on ? GLFW_TRUE : GLFW_FALSE);
     }
 }
 

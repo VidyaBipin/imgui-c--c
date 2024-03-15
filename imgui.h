@@ -3710,6 +3710,7 @@ struct ImGuiPlatformIO
 
     // (Optional) Screen functions Add By Dicky
     void    (*Platform_FullScreen)(ImGuiViewport* vp, bool on);             // . . U . .  // Set platform window full screen
+    void    (*Platform_OnTop)(ImGuiViewport* vp, bool on);                  // . . U . .  // Set platform window on top
     // Add By Dicky end
     // (Optional) Monitor list
     // - Updated by: app/backend. Update every frame to dynamically support changing monitor or DPI configuration.

@@ -36,6 +36,7 @@ IMGUI_IMPL_API void     ImGui_ImplGlfw_NewFrame();
 // Add By Dicky
 IMGUI_IMPL_API void     ImGui_ImplGlfw_WaitForEvent();
 IMGUI_IMPL_API void     ImGui_ImplGlfw_FullScreen(ImGuiViewport* viewport, bool on);
+IMGUI_IMPL_API void     ImGui_ImplGlfw_SetWindowOnTop(ImGuiViewport* viewport, bool on);
 IMGUI_IMPL_API void     ImGui_ImplGlfw_SetWindowIcon(GLFWwindow* window, const char * icon_path);
 // Add By Dicky end
 

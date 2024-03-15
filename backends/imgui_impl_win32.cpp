@@ -177,6 +177,11 @@ static bool ImGui_ImplWin32_InitEx(void* hwnd, bool platform_has_own_dc)
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         ImGui_ImplWin32_InitPlatformInterface(platform_has_own_dc);
 
+    // add By Dicky
+    ImGui::GetPlatformIO().Platform_FullScreen = ImGui_ImplWin32_FullScreen;
+    // TODO::Dicky add Platform_OnTop
+    // add By Dicky end
+
     // Dynamically load XInput library
 #ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
     bd->WantUpdateHasGamepad = true;
@@ -1348,7 +1353,6 @@ static void ImGui_ImplWin32_InitPlatformInterface(bool platform_has_own_dc)
     platform_io.Platform_OnChangedViewport = ImGui_ImplWin32_OnChangedViewport; // FIXME-DPI
 
     // add By Dicky
-    platform_io.Platform_FullScreen = ImGui_ImplWin32_FullScreen;
 #if IMGUI_RENDERING_VULKAN
     platform_io.Platform_CreateVkSurface = ImGui_ImplWin32_CreateVkSurface;
 #endif
