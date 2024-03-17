@@ -975,6 +975,7 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
     {
         return;
     }
+    ImRect video_rc(pos, pos + size);
     std::string dialog_id = "##TextureFileDlgKey" + std::to_string((long long)(texture1 ? texture1 : texture2));
     float texture_width = texture1 ? ImGui::ImGetTextureWidth(texture1) : size.x;
     float texture_height = texture1 ? ImGui::ImGetTextureHeight(texture1) : size.y;
@@ -1048,7 +1049,7 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
             {
                 ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
             }
-            if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || (handle.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left)))
+            if (video_rc.Contains(io.MousePos) && (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || (handle.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left))))
             {
                 auto _split = (io.MousePos.x - _offset_x) / adj_w;
                 img_split = ImClamp(_split, 0.f, 1.f);
@@ -1089,7 +1090,7 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
             {
                 ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
             }
-            if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || (handle.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left)))
+            if (video_rc.Contains(io.MousePos) && (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || (handle.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left))))
             {
                 auto _split = (io.MousePos.y - _offset_y) / adj_h;
                 img_split = ImClamp(_split, 0.f, 1.f);
@@ -1105,7 +1106,7 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
 
     _tf_x = _offset_x + adj_w;
     _tf_y = _offset_y + adj_h;
-    ImVec2 scale_range = ImVec2(2.0, 8.0);
+    ImVec2 scale_range = ImVec2(1.0, 8.0);
     static float texture_zoom = scale_range.x;
     ImGui::SetCursorScreenPos(pos);
     ImGui::InvisibleButton(("##video_window" + std::to_string((long long)texture1)).c_str(), size);
