@@ -1107,6 +1107,7 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
     _tf_y = _offset_y + adj_h;
     ImVec2 scale_range = ImVec2(2.0, 8.0);
     static float texture_zoom = scale_range.x;
+    ImGui::SetCursorScreenPos(pos);
     ImGui::InvisibleButton(("##video_window" + std::to_string((long long)texture1)).c_str(), size);
     bool zoom = ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift);
     if (zoom && ImGui::IsItemHovered())
