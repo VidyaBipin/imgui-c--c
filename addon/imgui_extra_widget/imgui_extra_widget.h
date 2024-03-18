@@ -51,6 +51,8 @@ IMGUI_API bool Fader(const char* label, const ImVec2& size, int* v, const int v_
 
 IMGUI_API void RoundProgressBar(float radius, float *p_value, float v_min, float v_max, ColorSet bar_color, ColorSet progress_color, ColorSet text_color);
 
+IMGUI_API bool HoverButton(ImDrawList *draw_list, const char * label, ImVec2 pos, ImVec2 size, std::string tooltips = "", ImVec4 hover_color = ImVec4(0.5f, 0.5f, 0.75f, 1.0f));
+
 // Splitter
 IMGUI_API bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size = -1.0f, float delay = 0.f);
 

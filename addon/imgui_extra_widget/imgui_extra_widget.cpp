@@ -10769,3 +10769,22 @@ void ImGui::TextExWithPadding(const ImVec2& padding, const char* text, const cha
         ItemAdd(bb, 0);
     }
 }
+
+bool ImGui::HoverButton(ImDrawList *draw_list, const char * label, ImVec2 pos, ImVec2 size, std::string tooltips, ImVec4 hover_color)
+{
+    ImGuiIO &io = ImGui::GetIO();
+    ImRect rect(pos, pos + size);
+    bool overButton = rect.Contains(io.MousePos);
+    if (overButton)
+        draw_list->AddRectFilled(rect.Min, rect.Max, ImGui::GetColorU32(hover_color), 2);
+    ImVec4 color = ImVec4(1.f, 1.f, 1.f, 1.f);
+    ImGui::SetWindowFontScale(0.75);
+    draw_list->AddText(pos, ImGui::GetColorU32(color), label);
+    ImGui::SetWindowFontScale(1.0);
+    if (overButton && !tooltips.empty() && ImGui::BeginTooltip())
+    {
+        ImGui::TextUnformatted(tooltips.c_str());
+        ImGui::EndTooltip();
+    }
+    return overButton;
+}
