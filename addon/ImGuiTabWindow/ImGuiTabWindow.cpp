@@ -519,7 +519,7 @@ void SetTableLabelBreathingSpeed(float speed, float min, float max)
 //=======================================================================================
 // Main method to draw the tab label
 // The TabLabelStyle used by this method won't be merged with the Window Alpha (please provide a pOptionalStyleToUseIn using TabLabelStyle::GetMergedWithWindowAlpha() if needed).
-static bool TabButton(const char *label, bool selected, bool *pCloseButtonPressedOut=NULL, const char* textOverrideIn=NULL, ImVec2 *pJustReturnItsSizeHereOut=NULL, const TabLabelStyle* pOptionalStyleToUseIn=NULL,ImFont *fontOverride=NULL, ImVec2 *pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset=NULL, ImDrawList *drawListOverride=NULL,bool privateReuseLastCalculatedLabelSizeDoNotUse = false,bool forceActiveColorLook = false, bool breathingSelected = false)  {
+static bool TabButton(const char *label, bool selected, bool *pCloseButtonPressedOut=NULL, const char* textOverrideIn=NULL, ImVec2 *pJustReturnItsSizeHereOut=NULL, const TabLabelStyle* pOptionalStyleToUseIn=NULL,ImFont *fontOverride=NULL, ImVec2 *pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset=NULL, ImDrawList *drawListOverride=NULL,bool privateReuseLastCalculatedLabelSizeDoNotUse = false,bool forceActiveColorLook = false, bool breathingSelected = false, int doneBadges = 0, int doingBadges = 0)  {
     // Based on ImGui::ButtonEx(...)
     bool *pHoveredOut = NULL;           // removed from args (can be queried from outside)
     bool *pCloseButtonHovered = NULL;   // removed from args (who cares if the close button is hovered?)
@@ -627,6 +627,32 @@ static bool TabButton(const char *label, bool selected, bool *pCloseButtonPresse
 
     }
     if (fontOverride) ImGui::PopFont();
+
+    // draw Badges
+    if (doneBadges > 0)
+    {
+        std::string badge_str = std::to_string(doneBadges < 100 ? doneBadges : 99);
+        if (doneBadges >= 100) badge_str += "+";
+        ImGui::SetWindowFontScale(doneBadges < 10 ? 0.75 : doneBadges < 100 ? 0.65 : 0.6);
+        float num_offset_x = doneBadges < 10 ? 7 : doneBadges < 100 ? 9 : 11;
+        float num_offset_y = doneBadges < 10 ? 3 : doneBadges < 100 ? 2 : 1;
+        drawListOverride->AddCircleFilled(ImVec2(bb.Max.x - 4, bb.Min.y + 4), 7, IM_COL32(0, 255, 0, 144));
+        drawListOverride->AddText(ImVec2(bb.Max.x - num_offset_x + 1, bb.Min.y - num_offset_y + 1), IM_COL32_BLACK, badge_str.c_str());
+        drawListOverride->AddText(ImVec2(bb.Max.x - num_offset_x, bb.Min.y - num_offset_y), IM_COL32_WHITE, badge_str.c_str());
+        ImGui::SetWindowFontScale(1.0);
+    }
+    if (doingBadges > 0)
+    {
+        std::string badge_str = std::to_string(doingBadges < 100 ? doingBadges : 99);
+        if (doingBadges >= 100) badge_str += "+";
+        ImGui::SetWindowFontScale(doingBadges < 10 ? 0.75 : doingBadges < 100 ? 0.65 : 0.6);
+        float num_offset_x = doingBadges < 10 ? -1 : doingBadges < 100 ? 1 : 2;
+        float num_offset_y = doingBadges < 10 ? 3 : doingBadges < 100 ? 2 : 1;
+        drawListOverride->AddCircleFilled(bb.Min + ImVec2(4, 3), 8, IM_COL32(255, 0, 0, 144));
+        drawListOverride->AddText(ImVec2(bb.Min.x - num_offset_x + 1, bb.Min.y - num_offset_y + 1), IM_COL32_BLACK, badge_str.c_str());
+        drawListOverride->AddText(ImVec2(bb.Min.x - num_offset_x, bb.Min.y - num_offset_y), IM_COL32_WHITE, badge_str.c_str());
+        ImGui::SetWindowFontScale(1.0);
+    }
 
     return pressed;
 }
@@ -2511,15 +2537,15 @@ TabWindow::TabLabel *TabWindow::FindTabLabelFromUserText(const char *userText, c
 }
 
 // Based on the code by krys-spectralpixel (https://github.com/krys-spectralpixel), posted here: https://github.com/ocornut/imgui/issues/261
-bool TabLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImVec2& tableSize, const std::vector<std::string> tabLabelTooltips, bool wrapMode, bool breathing_select, int *pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int *pOptionalClosedTabIndex, int *pOptionalClosedTabIndexInsideItemOrdering,bool invertRounding) {
+bool TabLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImVec2& tableSize, const std::vector<std::string> tabLabelTooltips, const std::vector<std::pair<int, int>> badgeNumbers, bool wrapMode, bool breathing_select, int *pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int *pOptionalClosedTabIndex, int *pOptionalClosedTabIndexInsideItemOrdering,bool invertRounding) {
     ImGuiStyle& style = ImGui::GetStyle();
     auto tabStyle = TabLabelStyle::GetMergedWithWindowAlpha();
     if (invertRounding) TabLabelStyle::SetTablePosition(tabStyle, TabLabelStyle::TAB_POSITION_BOTTOM);
     else TabLabelStyle::SetTablePosition(tabStyle, TabLabelStyle::TAB_POSITION_TOP);
 
     const ImVec2 itemSpacing =  style.ItemSpacing;
-    style.ItemSpacing.x =       3;
-    style.ItemSpacing.y =       3;
+    style.ItemSpacing.x =       4;
+    style.ItemSpacing.y =       4;
 
     if (!tabLabels.empty() && (selectedIndex<0 || selectedIndex>=tabLabels.size())) {
         //if (!pOptionalItemOrdering)  selectedIndex = 0;
@@ -2553,11 +2579,14 @@ bool TabLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImV
     {
         i = pOptionalItemOrdering ? pOptionalItemOrdering[j] : j;
         if (i==-1) continue;
+        
+        int done_badges = badgeNumbers.size() == tabLabels.size() ? badgeNumbers[i].first : 0;
+        int doing_badges = badgeNumbers.size() == tabLabels.size() ? badgeNumbers[i].second : 0;
 
         if (!wrapMode) {if (!noButtonDrawn) ImGui::SameLine();canUseSizeOptimization=false;}
         else if (sumX > 0.f) {
             sumX+=style.ItemSpacing.x;   // Maybe we can skip it if we use SameLine(0,0) below
-            ImGui::TabButton(tabLabels[i].c_str(),(i == selectedIndex),allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select);
+            ImGui::TabButton(tabLabels[i].c_str(),(i == selectedIndex),allowTabClosing ? &mustCloseTab : NULL,NULL,&tabButtonSz,&tabStyle,NULL,NULL,NULL,false,false,breathing_select,done_badges,doing_badges);
             sumX+=tabButtonSz.x;
             if (sumX>windowWidth) sumX = 0.f;
             else ImGui::SameLine();
@@ -2567,7 +2596,7 @@ bool TabLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImV
 
         // Draw the button
         ImGui::PushID(i);   // otherwise two tabs with the same name would clash.
-        if (ImGui::TabButton(tabLabels[i].c_str(),i == selectedIndex,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select))   {
+        if (ImGui::TabButton(tabLabels[i].c_str(),i == selectedIndex,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select,done_badges,doing_badges))   {
             selection_changed = (selectedIndex!=i);
             newSelectedIndex = i;
         }
@@ -2694,15 +2723,15 @@ bool TabLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImV
     return selection_changed;
 }
 
-bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImVec2& tableSize, const std::vector<std::string> tabLabelTooltips, const std::vector<ImTextureID> tabTextures, ImVec2 texture_size, bool wrapMode, bool breathing_select, int *pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int *pOptionalClosedTabIndex, int *pOptionalClosedTabIndexInsideItemOrdering,bool invertRounding) {
+bool TabImageLabels(const std::vector<std::string> tabLabels, int& selectedIndex, ImVec2& tableSize, const std::vector<std::string> tabLabelTooltips, const std::vector<std::pair<int, int>> badgeNumbers, const std::vector<ImTextureID> tabTextures, ImVec2 texture_size, bool wrapMode, bool breathing_select, int *pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int *pOptionalClosedTabIndex, int *pOptionalClosedTabIndexInsideItemOrdering,bool invertRounding) {
     ImGuiStyle& style = ImGui::GetStyle();
     auto tabStyle = TabLabelStyle::GetMergedWithWindowAlpha();
     if (invertRounding) TabLabelStyle::SetTablePosition(tabStyle, TabLabelStyle::TAB_POSITION_BOTTOM);
     else TabLabelStyle::SetTablePosition(tabStyle, TabLabelStyle::TAB_POSITION_TOP);
     auto button_size = ImGui::CalcTextSize("<") + style.WindowPadding;
     const ImVec2 itemSpacing =  style.ItemSpacing;
-    style.ItemSpacing.x =       3;
-    style.ItemSpacing.y =       3;
+    style.ItemSpacing.x =       4;
+    style.ItemSpacing.y =       4;
     if (tabStyle.tabPosition != TabLabelStyle::TAB_POSITION_NONE)
         tabStyle.rounding = 6;
 
@@ -3042,7 +3071,7 @@ namespace ImGui {
 //=======================================================================================
 // Main method to draw the tab label
 // The TabLabelStyle used by this method won't be merged with the Window Alpha (please provide a pOptionalStyleToUseIn using TabLabelStyle::GetMergedWithWindowAlpha() if needed).
-static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, bool *pCloseButtonPressedOut=NULL, const char* textOverrideIn=NULL, ImVec2 *pJustReturnItsSizeHereOut=NULL, const TabLabelStyle* pOptionalStyleToUseIn=NULL,ImFont *fontOverride=NULL, ImVec2 *pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset=NULL, ImDrawList *drawListOverride=NULL,bool privateReuseLastCalculatedLabelSizeDoNotUse = false,bool forceActiveColorLook = false, bool breathingSelected = false)  {
+static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, bool invertRounding, bool *pCloseButtonPressedOut=NULL, const char* textOverrideIn=NULL, ImVec2 *pJustReturnItsSizeHereOut=NULL, const TabLabelStyle* pOptionalStyleToUseIn=NULL,ImFont *fontOverride=NULL, ImVec2 *pOptionalJustDrawTabButtonGraphicsUnderMouseWithThisOffset=NULL, ImDrawList *drawListOverride=NULL,bool privateReuseLastCalculatedLabelSizeDoNotUse = false,bool forceActiveColorLook = false, bool breathingSelected = false, int doneBadges = 0, int doingBadges = 0)  {
     // Based on ImGui::ButtonEx(...)
     bool *pHoveredOut = NULL;           // removed from args (can be queried from outside)
     bool *pCloseButtonHovered = NULL;   // removed from args (who cares if the close button is hovered?)
@@ -3176,12 +3205,59 @@ static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, b
     }
     if (fontOverride) ImGui::PopFont();
 
+    // draw Badges
+    if (doneBadges > 0)
+    {
+        std::string badge_str = std::to_string(doneBadges < 100 ? doneBadges : 99);
+        if (doneBadges >= 100) badge_str += "+";
+        ImGui::SetWindowFontScale(doneBadges < 10 ? 0.75 : doneBadges < 100 ? 0.65 : 0.6);
+        if (!invertRounding)
+        {
+            float num_offset_x = doneBadges < 10 ? -1 : doneBadges < 100 ? 1 : 2;
+            float num_offset_y = doneBadges < 10 ? 3 : doneBadges < 100 ? 2 : 1;
+            drawListOverride->AddCircleFilled(ImVec2(bb.Min.x + 4, bb.Max.y - 4), 7, IM_COL32(0, 255, 0, 144));
+            drawListOverride->AddText(ImVec2(bb.Min.x - num_offset_x + 1, bb.Max.y - num_offset_y + 1 - 8), IM_COL32_BLACK, badge_str.c_str());
+            drawListOverride->AddText(ImVec2(bb.Min.x - num_offset_x, bb.Max.y - num_offset_y - 8), IM_COL32_WHITE, badge_str.c_str());
+        }
+        else
+        {
+            float num_offset_x = doneBadges < 10 ? 7 : doneBadges < 100 ? 9 : 11;
+            float num_offset_y = doneBadges < 10 ? 3 : doneBadges < 100 ? 2 : 1;
+            drawListOverride->AddCircleFilled(ImVec2(bb.Max.x - 4, bb.Max.y - 4), 7, IM_COL32(0, 255, 0, 144));
+            drawListOverride->AddText(ImVec2(bb.Max.x - num_offset_x + 1, bb.Max.y - num_offset_y + 1 - 8), IM_COL32_BLACK, badge_str.c_str());
+            drawListOverride->AddText(ImVec2(bb.Max.x - num_offset_x, bb.Max.y - num_offset_y - 8), IM_COL32_WHITE, badge_str.c_str());
+        }
+        ImGui::SetWindowFontScale(1.0);
+    }
+    if (doingBadges > 0)
+    {
+        std::string badge_str = std::to_string(doingBadges < 100 ? doingBadges : 99);
+        if (doingBadges >= 100) badge_str += "+";
+        ImGui::SetWindowFontScale(doingBadges < 10 ? 0.75 : doingBadges < 100 ? 0.65 : 0.6);
+        if (!invertRounding)
+        {
+            float num_offset_x = doingBadges < 10 ? -1 : doingBadges < 100 ? 1 : 2;
+            float num_offset_y = doingBadges < 10 ? 3 : doingBadges < 100 ? 2 : 1;
+            drawListOverride->AddCircleFilled(bb.Min + ImVec2(4, 3), 8, IM_COL32(255, 0, 0, 144));
+            drawListOverride->AddText(ImVec2(bb.Min.x - num_offset_x + 1, bb.Min.y - num_offset_y + 1), IM_COL32_BLACK, badge_str.c_str());
+            drawListOverride->AddText(ImVec2(bb.Min.x - num_offset_x, bb.Min.y - num_offset_y), IM_COL32_WHITE, badge_str.c_str());
+        }
+        else
+        {
+            float num_offset_x = doingBadges < 10 ? 7 : doingBadges < 100 ? 9 : 11;
+            float num_offset_y = doingBadges < 10 ? 3 : doingBadges < 100 ? 2 : 1;
+            drawListOverride->AddCircleFilled(ImVec2(bb.Max.x - 4, bb.Min.y + 3), 8, IM_COL32(255, 0, 0, 144));
+            drawListOverride->AddText(ImVec2(bb.Max.x - num_offset_x + 1, bb.Min.y - num_offset_y + 1), IM_COL32_BLACK, badge_str.c_str());
+            drawListOverride->AddText(ImVec2(bb.Max.x - num_offset_x, bb.Min.y - num_offset_y), IM_COL32_WHITE, badge_str.c_str());
+        }
+        ImGui::SetWindowFontScale(1.0);
+    }
     return pressed;
 }
 //========================================================================================
 
 
-bool TabLabelsVertical(const std::vector<std::string> tabLabels, int& selectedIndex, const std::vector<std::string> tabLabelTooltips, bool breathing_select, int* pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int* pOptionalClosedTabIndex, int * pOptionalClosedTabIndexInsideItemOrdering, bool invertRounding, bool textIsRotatedCCW)    {
+bool TabLabelsVertical(const std::vector<std::string> tabLabels, int& selectedIndex, const std::vector<std::string> tabLabelTooltips, const std::vector<std::pair<int, int>> badgeNumbers, bool breathing_select, int* pOptionalHoveredIndex, int* pOptionalItemOrdering, bool allowTabReorder, bool allowTabClosing, int* pOptionalClosedTabIndex, int * pOptionalClosedTabIndexInsideItemOrdering, bool invertRounding, bool textIsRotatedCCW)    {
     ImGuiStyle& style = ImGui::GetStyle();
     auto tabStyle = TabLabelStyle::GetMergedWithWindowAlpha();
     if (invertRounding) TabLabelStyle::SetTablePosition(tabStyle, TabLabelStyle::TAB_POSITION_RIGHT);
@@ -3189,7 +3265,7 @@ bool TabLabelsVertical(const std::vector<std::string> tabLabels, int& selectedIn
 
     const ImVec2 itemSpacing =  style.ItemSpacing;
     style.ItemSpacing.x =       1;
-    style.ItemSpacing.y =       1;
+    style.ItemSpacing.y =       4;
 
     if (!tabLabels.empty() && (selectedIndex < 0 || selectedIndex >= tabLabels.size())) {
         if (!pOptionalItemOrdering)  selectedIndex = 0;
@@ -3225,6 +3301,9 @@ bool TabLabelsVertical(const std::vector<std::string> tabLabels, int& selectedIn
         i = pOptionalItemOrdering ? pOptionalItemOrdering[j] : j;
         if (i==-1) continue;
 
+        int done_badges = badgeNumbers.size() == tabLabels.size() ? badgeNumbers[i].first : 0;
+        int doing_badges = badgeNumbers.size() == tabLabels.size() ? badgeNumbers[i].second : 0;
+
         //if (!wrapMode)
         {
             //if (!noButtonDrawn) ImGui::SameLine();
@@ -3242,7 +3321,7 @@ bool TabLabelsVertical(const std::vector<std::string> tabLabels, int& selectedIn
 
         // Draw the button
         ImGui::PushID(i);   // otherwise two tabs with the same name would clash.
-        if (ImGui::TabButtonVertical(textIsRotatedCCW,tabLabels[i].c_str(),i == selectedIndex,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select))   {
+        if (ImGui::TabButtonVertical(textIsRotatedCCW,tabLabels[i].c_str(),i == selectedIndex,invertRounding,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,NULL,NULL,NULL,canUseSizeOptimization,false,breathing_select,done_badges,doing_badges))   {
             selection_changed = (selectedIndex!=i);
             newSelectedIndex = i;
         }
@@ -3315,7 +3394,7 @@ bool TabLabelsVertical(const std::vector<std::string> tabLabels, int& selectedIn
                     ImGui::GetForegroundDrawList();
             const TabLabelStyle& tabStyle = TabLabelStyleGetMergedWithAlphaForOverlayUsage();
             ImFont* fontOverride = (ImFont*) (draggingTabWasSelected ? TabLabelStyle::ImGuiFonts[tabStyle.fontStyles[TabLabelStyle::TAB_STATE_SELECTED]] : TabLabelStyle::ImGuiFonts[tabStyle.fontStyles[TabLabelStyle::TAB_STATE_NORMAL]]);
-            ImGui::TabButtonVertical(textIsRotatedCCW,tabLabels[pOptionalItemOrdering[draggingTabIndex]].c_str(),draggingTabWasSelected,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,fontOverride,&start,drawList,false,true);
+            ImGui::TabButtonVertical(textIsRotatedCCW,tabLabels[pOptionalItemOrdering[draggingTabIndex]].c_str(),draggingTabWasSelected,invertRounding,allowTabClosing ? &mustCloseTab : NULL,NULL,NULL,&tabStyle,fontOverride,&start,drawList,false,true);
             ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
 
             if (TabWindow::DockPanelIconTextureID)	{

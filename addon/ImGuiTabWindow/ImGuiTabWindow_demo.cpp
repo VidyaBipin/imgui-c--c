@@ -17,19 +17,32 @@ void ShowAddonsTabWindow()
     static bool tabLabelWrapMode = true;
     static bool allowClosingTabs = false;
     static bool tableAtBottom = false;
+    static int doneBadgeNumber = 0;
+    static int doingBadgeNumber = 0;
+
     int justClosedTabIndex=-1,justClosedTabIndexInsideTabItemOrdering = -1,oldSelectedTab = selectedTab;
     ImGui::Checkbox("Wrap Mode##TabLabelWrapMode",&tabLabelWrapMode);
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s","WrapMode is only available\nin horizontal TabLabels");
     ImGui::SameLine();ImGui::Checkbox("Drag And Drop##TabLabelDragAndDrop",&allowTabLabelDragAndDrop);
     ImGui::SameLine();ImGui::Checkbox("Closable##TabLabelClosing",&allowClosingTabs);ImGui::SameLine();
     ImGui::Checkbox("At bottom##TabLabelAtbottom",&tableAtBottom);
-    bool resetTabLabels = ImGui::SmallButton("Reset Tabs");if (resetTabLabels) {selectedTab=0;for (int i=0;i<tabNames.size();i++) tabItemOrdering[i] = i;}
+    ImGui::SliderInt("Done Badge", &doneBadgeNumber, 0, 100);
+    ImGui::SliderInt("Doing Badge", &doingBadgeNumber, 0, 100);
+    bool resetTabLabels = ImGui::SmallButton("Reset Tabs");if (resetTabLabels) {selectedTab=0;for (int i=0;i<tabNames.size();i++) tabItemOrdering[i] = i; doneBadgeNumber = 0; doingBadgeNumber = 0; }
 
     ImVec2 table_size;
+    std::vector<std::pair<int, int>> BadgeNumber;
+    for (int i = 0; i < tabNames.size(); i++)
+    {
+        if (i == 0 || (tabNames.size() > 1 && i == 1))
+            BadgeNumber.push_back(std::pair<int, int>(doneBadgeNumber, doingBadgeNumber));
+        else
+            BadgeNumber.push_back(std::pair<int, int>(0, 0));
+    }       
 
     if (!tableAtBottom)
     {
-        ImGui::TabLabels(tabNames,selectedTab,table_size,tabTooltips,tabLabelWrapMode,false,&optionalHoveredTab,&tabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,&justClosedTabIndex,&justClosedTabIndexInsideTabItemOrdering);
+        ImGui::TabLabels(tabNames, selectedTab, table_size, tabTooltips, BadgeNumber, tabLabelWrapMode, false, &optionalHoveredTab, &tabItemOrdering[0], allowTabLabelDragAndDrop, allowClosingTabs, &justClosedTabIndex, &justClosedTabIndexInsideTabItemOrdering);
         // Optional stuff
         if (justClosedTabIndex==1) {
             tabItemOrdering[justClosedTabIndexInsideTabItemOrdering] = justClosedTabIndex;   // Prevent the user from closing Tab "Layers"
@@ -55,7 +68,7 @@ void ShowAddonsTabWindow()
     ImGui::EndChild();
     if (tableAtBottom)
     {
-        ImGui::TabLabels(tabNames,selectedTab,table_size,tabTooltips,tabLabelWrapMode,false,&optionalHoveredTab,&tabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,&justClosedTabIndex,&justClosedTabIndexInsideTabItemOrdering, true);
+        ImGui::TabLabels(tabNames,selectedTab,table_size,tabTooltips,BadgeNumber,tabLabelWrapMode,false,&optionalHoveredTab,&tabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,&justClosedTabIndex,&justClosedTabIndexInsideTabItemOrdering, true);
         // Optional stuff
         if (justClosedTabIndex==1) {
             tabItemOrdering[justClosedTabIndexInsideTabItemOrdering] = justClosedTabIndex;   // Prevent the user from closing Tab "Layers"
@@ -73,9 +86,18 @@ void ShowAddonsTabWindow()
     static int optionalHoveredVerticalTab = 0;
     if (resetTabLabels) {selectedVerticalTab=0;for (int i=0;i<verticalTabNames.size();i++) verticalTabItemOrdering[i] = i;}
 
+    std::vector<std::pair<int, int>> vBadgeNumber;
+    for (int i = 0; i < verticalTabNames.size(); i++)
+    {
+        if (i == 0 || (verticalTabNames.size() > 1 && i == 1))
+            vBadgeNumber.push_back(std::pair<int, int>(doneBadgeNumber, doingBadgeNumber));
+        else
+            vBadgeNumber.push_back(std::pair<int, int>(0, 0));
+    }       
+
     const float verticalTabsWidth = ImGui::CalcVerticalTabLabelsWidth();
     if (verticalTabLabelsAtLeft)	{
-        ImGui::TabLabelsVertical(verticalTabNames,selectedVerticalTab,verticalTabTooltips,false,&optionalHoveredVerticalTab,&verticalTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,!verticalTabLabelsAtLeft,false);
+        ImGui::TabLabelsVertical(verticalTabNames,selectedVerticalTab,verticalTabTooltips,vBadgeNumber,false,&optionalHoveredVerticalTab,&verticalTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,!verticalTabLabelsAtLeft,false);
         ImGui::SameLine(0,0);
     }
     // Draw tab page
@@ -84,7 +106,7 @@ void ShowAddonsTabWindow()
     ImGui::EndChild();
     if (!verticalTabLabelsAtLeft)	{
         ImGui::SameLine(0,0);
-        ImGui::TabLabelsVertical(verticalTabNames,selectedVerticalTab,verticalTabTooltips,false,&optionalHoveredVerticalTab,&verticalTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,!verticalTabLabelsAtLeft,false);
+        ImGui::TabLabelsVertical(verticalTabNames,selectedVerticalTab,verticalTabTooltips,vBadgeNumber,false,&optionalHoveredVerticalTab,&verticalTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,!verticalTabLabelsAtLeft,false);
     }
 
     // ImGui::TabImageLabels() example usage
@@ -130,7 +152,7 @@ void ShowAddonsTabWindow()
     ImGui::BeginChild("MyImageTabLabelsChild",ImVec2(0,300),true);
     ImGui::Text("Tab Page For Image Tab: \"%s\" here.",selectedImageTab >= 0 ? imageTabNames[selectedImageTab].c_str() : "None!");
     ImGui::EndChild();
-    ImGui::TabImageLabels(imageTabNames,selectedImageTab,table_size,std::vector<std::string>(),imageTabTextures,ImVec2(64,36),tabLabelWrapMode,false,&optionalHoveredImageTab,&imageTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,true);
+    ImGui::TabImageLabels(imageTabNames,selectedImageTab,table_size,std::vector<std::string>(),std::vector<std::pair<int, int>>(),imageTabTextures,ImVec2(64,36),tabLabelWrapMode,false,&optionalHoveredImageTab,&imageTabItemOrdering[0],allowTabLabelDragAndDrop,allowClosingTabs,NULL,NULL,true);
 }
 void  ReleaseTabWindow()
 {

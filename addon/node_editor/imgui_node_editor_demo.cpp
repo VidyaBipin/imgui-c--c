@@ -74,7 +74,7 @@ void ImGui::ShowNodeEditorWindow()
     auto& io = ImGui::GetIO();
     static int tab_index = 0;
     static ImVec2 table_size;
-    ImGui::TabLabels(DemoTabNames, tab_index, table_size, std::vector<std::string>() , false, false, nullptr, nullptr, false, false, nullptr, nullptr);
+    ImGui::TabLabels(DemoTabNames, tab_index, table_size, std::vector<std::string>(), std::vector<std::pair<int, int>>(), false, false, nullptr, nullptr, false, false, nullptr, nullptr);
     switch (tab_index)
     {
         case 0:
