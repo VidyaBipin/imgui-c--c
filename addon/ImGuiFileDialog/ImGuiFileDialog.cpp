@@ -2930,10 +2930,8 @@ void IGFD::ThumbnailFeature::m_ThreadThumbnailFileDatasExtractionFunc() {
                                 const auto newHeight      = (int)newY;
                                 const auto newBufSize     = (size_t)(newWidth * newHeight * 4U);  //-V112 //-V1028
                                 auto resizedData          = new uint8_t[newBufSize];
-                                // modify by Dicky to using stb_image_resize2
-                                unsigned char * resizeSucceeded = stbir_resize_uint8_linear(datas, w, h, 0, resizedData, newWidth, newHeight, 0, STBIR_RGBA);  //-V112
-                                // modify by Dicky end
-                                if (resizeSucceeded) {
+                                const auto* resizeSucceeded = stbir_resize_uint8_linear(datas, w, h, 0, resizedData, newWidth, newHeight, 0, stbir_pixel_layout::STBIR_RGBA);  //-V112
+                                if (resizeSucceeded != nullptr) {
                                     auto th              = &file->thumbnailInfo;
                                     th->textureFileDatas = resizedData;
                                     th->textureWidth     = newWidth;
@@ -3103,6 +3101,7 @@ IGFD::PlacesFeature::PlacesFeature() {
 #ifdef USE_PLACES_FEATURE
 void IGFD::PlacesFeature::m_InitPlaces(FileDialogInternal& vFileDialogInternal) {
 #ifdef USE_PLACES_BOOKMARKS
+    (void)vFileDialogInternal; // for disable compiler warning about unused var
     AddPlacesGroup(placesBookmarksGroupName, placesBookmarksDisplayOrder, true, PLACES_BOOKMARK_DEFAULT_OPEPEND);
 #endif  // USE_PLACES_BOOKMARK
 #ifdef USE_PLACES_DEVICES
@@ -3221,7 +3220,7 @@ bool IGFD::PlacesFeature::m_DrawPlacesPane(FileDialogInternal& vFileDialogIntern
     return res;
 }
 
-std::string IGFD::PlacesFeature::SerializePlaces(const bool& vForceSerialisationForAll) {
+std::string IGFD::PlacesFeature::SerializePlaces(const bool& /*vForceSerialisationForAll*/) {
     std::string res;
     size_t idx = 0;
     for (const auto& group : m_Groups) {
@@ -4296,7 +4295,7 @@ void IGFD::FileDialog::m_SelectableItem(int vidx, std::shared_ptr<FileInfos> vIn
     }
 }
 
-void IGFD::FileDialog::m_DisplayFileInfosTooltip(const int32_t& vRowIdx, const int32_t& vColumnIdx, std::shared_ptr<FileInfos> vFileInfos) {
+void IGFD::FileDialog::m_DisplayFileInfosTooltip(const int32_t& /*vRowIdx*/, const int32_t& vColumnIdx, std::shared_ptr<FileInfos> vFileInfos) {
     if (ImGui::IsItemHovered()) {
         if (vFileInfos != nullptr && vFileInfos->tooltipColumn == vColumnIdx) {
             if (!vFileInfos->tooltipMessage.empty()) {
