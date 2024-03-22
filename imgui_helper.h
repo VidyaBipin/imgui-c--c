@@ -11,6 +11,12 @@
 #include <memory>
 #include <algorithm>
 
+#ifdef _WIN32
+#define PATH_SEP '\\'
+#else //_WIN32
+#define PATH_SEP '/'
+#endif //_WIN32
+
 struct IMGUI_API codewin
 {
     static const int codewin_width {64};

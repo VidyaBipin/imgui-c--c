@@ -1226,12 +1226,12 @@ void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, I
             uvMin,
             uvMax
         );
-
-        if (tf_x) *tf_x = _tf_x;
-        if (tf_y) *tf_y = _tf_y;
         
         _tf_x = _offset_x + adj_w;
         _tf_y = _offset_y + adj_h;
+
+        if (tf_x) *tf_x = _tf_x;
+        if (tf_y) *tf_y = _tf_y;
 
         ImVec2 scale_range = ImVec2(2.0 , 8.0);
         static float texture_zoom = scale_range.x;
@@ -1260,6 +1260,10 @@ void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, I
                 ImVec2 uv0 = ImVec2((region_x) / texture_width, (region_y) / texture_height);
                 ImVec2 uv1 = ImVec2((region_x + region_sz) / texture_width, (region_y + region_sz) / texture_height);
                 ImGui::Image(texture, ImVec2(region_sz * texture_zoom, region_sz * texture_zoom), uv0, uv1, tint_col, border_col);
+                //ImVec2 window_pos = ImGui::GetWindowPos();
+                //ImVec2 window_size = ImGui::GetWindowSize();
+                //ImVec2 window_center = ImVec2(window_pos.x + window_size.x * 0.5f, window_pos.y + window_size.y * 0.5f);
+                //ImGui::GetForegroundDrawList()->AddCircle(window_center, 4, IM_COL32(0, 255, 0, 128), 0, 3);
                 ImGui::EndTooltip();
             }
             if (io.MouseWheel < -FLT_EPSILON)

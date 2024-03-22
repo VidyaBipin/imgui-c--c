@@ -24,7 +24,6 @@ struct IUnknown;
 #endif
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
-#define PATH_SEP '\\'
 #define PATH_SETTINGS "\\AppData\\Roaming\\"
 #else //_WIN32
 #include <unistd.h>
@@ -32,7 +31,6 @@ struct IUnknown;
 #include <pwd.h>
 #include <sys/stat.h>
 #include <sys/resource.h>
-#define PATH_SEP '/'
 #endif //_WIN32
 
 #if defined(__APPLE__)
