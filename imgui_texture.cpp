@@ -1099,13 +1099,15 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
         }
     }
 
-    if (tf_x) *tf_x = _tf_x;
-    if (tf_y) *tf_y = _tf_y;
     if (offset_x) *offset_x = _offset_x;
     if (offset_y) *offset_y = _offset_y;
 
     _tf_x = _offset_x + adj_w;
     _tf_y = _offset_y + adj_h;
+
+    if (tf_x) *tf_x = _tf_x;
+    if (tf_y) *tf_y = _tf_y;
+
     ImVec2 scale_range = ImVec2(1.0, 8.0);
     static float texture_zoom = scale_range.x;
     ImGui::SetCursorScreenPos(pos);
