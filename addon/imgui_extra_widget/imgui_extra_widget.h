@@ -80,7 +80,7 @@ IMGUI_API bool RotateCheckButton(const char* label, bool* pvalue, ImVec4 CheckBu
 
 // ColoredButtonV1: code posted by @ocornut here: https://github.com/ocornut/imgui/issues/4722
 // [Button rounding depends on the FrameRounding Style property (but can be overridden with the last argument)]
-IMGUI_API bool ColoredButton(const char* label, const ImVec2& size, ImU32 text_color, ImU32 bg_color_1, ImU32 bg_color_2, float frame_rounding_override=-1.f);
+IMGUI_API bool ColoredButton(const char* label, const ImVec2& size, ImU32 text_color, ImU32 bg_color_1, ImU32 bg_color_2, float frame_rounding_override=-1.f, float disabled_brightness = 0.5f);
 
 // new ProgressBar
 // Please note that you can tweak the "format" argument if you want to add a prefix (or a suffix) piece of text to the text that appears at the right of the bar.
@@ -348,6 +348,7 @@ IMGUI_API void ImageInspect(const int width,
 // Show Digital number
 IMGUI_API void ShowDigitalTime(ImDrawList *draw_list, int64_t millisec, int show_millisec, ImVec2 pos, ImU32 color);
 IMGUI_API void ShowDigitalTimeDuration(ImDrawList *draw_list, int64_t millisec, int64_t duration, int show_millisec, ImVec2 pos, ImU32 color);
+IMGUI_API void ShowDigitalDateTime(ImDrawList *draw_list, int64_t millisec, int show_millisec, ImVec2 pos, ImU32 color);
 
 // Rainbow Text
 IMGUI_API void RainbowText(const char* text);

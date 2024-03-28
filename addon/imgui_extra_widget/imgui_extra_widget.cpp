@@ -1371,7 +1371,7 @@ bool ImGui::RotateCheckButton(const char* label, bool* pvalue, ImVec4 CheckButto
 
 // ColoredButtonV1: code posted by @ocornut here: https://github.com/ocornut/imgui/issues/4722
 // [Button rounding depends on the FrameRounding Style property (but can be overridden with the last argument)]
-bool ImGui::ColoredButton(const char* label, const ImVec2& size_arg, ImU32 text_color, ImU32 bg_color_1, ImU32 bg_color_2,float frame_rounding_override)
+bool ImGui::ColoredButton(const char* label, const ImVec2& size_arg, ImU32 text_color, ImU32 bg_color_1, ImU32 bg_color_2, float frame_rounding_override, float disabled_brightness)
 {
     ImGuiWindow* window = ImGui::GetCurrentWindow();
     if (window->SkipItems)
@@ -1396,7 +1396,8 @@ bool ImGui::ColoredButton(const char* label, const ImVec2& size_arg, ImU32 text_
 
     bool hovered, held;
     bool pressed = ImGui::ButtonBehavior(bb, id, &hovered, &held, flags);
-
+    bool disabled = ImGui::IsItemDisabled();
+    if (disabled) { ImGui::ColorBrightnessU32(bg_color_1, disabled_brightness); ImGui::ColorBrightnessU32(bg_color_2, disabled_brightness); ImGui::ColorBrightnessU32(text_color, disabled_brightness); }
     // Render
     const bool is_gradient = bg_color_1 != bg_color_2;
     if (held || hovered)
@@ -10571,6 +10572,47 @@ void ImGui::ShowDigitalTime(ImDrawList *draw_list, int64_t millisec, int show_mi
         return result;
     };
     auto time_str = ImGuiHelper::MillisecToString(millisec, show_millisec);
+    auto show_text = ReplaceDigital(time_str);
+    ImGui::PushStyleVar(ImGuiStyleVar_TextSpacing, 0.75f);
+    draw_list->AddText(pos, color, show_text.c_str());
+    ImGui::PopStyleVar();
+}
+
+void ImGui::ShowDigitalDateTime(ImDrawList *draw_list, int64_t millisec, int show_millisec, ImVec2 pos, ImU32 color)
+{
+    auto ReplaceDigital = [](std::string str)
+    {
+        if (str.empty()) return str;
+        std::string result = "";
+        for (auto c : str)
+        {
+            if (c >= 0x30 && c <= 0x39)
+                result += DIGITALS[c - 0x30];
+            else if (c == 0x3A)
+                result += DIGITAL_COLON;
+            else if (c == 0x2E)
+                result += DIGITAL_DOT;
+            else
+                result += c;
+        }
+        return result;
+    };
+
+    char str_buf[1024] = {0};
+    if (millisec != 0)
+    {
+        auto mTime = std::chrono::milliseconds(millisec);
+        auto tp = std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds>(mTime);
+        auto tt = std::chrono::system_clock::to_time_t(tp);
+        std::tm *now = localtime(&tt);
+        snprintf(str_buf, sizeof(str_buf), "%4d-%02d-%02d %02d:%02d:%02d\n", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
+    }
+    else
+    {
+        snprintf(str_buf, sizeof(str_buf), "0000-00-00 00:00:00\n");
+    }
+    
+    std::string time_str = std::string(str_buf);
     auto show_text = ReplaceDigital(time_str);
     ImGui::PushStyleVar(ImGuiStyleVar_TextSpacing, 0.75f);
     draw_list->AddText(pos, color, show_text.c_str());
