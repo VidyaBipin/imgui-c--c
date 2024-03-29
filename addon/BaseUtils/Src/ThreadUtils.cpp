@@ -47,29 +47,32 @@ void SetThreadName(thread& t, const string& name)
 #endif
 }
 
-bool BaseAsyncTask::SetState(State eState)
+bool BaseAsyncTask::SetState(State eState, bool bForce)
 {
     lock_guard<mutex> _lk(m_mtxLock);
     if (m_eState == eState)
         return true;
 
-    bool bStateTransAllowed = false;
-    if (m_eState == WAITING)
+    bool bStateTransAllowed = bForce;
+    if (!bForce)
     {
-        // allowed state transition:
-        //   1. WAITING -> PROCESSING
-        //   2. WAITING -> CANCELLED
-        if (eState == PROCESSING || eState == CANCELLED)
-            bStateTransAllowed = true;
-    }
-    else if (m_eState == PROCESSING)
-    {
-        // allowed state transition:
-        //   1. PROCESSING -> DONE
-        //   1. PROCESSING -> FAILED
-        //   3. PROCESSING -> CANCELLED
-        if (eState == DONE || eState == FAILED || eState == CANCELLED)
-            bStateTransAllowed = true;
+        if (m_eState == WAITING)
+        {
+            // allowed state transition:
+            //   1. WAITING -> PROCESSING
+            //   2. WAITING -> CANCELLED
+            if (eState == PROCESSING || eState == CANCELLED)
+                bStateTransAllowed = true;
+        }
+        else if (m_eState == PROCESSING)
+        {
+            // allowed state transition:
+            //   1. PROCESSING -> DONE
+            //   1. PROCESSING -> FAILED
+            //   3. PROCESSING -> CANCELLED
+            if (eState == DONE || eState == FAILED || eState == CANCELLED)
+                bStateTransAllowed = true;
+        }
     }
 
     if (bStateTransAllowed)

@@ -42,7 +42,7 @@ struct AsyncTask
     };
 
     virtual bool operator() () = 0;
-    virtual bool SetState(State eState) = 0;
+    virtual bool SetState(State eState, bool bForce = false) = 0;
     virtual State GetState() const = 0;
     virtual bool IsWaiting() const = 0;
     virtual bool IsProcessing() const = 0;
@@ -84,7 +84,7 @@ public:
         return true;
     }
 
-    bool SetState(State eState) override;
+    bool SetState(State eState, bool bForce = false) override;
     bool Cancel() override;
     State GetState() const override
     { return m_eState; }
