@@ -5930,11 +5930,11 @@ static bool SpinnerBegin(const char *label, float radius, ImVec2 &pos, ImVec2 &s
     }
 
 inline ImColor color_alpha(ImColor c, float alpha) { c.Value.w *= alpha * ImGui::GetStyle().Alpha; return c; }
-float damped_spring (double mass, double stiffness, double damping, double time, float a = ImGui::PI_DIV_2, float b = ImGui::PI_DIV_2) {
-    double omega = sqrt(stiffness / mass);
-    double alpha = damping / (2 * mass);
-    double exponent = exp(-alpha * time);
-    double cosTerm = cos(omega * sqrt(1 - alpha * alpha) * time);
+inline float damped_spring(float mass, float stiffness, float damping, float time, float a = ImGui::PI_DIV_2, float b = ImGui::PI_DIV_2) {
+    float omega = ImSqrt(stiffness / mass);
+    float alpha = damping / (2 * mass);
+    float exponent = std::exp(-alpha * time);
+    float cosTerm = ImCos(omega * ImSqrt(1 - alpha * alpha) * time);
     float result = exponent * cosTerm;
     return ((result *= a) + b);
 };
@@ -5949,6 +5949,12 @@ float damped_gravity(float limtime) {
     }
     return height / 10.f; // add By Dicky
 }
+
+
+inline std::pair<float, float> damped_infinity(float const& a, float const& t) {
+    return std::make_pair((a * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))),
+                          (a * ImSin(t) * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))));
+};
 
 /*
     const char *label: A string label for the spinner, used to identify it in ImGui.
@@ -6040,7 +6046,11 @@ void ImGui::SpinnerAng(const char *label, float radius, float thickness, const I
         return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
     }, color_alpha(bg, 1.f), thickness);
 
-    const float b = (mode == 1) ? damped_gravity(ImSin(start * 1.1f)) * angle : 0.f;
+    float b = 0.f;
+    switch (mode) {
+    case 1: b = damped_gravity(ImSin(start * 1.1f)) * angle; break;
+    case 3: b = damped_infinity(1.f, (float)start * 1.1f).second; break;
+    }
     circle([&] (int i) {                                                        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
         const float a = start - b + (i * angle / num_segments);
         return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
@@ -6213,41 +6223,45 @@ void ImGui::SpinnerCircularLines(const char *label, float radius, const ImColor 
     }
 }
 
-void ImGui::SpinnerDots(const char *label, float *nextdot, float radius, float thickness, const ImColor &color, float speed, size_t dots, float minth)
+void ImGui::SpinnerDots(const char *label, float *nextdot, float radius, float thickness, const ImColor &color, float speed, size_t dots, float minth, int mode)
 {
-        SPINNER_HEADER(pos, size, centre, num_segments);
+    SPINNER_HEADER(pos, size, centre, num_segments);
 
-        const float start = (float)ImGui::GetTime() * speed;
-        const float bg_angle_offset = PI_2 / dots;
-        dots = ImMin(dots, (size_t)32);
-        const size_t mdots = dots / 2;
+    float start = (float)ImGui::GetTime() * speed;
+    const float bg_angle_offset = PI_2 / dots;
+    dots = ImMin(dots, (size_t)32);
+    const size_t mdots = dots / 2;
 
-        float def_nextdot = 0;
-        float &ref_nextdot = nextdot ? *nextdot : def_nextdot;
-        if (ref_nextdot < 0.f)
-        ref_nextdot = (float)dots;
+    float def_nextdot = 0;
+    float &ref_nextdot = nextdot ? *nextdot : def_nextdot;
+    if (ref_nextdot < 0.f)
+    ref_nextdot = (float)dots;
 
-        auto thcorrect = [&thickness, &ref_nextdot, &mdots, &minth] (size_t i) {
-            const float nth = minth < 0.f ? thickness / 2.f : minth;
-            return ImMax(nth, ImSin(((i - ref_nextdot) / mdots) * IM_PI) * thickness);
-        };
+    auto thcorrect = [&thickness, &ref_nextdot, &mdots, &minth] (size_t i) {
+        const float nth = minth < 0.f ? thickness / 2.f : minth;
+        return ImMax(nth, ImSin(((i - ref_nextdot) / mdots) * IM_PI) * thickness);
+    };
 
-        for (size_t i = 0; i <= dots; i++)
-        {
-            float a = start + (i * bg_angle_offset);
-            a = ImFmod(a, PI_2);
-            float th = minth < 0 ? thickness / 2.f : minth;
+    switch (mode) {
+    case 1: start = damped_infinity(1.f, (float)start * 1.1f).second; break;
+    }
 
-            if (ref_nextdot + mdots < dots) {
-                if (i > ref_nextdot && i < ref_nextdot + mdots)
-                    th = thcorrect(i);
-            } else {
-                if ((i > ref_nextdot && i < dots) || (i < ((int)(ref_nextdot + mdots)) % dots))
-                    th = thcorrect(i);
-            }
+    for (size_t i = 0; i <= dots; i++)
+    {
+        float a = start + (i * bg_angle_offset);
+        a = ImFmod(a, PI_2);
+        float th = minth < 0 ? thickness / 2.f : minth;
 
-            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(-a) * radius, centre.y + ImSin(-a) * radius), th, color_alpha(color, 1.f), 8);
+        if (ref_nextdot + mdots < dots) {
+            if (i > ref_nextdot && i < ref_nextdot + mdots)
+                th = thcorrect(i);
+        } else {
+            if ((i > ref_nextdot && i < dots) || (i < ((int)(ref_nextdot + mdots)) % dots))
+                th = thcorrect(i);
         }
+
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(-a) * radius, centre.y + ImSin(-a) * radius), th, color_alpha(color, 1.f), 8);
+    }
 }
 
 void ImGui::SpinnerVDots(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bgcolor, float speed, size_t dots, size_t mdots)
@@ -6286,10 +6300,13 @@ void ImGui::SpinnerBounceDots(const char *label, float radius, float thickness, 
 
     // Render
     float start = (float)ImGui::GetTime() * speed;
-
     const float offset = PI_DIV(dots);
     for (size_t i = 0; i < dots; i++) {
-        float a = mode ? damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(dots*2), PI_2))) : start + (IM_PI - i * offset);
+        float a = start + (IM_PI - i * offset);
+        switch (mode) {
+        case 1: a = damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(dots * 2), PI_2))); break;
+        case 2: a = damped_infinity(radius, (float)(start + i * PI_DIV(dots * 2))).second; break;
+        }
         float y =  centre.y + ImSin(a * heightSpeed) * thickness * heightKoeff;
         window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + i * (thickness * nextItemKoeff), ImMin(y, centre.y)), thickness, color_alpha(color, 1.f), 8);
     }
@@ -6602,8 +6619,13 @@ void ImGui::SpinnerRotateDots(const char *label, float radius, float thickness, 
 
     for (int i = 0; i < dots; i++)
     {
-        float a = mode ? start + i * PI_2_DIV(dots) + damped_spring(1, 10.f, 1.0f, ImSin(start + i * PI_2_DIV(dots)), PI_2_DIV(dots), 0)
-                       : start + (i * PI_2_DIV(dots));
+        float a = 0.f;
+        switch (mode) {
+        case 1: a = start + i * PI_2_DIV(dots) + damped_spring(1, 10.f, 1.0f, ImSin(start + i * PI_2_DIV(dots)), PI_2_DIV(dots), 0); break;
+        case 2: a = start + i * PI_2_DIV(dots) + damped_infinity(1.f, (float)(start + i * PI_DIV(dots * 2))).second; break;
+        default:
+            a = start + (i * PI_2_DIV(dots));
+        }
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), thickness, color_alpha(color, 1.f), 8);
     }
 }
@@ -6762,7 +6784,7 @@ void ImGui::SpinnerTopup(const char *label, float radius1, float radius2, const 
     window->DrawList->Flags = save;
 }
 
-void ImGui::SpinnerTwinAng180(const char *label, float radius1, float radius2, float thickness, const ImColor &color1, const ImColor &color2, float speed)
+void ImGui::SpinnerTwinAng180(const char *label, float radius1, float radius2, float thickness, const ImColor &color1, const ImColor &color2, float speed, float angle, int mode)
 {
     const float radius = ImMax(radius1, radius2);
     SPINNER_HEADER(pos, size, centre, num_segments);
@@ -6780,6 +6802,9 @@ void ImGui::SpinnerTwinAng180(const char *label, float radius1, float radius2, f
     for (size_t i = 0; i <= num_segments / 2 + 1; i++)
     {
         ared = start + (i * angle_offset);
+        switch (mode) {
+        case 1: ared += damped_infinity(angle, start).second; break;
+        }
 
         if (i * angle_offset < ared_min)
             continue;
@@ -8324,13 +8349,10 @@ void ImGui::SpinnerLemniscate(const char* label, float radius, float thickness, 
     const float step = angle / num_segments;
     const float th = thickness / num_segments;
     
-    auto get_coord = [&](float const& a, float const& t) -> std::pair<float, float> {
-        return std::make_pair((a * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))), (a * ImSin(t) * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))));
-    };
     for (size_t i = 0; i < num_segments; i++)
     {
-        const auto xy0 = get_coord(a, start + (i * step));
-        const auto xy1 = get_coord(a, start + ((i + 1) * step));
+        const auto xy0 = damped_infinity(a, start + (i * step));
+        const auto xy1 = damped_infinity(a, start + ((i + 1) * step));
 
         window->DrawList->AddLine(ImVec2(centre.x + xy0.first, centre.y + xy0.second),
                                 ImVec2(centre.x + xy1.first, centre.y + xy1.second),
@@ -9386,6 +9408,22 @@ void ImGui::SpinnerRotateSegmentsPulsar(const char *label, float radius, float t
             window->DrawList->PathStroke(c, false, thickness);
         }
     }
+}
+
+void ImGui::SpinnerSplineAng(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bg, float speed, float angle, int mode)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);                            // Get the position, size, centre, and number of segments of the spinner using the SPINNER_HEADER macro.
+    float start = (float)ImGui::GetTime() * speed;                        // The start angle of the spinner is calculated based on the current time and the specified speed.
+    radius = (mode == 1) ? (0.8f + ImCos(start) * 0.2f) * radius : radius;
+    circle([&] (int i) {                                                         // Draw the background of the spinner using the `circle` function, with the specified background color and thickness.
+        const float a = start + (i * (PI_2 / (num_segments - 1)));               // Calculate the angle for each segment based on the start angle and the number of segments.
+        return ImVec2(ImCos(a) * (radius + thickness), damped_infinity(1.3f, (float)a).second * radius);
+    }, color_alpha(bg, 1.f), thickness);
+    const float b = damped_gravity(ImSin(start * 1.1f)) * angle;
+    circle([&] (int i) {                                                        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
+        const float a = start - b + (i * angle / num_segments);
+        return ImVec2(ImCos(a) * radius, damped_infinity(1.f, (float)a).second * radius);
+    }, color_alpha(color, 1.f), thickness);
 }
 
 // draw leader
