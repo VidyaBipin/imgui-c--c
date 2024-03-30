@@ -1006,6 +1006,7 @@ set(IMGUI_INC_DIRS
 set(IMGUI_SRC
     ${IMGUI_SRC}
     addon/imgui_extra_widget/imgui_extra_widget.cpp
+    addon/imgui_extra_widget/imgui_extra_spinner.cpp
 )
 set(IMGUI_INCS
     ${IMGUI_INCS}
