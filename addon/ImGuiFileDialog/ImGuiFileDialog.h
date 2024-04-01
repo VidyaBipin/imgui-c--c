@@ -2353,7 +2353,7 @@ struct IGFD_FileDialog_Config {
     float sidePaneWidth;  // side pane width};
     ImGuiFileDialogFlags flags;    // ImGuiFileDialogFlags
 };
-IGFD_C_API IGFD_FileDialog_Config IGFD_FileDialog_Config_Get();  // return an initialized IGFD_FileDialog_Config
+IGFD_C_API struct IGFD_FileDialog_Config IGFD_FileDialog_Config_Get();  // return an initialized IGFD_FileDialog_Config
 
 struct IGFD_Selection_Pair {
     char* fileName;
