@@ -200,6 +200,229 @@ static BOOL MyEnumProcessModules(HANDLE hProcess, HMODULE* lphModule, DWORD cb, 
 	return EnumProcessModulesPtr(hProcess, lphModule, cb, lpcbNeeded);
 }
 
+static HMODULE MyGetModuleHandleFromAddress( const void *addr )
+{
+    static BOOL (WINAPI *GetModuleHandleExAPtr)(DWORD, LPCSTR, HMODULE *) = NULL;
+    static BOOL failed = FALSE;
+    HMODULE kernel32;
+    HMODULE hModule;
+    MEMORY_BASIC_INFORMATION info;
+    size_t sLen;
+
+    if( !failed && GetModuleHandleExAPtr == NULL )
+    {
+        kernel32 = GetModuleHandleA( "Kernel32.dll" );
+        if( kernel32 != NULL )
+            GetModuleHandleExAPtr = (BOOL (WINAPI *)(DWORD, LPCSTR, HMODULE *)) (LPVOID) GetProcAddress( kernel32, "GetModuleHandleExA" );
+        if( GetModuleHandleExAPtr == NULL )
+            failed = TRUE;
+    }
+
+    if( !failed )
+    {
+        /* If GetModuleHandleExA is available use it with GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS */
+        if( !GetModuleHandleExAPtr( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)addr, &hModule ) )
+            return NULL;
+    }
+    else
+    {
+        /* To get HMODULE from address use undocumented hack from https://stackoverflow.com/a/2396380
+         * The HMODULE of a DLL is the same value as the module's base address.
+         */
+        sLen = VirtualQuery( addr, &info, sizeof( info ) );
+        if( sLen != sizeof( info ) )
+            return NULL;
+        hModule = (HMODULE) info.AllocationBase;
+    }
+
+    return hModule;
+}
+
+static const char *get_export_symbol_name( HMODULE module, IMAGE_EXPORT_DIRECTORY *ied, const void *addr, void **func_address )
+{
+    DWORD i;
+    void *candidateAddr = NULL;
+    int candidateIndex = -1;
+    BYTE *base = (BYTE *) module;
+    DWORD *functionAddressesOffsets = (DWORD *) (base + (DWORD) ied->AddressOfFunctions);
+    DWORD *functionNamesOffsets = (DWORD *) (base + (DWORD) ied->AddressOfNames);
+    USHORT *functionNameOrdinalsIndexes = (USHORT *) (base + (DWORD) ied->AddressOfNameOrdinals);
+
+    for( i = 0; i < ied->NumberOfFunctions; i++ )
+    {
+        if( (void *) ( base + functionAddressesOffsets[i] ) > addr || candidateAddr >= (void *) ( base + functionAddressesOffsets[i] ) )
+            continue;
+
+        candidateAddr = (void *) ( base + functionAddressesOffsets[i] );
+        candidateIndex = i;
+    }
+
+    if( candidateIndex == -1 )
+        return NULL;
+
+    *func_address = candidateAddr;
+
+    for( i = 0; i < ied->NumberOfNames; i++ )
+    {
+        if( functionNameOrdinalsIndexes[i] == candidateIndex )
+            return (const char *) ( base + functionNamesOffsets[i] );
+    }
+
+    return NULL;
+}
+
+static BOOL is_valid_address( const void *addr )
+{
+    MEMORY_BASIC_INFORMATION info;
+    size_t result;
+
+    if( addr == NULL )
+        return FALSE;
+
+    /* check valid pointer */
+    result = VirtualQuery( addr, &info, sizeof( info ) );
+
+    if( result == 0 || info.AllocationBase == NULL || info.AllocationProtect == 0 || info.AllocationProtect == PAGE_NOACCESS )
+        return FALSE;
+
+    return TRUE;
+}
+
+static BOOL is_import_thunk( const void *addr )
+{
+#if defined(_M_ARM64) || defined(__aarch64__)
+    ULONG opCode1 = * (ULONG *) ( (BYTE *) addr );
+    ULONG opCode2 = * (ULONG *) ( (BYTE *) addr + 4 );
+    ULONG opCode3 = * (ULONG *) ( (BYTE *) addr + 8 );
+
+    return (opCode1 & 0x9f00001f) == 0x90000010    /* adrp x16, [page_offset] */
+        && (opCode2 & 0xffe003ff) == 0xf9400210    /* ldr  x16, [x16, offset] */
+        && opCode3 == 0xd61f0200                   /* br   x16 */
+        ? TRUE : FALSE;
+#else
+    return *(short *) addr == 0x25ff ? TRUE : FALSE;
+#endif
+}
+
+static BOOL get_image_section( HMODULE module, int index, void **ptr, DWORD *size )
+{
+    IMAGE_DOS_HEADER *dosHeader;
+    IMAGE_NT_HEADERS *ntHeaders;
+    IMAGE_OPTIONAL_HEADER *optionalHeader;
+
+    dosHeader = (IMAGE_DOS_HEADER *) module;
+
+    if( dosHeader->e_magic != IMAGE_DOS_SIGNATURE )
+        return FALSE;
+
+    ntHeaders = (IMAGE_NT_HEADERS *) ( (BYTE *) dosHeader + dosHeader->e_lfanew );
+
+    if( ntHeaders->Signature != IMAGE_NT_SIGNATURE )
+        return FALSE;
+
+    optionalHeader = &ntHeaders->OptionalHeader;
+
+    if( optionalHeader->Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC )
+        return FALSE;
+
+    if( index < 0 || index >= IMAGE_NUMBEROF_DIRECTORY_ENTRIES || index >= optionalHeader->NumberOfRvaAndSizes )
+        return FALSE;
+
+    if( optionalHeader->DataDirectory[index].Size == 0 || optionalHeader->DataDirectory[index].VirtualAddress == 0 )
+        return FALSE;
+
+    if( size != NULL )
+        *size = optionalHeader->DataDirectory[index].Size;
+
+    *ptr = (void *)( (BYTE *) module + optionalHeader->DataDirectory[index].VirtualAddress );
+
+    return TRUE;
+}
+
+static void *get_address_from_import_address_table( void *iat, DWORD iat_size, const void *addr )
+{
+    BYTE *thkp = (BYTE *) addr;
+#if defined(_M_ARM64) || defined(__aarch64__)
+    /*
+     *  typical import thunk in ARM64:
+     *  0x7ff772ae78c0 <+25760>: adrp   x16, 1
+     *  0x7ff772ae78c4 <+25764>: ldr    x16, [x16, #0xdc0]
+     *  0x7ff772ae78c8 <+25768>: br     x16
+     */
+    ULONG opCode1 = * (ULONG *) ( (BYTE *) addr );
+    ULONG opCode2 = * (ULONG *) ( (BYTE *) addr + 4 );
+
+    /* Extract the offset from adrp instruction */
+    UINT64 pageLow2 = (opCode1 >> 29) & 3;
+    UINT64 pageHigh19 = (opCode1 >> 5) & ~(~0ull << 19);
+    INT64 page = sign_extend((pageHigh19 << 2) | pageLow2, 21) << 12;
+
+    /* Extract the offset from ldr instruction */
+    UINT64 offset = ((opCode2 >> 10) & ~(~0ull << 12)) << 3;
+
+    /* Calculate the final address */
+    BYTE *ptr = (BYTE *) ( (ULONG64) thkp & ~0xfffull ) + page + offset;
+#else
+    /* Get offset from thunk table (after instruction 0xff 0x25)
+     *   4018c8 <_VirtualQuery>: ff 25 4a 8a 00 00
+     */
+    ULONG offset = *(ULONG *)( thkp + 2 );
+#if defined(_M_AMD64) || defined(__x86_64__)
+    /* On 64 bit the offset is relative
+     *      4018c8:   ff 25 4a 8a 00 00    jmpq    *0x8a4a(%rip)    # 40a318 <__imp_VirtualQuery>
+     * And can be also negative (MSVC in WDK)
+     *   100002f20:   ff 25 3a e1 ff ff    jmpq   *-0x1ec6(%rip)    # 0x100001060
+     * So cast to signed LONG type
+     */
+    BYTE *ptr = (BYTE *)( thkp + 6 + (LONG) offset );
+#else
+    /* On 32 bit the offset is absolute
+     *   4019b4:    ff 25 90 71 40 00    jmp    *0x40719
+     */
+    BYTE *ptr = (BYTE *) offset;
+#endif
+#endif
+
+    if( !is_valid_address( ptr ) || ptr < (BYTE *) iat || ptr > (BYTE *) iat + iat_size )
+        return NULL;
+
+    return *(void **) ptr;
+}
+
+static char module_filename[2*MAX_PATH];
+
+static BOOL fill_info( const void *addr, Dl_info *info )
+{
+    HMODULE hModule;
+    DWORD dwSize;
+    IMAGE_EXPORT_DIRECTORY *ied;
+    void *funcAddress = NULL;
+
+    /* Get module of the specified address */
+    hModule = MyGetModuleHandleFromAddress( addr );
+
+    if( hModule == NULL )
+        return FALSE;
+
+    dwSize = GetModuleFileNameA( hModule, module_filename, sizeof( module_filename ) );
+
+    if( dwSize == 0 || dwSize == sizeof( module_filename ) )
+        return FALSE;
+
+    info->dli_fname = module_filename;
+    info->dli_fbase = (void *) hModule;
+
+    /* Find function name and function address in module's export table */
+    if( get_image_section( hModule, IMAGE_DIRECTORY_ENTRY_EXPORT, (void **) &ied, NULL ) )
+        info->dli_sname = get_export_symbol_name( hModule, ied, addr, &funcAddress );
+    else
+        info->dli_sname = NULL;
+
+    info->dli_saddr = info->dli_sname == NULL ? NULL : funcAddress != NULL ? funcAddress : (void *) addr;
+
+    return TRUE;
+}
+
 void* dlopen(const char* file, int mode)
 {
 	HMODULE hModule;
@@ -465,4 +688,54 @@ char* dlerror(void)
 	current_error = NULL;
 
 	return error_pointer;
+}
+
+int dladdr( const void *addr, Dl_info *info )
+{
+    if( info == NULL )
+        return 0;
+
+    if( !is_valid_address( addr ) )
+        return 0;
+
+    if( is_import_thunk( addr ) )
+    {
+        void *iat;
+        DWORD iatSize;
+        HMODULE hModule;
+
+        /* Get module of the import thunk address */
+        hModule = MyGetModuleHandleFromAddress( addr );
+
+        if( hModule == NULL )
+            return 0;
+
+        if( !get_image_section( hModule, IMAGE_DIRECTORY_ENTRY_IAT, &iat, &iatSize ) )
+        {
+            /* Fallback for cases where the iat is not defined,
+             * for example i586-mingw32msvc-gcc */
+            IMAGE_IMPORT_DESCRIPTOR *iid;
+            DWORD iidSize;
+
+            if( !get_image_section( hModule, IMAGE_DIRECTORY_ENTRY_IMPORT, (void **) &iid, &iidSize ) )
+                return 0;
+
+            if( iid == NULL || iid->Characteristics == 0 || iid->FirstThunk == 0 )
+                return 0;
+
+            iat = (void *)( (BYTE *) hModule + (DWORD) iid->FirstThunk );
+            /* We assume that in this case iid and iat's are in linear order */
+            iatSize = iidSize - (DWORD) ( (BYTE *) iat - (BYTE *) iid );
+        }
+
+        addr = get_address_from_import_address_table( iat, iatSize, addr );
+
+        if( !is_valid_address( addr ) )
+            return 0;
+    }
+
+    if( !fill_info( addr, info ) )
+        return 0;
+
+    return 1;
 }

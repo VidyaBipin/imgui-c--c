@@ -20,6 +20,7 @@ public:
 	std::shared_ptr<T> make_obj();
 	int32_t get_version();
 	int32_t get_api_version();
+	std::string get_module_path();
 
 private:
 	struct shared_obj {
@@ -32,6 +33,7 @@ private:
 		~shared_obj();
 		bool open_module(std::string module);
 		void close_module();
+		std::string module_path;
 	};
 
 	std::string module;
@@ -107,6 +109,9 @@ bool DLClass<T>::shared_obj::open_module(std::string module) {
 		return false;
 	}
 
+	Dl_info info;
+	dladdr((void *)version, &info);
+	module_path = std::string(info.dli_fname);
 	return true;
 }
 
@@ -118,6 +123,11 @@ int32_t DLClass<T>::get_version() {
 template <class T>
 int32_t DLClass<T>::get_api_version() {
 	return shared->api_version();
+}
+
+template <class T>
+std::string DLClass<T>::get_module_path() {
+	return shared->module_path;
 }
 
 template <class T>

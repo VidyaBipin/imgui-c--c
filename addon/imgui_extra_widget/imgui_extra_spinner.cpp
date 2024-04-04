@@ -1,5 +1,5 @@
 #include "imgui_extra_widget.h"
-
+#include <array>
 // ImSpinner
 // SpinnerBegin is a function that starts a spinner widget, used to display an animation indicating that
 // a task is in progress. It returns true if the widget is visible and can be used, or false if it should be skipped.

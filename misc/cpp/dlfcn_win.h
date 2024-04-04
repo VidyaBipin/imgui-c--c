@@ -46,10 +46,21 @@ extern "C" {
 #define RTLD_DEFAULT    ((void *)0)
 #define RTLD_NEXT       ((void *)-1)
 
+/* Structure filled in by dladdr() */
+typedef struct dl_info
+{
+   const char *dli_fname;  /* Filename of defining object (thread unsafe and reused on every call to dladdr) */
+   void       *dli_fbase;  /* Load address of that object */
+   const char *dli_sname;  /* Name of nearest lower symbol */
+   void       *dli_saddr;  /* Exact value of nearest symbol */
+} Dl_info;
+
+
 	EXPORT void* dlopen(const char* file, int mode);
 	EXPORT int   dlclose(void* handle);
 	EXPORT void* dlsym(void* handle, const char* name);
 	EXPORT char* dlerror(void);
+	EXPORT int   dladdr(const void *addr, Dl_info *info);
 
 #ifdef __cplusplus
 }
