@@ -133,9 +133,15 @@ endif()
 
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 find_package(OpenGL)
+find_package(OpenSSL)
+
 if (OPENGL_FOUND)
     message("imgui found opengl")
 endif(OPENGL_FOUND)
+
+if (OpenSSL_FOUND)
+    message(STATUS "imgui found openssl")
+endif(OpenSSL_FOUND)
 
 if (IMGUI_FREETYPE)
     find_package(Freetype)
@@ -302,6 +308,18 @@ if(OPENGL_FOUND)
         ${OPENGL_LIBRARIES}
     )
 endif(OPENGL_FOUND)
+
+if (OpenSSL_FOUND)
+    set(IMGUI_INC_DIRS
+        ${IMGUI_INC_DIRS}
+        ${OPENSSL_INCLUDE_DIR}
+    )
+    set(LINK_LIBS
+        ${LINK_LIBS}
+        ${OPENSSL_SSL_LIBRARY}
+        ${OPENSSL_CRYPTO_LIBRARY}
+    )
+endif(OpenSSL_FOUND)
 
 if(IMGUI_FREETYPE AND FREETYPE_FOUND)
     set(IMGUI_ENABLE_FREETYPE ON)
