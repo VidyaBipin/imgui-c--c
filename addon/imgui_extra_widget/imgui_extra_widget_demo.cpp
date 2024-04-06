@@ -382,7 +382,7 @@ void ShowExtraWidgetDemoWindow()
                 float sp_offset = (widget_size - 32.f) / 2.f;
                 ImGui::SetCursorPos({curpos_begin.x + sp_offset, curpos_begin.y + sp_offset});
                 switch (y * sidex + x) {
-                    case   0: ImGui::Spinner<e_st_rainbow>("Spinner", Radius{16.f}, Thickness{2.f}, Color{ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f)}, Speed{8 * velocity}); ImGui::ShowTooltipOnHover("Spinner"); break;
+                    case   0: ImGui::Spinner<e_st_rainbow>("Spinner", Radius{16.f}, Thickness{2.f}, Color{ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f)}, Speed{8 * velocity}, AngleMin{0.f}, AngleMax{PI_2}, Dots{1}, Mode{0}); ImGui::ShowTooltipOnHover("Spinner"); break;
                     case   1: ImGui::Spinner<e_st_angle>("SpinnerAng", Radius{16.f}, Thickness{2.f}, Color{ImColor(255, 255, 255)}, BgColor{ImColor(255, 255, 255, 128)}, Speed{8 * velocity}, Angle{IM_PI}, Mode{0}); ImGui::ShowTooltipOnHover("SpinnerAng"); break;
                     case   2: ImGui::Spinner<e_st_dots>("SpinnerDots", Radius{16}, Thickness{4}, Color{ImColor(255, 255, 255)}, FloatPtr{&nextdot}, Speed{1 * velocity}, Dots{12}, MinThickness{-1.f}, Mode{0}); ImGui::ShowTooltipOnHover("SpinnerDots"); break;
                     case   3: ImGui::Spinner<e_st_dots>("SpinnerDots", Radius{16}, Thickness{4}, Color{ImColor(255, 255, 255)}, FloatPtr{&nextdot}, Speed{1 * velocity}, Dots{12}, MinThickness{-1.f}, Mode{1}); ImGui::ShowTooltipOnHover("SpinnerDotsM1"); break;
@@ -398,7 +398,7 @@ void ShowExtraWidgetDemoWindow()
                     case  13: ImGui::SpinnerScaleDots("SpinnerScaleDots", 16, 6, ImColor(255, 255, 255), 7 * velocity, 8); ImGui::ShowTooltipOnHover("SpinnerScaleDots"); break;
                     case  14: ImGui::SpinnerMovingDots("SpinnerMovingDots", 16, 6, ImColor(255, 255, 255), 30 * velocity, 3); ImGui::ShowTooltipOnHover("SpinnerMovingDots"); break;
                     case  15: ImGui::SpinnerRotateDots("SpinnerRotateDots", 16, 6, ImColor(255, 255, 255), 4 * velocity, 2, 0); ImGui::ShowTooltipOnHover("SpinnerRotateDots"); break;
-                    case  16: ImGui::SpinnerTwinAng("SpinnerTwinAng", 16, 16, 6, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI); ImGui::ShowTooltipOnHover("SpinnerTwinAng"); break;
+                    case  16: ImGui::SpinnerTwinAng("SpinnerTwinAng", 16, 16, 6, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI, 0); ImGui::ShowTooltipOnHover("SpinnerTwinAng"); break;
                     case  17: ImGui::SpinnerClock("SpinnerClock", 16, 2, ImColor(255, 0, 0), ImColor(255, 255, 255), 4 * velocity); ImGui::ShowTooltipOnHover("SpinnerClock"); break;
                     case  18: ImGui::SpinnerIngYang("SpinnerIngYangR", 16, 5, true, 0.1f, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI * 0.8f); ImGui::ShowTooltipOnHover("SpinnerIngYangR"); break;
                     case  19: ImGui::SpinnerBarChartSine("SpinnerBarChartSine2", 16, 4, ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), 4.8f * velocity, 4, 1); ImGui::ShowTooltipOnHover("SpinnerBarChartSine2"); break;
@@ -586,6 +586,10 @@ void ShowExtraWidgetDemoWindow()
                     case 201: ImGui::SpinnerPulsar("SpinnerPulsar2", 16, 2, ImColor(255, 255, 255), 1 * velocity, true, PI_2, 1); ImGui::ShowTooltipOnHover("SpinnerPulsar2"); break;
                     case 202: ImGui::SpinnerAngTwin("SpinnerAngTwin4", 16, 13, 2, ImColor(255, 0, 0), ImColor(255, 255, 255), 1.6f * velocity, 3.14, 1, 2); ImGui::ShowTooltipOnHover("SpinnerAngTwin4"); break;
                     case 203: ImGui::SpinnerAngTwin("SpinnerAngTwin5", 14, 16, 2, ImColor(255, 0, 0), ImColor(255, 255, 255), 0.8f * velocity, 1.57, 3, 2); ImGui::ShowTooltipOnHover("SpinnerAngTwin5"); break;
+                    case 204: ImGui::Spinner<e_st_dots>("SpinnerDotsX3", Radius{16}, Thickness{2.3}, Color{ImColor(255, 255, 255)}, FloatPtr{&nextdot}, Speed{1 * velocity}, Dots{3}, MinThickness{-1.f}, Mode{2}); ImGui::ShowTooltipOnHover("SpinnerDotsX3"); break;
+                    case 205: ImGui::Spinner<e_st_dots>("SpinnerDotsX13", Radius{16}, Thickness{2.3}, Color{ImColor(255, 255, 255)}, FloatPtr{&nextdot}, Speed{1 * velocity}, Dots{13}, MinThickness{-1.f}, Mode{2}); ImGui::ShowTooltipOnHover("SpinnerDotsX13"); break;
+                    case 206: ImGui::Spinner<e_st_angle>("SpinnerAng", Radius{16}, Thickness{2}, Color{ImColor(255, 255, 255)}, BgColor{ImColor(255, 255, 255, 128)}, Speed{2.8 * velocity}, Angle{PI_DIV_2}, Mode{4}); ImGui::ShowTooltipOnHover("SpinnerAng"); break;
+                    case 207: ImGui::SpinnerTwinAng180("SpinnerTwinAngX", 16, 12, 2, ImColor(255, 255, 255), ImColor(255, 0, 0), 0.5f * velocity, PI_DIV_4, 2); ImGui::ShowTooltipOnHover("SpinnerTwinAngX"); break;
 
                     // ...
                     default: break;
