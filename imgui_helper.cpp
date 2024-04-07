@@ -9,7 +9,6 @@
 #include <iomanip>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/mman.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -19,6 +18,7 @@
 #include <shlobj.h>     // For SHGetFolderPathW and various CSIDL "magic numbers"
 #include <stringapiset.h>   // For WideCharToMultiByte
 #include <psapi.h> 
+#include "mman_win.h"
 #if IMGUI_RENDERING_DX11
 struct IUnknown;
 #include <d3d11.h>
@@ -34,6 +34,7 @@ struct IUnknown;
 #include <pwd.h>
 #include <sys/stat.h>
 #include <sys/resource.h>
+#include <sys/mman.h>
 #endif //_WIN32
 
 #if defined(__APPLE__)

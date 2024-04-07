@@ -1665,6 +1665,7 @@ public:
         Directory = 0,
         File = 1,
         LinkToUnknown = 2,  // link to something that is not a regular file or directory.
+        Driver = 3,         // add by Dicky, current path is system driver
     };
 
 private:
@@ -1679,6 +1680,7 @@ public:
     void SetSymLink(const bool& vIsSymlink);
 
     bool isValid() const;
+    bool isDriver() const;  // add By Dicky
     bool isDir() const;
     bool isFile() const;
     bool isLinkToUnknown() const;

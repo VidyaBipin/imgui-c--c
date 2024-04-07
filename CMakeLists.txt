@@ -460,11 +460,13 @@ if(WIN32)
     set(IMGUI_SRC
         ${IMGUI_SRC}
         misc/cpp/dlfcn_win.cpp
+        misc/cpp/mman_win.cpp
     )
     set(IMGUI_INCS
         ${IMGUI_INCS}
         misc/dirent_portable.h
         misc/cpp/dlfcn_win.h
+        misc/cpp/mman_win.h
     )
 endif(WIN32)
 

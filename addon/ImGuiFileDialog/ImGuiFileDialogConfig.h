@@ -88,7 +88,7 @@
 #define fileNameString "Select Name :"
 #define dirNameString "Select Path :"
 // #define buttonResetSearchString "Reset search"
-// #define buttonDriveString "Drives"
+#define buttonDriveString "Drives"
 // #define buttonEditPathString "Edit path\nYou can also right click on path buttons"
 // #define buttonResetPathString "Reset to current directory"
 // #define buttonCreateDirString "Create Directory"

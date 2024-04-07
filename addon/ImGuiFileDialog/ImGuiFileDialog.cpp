@@ -1652,6 +1652,11 @@ void IGFD::FileType::SetSymLink(const bool& vIsSymlink) {
 bool IGFD::FileType::isValid() const {
     return m_Content != ContentType::Invalid;
 }
+// add by Dicky
+bool IGFD::FileType::isDriver() const {
+    return m_Content == ContentType::Driver;
+}
+// add by Dicky end
 bool IGFD::FileType::isDir() const {
     return m_Content == ContentType::Directory;
 }
@@ -2104,7 +2109,7 @@ bool IGFD::FileManager::GetDrives() {
             info_ptr->fileNameExt       = drive.first;
             info_ptr->fileNameExt_optimized = Utils::LowerCaseString(drive.first);
             info_ptr->deviceInfos           = drive.second;
-            info_ptr->fileType.SetContent(FileType::ContentType::Directory);
+            info_ptr->fileType.SetContent(FileType::ContentType::Driver); // modify by Dicky
             if (!info_ptr->fileNameExt.empty()) {
                 m_FileList.push_back(info_ptr);
             }
@@ -2391,7 +2396,16 @@ bool IGFD::FileManager::SelectDirectory(const std::shared_ptr<FileInfos>& vInfos
 
     bool pathClick = false;
 
-    if (vInfos->fileNameExt == "..") {
+    // add by Dicky
+    if (vInfos->fileType.isDriver())
+    {
+        if (m_FileSystemPtr->IsDirectoryCanBeOpened(vInfos->fileNameExt)) {
+            m_CurrentPath = vInfos->fileNameExt;  //-V820
+            pathClick = true;
+        }
+    }
+    // add by Dicky end
+    else if (vInfos->fileNameExt == "..") {
         pathClick = SetPathOnParentDirectoryIfAny();
     } else {
         std::string newPath;
@@ -2539,12 +2553,14 @@ void IGFD::FileManager::DrawPathComposer(const FileDialogInternal& vFileDialogIn
     if (ImGui::IsItemHovered()) ImGui::SetTooltip(buttonResetPathString);
 
 #ifdef _IGFD_WIN_
-    /*ImGui::SameLine();
+    // enabled by Dicky
+    ImGui::SameLine();
 
     if (IMGUI_BUTTON(drivesButtonString)) {
         drivesClicked = true;
     }
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip(buttonDriveString);*/
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip(buttonDriveString);
+    // enabled by Dicky end
 #endif  // _IGFD_WIN_
 
     ImGui::SameLine();
@@ -2766,6 +2782,14 @@ void IGFD::FileDialogInternal::EndFrame() {
     if (fileManager.puPathClicked) {
         fileManager.OpenCurrentPath(*this);
     }
+
+    // add back by Dicky for Windows
+    if (fileManager.drivesClicked) {
+        if (fileManager.GetDrives()) {
+            fileManager.ApplyFilteringOnFileList(*this);
+        }
+    }
+    // add back by Dicky end
 
     if (fileManager.inputPathActivated) {
         auto gio = ImGui::GetIO();
@@ -4244,7 +4268,7 @@ void IGFD::FileDialog::m_SelectableItem(int vidx, std::shared_ptr<FileInfos> vIn
     bool res = ImGui::Selectable(fdi.variadicBuffer, vSelected, selectableFlags, ImVec2(-1.0f, h));
 #endif  // USE_EXPLORATION_BY_KEYS
     if (res) {
-        if (vInfos->fileType.isDir()) {
+        if (vInfos->fileType.isDir() || vInfos->fileType.isDriver()) { // modify by Dicky
             // nav system, selectable cause open directory or select directory
             if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard) {
                 // Modify By Dicky aways using double click to chooser
