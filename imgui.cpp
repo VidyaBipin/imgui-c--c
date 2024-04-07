@@ -2495,6 +2495,21 @@ void ImGui::ColorConvertHSVtoRGB(float h, float s, float v, float& out_r, float&
     }
 }
 
+// add by Dicky
+void ImGui::ColorBrightnessU32(ImU32& in, float bright)
+{
+    ImClamp(bright, 0.f, 1.f);
+    auto R = (in >> IM_COL32_R_SHIFT) & 0xFF;
+    auto G = (in >> IM_COL32_G_SHIFT) & 0xFF;
+    auto B = (in >> IM_COL32_B_SHIFT) & 0xFF;
+    auto A = (in >> IM_COL32_A_SHIFT) & 0xFF;
+    in  = ((ImU32)(R * bright)) << IM_COL32_R_SHIFT;
+    in |= ((ImU32)(G * bright)) << IM_COL32_G_SHIFT;
+    in |= ((ImU32)(B * bright)) << IM_COL32_B_SHIFT;
+    in |= A << IM_COL32_A_SHIFT;
+}
+// add by Dicky end
+
 //-----------------------------------------------------------------------------
 // [SECTION] ImGuiStorage
 // Helper: Key->value storage
@@ -8619,6 +8634,15 @@ ImVec2 ImGui::GetFontTexUvWhitePixel()
 {
     return GImGui->DrawListSharedData.TexUvWhitePixel;
 }
+
+// add by Dicky
+float ImGui::GetWindowFontScale()
+{
+    ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = GetCurrentWindow();
+    return window->FontWindowScale;
+}
+// add by Dicky end
 
 void ImGui::SetWindowFontScale(float scale)
 {
@@ -19941,11 +19965,11 @@ void ImGui::GetVersion(int& major, int& minor, int& patch, int& build)
 double ImGui::get_current_time()
 {
 #ifdef _WIN32
-    LARGE_INTEGER freq;
-    LARGE_INTEGER pc;
-    QueryPerformanceFrequency(&freq);
-    QueryPerformanceCounter(&pc);
-    return (double)pc.QuadPart / ((double)freq.QuadPart + 1e-10);
+    using std::chrono::duration_cast;
+    using std::chrono::system_clock;
+    using std::chrono::milliseconds;
+    auto millisec_since_epoch = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    return (double)millisec_since_epoch / 1000.f;
 #else  // _WIN32
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -19953,34 +19977,34 @@ double ImGui::get_current_time()
 #endif // _WIN32
 }
 
-uint32_t ImGui::get_current_time_msec()
+uint64_t ImGui::get_current_time_msec()
 {
-#ifdef _WIN32
-    LARGE_INTEGER freq;
-    LARGE_INTEGER pc;
-    QueryPerformanceFrequency(&freq);
-    QueryPerformanceCounter(&pc);
-    return pc.QuadPart * 1000.0 / freq.QuadPart;
-#else
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return ((uint32_t)tv.tv_sec * 1000 + (uint32_t)tv.tv_usec / 1000);
-#endif
+//#ifdef _WIN32
+    using std::chrono::duration_cast;
+    using std::chrono::system_clock;
+    using std::chrono::milliseconds;
+    auto millisec_since_epoch = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    return millisec_since_epoch;
+//#else
+//    struct timeval tv;
+//    gettimeofday(&tv, NULL);
+//    return ((uint32_t)tv.tv_sec * 1000 + (uint32_t)tv.tv_usec / 1000);
+//#endif
 }
 
 uint64_t ImGui::get_current_time_usec()
 {
-#ifdef _WIN32
-    LARGE_INTEGER freq;
-    LARGE_INTEGER pc;
-    QueryPerformanceFrequency(&freq);
-    QueryPerformanceCounter(&pc);
-    return pc.QuadPart * 1000000.0 / freq.QuadPart;
-#else
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return ((uint64_t)tv.tv_sec * 1000000 + (uint64_t)tv.tv_usec);
-#endif
+//#ifdef _WIN32
+    using std::chrono::duration_cast;
+    using std::chrono::system_clock;
+    using std::chrono::milliseconds;
+    auto millisec_since_epoch = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    return millisec_since_epoch * 1000;
+//#else
+//    struct timeval tv;
+//    gettimeofday(&tv, NULL);
+//    return ((uint64_t)tv.tv_sec * 1000000 + (uint64_t)tv.tv_usec);
+//#endif
 }
 
 void ImGui::sleep(float seconds)

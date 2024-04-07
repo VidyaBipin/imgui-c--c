@@ -633,25 +633,27 @@ static bool TabButton(const char *label, bool selected, bool *pCloseButtonPresse
     {
         std::string badge_str = std::to_string(doneBadges < 100 ? doneBadges : 99);
         if (doneBadges >= 100) badge_str += "+";
+        auto org_font_scale = ImGui::GetWindowFontScale();
         ImGui::SetWindowFontScale(doneBadges < 10 ? 0.75 : doneBadges < 100 ? 0.65 : 0.6);
         float num_offset_x = doneBadges < 10 ? 7 : doneBadges < 100 ? 9 : 11;
         float num_offset_y = doneBadges < 10 ? 3 : doneBadges < 100 ? 2 : 1;
         drawListOverride->AddCircleFilled(ImVec2(bb.Max.x - 4, bb.Min.y + 4), 7, IM_COL32(0, 255, 0, 144));
         drawListOverride->AddText(ImVec2(bb.Max.x - num_offset_x + 1, bb.Min.y - num_offset_y + 1), IM_COL32_BLACK, badge_str.c_str());
         drawListOverride->AddText(ImVec2(bb.Max.x - num_offset_x, bb.Min.y - num_offset_y), IM_COL32_WHITE, badge_str.c_str());
-        ImGui::SetWindowFontScale(1.0);
+        ImGui::SetWindowFontScale(org_font_scale);
     }
     if (doingBadges > 0)
     {
         std::string badge_str = std::to_string(doingBadges < 100 ? doingBadges : 99);
         if (doingBadges >= 100) badge_str += "+";
+        auto org_font_scale = ImGui::GetWindowFontScale();
         ImGui::SetWindowFontScale(doingBadges < 10 ? 0.75 : doingBadges < 100 ? 0.65 : 0.6);
         float num_offset_x = doingBadges < 10 ? -1 : doingBadges < 100 ? 1 : 2;
         float num_offset_y = doingBadges < 10 ? 3 : doingBadges < 100 ? 2 : 1;
         drawListOverride->AddCircleFilled(bb.Min + ImVec2(4, 3), 8, IM_COL32(255, 0, 0, 144));
         drawListOverride->AddText(ImVec2(bb.Min.x - num_offset_x + 1, bb.Min.y - num_offset_y + 1), IM_COL32_BLACK, badge_str.c_str());
         drawListOverride->AddText(ImVec2(bb.Min.x - num_offset_x, bb.Min.y - num_offset_y), IM_COL32_WHITE, badge_str.c_str());
-        ImGui::SetWindowFontScale(1.0);
+        ImGui::SetWindowFontScale(org_font_scale);
     }
 
     return pressed;
@@ -3210,6 +3212,7 @@ static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, b
     {
         std::string badge_str = std::to_string(doneBadges < 100 ? doneBadges : 99);
         if (doneBadges >= 100) badge_str += "+";
+        auto org_font_scale = ImGui::GetWindowFontScale();
         ImGui::SetWindowFontScale(doneBadges < 10 ? 0.75 : doneBadges < 100 ? 0.65 : 0.6);
         if (!invertRounding)
         {
@@ -3227,12 +3230,13 @@ static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, b
             drawListOverride->AddText(ImVec2(bb.Max.x - num_offset_x + 1, bb.Max.y - num_offset_y + 1 - 8), IM_COL32_BLACK, badge_str.c_str());
             drawListOverride->AddText(ImVec2(bb.Max.x - num_offset_x, bb.Max.y - num_offset_y - 8), IM_COL32_WHITE, badge_str.c_str());
         }
-        ImGui::SetWindowFontScale(1.0);
+        ImGui::SetWindowFontScale(org_font_scale);
     }
     if (doingBadges > 0)
     {
         std::string badge_str = std::to_string(doingBadges < 100 ? doingBadges : 99);
         if (doingBadges >= 100) badge_str += "+";
+        auto org_font_scale = ImGui::GetWindowFontScale();
         ImGui::SetWindowFontScale(doingBadges < 10 ? 0.75 : doingBadges < 100 ? 0.65 : 0.6);
         if (!invertRounding)
         {
@@ -3250,7 +3254,7 @@ static bool TabButtonVertical(bool rotateCCW,const char *label, bool selected, b
             drawListOverride->AddText(ImVec2(bb.Max.x - num_offset_x + 1, bb.Min.y - num_offset_y + 1), IM_COL32_BLACK, badge_str.c_str());
             drawListOverride->AddText(ImVec2(bb.Max.x - num_offset_x, bb.Min.y - num_offset_y), IM_COL32_WHITE, badge_str.c_str());
         }
-        ImGui::SetWindowFontScale(1.0);
+        ImGui::SetWindowFontScale(org_font_scale);
     }
     return pressed;
 }

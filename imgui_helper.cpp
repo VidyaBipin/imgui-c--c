@@ -7,6 +7,9 @@
 #include <thread>
 #include <sstream>
 #include <iomanip>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -1898,6 +1901,31 @@ std::string MillisecToString(int64_t millisec, int show_millisec)
             oss << '.' << std::setw(1) << milli / 100;
     }
     return oss.str();
+}
+
+void ImDecryptFile(const std::string path, const std::string key, std::vector<uint8_t>& data)
+{
+    data.clear();
+    struct stat sb_enc;
+    const uint8_t *memblock_enc;
+    int fd_enc = open(path.c_str(), O_RDONLY);
+    if (fd_enc == -1)
+    {
+        std::cout << "out file can't open data file" << path << std::endl;
+        return;
+    }
+    fstat(fd_enc, &sb_enc);
+    memblock_enc = (const uint8_t *)mmap(NULL, sb_enc.st_size, PROT_READ, MAP_PRIVATE, fd_enc, 0);
+    close(fd_enc);
+    if (memblock_enc == MAP_FAILED)
+    {
+        std::cout << "out file can't map data file" << path << std::endl;
+        return;
+    }
+    auto& instance = ImGuiHelper::Encrypt::Instance();
+    auto check_len = instance.decrypt(memblock_enc, data, sb_enc.st_size, (uint8_t*)key.c_str());
+    std::cout << "decrypt length:" << check_len << std::endl;
+    munmap((void *)memblock_enc, sb_enc.st_size);
 }
 } //namespace ImGuiHelper
 

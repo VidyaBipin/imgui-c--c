@@ -133,9 +133,15 @@ endif()
 
 if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 find_package(OpenGL)
+find_package(OpenSSL)
+
 if (OPENGL_FOUND)
     message("imgui found opengl")
 endif(OPENGL_FOUND)
+
+if (OpenSSL_FOUND)
+    message(STATUS "imgui found openssl")
+endif(OpenSSL_FOUND)
 
 if (IMGUI_FREETYPE)
     find_package(Freetype)
@@ -303,6 +309,18 @@ if(OPENGL_FOUND)
     )
 endif(OPENGL_FOUND)
 
+if (OpenSSL_FOUND)
+    set(IMGUI_INC_DIRS
+        ${IMGUI_INC_DIRS}
+        ${OPENSSL_INCLUDE_DIR}
+    )
+    set(LINK_LIBS
+        ${LINK_LIBS}
+        ${OPENSSL_SSL_LIBRARY}
+        ${OPENSSL_CRYPTO_LIBRARY}
+    )
+endif(OpenSSL_FOUND)
+
 if(IMGUI_FREETYPE AND FREETYPE_FOUND)
     set(IMGUI_ENABLE_FREETYPE ON)
     set(IMGUI_INC_DIRS
@@ -361,7 +379,7 @@ set(IMGUI_INCS
 
 set(IMGUI_FONT_UTF8 WeiHei CACHE STRING "ImGui internal UTF8 font")
 set_property(CACHE IMGUI_FONT_UTF8 PROPERTY STRINGS 
-    None WeiHei BoldHei Hei Yuan Song Kai Sans Zpix
+    None WeiHei BoldHei RegHei Yuan Song Kai Sans Zpix
 )
 
 set(IMGUI_FONT_LATIN MonoNarrow CACHE STRING "ImGui internal Latin font")
@@ -381,7 +399,7 @@ endif()
 if (${IMGUI_FONT_UTF8} MATCHES "BoldHei")
     set(IMGUI_FONT_SARASA ON)
 endif()
-if (${IMGUI_FONT_UTF8} MATCHES "Hei")
+if (${IMGUI_FONT_UTF8} MATCHES "RegHei")
     set(IMGUI_FONT_HEI ON)
 endif()
 if (${IMGUI_FONT_UTF8} MATCHES "Yuan")
@@ -1006,6 +1024,7 @@ set(IMGUI_INC_DIRS
 set(IMGUI_SRC
     ${IMGUI_SRC}
     addon/imgui_extra_widget/imgui_extra_widget.cpp
+    addon/imgui_extra_widget/imgui_extra_spinner.cpp
 )
 set(IMGUI_INCS
     ${IMGUI_INCS}

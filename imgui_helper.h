@@ -10,6 +10,8 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
+#include <openssl/evp.h>
+#include <openssl/rand.h>
 
 #ifdef _WIN32
 #define PATH_SEP '\\'
@@ -545,6 +547,229 @@ IMGUI_API int StringAppend(ImVector<char>& v,const char* fmt, ...);
 // ImGui Theme generator
 IMGUI_API void ThemeGenerator(const char* name, bool* p_open = NULL, ImGuiWindowFlags flags = 0);
 
+class Encrypt {
+private:
+    Encrypt() {}
+
+public:
+    static Encrypt& Instance() {
+        static Encrypt instance;
+        return instance;
+    }
+
+    Encrypt(const Encrypt&) = delete;
+    Encrypt& operator=(const Encrypt&) = delete;
+
+    size_t encrypt(const uint8_t *in, uint8_t **out, size_t size, uint8_t * passwd)
+    {
+        int ret = 0;
+        if (!in || !out)
+            return 0;
+
+        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+        if (!ctx)
+        {
+            throw std::runtime_error("Failed to create cipher context");
+        }
+
+        int key_len = 0;
+        if ((key_len = EVP_BytesToKey(EVP_aes_256_cbc(), EVP_get_digestbyname("md5"), salt, passwd, strlen((const char *)passwd), 1, key, iv)) <= 0)
+        {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to get key");
+        }
+
+        if (EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv) != 1)
+        {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to initialize encryption");
+        }
+
+        int len;
+        size_t out_size = size + EVP_CIPHER_block_size(EVP_aes_256_cbc());
+        *out = (uint8_t *)malloc(out_size);
+        if (EVP_EncryptUpdate(ctx, *out, &len, reinterpret_cast<const unsigned char*>(in), size) != 1)
+        {
+            free(*out);
+            *out = NULL;
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to encrypt data");
+            return 0;
+        }
+
+        int padding_len;
+        if (EVP_EncryptFinal_ex(ctx, *out + len, &padding_len) != 1)
+        {
+            free(*out);
+            *out = NULL;
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to finalize encryption");
+            return 0;
+        }
+
+        EVP_CIPHER_CTX_free(ctx);
+        //fprintf(stderr, "salt:"); for (int i=0; i<PKCS5_SALT_LEN; i++) { fprintf(stderr, "%02X", salt[i]); } fprintf(stderr, "\n");
+        //fprintf(stderr, " key:"); for (int i=0; i<key_len; i++) { fprintf(stderr, "%02X", key[i]); } fprintf(stderr, "\n");
+        //fprintf(stderr, "  iv:"); for (int i=0; i<EVP_MAX_IV_LENGTH; i++) { fprintf(stderr, "%02X", iv[i]); } fprintf(stderr, "\n");
+        return len + padding_len;
+    }
+
+    size_t encrypt(const uint8_t *in, std::vector<uint8_t>& out, size_t size, uint8_t * passwd)
+    {
+        int ret = 0;
+        if (!in)
+            return 0;
+
+        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+        if (!ctx)
+        {
+            throw std::runtime_error("Failed to create cipher context");
+        }
+
+        int key_len = 0;
+        if ((key_len = EVP_BytesToKey(EVP_aes_256_cbc(), EVP_get_digestbyname("md5"), salt, passwd, strlen((const char *)passwd), 1, key, iv)) <= 0)
+        {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to get key");
+        }
+
+        if (EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv) != 1)
+        {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to initialize encryption");
+        }
+
+        int len;
+        size_t out_size = size + EVP_CIPHER_block_size(EVP_aes_256_cbc());
+        //*out = (uint8_t *)malloc(out_size);
+        out.resize(out_size);
+        if (EVP_EncryptUpdate(ctx, out.data(), &len, reinterpret_cast<const unsigned char*>(in), size) != 1)
+        {
+            out.clear();
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to encrypt data");
+            return 0;
+        }
+
+        int padding_len;
+        if (EVP_EncryptFinal_ex(ctx, out.data() + len, &padding_len) != 1)
+        {
+            out.clear();
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to finalize encryption");
+            return 0;
+        }
+
+        EVP_CIPHER_CTX_free(ctx);
+        //fprintf(stderr, "salt:"); for (int i=0; i<PKCS5_SALT_LEN; i++) { fprintf(stderr, "%02X", salt[i]); } fprintf(stderr, "\n");
+        //fprintf(stderr, " key:"); for (int i=0; i<key_len; i++) { fprintf(stderr, "%02X", key[i]); } fprintf(stderr, "\n");
+        //fprintf(stderr, "  iv:"); for (int i=0; i<EVP_MAX_IV_LENGTH; i++) { fprintf(stderr, "%02X", iv[i]); } fprintf(stderr, "\n");
+        return len + padding_len;
+    }
+
+    size_t decrypt(const uint8_t *in, uint8_t **out, size_t size, uint8_t * passwd)
+    {
+        if (!in || !out)
+            return 0;
+
+        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+        if (!ctx)
+        {
+            throw std::runtime_error("Failed to create cipher context");
+        }
+        int key_len = 0;
+        if ((key_len = EVP_BytesToKey(EVP_aes_256_cbc(), EVP_get_digestbyname("md5"), salt, passwd, strlen((const char *)passwd), 1, key, iv)) <= 0)
+        {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to get key");
+        }
+
+        if (EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv) != 1)
+        {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to initialize decryption");
+        }
+
+        int len;
+        size_t out_size = size;
+        *out = (uint8_t *)malloc(out_size);
+        if (EVP_DecryptUpdate(ctx, *out, &len, in, size) != 1)
+        {
+            free(*out);
+            *out = NULL;
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to decrypt data");
+            return 0;
+        }
+
+        int padding_len;
+        if (EVP_DecryptFinal_ex(ctx, *out + len, &padding_len) != 1)
+        {
+            free(*out);
+            *out = NULL;
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to finalize decryption");
+            return 0;
+        }
+
+        EVP_CIPHER_CTX_free(ctx);
+        //fprintf(stderr, "salt:"); for (int i=0; i<PKCS5_SALT_LEN; i++) { fprintf(stderr, "%02X", salt[i]); } fprintf(stderr, "\n");
+        //fprintf(stderr, " key:"); for (int i=0; i<key_len; i++) { fprintf(stderr, "%02X", key[i]); } fprintf(stderr, "\n");
+        //fprintf(stderr, "  iv:"); for (int i=0; i<EVP_MAX_IV_LENGTH; i++) { fprintf(stderr, "%02X", iv[i]); } fprintf(stderr, "\n");
+        return len + padding_len;
+    }
+
+    size_t decrypt(const uint8_t *in, std::vector<uint8_t>& out, size_t size, uint8_t * passwd)
+    {
+        if (!in)
+            return 0;
+        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+        if (!ctx)
+        {
+            throw std::runtime_error("Failed to create cipher context");
+        }
+        int key_len = 0;
+        if ((key_len = EVP_BytesToKey(EVP_aes_256_cbc(), EVP_get_digestbyname("md5"), salt, passwd, strlen((const char *)passwd), 1, key, iv)) <= 0)
+        {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to get key");
+        }
+
+        if (EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv) != 1)
+        {
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to initialize decryption");
+        }
+
+        int len;
+        size_t out_size = size;
+        out.resize(out_size);
+        if (EVP_DecryptUpdate(ctx, out.data(), &len, in, size) != 1)
+        {
+            out.clear();
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to decrypt data");
+            return 0;
+        }
+
+        int padding_len;
+        if (EVP_DecryptFinal_ex(ctx, out.data() + len, &padding_len) != 1)
+        {
+            out.clear();
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Failed to finalize decryption");
+            return 0;
+        }
+
+        EVP_CIPHER_CTX_free(ctx);
+        return len + padding_len;
+    }
+private:
+    unsigned char key[EVP_MAX_KEY_LENGTH];
+    unsigned char iv[EVP_MAX_IV_LENGTH];
+    unsigned char salt[PKCS5_SALT_LEN] = "CodeWin";
+};
+IMGUI_API void ImDecryptFile(const std::string path, const std::string key, std::vector<uint8_t>& data);
 } // ImGuiHelper
 
 static inline ImPoint Vec2Point(ImVec2 in) { return ImPoint(in.x, in.y); }

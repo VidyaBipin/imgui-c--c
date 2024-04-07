@@ -8,6 +8,10 @@
 #define STBIDEF inline
 #define STBIWDEF inline
 #define STBIRDEF inline
+#ifdef _WIN32
+#define STBI_WINDOWS_UTF8
+#define STBIW_WINDOWS_UTF8
+#endif
 #include "stb_image.h"
 #include "stb_image_write.h"
 #include "stb_image_resize2.h"
@@ -33,7 +37,7 @@ IMGUI_API double    GetEventWaitingTime();                      // in seconds; n
 namespace ImGui
 {
 IMGUI_API double    get_current_time();
-IMGUI_API uint32_t  get_current_time_msec();
+IMGUI_API uint64_t  get_current_time_msec();
 IMGUI_API uint64_t  get_current_time_usec();
 IMGUI_API void      sleep(float seconds);
 IMGUI_API void      sleep(int ms_seconds);
