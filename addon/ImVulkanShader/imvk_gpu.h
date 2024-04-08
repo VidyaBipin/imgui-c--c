@@ -38,6 +38,7 @@ VKSHADER_API VkInstance get_gpu_instance();
 
 // Destroy VkInstance object and free the memory of the associated object
 // Usually called in the destructor of the main program exit
+// The function will internally ensure that all vulkan devices are idle before proceeding with destruction.
 VKSHADER_API void destroy_gpu_instance();
 
 // vulkan core

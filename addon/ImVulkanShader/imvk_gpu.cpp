@@ -2010,6 +2010,19 @@ void destroy_gpu_instance()
     if (g_instance.created == 0)
         return;
 
+    for (int i = 0; i < MAX_GPU_COUNT; i++)
+    {
+        VulkanDevice* vulkan_device = g_default_vkdev[i];
+        if (vulkan_device)
+        {
+            VkDevice vkdev = g_default_vkdev[i]->vkdevice();
+            if (vkdev)
+            {
+                vkDeviceWaitIdle(vkdev);
+            }
+        }
+    }
+
     // fprintf(stderr, "destroy_gpu_instance");
 
     if (g_instance.glslang_initialized)
