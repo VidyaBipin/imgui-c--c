@@ -261,7 +261,7 @@ void show_file_dialog_demo_window(bool * open)
 			IGFD::FileDialogConfig config;
 			config.path = ".";
 			config.countSelectionMax = 1;
-			config.sidePane = std::bind(&InfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+			config.sidePane = std::bind(&InfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
 			config.sidePaneWidth = 350.0f;
 			config.userDatas = IGFDUserDatas("InfosPane");
 			config.flags = ImGuiFileDialogFlags_Modal;

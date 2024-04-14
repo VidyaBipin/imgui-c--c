@@ -2,23 +2,38 @@
 
 // uncomment and modify defines under for customize ImGuiFileDialog
 
+/////////////////////////////////
+//// STL FILE SYSTEM ////////////
+/////////////////////////////////
+
 // uncomment if you need to use your FileSystem Interface
 // if commented, you have two defualt interface, std::filesystem or dirent
 // #define USE_CUSTOM_FILESYSTEM
-
 // this options need c++17
 // #define USE_STD_FILESYSTEM
 
-// #define MAX_FILE_DIALOG_NAME_BUFFER 1024
-// #define MAX_PATH_BUFFER_SIZE 1024
-
-// the slash's buttons in path cna be used for quick select parallles directories
-// #define USE_QUICK_PATH_SELECT
+/////////////////////////////////
+//// MISC ///////////////////////
+/////////////////////////////////
 
 // the spacing between button path's can be customized.
 // if disabled the spacing is defined by the imgui theme
 // define the space between path buttons
 // #define CUSTOM_PATH_SPACING 2
+
+// #define MAX_FILE_DIALOG_NAME_BUFFER 1024
+// #define MAX_PATH_BUFFER_SIZE 1024
+
+/////////////////////////////////
+//// QUICK PATH /////////////////
+/////////////////////////////////
+
+// the slash's buttons in path cna be used for quick select parallles directories
+// #define USE_QUICK_PATH_SELECT
+
+/////////////////////////////////
+//// THUMBNAILS /////////////////
+/////////////////////////////////
 
 // #define USE_THUMBNAILS
 // the thumbnail generation use the stb_image and stb_resize lib who need to define the implementation
@@ -37,6 +52,10 @@
 // #define DisplayMode_ThumbailsGrid_ButtonString "TG"
 // #define DisplayMode_ThumbailsGrid_ButtonHelp "Thumbnails Grid"
 
+/////////////////////////////////
+//// EXPLORATION BY KEYS ////////
+/////////////////////////////////
+
 // #define USE_EXPLORATION_BY_KEYS
 // this mapping by default is for GLFW but you can use another
 // #include <GLFW/glfw3.h>
@@ -49,9 +68,17 @@
 // BackSpace for comming back to the last directory
 // #define IGFD_KEY_BACKSPACE ImGuiKey_Backspace
 
+/////////////////////////////////
+//// DIALOG EXIT ////////////////
+/////////////////////////////////
+
 // by ex you can quit the dialog by pressing the key excape
 // #define USE_DIALOG_EXIT_WITH_KEY
 // #define IGFD_EXIT_KEY ImGuiKey_Escape
+
+/////////////////////////////////
+//// WIDGETS ////////////////////
+/////////////////////////////////
 
 // widget
 // begin combo widget
@@ -67,6 +94,10 @@
 // standard button
 // #define IMGUI_BUTTON ImGui::Button
 
+/////////////////////////////////
+//// STRING'S ///////////////////
+/////////////////////////////////
+
 // locales string
 #include "imgui.h"
 #include "icons/folder.h" // add by Dicky
@@ -76,7 +107,7 @@
 #define okButtonString ICON_IGFD_OK " OK"
 #define cancelButtonString ICON_IGFD_CANCEL " Cancel"
 #define resetButtonString ICON_IGFD_RESET
-#define drivesButtonString ICON_IGFD_DRIVES
+#define devicesButtonString ICON_IGFD_DRIVES
 #define editPathButtonString ICON_IGFD_EDIT
 #define searchString ICON_IGFD_SEARCH
 #define dirEntryString ICON_IGFD_FOLDER
@@ -88,7 +119,7 @@
 #define fileNameString "Select Name :"
 #define dirNameString "Select Path :"
 // #define buttonResetSearchString "Reset search"
-#define buttonDriveString "Drives"
+#define buttonDriveString "Devices"
 // #define buttonEditPathString "Edit path\nYou can also right click on path buttons"
 // #define buttonResetPathString "Reset to current directory"
 // #define buttonCreateDirString "Create Directory"
@@ -111,6 +142,10 @@
 // "%Y/%m/%d %H:%M" give 2021:01:22 11:47
 // "%Y/%m/%d %i:%M%p" give 2021:01:22 11:45PM
 // #define DateTimeFormat "%Y/%m/%d %i:%M%p"
+
+/////////////////////////////////
+//// SORTING ICONS //////////////
+/////////////////////////////////
 
 // theses icons will appear in table headers
 // #define USE_CUSTOM_SORTING_ICON
@@ -141,6 +176,10 @@
 // #define defaultSortOrderDate true
 // #define defaultSortOrderThumbnails true
 
+/////////////////////////////////
+//// PLACES FEATURES ////////////
+/////////////////////////////////
+
 #define USE_PLACES_FEATURE
 #if IMGUI_ICONS
 #define placesButtonString ICON_IGFD_BOOKMARK
@@ -159,11 +198,19 @@
 // #define validatePlaceButtonString "ok"
 // #define editPlaceButtonString "E"
 
+//////////////////////////////////////
+//// PLACES FEATURES : BOOKMARKS /////
+//////////////////////////////////////
+
 // a group for bookmarks will be added by default, but you can also create it yourself and many more
 #define USE_PLACES_BOOKMARKS
 #define PLACES_BOOKMARK_DEFAULT_OPEPEND true
 #define placesBookmarksGroupName "Bookmarks"
 #define placesBookmarksDisplayOrder 0  // to the first
+
+//////////////////////////////////////
+//// PLACES FEATURES : DEVICES ///////
+//////////////////////////////////////
 
 // a group for system devices (returned by IFileSystem), but you can also add yours
 // by ex if you would like to display a specific icon for some devices

@@ -1247,28 +1247,29 @@ enum IGFD_FileStyleFlags_         // by evaluation / priority order
 #pragma region FLAGS : ImGuiFileDialogFlags
 
 typedef int ImGuiFileDialogFlags;  // -> enum ImGuiFileDialogFlags_
-enum ImGuiFileDialogFlags_ {
-    ImGuiFileDialogFlags_None = 0,                                 // define none default flag
-    ImGuiFileDialogFlags_ConfirmOverwrite = (1 << 0),              // show confirm to overwrite dialog
-    ImGuiFileDialogFlags_DontShowHiddenFiles = (1 << 1),           // dont show hidden file (file starting with a .)
-    ImGuiFileDialogFlags_DisableCreateDirectoryButton = (1 << 2),  // disable the create directory button
-    ImGuiFileDialogFlags_HideColumnType = (1 << 3),                // hide column file type
-    ImGuiFileDialogFlags_HideColumnSize = (1 << 4),                // hide column file size
-    ImGuiFileDialogFlags_HideColumnDate = (1 << 5),                // hide column file date
-    ImGuiFileDialogFlags_NoDialog = (1 << 6),                      // let the dialog embedded in your own imgui begin / end scope
-    ImGuiFileDialogFlags_ReadOnlyFileNameField = (1 << 7),         // don't let user type in filename field for file open style dialogs
-    ImGuiFileDialogFlags_CaseInsensitiveExtention = (1 << 8),      // the file extentions treatments will not take into account the case
-    ImGuiFileDialogFlags_Modal = (1 << 9),                         // modal
-    ImGuiFileDialogFlags_DisableThumbnailMode = (1 << 10),         // disable the thumbnail mode
-    ImGuiFileDialogFlags_DisablePlaceMode = (1 << 11),          // disable the place mode
-    ImGuiFileDialogFlags_DisableQuickPathSelection = (1 << 12),    // disable the quick path selection
+enum ImGuiFileDialogFlags_ : int32_t {                              // 32 flags
+    ImGuiFileDialogFlags_None                         = 0,          // define none default flag
+    ImGuiFileDialogFlags_ConfirmOverwrite             = (1 << 0),   // show confirm to overwrite dialog
+    ImGuiFileDialogFlags_DontShowHiddenFiles          = (1 << 1),   // dont show hidden file (file starting with a .)
+    ImGuiFileDialogFlags_DisableCreateDirectoryButton = (1 << 2),   // disable the create directory button
+    ImGuiFileDialogFlags_HideColumnType               = (1 << 3),   // hide column file type
+    ImGuiFileDialogFlags_HideColumnSize               = (1 << 4),   // hide column file size
+    ImGuiFileDialogFlags_HideColumnDate               = (1 << 5),   // hide column file date
+    ImGuiFileDialogFlags_NoDialog                     = (1 << 6),   // let the dialog embedded in your own imgui begin / end scope
+    ImGuiFileDialogFlags_ReadOnlyFileNameField        = (1 << 7),   // don't let user type in filename field for file open style dialogs
+    ImGuiFileDialogFlags_CaseInsensitiveExtention     = (1 << 8),   // the file extentions treatments will not take into account the case
+    ImGuiFileDialogFlags_Modal                        = (1 << 9),   // modal
+    ImGuiFileDialogFlags_DisableThumbnailMode         = (1 << 10),  // disable the thumbnail mode
+    ImGuiFileDialogFlags_DisablePlaceMode             = (1 << 11),  // disable the place mode
+    ImGuiFileDialogFlags_DisableQuickPathSelection    = (1 << 12),  // disable the quick path selection
+    ImGuiFileDialogFlags_ShowDevicesButton            = (1 << 13),  // show the devices selection button
 
 	// show bookmark when open dialog add by Dicky
-	ImGuiFileDialogFlags_ShowBookmark                 = (1 << 13),    // show bookmark at openning
-	ImGuiFileDialogFlags_NoButton                     = (1 << 14),    // dont't show ok/cancel button, it will using embedded mode
-	ImGuiFileDialogFlags_PathDecompositionShort       = (1 << 15),    // show Path Decomposition only current and parents
-    ImGuiFileDialogFlags_DisableDragDrop              = (1 << 16),    // disable drag drop support
-    ImGuiFileDialogFlags_AllowDirectorySelect         = (1 << 17),    // allow directory select even we have filter string 
+	ImGuiFileDialogFlags_ShowBookmark                 = (1 << 14),    // show bookmark at openning
+	ImGuiFileDialogFlags_NoButton                     = (1 << 15),    // dont't show ok/cancel button, it will using embedded mode
+	ImGuiFileDialogFlags_PathDecompositionShort       = (1 << 16),    // show Path Decomposition only current and parents
+    ImGuiFileDialogFlags_DisableDragDrop              = (1 << 17),    // disable drag drop support
+    ImGuiFileDialogFlags_AllowDirectorySelect         = (1 << 18),    // allow directory select even we have filter string 
     // add by dicky end
     // default behavior when no flags is defined. seems to be the more common cases
     ImGuiFileDialogFlags_Default = ImGuiFileDialogFlags_ConfirmOverwrite |  //
@@ -1799,8 +1800,8 @@ private:
 
 public:
     bool inputPathActivated = false;                             // show input for path edition
-    bool drivesClicked = false;                                  // event when a drive button is clicked
-    bool puPathClicked = false;                                  // event when a path button was clicked
+    bool devicesClicked = false;                                  // event when a drive button is clicked
+    bool pathClicked = false;                                  // event when a path button was clicked
     char inputPathBuffer[MAX_PATH_BUFFER_SIZE] = "";             // input path buffer for imgui widget input text (displayed in palce of composer)
     char variadicBuffer[MAX_FILE_DIALOG_NAME_BUFFER] = "";       // called by m_SelectableItem
     char fileNameBuffer[MAX_FILE_DIALOG_NAME_BUFFER] = "";       // file name buffer in footer for imgui widget input text
@@ -1818,6 +1819,7 @@ public:
         defaultSortOrderFilename, defaultSortOrderType, defaultSortOrderSize, defaultSortOrderDate};
 #endif
     SortingFieldEnum sortingField = SortingFieldEnum::FIELD_FILENAME;  // detail view sorting column
+    bool showDevices = false;                                           // devices are shown (only on os windows)
 
     std::string dLGpath;               // base path set by user when OpenDialog was called
     std::string dLGDefaultFileName;    // base default file path name set by user when OpenDialog was called
@@ -1878,9 +1880,8 @@ public:
     void ClearAll();
     void ApplyFilteringOnFileList(const FileDialogInternal& vFileDialogInternal);
     void SortFields(const FileDialogInternal& vFileDialogInternal);        // will sort a column
-    void OpenCurrentPath(const FileDialogInternal& vFileDialogInternal);   // set the path of the dialog, will launch the
-                                                                           // scandir for populate the file listview
-    bool GetDrives();                                                      // list drives on windows platform
+    void OpenCurrentPath(const FileDialogInternal& vFileDialogInternal);   // set the path of the dialog, will launch the scandir for populate the file listview
+    bool GetDevices();                                                      // list devices
     bool CreateDir(const std::string& vPath);                              // create a directory on the file system
     std::string ComposeNewPath(std::vector<std::string>::iterator vIter);  // compose a path from the compose path widget
     bool SetPathOnParentDirectoryIfAny();                                  // compose paht on parent directory
@@ -1926,7 +1927,7 @@ struct IGFD_API DropInfos {
 #pragma region FileDialogInternal
 
 typedef void* UserDatas;
-typedef std::function<void(const char*, const char*, UserDatas, bool*)> PaneFun;  // modify by Dicky, add current path, side pane function binding
+typedef std::function<void(const char*, const char*, UserDatas, bool*, bool*)> PaneFun;  // modify by Dicky, add current path, side pane function binding
 typedef std::function<bool(FileInfos*, UserDatas)> UserFileAttributesFun;  // custom file Attributes call back, reject file if false
 
 struct IGFD_API FileDialogConfig {
@@ -2332,7 +2333,7 @@ typedef struct IGFD_Selection_Pair IGFD_Selection_Pair;
 typedef struct IGFD_Selection IGFD_Selection;
 #endif  // __cplusplus
 
-typedef void (*IGFD_PaneFun)(const char*, const char*, void*, bool*);  // modify by Dicky add current path, callback fucntion for display the pane
+typedef void (*IGFD_PaneFun)(const char*, const char*, void*, bool*, bool*);  // modify by Dicky add current path, callback fucntion for display the pane
 
 struct IGFD_FileDialog_Config {
     const char* path;              // path
