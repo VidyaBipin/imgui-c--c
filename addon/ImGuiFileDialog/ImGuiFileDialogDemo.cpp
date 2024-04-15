@@ -6,7 +6,7 @@
 
 static bool canValidateDialog = false;
 
-inline void InfosPane(const char* vFilter, const char* currentPath, IGFDUserDatas vUserDatas, bool* vCantContinue) // if vCantContinue is false, the user cant validate the dialog
+inline void InfosPane(const char* vFilter, const char* currentPath, IGFDUserDatas vUserDatas, bool* vCantContinue, bool* bOk) // if vCantContinue is false, the user cant validate the dialog
 {
 	ImGui::TextColored(ImVec4(0, 1, 1, 1), "Infos Pane");
 
@@ -131,7 +131,7 @@ void show_file_dialog_demo_window(bool * open)
 	static std::vector<std::pair<std::string, std::string>> selection = {};
 
 	ImGui::Begin("imGuiFileDialog Demo", open); 
-	ImGui::Text("imGuiFileDialog Version : %s", IMGUIFILEDIALOG_VERSION);
+	ImGui::Text("imGuiFileDialog Version : %s", IGFD_VERSION);
 	ImGui::Indent();
 	{
 #ifdef USE_EXPLORATION_BY_KEYS
