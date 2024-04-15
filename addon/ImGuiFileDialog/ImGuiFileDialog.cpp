@@ -1,11 +1,6 @@
-#pragma region PVS STUDIO
 
 // This is an independent project of an individual developer. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-
-#pragma endregion
-
-#pragma region IGFD LICENSE
 
 /*
 MIT License
@@ -31,13 +26,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma endregion
-
 #include "ImGuiFileDialog.h"
 
 #ifdef __cplusplus
-
-#pragma region Includes
 
 #include "imgui.h" // add by Dicky
 #include "imgui_helper.h" // add by Dicky
@@ -107,7 +98,9 @@ SOFTWARE.
 #include <algorithm>
 #include <iostream>
 
-#pragma endregion
+///////////////////////////////
+// STB IMAGE LIBS
+///////////////////////////////
 
 #pragma region Common defines
 // add by dicky
@@ -144,6 +137,10 @@ const std::string media_filter = "Media files (" + video_file_dis + " " + image_
 // disable by dicky end
 */
 
+///////////////////////////////
+// FLOAT MACROS
+///////////////////////////////
+
 // float comparisons
 #ifndef IS_FLOAT_DIFFERENT
 #define IS_FLOAT_DIFFERENT(a, b) (fabs((a) - (b)) > FLT_EPSILON)
@@ -161,6 +158,7 @@ const std::string media_filter = "Media files (" + video_file_dis + " " + image_
 ///////////////////////////////
 // COMBOBOX
 ///////////////////////////////
+
 #ifndef FILTER_COMBO_AUTO_SIZE
 #define FILTER_COMBO_AUTO_SIZE 1
 #endif  // FILTER_COMBO_AUTO_SIZE
@@ -170,9 +168,11 @@ const std::string media_filter = "Media files (" + video_file_dis + " " + image_
 #ifndef IMGUI_BEGIN_COMBO
 #define IMGUI_BEGIN_COMBO ImGui::BeginCombo
 #endif  // IMGUI_BEGIN_COMBO
+
 ///////////////////////////////
 // BUTTON
 ///////////////////////////////
+
 // for lets you define your button widget
 // if you have like me a special bi-color button
 #ifndef IMGUI_PATH_BUTTON
@@ -181,9 +181,11 @@ const std::string media_filter = "Media files (" + video_file_dis + " " + image_
 #ifndef IMGUI_BUTTON
 #define IMGUI_BUTTON ImGui::Button
 #endif  // IMGUI_BUTTON
+
 ///////////////////////////////
 // locales
 ///////////////////////////////
+
 #ifndef createDirButtonString
 #define createDirButtonString "+"
 #endif  // createDirButtonString
@@ -295,11 +297,13 @@ const std::string media_filter = "Media files (" + video_file_dis + " " + image_
 #endif  // OverWriteDialogCancelButtonString
 #ifndef DateTimeFormat
 // see strftime functionin <ctime> for customize
-#define DateTimeFormat "%Y/%m/%d %H:%M:%S" // Modify By Dicky
+#define DateTimeFormat "%Y/%m/%d %H:%M"
 #endif  // DateTimeFormat
+
 ///////////////////////////////
 // THUMBNAILS
 ///////////////////////////////
+
 #ifdef USE_THUMBNAILS
 #ifndef tableHeaderFileThumbnailsString
 #define tableHeaderFileThumbnailsString "Thumbnails"
@@ -345,9 +349,11 @@ inline bool inRadioButton(const char* vLabel, bool vToggled) {
 #define IMGUI_RADIO_BUTTON inRadioButton
 #endif  // IMGUI_RADIO_BUTTON
 #endif  // USE_THUMBNAILS
+
 ///////////////////////////////
-// BOOKMARKS
+// PLACES
 ///////////////////////////////
+
 #ifdef USE_PLACES_FEATURE
 // add by Dicky
 #ifndef addPlaceButtonHelpString
@@ -431,12 +437,6 @@ inline bool inToggleButton(const char* vLabel, bool* vToggled) {
 #endif  // IMGUI_TOGGLE_BUTTON
 #endif  // USE_PLACES_FEATURE
 
-#pragma endregion
-
-#pragma region INTERNAL
-
-#pragma region EXCEPTION
-
 class IGFDException : public std::exception {
 private:
     char const* m_msg{};
@@ -451,10 +451,6 @@ public:
         return m_msg;
     }
 };
-
-#pragma endregion
-
-#pragma region FILE SYSTEM INTERFACE
 
 #ifndef CUSTOM_FILESYSTEM_INCLUDE
 #ifdef USE_STD_FILESYSTEM
@@ -830,10 +826,6 @@ public:
 #include CUSTOM_FILESYSTEM_INCLUDE
 #endif  // USE_CUSTOM_FILESYSTEM
 
-#pragma endregion
-
-#pragma region Utils
-
 // https://github.com/ocornut/imgui/issues/1720
 bool IGFD::Utils::ImSplitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size) {
     auto* window = ImGui::GetCurrentWindow();
@@ -1048,10 +1040,6 @@ std::string IGFD::Utils::FormatFileSize(size_t vByteSize) {
     return "0 " fileSizeBytes;
 }
 
-#pragma endregion
-
-#pragma region FileStyle
-
 IGFD::FileStyle::FileStyle() : color(0, 0, 0, 0) {
 }
 
@@ -1064,10 +1052,6 @@ IGFD::FileStyle::FileStyle(const FileStyle& vStyle) {
 
 IGFD::FileStyle::FileStyle(const ImVec4& vColor, const std::string& vIcon, ImFont* vFont) : color(vColor), icon(vIcon), font(vFont) {
 }
-
-#pragma endregion
-
-#pragma region SearchManager
 
 void IGFD::SearchManager::Clear() {
     searchTag.clear();
@@ -1093,10 +1077,6 @@ void IGFD::SearchManager::DrawSearchBar(FileDialogInternal& vFileDialogInternal)
         vFileDialogInternal.fileManager.ApplyFilteringOnFileList(vFileDialogInternal);
     }
 }
-
-#pragma endregion
-
-#pragma region FilterInfos
 
 void IGFD::FilterInfos::setCollectionTitle(const std::string& vTitle) {
     title = vTitle;
@@ -1160,7 +1140,7 @@ bool IGFD::FilterInfos::exist(const FileInfos& vFileInfos, bool vIsCaseInsensiti
 }
 
 bool IGFD::FilterInfos::regexExist(const std::string& vFilter) const {
-    for (auto regex : filters_regex) {
+    for (const auto& regex : filters_regex) {
         if (std::regex_search(vFilter, regex)) {
             return true;
         }
@@ -1185,10 +1165,6 @@ std::string IGFD::FilterInfos::transformAsteriskBasedFilterToRegex(const std::st
     }
     return res;
 }
-
-#pragma endregion
-
-#pragma region FilterManager
 
 const IGFD::FilterInfos& IGFD::FilterManager::GetSelectedFilter() const {
     return m_SelectedFilter;
@@ -1627,6 +1603,8 @@ std::string IGFD::FilterManager::ReplaceExtentionWithCurrentFilterIfNeeded(const
                     }
                     break;
                 }
+                default:
+                    break;
             }
 
             Utils::ReplaceString(result, "..", ".");
@@ -1641,10 +1619,6 @@ void IGFD::FilterManager::SetDefaultFilterIfNotDefined() {
         m_SelectedFilter = *m_ParsedFilters.begin();  // we take the first filter
     }
 }
-
-#pragma endregion
-
-#pragma region FileType
 
 IGFD::FileType::FileType() = default;
 IGFD::FileType::FileType(const ContentType& vContentType, const bool& vIsSymlink) : m_Content(vContentType), m_Symlink(vIsSymlink) {
@@ -1688,10 +1662,6 @@ bool IGFD::FileType::operator<(const FileType& rhs) const {
 bool IGFD::FileType::operator>(const FileType& rhs) const {
     return m_Content > rhs.m_Content;
 }
-
-#pragma endregion
-
-#pragma region FileInfos
 
 std::shared_ptr<IGFD::FileInfos> IGFD::FileInfos::create() {
     return std::make_shared<IGFD::FileInfos>();
@@ -1776,10 +1746,6 @@ bool IGFD::FileInfos::FinalizeFileTypeParsing(const size_t& vMaxDotToExtract) {
     }
     return false;
 }
-
-#pragma endregion
-
-#pragma region FileManager
 
 IGFD::FileManager::FileManager() {
     fsRoot           = IGFD::Utils::GetPathSeparator();
@@ -2126,23 +2092,23 @@ bool IGFD::FileManager::GetDevices() {
     return false;
 }
 
-bool IGFD::FileManager::IsComposerEmpty() {
+bool IGFD::FileManager::IsComposerEmpty() const {
     return m_CurrentPathDecomposition.empty();
 }
 
-size_t IGFD::FileManager::GetComposerSize() {
+size_t IGFD::FileManager::GetComposerSize() const {
     return m_CurrentPathDecomposition.size();
 }
 
-bool IGFD::FileManager::IsFileListEmpty() {
+bool IGFD::FileManager::IsFileListEmpty() const {
     return m_FileList.empty();
 }
 
-bool IGFD::FileManager::IsPathListEmpty() {
+bool IGFD::FileManager::IsPathListEmpty()  const{
     return m_PathList.empty();
 }
 
-size_t IGFD::FileManager::GetFullFileListSize() {
+size_t IGFD::FileManager::GetFullFileListSize() const {
     return m_FileList.size();
 }
 
@@ -2151,19 +2117,19 @@ std::shared_ptr<IGFD::FileInfos> IGFD::FileManager::GetFullFileAt(size_t vIdx) {
     return nullptr;
 }
 
-bool IGFD::FileManager::IsFilteredListEmpty() {
+bool IGFD::FileManager::IsFilteredListEmpty() const {
     return m_FilteredFileList.empty();
 }
 
-bool IGFD::FileManager::IsPathFilteredListEmpty() {
+bool IGFD::FileManager::IsPathFilteredListEmpty() const {
     return m_FilteredPathList.empty();
 }
 
-size_t IGFD::FileManager::GetFilteredListSize() {
+size_t IGFD::FileManager::GetFilteredListSize() const {
     return m_FilteredFileList.size();
 }
 
-size_t IGFD::FileManager::GetPathFilteredListSize() {
+size_t IGFD::FileManager::GetPathFilteredListSize() const {
     return m_FilteredPathList.size();
 }
 
@@ -2177,7 +2143,7 @@ std::shared_ptr<IGFD::FileInfos> IGFD::FileManager::GetFilteredPathAt(size_t vId
     return nullptr;
 }
 
-std::vector<std::string>::iterator IGFD::FileManager::GetCurrentPopupComposedPath() {
+std::vector<std::string>::iterator IGFD::FileManager::GetCurrentPopupComposedPath() const {
     return m_PopupComposedPath;
 }
 
@@ -2743,10 +2709,7 @@ std::map<std::string, std::string> IGFD::FileManager::GetResultingSelection(File
     return res;
 }
 
-#pragma endregion
-
 // add By Dicky for drag drop support
-#pragma region DragDropInfo
 IGFD::DropInfos::DropInfos(std::shared_ptr<IGFD::FileInfos> info, FileManager* fdi)
 {
     fileType = info->fileType;
@@ -2758,10 +2721,7 @@ IGFD::DropInfos::DropInfos(std::shared_ptr<IGFD::FileInfos> info, FileManager* f
     //filePath = (path + fileNameExt).c_str();
     strncpy(filePath, (path + fileNameExt).c_str(), sizeof(filePath));
 }
-#pragma endregion
 // add By Dicky end
-
-#pragma region FileDialogInternal
 
 void IGFD::FileDialogInternal::NewFrame() {
     canWeContinue             = true;   // reset flag for possibily validate the dialog
@@ -2866,14 +2826,6 @@ const IGFD::FileDialogConfig& IGFD::FileDialogInternal::getDialogConfig() const 
 IGFD::FileDialogConfig& IGFD::FileDialogInternal::getDialogConfigRef() {
     return m_DialogConfig;
 }
-
-#pragma endregion
-
-#pragma endregion
-
-#pragma region Optional Features
-
-#pragma region ThumbnailFeature
 
 IGFD::ThumbnailFeature::ThumbnailFeature() {
 #ifdef USE_THUMBNAILS
@@ -3128,10 +3080,6 @@ void IGFD::ThumbnailFeature::ManageGPUThumbnails() {
 
 #endif  // USE_THUMBNAILS
 
-#pragma endregion
-
-#pragma region PlacesFeature
-
 IGFD::PlacesFeature::PlacesFeature() {
 #ifdef USE_PLACES_FEATURE
     m_PlacesPaneWidth = defaultPlacePaneWith;
@@ -3367,10 +3315,6 @@ bool IGFD::PlacesFeature::GroupStruct::RemovePlace(const std::string& vPlaceName
     return false;
 }
 #endif  // USE_PLACES_FEATURE
-
-#pragma endregion
-
-#pragma region KeyExplorerFeature
 
 IGFD::KeyExplorerFeature::KeyExplorerFeature() = default;
 
@@ -3744,12 +3688,6 @@ void IGFD::KeyExplorerFeature::SetFlashingAttenuationInSeconds(float vAttenValue
     m_FlashAlphaAttenInSecs = 1.0f / ImMax(vAttenValue, 0.01f);
 }
 #endif  // USE_EXPLORATION_BY_KEYS
-
-#pragma endregion
-
-#pragma endregion
-
-#pragma region FileDialog
 
 IGFD::FileDialog::FileDialog() : PlacesFeature(), KeyExplorerFeature(), ThumbnailFeature() {
 #ifdef USE_PLACES_FEATURE
@@ -4988,13 +4926,7 @@ bool IGFD::FileDialog::m_Confirm_Or_OpenOverWriteFileDialog_IfNeeded(bool vLastA
     return false;
 }
 
-#pragma endregion
-
-#pragma endregion
-
 #endif  // __cplusplus
-
-#pragma region IGFD_C_API
 
 // return an initialized IGFD_FileDialog_Config
 IGFD_C_API IGFD_FileDialog_Config IGFD_FileDialog_Config_Get() {
