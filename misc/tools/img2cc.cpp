@@ -28,7 +28,7 @@ static void load_image(std::string path, ImGui::ImMat & mat)
     if (data)
     {
         mat.release();
-        mat.create_type(width, height, component, data, IM_DT_INT8);
+        mat.create_type(width, height, 4, data, IM_DT_INT8);
     }
 }
 
@@ -45,7 +45,7 @@ static bool binary_to_compressed_c(const char* filename, const char* symbol, voi
 
     //fprintf(f, "// File: '%s' (%d bytes)\n", filename, (int)data_sz);
     //fprintf(f, "// Exported using binary_to_compressed_c.cpp\n");
-    const char* static_str = "    ";
+    const char* static_str = "extern ";
     const char* compressed_str = "";
     {
         fprintf(f, "%sconst unsigned int %s_%ssize = %d;\n", static_str, symbol, compressed_str, (int)compressed_sz);
