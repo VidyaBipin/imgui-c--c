@@ -44,7 +44,7 @@
 #include <webgpu/webgpu.h>
 
 // Dear ImGui prototypes from imgui_internal.h
-//extern ImGuiID ImHashData(const void* data_p, size_t data_size, ImU32 seed = 0);
+extern ImGuiID ImHashData(const void* data_p, size_t data_size, ImU32 seed = 0);
 #define MEMALIGN(_SIZE,_ALIGN)        (((_SIZE) + ((_ALIGN) - 1)) & ~((_ALIGN) - 1))    // Memory align (copied from IM_ALIGN() macro).
 
 // WebGPU data
@@ -753,7 +753,7 @@ bool ImGui_ImplWGPU_Init(ImGui_ImplWGPU_InitInfo* init_info)
 
     // Create buffers with a default size (they will later be grown as needed)
     bd->pFrameResources = new FrameResources[bd->numFramesInFlight];
-    for (int i = 0; i < bd->numFramesInFlight; i++)
+    for (unsigned int i = 0; i < bd->numFramesInFlight; i++)
     {
         FrameResources* fr = &bd->pFrameResources[i];
         fr->IndexBuffer = nullptr;

@@ -1471,7 +1471,7 @@ endif(IMGUI_STATIC)
 
 set(IMGUI_VERSION_MAJOR 1)
 set(IMGUI_VERSION_MINOR 90)
-set(IMGUI_VERSION_PATCH 50)
+set(IMGUI_VERSION_PATCH 51)
 string(TIMESTAMP IMGUI_VERSION_BUILD "%y%m%d")
 set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH})
 add_definitions(-DIMGUI_VERSION_MAJOR=${IMGUI_VERSION_MAJOR})
@@ -1755,15 +1755,15 @@ if (IMGUI_BUILD_EXAMPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     set(IMGUI_WEB_WGPU_DIR ${PROJECT_BINARY_DIR}/web_wgpu/)
     SET(IMGUI_SHELL_WGPU_FILE ${PROJECT_SOURCE_DIR}/test/wgpu_index.html)
     add_executable(
-        example_emscripten_wgpu
-        test/example_emscripten_wgpu.cpp
+        example_glfw_wgpu
+        test/example_glfw_wgpu.cpp
     )
     target_link_libraries(
-        example_emscripten_wgpu
+        example_glfw_wgpu
         imgui
     )
     set_target_properties(
-        example_emscripten_wgpu
+        example_glfw_wgpu
         PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${IMGUI_WEB_WGPU_DIR}
         RUNTIME_OUTPUT_DIRECTORY ${IMGUI_WEB_WGPU_DIR}
