@@ -514,6 +514,7 @@ public:
             regex::flag_type flags = m_caseSensitive ? regex::optimize : regex::icase|regex::optimize;
             m_filterRegex = regex(filterPattern, flags);
         }
+        m_doFileFilter = true;
         return true;
     }
 
@@ -790,7 +791,7 @@ public:
                     break;
                 }
             }
-            else if (IsCorrectFileType(dirEntry) && IsMatchPattern(dirEntry.path().string()))
+            else if (IsCorrectFileType(dirEntry) && (!m_doFileFilter || IsMatchPattern(dirEntry.path().string())))
             {
                 const fs::path filePath = fs::path(subDirPath)/dirEntry.path().filename();
                 if (pathList.empty())
@@ -833,7 +834,7 @@ public:
                     break;
                 }
             }
-            else if (IsCorrectFileType(ent, relativePath) && IsMatchPattern(ent->d_name))
+            else if (IsCorrectFileType(ent, relativePath) && (!m_doFileFilter || IsMatchPattern(ent->d_name)))
             {
                 if (pathList.empty())
                 {
@@ -859,6 +860,7 @@ private:
     string m_quickSample;
     bool m_isQuickSampleReady{false};
     bool m_isRecursive{false};
+    bool m_doFileFilter{false};
     string m_filterPattern;
     bool m_caseSensitive{true};
     bool m_isRegexPattern;
