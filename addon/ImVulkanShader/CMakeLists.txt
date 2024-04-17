@@ -454,6 +454,7 @@ set(VKSHADER_SRCS
     internals/Copy_make_border.cpp
     internals/Binary_vulkan.cpp
     internals/OpacityFilter_vulkan.cpp
+    internals/Expand_vulkan.cpp
 )
 
 set(VKSHADER_INCS
@@ -483,7 +484,9 @@ set(VKSHADER_INCS
     internals/Copy_make_border_shader.h
     internals/Copy_make_border.h
     internals/Binary_shader.h
-    internals/Binary_vulkan.cpp
+    internals/Binary_vulkan.h
+    internals/Expand_shader.h
+    internals/Expand_vulkan.h
 )
 
 set(VKSHADER_INC_DIRS
@@ -514,7 +517,7 @@ endif(VKSHADER_VULKAN_PREBUILD)
 
 set(VKSHADER_VERSION_MAJOR 1)
 set(VKSHADER_VERSION_MINOR 13)
-set(VKSHADER_VERSION_PATCH 2)
+set(VKSHADER_VERSION_PATCH 3)
 string(TIMESTAMP VKSHADER_VERSION_BUILD "%y%m%d")
 set(VKSHADER_VERSION_STRING ${VKSHADER_VERSION_MAJOR}.${VKSHADER_VERSION_MINOR}.${VKSHADER_VERSION_PATCH})
 add_definitions(-DVKSHADER_VERSION_MAJOR=${VKSHADER_VERSION_MAJOR})

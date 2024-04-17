@@ -115,6 +115,7 @@ double Crop_vulkan::crop(const ImMat& src, ImMat& dst, int _x, int _y, int _w, i
     ret = cmd->benchmark();
 #endif
     cmd->reset();
+    dst.copy_attribute(src);
     return ret;
 }
 
