@@ -23,8 +23,9 @@
 #include <imgui_toggle.h>
 #include <imgui_tex_inspect.h>
 #include <ImCoolbar.h>
-#include <imgui_orient.h>
+#include <ImGuiOrient.h>
 #include <portable-file-dialogs.h>
+#include <ImGuiStyleSerializer.h>
 #include <imgui_cpu.h>
 
 #if IMGUI_VULKAN_SHADER
@@ -259,6 +260,7 @@ public:
     bool show_portable_file_dialogs = false;
     bool show_coolbar_window = false;
     bool show_orient_widget = false;
+    bool show_style_serializer_window = false;
 public:
     void DrawMatDemo();
     void DrawFishCircleDemo();
@@ -858,6 +860,7 @@ bool Example_Frame(void* handle, bool app_will_quit)
         ImGui::Checkbox("TexInspect Window", &example->show_tex_inspect_window);
         ImGui::Checkbox("Coolbar Window", &example->show_coolbar_window);
         ImGui::Checkbox("3D Orient Widget", &example->show_orient_widget);
+        ImGui::Checkbox("Show Style Serializer", &example->show_style_serializer_window);
 
 #if IMGUI_VULKAN_SHADER
         ImGui::Checkbox("Show Vulkan Shader Test Window", &example->show_shader_window);
@@ -1204,8 +1207,8 @@ bool Example_Frame(void* handle, bool app_will_quit)
     // Show Zmo Window
     if (example->show_zmo_window)
     {
-        ImGui::SetNextWindowSize(ImVec2(1280, 800), ImGuiCond_FirstUseEver);
-        ImGui::Begin("##ZMO", &example->show_zmo_window, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar);
+        ImGui::SetNextWindowSize(ImVec2(1280, 1024), ImGuiCond_FirstUseEver);
+        ImGui::Begin("##ZMO", &example->show_zmo_window, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
         ImGuizmo::ShowImGuiZmoDemo();
         ImGui::End();
     }
@@ -1243,6 +1246,15 @@ bool Example_Frame(void* handle, bool app_will_quit)
         ImGui::QuaternionGizmo("Quaternion", quat);
         ImGui::AxisAngleGizmo("Axis Angle", axis, angle);
         ImGui::DirectionGizmo("Direction", dir);
+        ImGui::End();
+    }
+
+    // Show Style Serializer Window
+    if (example->show_style_serializer_window)
+    {
+        ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Style Serializer", &example->show_style_serializer_window);
+        ImGui::ShowStyleSerializerDemoWindow();
         ImGui::End();
     }
 

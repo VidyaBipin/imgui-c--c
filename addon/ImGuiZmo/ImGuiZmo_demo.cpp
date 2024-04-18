@@ -1,300 +1,278 @@
 #include "ImGuiZmo.h"
+#include <imgui_helper.h>
 #include <imgui_extra_widget.h>
+#include <ImGuiFileDialog.h>
 #include <string>
 #include <vector>
 #include <algorithm>
 
 namespace IMGUIZMO_NAMESPACE
 {
-static int gizmoCount = 1;
-static float camDistance = 8.f;
-static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::TRANSLATE);
-
-static float objectMatrix[4][16] =
-{
-    {   1.f, 0.f, 0.f, 0.f,
-        0.f, 1.f, 0.f, 0.f,
-        0.f, 0.f, 1.f, 0.f,
-        0.f, 0.f, 0.f, 1.f
-    },
-
-    {   1.f, 0.f, 0.f, 0.f,
-        0.f, 1.f, 0.f, 0.f,
-        0.f, 0.f, 1.f, 0.f,
-        2.f, 0.f, 0.f, 1.f
-    },
-
-    { 1.f, 0.f, 0.f, 0.f,
-        0.f, 1.f, 0.f, 0.f,
-        0.f, 0.f, 1.f, 0.f,
-        2.f, 0.f, 2.f, 1.f
-    },
-
-    {   1.f, 0.f, 0.f, 0.f,
-        0.f, 1.f, 0.f, 0.f,
-        0.f, 0.f, 1.f, 0.f,
-        0.f, 0.f, 2.f, 1.f 
-    }
-};
-
-static const float identityMatrix[16] =
-{   1.f, 0.f, 0.f, 0.f,
-    0.f, 1.f, 0.f, 0.f,
-    0.f, 0.f, 1.f, 0.f,
-    0.f, 0.f, 0.f, 1.f
-};
-
-static void OrthoGraphic(const float l, float r, float b, const float t, float zn, const float zf, float* m16)
-{
-    m16[0] = 2 / (r - l);
-    m16[1] = 0.0f;
-    m16[2] = 0.0f;
-    m16[3] = 0.0f;
-    m16[4] = 0.0f;
-    m16[5] = 2 / (t - b);
-    m16[6] = 0.0f;
-    m16[7] = 0.0f;
-    m16[8] = 0.0f;
-    m16[9] = 0.0f;
-    m16[10] = 1.0f / (zf - zn);
-    m16[11] = 0.0f;
-    m16[12] = (l + r) / (l - r);
-    m16[13] = (t + b) / (b - t);
-    m16[14] = zn / (zn - zf);
-    m16[15] = 1.0f;
-}
-
-inline void rotationY(const float angle, float* m16)
-{
-    float c = cosf(angle);
-    float s = sinf(angle);  
-    m16[0] = c;
-    m16[1] = 0.0f;
-    m16[2] = -s;
-    m16[3] = 0.0f;
-    m16[4] = 0.0f;
-    m16[5] = 1.f;
-    m16[6] = 0.0f;
-    m16[7] = 0.0f;
-    m16[8] = s;
-    m16[9] = 0.0f;
-    m16[10] = c;
-    m16[11] = 0.0f;
-    m16[12] = 0.f;
-    m16[13] = 0.f;
-    m16[14] = 0.f;
-    m16[15] = 1.0f;
-}
-
-static void EditTransform(float* cameraView, float* cameraProjection, float* matrix, bool boundingBox)
-{
-    static ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::LOCAL);
-    static bool useSnap = false;
-    static float snap[3] = { 1.f, 1.f, 1.f };
-    static float bounds[] = { -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f };
-    static float boundsSnap[] = { 0.1f, 0.1f, 0.1f };
-    static bool boundSizing = false;
-    static bool boundSizingSnap = false;
-
-    ImVec4 _Min = ImVec4(-1.0f, -1.0f, -1.0f, 0.f);
-    ImVec4 _Max = ImVec4(1.0f, 1.0f, 1.0f, 0.f);
-
-    ImVec2 window_size = ImGui::GetWindowSize();
-    static float size_ctrl = 0.25 * window_size.x, size_zmo = 0.75 * window_size.x;
-    ImGui::PushID("##ImGuizmoCtrl");
-    ImGui::Splitter(true, 8.0f, &size_ctrl, &size_zmo, 8, 8);
-    ImGui::PopID();
-    ImGui::BeginChild("Control", ImVec2(size_ctrl, window_size.y));
-    {
-        if (ImGui::IsKeyPressed(ImGuiKey_T))
-            mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
-        if (ImGui::IsKeyPressed(ImGuiKey_E))
-            mCurrentGizmoOperation = ImGuizmo::ROTATE;
-        if (ImGui::IsKeyPressed(ImGuiKey_R)) // r Key
-            mCurrentGizmoOperation = ImGuizmo::SCALE;
-        if (ImGui::RadioButton("Translate", mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
-            mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Rotate", mCurrentGizmoOperation == ImGuizmo::ROTATE))
-            mCurrentGizmoOperation = ImGuizmo::ROTATE;
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Scale", mCurrentGizmoOperation == ImGuizmo::SCALE))
-            mCurrentGizmoOperation = ImGuizmo::SCALE;
-        if (ImGui::RadioButton("Universal", mCurrentGizmoOperation == ImGuizmo::UNIVERSAL))
-            mCurrentGizmoOperation = ImGuizmo::UNIVERSAL;
-        ImVec3 matrixTranslation, matrixRotation, matrixScale;
-        ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
-        ImGui::InputFloat3("Tr", (float *)&matrixTranslation);
-        ImGui::InputFloat3("Rt", (float *)&matrixRotation);
-        ImGui::InputFloat3("Sc", (float *)&matrixScale);
-        ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix);
-
-        if (mCurrentGizmoOperation != ImGuizmo::SCALE)
-        {
-            if (ImGui::RadioButton("Local", mCurrentGizmoMode == ImGuizmo::LOCAL))
-                mCurrentGizmoMode = ImGuizmo::LOCAL;
-            ImGui::SameLine();
-            if (ImGui::RadioButton("World", mCurrentGizmoMode == ImGuizmo::WORLD))
-                mCurrentGizmoMode = ImGuizmo::WORLD;
-        }
-        if (ImGui::IsKeyPressed(ImGuiKey_S))
-            useSnap = !useSnap;
-        ImGui::Checkbox("##snap", &useSnap);
-        ImGui::SameLine();
-
-        switch (mCurrentGizmoOperation)
-        {
-        case ImGuizmo::TRANSLATE:
-            ImGui::InputFloat3("Snap", &snap[0]);
-            break;
-        case ImGuizmo::ROTATE:
-            ImGui::InputFloat("Angle Snap", &snap[0]);
-            break;
-        case ImGuizmo::SCALE:
-            ImGui::InputFloat("Scale Snap", &snap[0]);
-            break;
-        default:
-            break;
-        }
-        ImGui::Checkbox("Bound Sizing", &boundSizing);
-        if (boundSizing)
-        {
-            ImGui::PushID(3);
-            ImGui::Checkbox("##BoundSizing", &boundSizingSnap);
-            ImGui::SameLine();
-            ImGui::InputFloat3("Snap", boundsSnap);
-            ImGui::PopID();
-        }
-    }
-    ImGui::EndChild();
-    ImGui::SameLine();
-    ImGui::BeginChild("zmo", ImVec2(size_zmo, window_size.y), false, ImGuiWindowFlags_NoMove);
-    {
-        ImGui::PushStyleColor(ImGuiCol_WindowBg, (ImVec4)ImColor(0.35f, 0.3f, 0.3f));
-        ImGuizmo::SetDrawlist();
-        float windowWidth = (float)ImGui::GetWindowWidth();
-        float windowHeight = (float)ImGui::GetWindowHeight();
-        ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-        float viewManipulateRight = ImGui::GetWindowPos().x + windowWidth;
-        float viewManipulateTop = ImGui::GetWindowPos().y;
-        ImGuizmo::DrawGrid(cameraView, cameraProjection, identityMatrix, 100.f);
-        ImGuizmo::DrawCubes(cameraView, cameraProjection, &objectMatrix[0][0], gizmoCount);
-        ImGuizmo::Manipulate(cameraView, cameraProjection, mCurrentGizmoOperation, mCurrentGizmoMode, matrix, NULL, useSnap ? &snap[0] : NULL, boundSizing ? bounds : NULL, boundSizingSnap ? boundsSnap : NULL);
-        ImGuizmo::ViewManipulate(cameraView, camDistance, ImVec2(viewManipulateRight - 128, viewManipulateTop), ImVec2(128, 128), 0x10101010);
-
-        if (boundingBox)
-        {
-            ImGuizmo::DrawBoundingBox(
-                cameraView,
-                cameraProjection,
-                matrix,
-                (float*)&_Min,
-                (float*)&_Max);
-        }
-        ImGui::PopStyleColor(1);
-    }
-    ImGui::EndChild();
-}
 
 void ShowImGuiZmoDemo()
 {
-    static float size_edit = 0;
-    static float size_edit_h = 0; 
-    static float size_zmo_h = 0;
+    auto& io = ImGui::GetIO();
+    bool multiviewport = io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable;
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const ImVec2 Canvas_size = ImGui::GetWindowSize();
+    // background ImGuizmo
     static float cameraView[16] =
     {   1.f, 0.f, 0.f, 0.f,
         0.f, 1.f, 0.f, 0.f,
         0.f, 0.f, 1.f, 0.f,
         0.f, 0.f, 0.f, 1.f
     };
+    static const float identityMatrix[16] =
+    {   1.f, 0.f, 0.f, 0.f,
+        0.f, 1.f, 0.f, 0.f,
+        0.f, 0.f, 1.f, 0.f,
+        0.f, 0.f, 0.f, 1.f
+    };
+    static float cubeMatrix[16] =
+    {   1.f, 0.f, 0.f, 0.f,
+        0.f, 1.f, 0.f, 0.f,
+        0.f, 0.f, 1.f, 0.f,
+        0.f, 0.f, 0.f, 1.f
+    };
+    static bool inited = false;
     static float cameraProjection[16];
-    // Camera projection
-    static bool isPerspective = true;
-    static float fov = 27.f;
-    static float viewWidth = 10.f; // for orthographic
-    static float viewHeight = viewWidth;
-    static float camYAngle = 165.f / 180.f * 3.14159f;
-    static float camXAngle = 32.f / 180.f * 3.14159f;
+    static bool bFace = true;
+    static bool bMesh = false;
+    static bool bNormal = false;
+    static float fov = 30.f;
+    static float camYAngle = ImDegToRad(165.f);
+    static float camXAngle = ImDegToRad(15.f);
+    static float camDistance = 8.f;
+    static float camShiftX = 0.0f;
+    static float camShiftY = 0.0f;
+    static std::vector<Model*> models;
 
-    static bool boundingBox = false;
+    bool bControlHoverd = false;
+    bool bAnyPopup = ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopupId);
+    ImGuizmo::Perspective(fov, Canvas_size.x / Canvas_size.y, 0.1f, 100.f, cameraProjection, camShiftX, camShiftY);
+    ImGuizmo::SetOrthographic(false);
 
-    static bool firstFrame = true;
-    ImVec2 window_size = ImGui::GetWindowSize();
-    if (isPerspective)
+    auto cameraViewUpdate = [&]()
     {
-        Perspective(fov, window_size.x / window_size.y, 0.1f, 100.f, cameraProjection);
+        ImGuizmo::Perspective(fov, Canvas_size.x / Canvas_size.y, 0.1f, 100.f, cameraProjection, camShiftX, camShiftY);
+        float eye[] = { cosf(camYAngle) * cosf(camXAngle) * camDistance, sinf(camXAngle) * camDistance, sinf(camYAngle) * cosf(camXAngle) * camDistance };
+        float at[] = { 0.f, 0.f, 0.f };
+        float up[] = { 0.f, 1.f, 0.f };
+        ImGuizmo::LookAt(eye, at, up, cameraView);
+        for (auto model : models)
+            ImGuizmo::UpdateModel(cameraView, cameraProjection, model);
+    };
+
+    if (!inited)
+    {
+        cameraViewUpdate();
+        inited = true;
     }
-    else
-    {
-        viewHeight = viewWidth * window_size.y / window_size.x;
-        OrthoGraphic(-viewWidth, viewWidth, -viewHeight, viewHeight, 1000.f, -1000.f, cameraProjection);
-    }
-    ImGuizmo::SetOrthographic(!isPerspective);
 
-    if (size_edit == 0 || size_edit_h == 0 || size_zmo_h == 0)
+    // draw zmo
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, (ImVec4)ImColor(0.35f, 0.3f, 0.3f));
+    ImGuizmo::SetDrawlist();
+    ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, Canvas_size.x, Canvas_size.y);
+    ImGuizmo::DrawGrid(cameraView, cameraProjection, identityMatrix, 100.f);
+    
+    // draw models
+    for (auto model : models)
     {
-        size_edit = window_size.y;
-        size_edit_h = 0.25 * size_edit;
-        size_zmo_h = size_edit - size_edit_h;
+        // Draw Bodel
+        ImGuizmo::DrawModel(cameraView, cameraProjection, model, bFace, bMesh, bNormal);
+
+        if (model->showManipulate)
+        {
+            bool updated = ImGuizmo::Manipulate(cameraView, cameraProjection, model->currentGizmoOperation, model->currentGizmoMode, (float *)&model->identity_matrix, NULL, 
+                                                model->useSnap ? (float *)&model->snap : NULL, 
+                                                model->boundSizing ? (float *)&model->bounds : NULL, 
+                                                model->boundSizingSnap ? (float *)&model->boundsSnap : NULL);
+            if (updated)
+            {
+                ImGuizmo::UpdateModel(cameraView, cameraProjection, model);
+            }
+            bControlHoverd |= updated;
+        }
     }
 
-    ImGui::PushID("##ImGuizmoView");
-    ImGui::Splitter(false, 8.0f, &size_edit_h, &size_zmo_h, 8, 12, window_size.x);
-    ImGui::PopID();
-    ImGui::BeginChild("Edit", ImVec2(window_size.x, size_edit_h));
+    // draw view Manipulate
+    float viewManipulateRight = ImGui::GetWindowPos().x + Canvas_size.x;
+    float viewManipulateTop = ImGui::GetWindowPos().y;
+    if (ImGuizmo::ViewManipulate(cameraView, camDistance, ImVec2(viewManipulateRight - 256, viewManipulateTop + 64), ImVec2(128, 128), 0x10101010, &camXAngle, &camYAngle))
     {
-        ImGui::Text("Camera");
-        bool viewDirty = false;
-        if (ImGui::RadioButton("Perspective", isPerspective)) isPerspective = true;
+        cameraViewUpdate();
+        bControlHoverd = true;
+    }
+    ImGui::PopStyleColor();
+
+    // draw control panel
+    ImGuiWindowFlags control_window_flags = ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoDecoration;
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        const ImGuiViewport* _viewport = ImGui::GetWindowViewport();
+        control_window_flags |= ImGuiWindowFlags_NoDocking;
+        io.ConfigViewportsNoDecoration = true;
+        ImGui::SetNextWindowViewport(_viewport->ID);
+    }
+    ImGui::SetNextWindowSize(ImVec2(400, 800), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.5, 0.5, 0.5, 0.5));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.5, 0.5, 0.5, 1.0));
+    if (ImGui::Begin("Model Control", nullptr, control_window_flags))
+    {
+        bControlHoverd |= ImGui::IsWindowFocused();
+        if (ImGui::Button(ICON_FK_REFRESH " Reset View"))
+        {
+            camYAngle = ImDegToRad(165.f);
+            camXAngle = ImDegToRad(15.f);
+            camDistance = 8.f;
+            camShiftX = 0.0f;
+            camShiftY = 0.0f;
+            cameraViewUpdate();
+        }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Orthographic", !isPerspective)) isPerspective = false;
-        if (isPerspective)
+        ImGui::Checkbox("Face", &bFace);
+        ImGui::SameLine();
+        ImGui::Checkbox("Mesh", &bMesh);
+        ImGui::SameLine();
+        ImGui::Checkbox("Normal", &bNormal);
+        if (ImGui::Button(ICON_FK_PLUS " Add model"))
         {
-            ImGui::SliderFloat("Fov", &fov, 20.f, 110.f);
+            IGFD::FileDialogConfig config;
+            config.path = ".";
+            config.countSelectionMax = 1;
+            config.userDatas = IGFDUserDatas("Open Model");
+            config.flags = ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_CaseInsensitiveExtention | ImGuiFileDialogFlags_DisableCreateDirectoryButton | ImGuiFileDialogFlags_Modal;
+            ImGuiFileDialog::Instance()->OpenDialog("##OpenFileDlgKey", ICON_IGFD_FOLDER_OPEN " Choose OBJ File", 
+                                                    "3D Object file(*.obj){.obj}",
+                                                    config);
         }
-        else
+
+        for (auto iter = models.begin(); iter != models.end();)
         {
-            ImGui::SliderFloat("Ortho width", &viewWidth, 1, 20);
+            Model * model = *iter;
+            std::string model_label = "Model #" + ImGuiHelper::MillisecToString(model->model_id, 1);
+            auto model_label_id = ImGui::GetID(model_label.c_str());
+            ImGui::PushID(model_label_id);
+            if (ImGui::TreeNodeEx(model_label.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_AllowOverlap))
+            {
+                if (ImGui::RadioButton("Translate", model->currentGizmoOperation == ImGuizmo::TRANSLATE))
+                    model->currentGizmoOperation = ImGuizmo::TRANSLATE;
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Rotate", model->currentGizmoOperation == ImGuizmo::ROTATE))
+                    model->currentGizmoOperation = ImGuizmo::ROTATE;
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Scale", model->currentGizmoOperation == ImGuizmo::SCALE))
+                    model->currentGizmoOperation = ImGuizmo::SCALE;
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Universal", model->currentGizmoOperation == ImGuizmo::UNIVERSAL))
+                    model->currentGizmoOperation = ImGuizmo::UNIVERSAL;
+                ImGuizmo::DecomposeMatrixToComponents(model->identity_matrix, model->matrixTranslation, model->matrixRotation, model->matrixScale);
+                ImGui::PushItemWidth(240);
+                ImGui::InputFloat3("Tr", (float*)&model->matrixTranslation);
+                ImGui::InputFloat3("Rt", (float*)&model->matrixRotation);
+                ImGui::InputFloat3("Sc", (float*)&model->matrixScale);
+                ImGuizmo::RecomposeMatrixFromComponents(model->matrixTranslation, model->matrixRotation, model->matrixScale, model->identity_matrix);
+                ImGui::PopItemWidth();
+                if (model->currentGizmoOperation != ImGuizmo::SCALE)
+                {
+                    if (ImGui::RadioButton("Local", model->currentGizmoMode == ImGuizmo::LOCAL))
+                        model->currentGizmoMode = ImGuizmo::LOCAL;
+                    ImGui::SameLine();
+                    if (ImGui::RadioButton("World",model->currentGizmoMode == ImGuizmo::WORLD))
+                        model->currentGizmoMode = ImGuizmo::WORLD;
+                }
+                ImGui::Separator();
+                ImGui::Checkbox("Manipulate", &model->showManipulate);
+                ImGui::SameLine();
+                if (ImGui::Button(ICON_FK_HOME " Reset"))
+                {
+                    ImGuizmo::DecomposeMatrixToComponents(identityMatrix, model->matrixTranslation, model->matrixRotation, model->matrixScale);
+                    model->matrixScale *= 0.2f;
+                    ImGuizmo::RecomposeMatrixFromComponents(model->matrixTranslation, model->matrixRotation, model->matrixScale, model->identity_matrix);
+                    ImGuizmo::UpdateModel(cameraView, cameraProjection, model);
+                }
+                ImGui::SameLine();
+                if (ImGui::Button(ICON_FK_TRASH_O " Delete"))
+                {
+                    delete model;
+                    iter = models.erase(iter);
+                }
+                else
+                    iter++;
+                ImGui::TreePop();
+            }
+            ImGui::PopID();
         }
-        viewDirty |= ImGui::SliderFloat("Distance", &camDistance, 1.f, 10.f);
-        ImGui::SliderInt("Gizmo count", &gizmoCount, 1, 4);
-        if (viewDirty || firstFrame)
+
+        ImVec2 minSize = ImVec2(600, 600);
+        ImVec2 maxSize = ImVec2(FLT_MAX, FLT_MAX);
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
-            float eye[] = { cosf(camYAngle) * cosf(camXAngle) * camDistance, sinf(camXAngle) * camDistance, sinf(camYAngle) * cosf(camXAngle) * camDistance };
-            float at[] = { 0.f, 0.f, 0.f };
-            float up[] = { 0.f, 1.f, 0.f };
-            LookAt(eye, at, up, cameraView);
-            firstFrame = false;
+            const ImGuiViewport* _viewport = ImGui::GetWindowViewport();
+            ImGui::SetNextWindowViewport(_viewport->ID);
         }
-        ImGui::Checkbox("Bounding Box", &boundingBox);
-        ImGuiIO& io = ImGui::GetIO();
-        ImGui::Text("X: %f Y: %f", io.MousePos.x, io.MousePos.y);
-        if (ImGuizmo::IsUsing())
+        if (ImGuiFileDialog::Instance()->Display("##OpenFileDlgKey", ImGuiWindowFlags_NoCollapse, minSize, maxSize))
         {
-            ImGui::Text("Using gizmo");
-        }
-        else
-        {
-            ImGui::Text(ImGuizmo::IsOver()?"Over gizmo":"");
-            ImGui::SameLine();
-            ImGui::Text(ImGuizmo::IsOver(ImGuizmo::TRANSLATE) ? "Over translate gizmo" : "");
-            ImGui::SameLine();
-            ImGui::Text(ImGuizmo::IsOver(ImGuizmo::ROTATE) ? "Over rotate gizmo" : "");
-            ImGui::SameLine();
-            ImGui::Text(ImGuizmo::IsOver(ImGuizmo::SCALE) ? "Over scale gizmo" : "");
+            if (ImGuiFileDialog::Instance()->IsOk())
+            {
+                auto file_path = ImGuiFileDialog::Instance()->GetFilePathName();
+                auto file_name = ImGuiFileDialog::Instance()->GetCurrentFileName();
+                auto userDatas = std::string((const char*)ImGuiFileDialog::Instance()->GetUserDatas());
+                if (userDatas.compare("Open Model") == 0)
+                {
+                    Model* model = new Model();
+                    model->model_data = LoadObj(file_path);
+                    if (model->model_data->model_open)
+                    {
+                        model->model_id = ImGui::get_current_time_usec();
+                        ImGuizmo::DecomposeMatrixToComponents(model->identity_matrix, model->matrixTranslation, model->matrixRotation, model->matrixScale);
+                        model->matrixScale *= 0.2f;
+                        ImGuizmo::RecomposeMatrixFromComponents(model->matrixTranslation, model->matrixRotation, model->matrixScale, model->identity_matrix);
+                        ImGuizmo::UpdateModel(cameraView, cameraProjection, model);
+                        models.emplace_back(model);
+                    }
+                }
+            }
+            ImGuiFileDialog::Instance()->Close();
         }
     }
-    ImGui::EndChild();
-    ImGui::BeginChild("Gizmo", ImVec2(window_size.x, size_zmo_h));
-    for (int matId = 0; matId < gizmoCount; matId++)
+    ImGui::End();
+    ImGui::PopStyleColor(3);
+
+    // handle mouse wheel
+    if (!bControlHoverd && !bAnyPopup)
     {
-        ImGuizmo::SetID(matId);
-        EditTransform(cameraView, cameraProjection, objectMatrix[matId], boundingBox);
-        ImGui::Separator();
+        if (io.MouseWheelH < -FLT_EPSILON)
+        {
+            camYAngle += ImDegToRad(2.f);
+            cameraViewUpdate();
+        }
+        else if (io.MouseWheelH > FLT_EPSILON)
+        {
+            camYAngle -= ImDegToRad(2.f);
+            cameraViewUpdate();
+        }
+        else if (io.MouseWheel < -FLT_EPSILON)
+        {
+            camDistance *= 0.95;
+            if (camDistance < 1.f) camDistance = 1.f;
+            cameraViewUpdate();
+        }
+        else if (io.MouseWheel > FLT_EPSILON)
+        {
+            camDistance *= 1.05;
+            if (camDistance > 10.f) camDistance = 10.f;
+            cameraViewUpdate();
+        }
+        
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+        {
+            camShiftX -= io.MouseDelta.x / Canvas_size.x / camDistance;
+            camShiftY += io.MouseDelta.y / Canvas_size.y / camDistance;
+            cameraViewUpdate();
+        }
     }
-
-    ImGui::EndChild();
-
-
 }
 } // namespace IMGUIZMO_NAMESPACE

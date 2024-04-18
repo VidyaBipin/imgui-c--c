@@ -1220,11 +1220,13 @@ endif(IMGUI_BUILD_EXAMPLE)
 # ImGuiZmo
 set(IMGUI_SRC
     ${IMGUI_SRC}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiOrient.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiZmo.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/model.cpp
 )
 set(IMGUI_INCS
     ${IMGUI_INCS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiOrient.h
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiZmo.h
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/model.h
 )
@@ -1309,18 +1311,18 @@ set(IMGUI_INC_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImCoolbar
 )
 
-# 3D orient widget
+# Style Serializer
 set(IMGUI_SRC
     ${IMGUI_SRC}
-    addon/Orient/imgui_orient.cpp
+    addon/ImGuiStyleSerializer/ImGuiStyleSerializer.cpp
 )
 set(IMGUI_INCS
     ${IMGUI_INCS}
-    addon/Orient/imgui_orient.h
+    addon/ImGuiStyleSerializer/ImGuiStyleSerializer.h
 )
 set(IMGUI_INC_DIRS
     ${IMGUI_INC_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/addon/Orient
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiStyleSerializer
 )
 
 # ZLib
@@ -1711,17 +1713,6 @@ if (IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
     )
     target_link_libraries(ImMaskCreatorTest PRIVATE
         ImMaskCreator
-    )
-    
-    add_executable(
-        obj_viewer
-        test/example_obj_viewer.cpp
-        ${IMGUI_APP_SRC}
-    )
-    target_link_libraries(
-        obj_viewer
-        imgui
-        ${LINK_LIBS}
     )
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     set(IMGUI_SHELL_FILE ${PROJECT_SOURCE_DIR}/test/shell_minimal.html)
