@@ -342,6 +342,12 @@ IMGUI_API bool SetFileContent(const char *filePath, const unsigned char* content
 
 // true of file exists
 IMGUI_API bool file_exists(const std::string& path);
+// true of file is file
+IMGUI_API bool is_file(const std::string& path);
+// true of file is folder
+IMGUI_API bool is_folder(const std::string& path);
+// true of file is link
+IMGUI_API bool is_link(const std::string& path);
 // extract the path of a full URI (e.g. file:://home/me/toto.mpg -> file:://home/me/)
 IMGUI_API std::string path_url(const std::string& path);
 // extract the path of a full URI parent(e.g. file:://home/me/ -> file:://home/)
@@ -352,6 +358,8 @@ IMGUI_API std::string path_filename(const std::string& path);
 IMGUI_API std::string path_filename_prefix(const std::string& path);
 // get file url filename suffix of a full URI (e.g. file:://home/me/toto.mpg -> mpg)
 IMGUI_API std::string path_filename_suffix(const std::string& path);
+// extract the path of a full URI current(e.g. file:://home/me/ -> me)
+IMGUI_API std::string path_current(const std::string& path);
 // get fixed length string (17 chars) YYYYMMDDHHmmssiii
 IMGUI_API std::string date_time_string();
 // get the OS dependent username

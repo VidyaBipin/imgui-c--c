@@ -1560,6 +1560,51 @@ bool file_exists(const std::string& path)
     return access(path.c_str(), R_OK) == 0;
 }
 
+bool is_file(const std::string& path)
+{
+    if (path.empty()) return false;
+    bool isFile = false;
+    auto fd = open(path.c_str(), O_RDONLY);
+    if (fd >= 0)
+    {
+        struct stat st;
+        if (fstat(fd, &st) == 0)
+            isFile = S_ISREG(st.st_mode);
+        close(fd);
+    }
+    return isFile;
+}
+
+bool is_folder(const std::string& path)
+{
+    if (path.empty()) return false;
+    bool isDir = false;
+    auto fd = open(path.c_str(), O_RDONLY);
+    if (fd >= 0)
+    {
+        struct stat st;
+        if (fstat(fd, &st) == 0)
+            isDir = S_ISDIR(st.st_mode);
+        close(fd);
+    }
+    return isDir;
+}
+
+bool is_link(const std::string& path)
+{
+    if (path.empty()) return false;
+    bool isLink = false;
+    auto fd = open(path.c_str(), O_RDONLY);
+    if (fd >= 0)
+    {
+        struct stat st;
+        if (fstat(fd, &st) == 0)
+            isLink = S_ISLNK(st.st_mode);
+        close(fd);
+    }
+    return isLink;
+}
+
 std::string path_url(const std::string& path)
 {
     auto pos = path.find_last_of(PATH_SEP);
@@ -1610,6 +1655,13 @@ std::string path_filename_suffix(const std::string& path)
         if (pos != std::string::npos)
             return filename.substr(pos);
     }
+    return "";
+}
+
+std::string path_current(const std::string& path)
+{
+    auto pos = path.rfind(PATH_SEP);
+    if (pos != std::string::npos) return path.substr(pos + 1, path.length() - pos - 1);
     return "";
 }
 
