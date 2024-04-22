@@ -4921,4 +4921,40 @@ ImMat MatWarpPerspective(const ImMat& src, const ImMat& M, ImSize dsize, ImInter
     return dst;
 }
 
+// #tag Implementation Start, Jimmy
+ImMat calcCovarMatrix(std::vector<ImPoint>& vectors)
+{
+    int pCount = vectors.size();
+    if (pCount <= 0) return ImGui::ImMat();
+
+    ImGui::ImMat matrix22;
+    matrix22.create_type(2, 2, IM_DT_FLOAT32);
+    std::vector<ImPoint> pVectors = std::vector<ImPoint>(pCount);
+    ImPoint avg = ImPoint(0.0f, 0.0f);
+    for (int i = 0; i < pCount; ++i)
+	{
+		pVectors[i] = vectors[i];
+		avg = avg + vectors[i];
+	}
+    avg = avg / static_cast<float>(pCount);
+    for (int i = 0; i < pCount; ++i)
+		pVectors[i] = pVectors[i] - avg;
+
+    for (int c = 0; c < 2; ++c)
+	{
+		for (int r = c; r < 2; ++r)
+		{
+            float& acc = matrix22.at<float>(c, r);
+			acc = 0.0f;
+			// cov(X, Y) = E[(X - x)(Y - y)]
+			for (int i = 0; i < pCount; ++i)
+				acc += pVectors[i][c] * pVectors[i][r];
+			acc /= static_cast<float>(pCount);
+
+			matrix22.at<float>(r, c) = acc;	// covariance matrix is symmetric
+		}
+	}
+    return matrix22;
+}
+// #tag Implementation End, Jimmy
 } // namespace ImGui
