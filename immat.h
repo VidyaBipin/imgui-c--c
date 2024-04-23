@@ -401,6 +401,15 @@ struct ImPoint
     ImPoint operator-(const ImPoint& rhs)   { return ImPoint(x - rhs.x, y - rhs.y); }
     ImPoint operator*(const ImPoint& rhs)   { return ImPoint(x * rhs.x, y * rhs.y); }
     ImPoint operator/(const ImPoint& rhs)   { return ImPoint(x / rhs.x, y / rhs.y); }
+    void operator+=(const ImPoint& rhs)   { ImPoint t(*this); t.x += rhs.x; t.y += rhs.y;  *this = t; }
+    void operator-=(const ImPoint& rhs)   { ImPoint t(*this); t.x -= rhs.x; t.y -= rhs.y;  *this = t; }
+    void operator*=(const ImPoint& rhs)   { ImPoint t(*this); t.x *= rhs.x; t.y *= rhs.y;  *this = t; }
+    void operator/=(const ImPoint& rhs)   { ImPoint t(*this); t.x /= rhs.x; t.y /= rhs.y;  *this = t; }
+    void operator+=(const float rhs)   { ImPoint t(*this); t.x += rhs; t.y += rhs;  *this = t; }
+    void operator-=(const float rhs)   { ImPoint t(*this); t.x -= rhs; t.y -= rhs;  *this = t; }
+    void operator*=(const float rhs)   { ImPoint t(*this); t.x *= rhs; t.y *= rhs;  *this = t; }
+    void operator/=(const float rhs)   { ImPoint t(*this); t.x /= rhs; t.y /= rhs;  *this = t; }
+    ImPoint normalize()   {  ImPoint t(*this); float acc = sqrt(t.x*t.x + t.y*t.y); return ImPoint(t.x/acc, t.y/acc); }
     float dot(const ImPoint& d)             { return (x * d.x) + (y * d.y); }
     float length()                          { return sqrt(x * x + y * y); }
     float cross(const ImPoint& d)           { return (x * d.y) - (y * d.x); }
@@ -413,6 +422,8 @@ struct ImPoint3D
     ImPoint3D()                                : x(0.0f), y(0.0f), z(0.0f) { }
     ImPoint3D(float _v)                        : x(_v), y(_v), z(_v) { }
     ImPoint3D(float _x, float _y, float _z)    : x(_x), y(_y), z(_z) { }
+    float  operator[] (size_t idx) const    { assert(idx <= 1); return (&x)[idx]; }
+    float& operator[] (size_t idx)          { assert(idx <= 1); return (&x)[idx]; }
     bool operator==(const ImPoint3D& d) const { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8; }
     bool operator==(const ImPoint3D& d)       { return fabs(x - d.x) < 10e-8 && fabs(y - d.y) < 10e-8 && fabs(z - d.z) < 10e-8; }
     bool operator!=(const ImPoint3D& d) const { return fabs(x - d.x) > 10e-8 || fabs(y - d.y) > 10e-8 || fabs(z - d.z) > 10e-8; }
@@ -425,6 +436,15 @@ struct ImPoint3D
     ImPoint3D operator-(const ImPoint3D& rhs) { return ImPoint3D(x - rhs.x, y - rhs.y, z - rhs.z); }
     ImPoint3D operator*(const ImPoint3D& rhs) { return ImPoint3D(x * rhs.x, y * rhs.y, z * rhs.z); }
     ImPoint3D operator/(const ImPoint3D& rhs) { return ImPoint3D(x / rhs.x, y / rhs.y, z / rhs.z); }
+    void operator+=(const ImPoint3D& rhs)   { ImPoint3D t(*this); t.x += rhs.x; t.y += rhs.y; t.z += rhs.z; *this = t; }
+    void operator-=(const ImPoint3D& rhs)   { ImPoint3D t(*this); t.x -= rhs.x; t.y -= rhs.y; t.z += rhs.z; *this = t; }
+    void operator*=(const ImPoint3D& rhs)   { ImPoint3D t(*this); t.x *= rhs.x; t.y *= rhs.y; t.z += rhs.z; *this = t; }
+    void operator/=(const ImPoint3D& rhs)   { ImPoint3D t(*this); t.x /= rhs.x; t.y /= rhs.y; t.z += rhs.z; *this = t; }
+    void operator+=(const float rhs)   { ImPoint3D t(*this); t.x += rhs; t.y += rhs; t.z += rhs; *this = t; }
+    void operator-=(const float rhs)   { ImPoint3D t(*this); t.x -= rhs; t.y -= rhs; t.z += rhs; *this = t; }
+    void operator*=(const float rhs)   { ImPoint3D t(*this); t.x *= rhs; t.y *= rhs; t.z += rhs; *this = t; }
+    void operator/=(const float rhs)   { ImPoint3D t(*this); t.x /= rhs; t.y /= rhs; t.z += rhs; *this = t; }
+    ImPoint3D normalize() { ImPoint3D t(*this); float acc = sqrt(t.x*t.x + t.y*t.y + t.z*t.z); return ImPoint3D(t.x/acc, t.y/acc, t.z/acc); }
     float dot(const ImPoint3D& b) const       { return x * b.x + y * b.y + z * b.z; }
     float length() const                      { return (float)sqrt(x * x + y * y + z * z); }
     ImPoint3D cross(const ImPoint3D& b) const { return ImPoint3D(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x); }
@@ -5533,7 +5553,16 @@ IMGUI_API ImMat getAffineTransform(const ImPoint src[], const ImPoint dst[]);
 IMGUI_API ImMat getAffineTransform(int sw, int sh, int dw, int dh, float x_offset, float y_offset, float x_scale, float y_scale, float angle);
 IMGUI_API void  getAffineParam(const ImMat& M, float& x_offset, float& y_offset, float& x_scale, float& y_scale, float& angle);
 IMGUI_API ImMat similarTransform(const ImMat& src, const ImMat& dst);
-IMGUI_API ImMat calcCovarMatrix(std::vector<ImPoint>& vectors);
+IMGUI_API ImMat calcCovarMatrix(std::vector<ImPoint>& vertices, ImPoint& avgPos);
+IMGUI_API ImMat calcCovarMatrix(std::vector<ImPoint3D>& vertices, ImPoint3D& avgPos);
+IMGUI_API void jacobiSolver(ImMat M, std::vector<float> &eVal, std::vector<ImPoint> &eVec, float precision = 1e-5, float iteration = 1e4);
+IMGUI_API void jacobiSolver(ImMat M, std::vector<float> &eVal, std::vector<ImPoint3D> &eVec, float precision = 1e-5, float iteration = 1e4);
+IMGUI_API void schmidtOrthogonal(ImPoint &u, ImPoint &v);
+IMGUI_API void schmidtOrthogonal(ImPoint3D &u, ImPoint3D &v, ImPoint3D &w);
+IMGUI_API void calcCenterDimension(std::vector<ImPoint> &vertices, std::vector<ImPoint> &axis, ImPoint &center, ImPoint &halfDimension);
+IMGUI_API void calcCenterDimension(std::vector<ImPoint3D> &vertices, std::vector<ImPoint3D> &axis, ImPoint3D &center, ImPoint3D &halfDimension);
+IMGUI_API void calcOrientedBoundingBox(std::vector<ImPoint> &vertices, std::vector<ImPoint> &axis, ImPoint &center, ImPoint &halfDimension);
+IMGUI_API void calcOrientedBoundingBox(std::vector<ImPoint3D> &vertices, std::vector<ImPoint3D> &axis, ImPoint3D &center, ImPoint3D &halfDimension);
 
 // draw utils
 IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);

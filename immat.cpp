@@ -4922,39 +4922,313 @@ ImMat MatWarpPerspective(const ImMat& src, const ImMat& M, ImSize dsize, ImInter
 }
 
 // #tag Implementation Start, Jimmy
-ImMat calcCovarMatrix(std::vector<ImPoint>& vectors)
+ImMat calcCovarMatrix(std::vector<ImPoint>& vertices, ImPoint& avgPos)
 {
-    int pCount = vectors.size();
-    if (pCount <= 0) return ImGui::ImMat();
+    ImGui::ImMat M;
+    M.create_type(2, 2, IM_DT_FLOAT32); M.eye(1.f);
+    avgPos = ImPoint(0.0f, 0.0f);
+    std::vector<ImPoint>::iterator iter;
+    for (iter = vertices.begin(); iter != vertices.end(); ++iter)
+        avgPos += (*iter);
+    avgPos /= (float)vertices.size();
 
-    ImGui::ImMat matrix22;
-    matrix22.create_type(2, 2, IM_DT_FLOAT32);
-    std::vector<ImPoint> pVectors = std::vector<ImPoint>(pCount);
-    ImPoint avg = ImPoint(0.0f, 0.0f);
-    for (int i = 0; i < pCount; ++i)
-	{
-		pVectors[i] = vectors[i];
-		avg = avg + vectors[i];
+    for (iter = vertices.begin(); iter != vertices.end(); ++iter)
+        (*iter) -= avgPos;
+
+    float acc;
+    for (int i = 0; i < 2; ++i)
+    {
+        for (int j = 0; j < 2; ++j)
+        {
+            acc = 0;
+            for (iter = vertices.begin(); iter != vertices.end(); ++iter)
+                acc += (*iter)[i] * (*iter)[j];
+            M.at<float>(i, j) = M.at<float>(j, i) = acc / vertices.size();
+        }
+    }
+
+    return M;
+}
+
+ImMat calcCovarMatrix(std::vector<ImPoint3D>& vertices, ImPoint3D& avgPos)
+{
+    ImGui::ImMat M;
+    M.create_type(3, 3, IM_DT_FLOAT32); M.eye(1.f);
+    avgPos = ImPoint3D(0.0f, 0.0f, 0.0f);
+    std::vector<ImPoint3D>::iterator iter;
+    for (iter = vertices.begin(); iter != vertices.end(); ++iter)
+        avgPos += (*iter);
+    avgPos /= (float)vertices.size();
+
+    for (iter = vertices.begin(); iter != vertices.end(); ++iter)
+        (*iter) -= avgPos;
+
+    float acc;
+    for (int i = 0; i < 2; ++i)
+    {
+        for (int j = 0; j < 2; ++j)
+        {
+            acc = 0;
+            for (iter = vertices.begin(); iter != vertices.end(); ++iter)
+                acc += (*iter)[i] * (*iter)[j];
+            M.at<float>(i, j) = M.at<float>(j, i) = acc / vertices.size();
+        }
+    }
+
+    return M;
+}
+
+void jacobiSolver(ImMat M, std::vector<float> &eVal, std::vector<ImPoint> &eVec, float precision, float iteration)
+{
+    IM_ASSERT(M.w == M.h && M.h == 2);
+    int N = M.w;
+    eVal = std::vector<float>(N, 0.f);
+    eVec = std::vector<ImPoint>(N, ImPoint(0.0f, 0.0f));
+	float max;
+	int row, col, i, j, itCnt = 0;
+	float theta, sinTheta, cosTheta, sin2Theta, cos2Theta, covRow, covCol, covRC, covRI, covCI, eVecRI, eVecCI;
+	while (1)
+    {
+		//get max value
+		max = fabs(M.at<float>(0, 1));
+		row = 0; col = 1;
+		for (i = 0; i < N; i++)
+        {
+			for (j = 0; j < N; j++)
+            {
+				if (i != j && fabs(M.at<float>(i, j)) > max)
+                {
+					max = fabs(M.at<float>(i, j));
+					row = i; col = j;
+				}
+			}
+		}
+		//check whether to stop
+		if (itCnt > iteration || max < precision) break;
+
+		//jacobi
+		if (M.at<float>(row, row) == M.at<float>(col, col))
+			theta = M_PI / 4;
+		else
+			theta = atan(2 * M.at<float>(row, col) / (M.at<float>(row, row) - M.at<float>(col, col))) / 2;
+
+		covRow = M.at<float>(row, row);
+		covCol = M.at<float>(col, col);
+		covRC = M.at<float>(row, col);
+		sinTheta = sin(theta);
+		cosTheta = cos(theta);
+		sin2Theta = sin(2 * theta);
+		cos2Theta = cos(2 * theta);
+		M.at<float>(row, row) = covRow * cosTheta * cosTheta + covCol * sinTheta * sinTheta + covRC * sin2Theta;
+		M.at<float>(col, col) = covRow * sinTheta * sinTheta + covCol * cosTheta * cosTheta - covRC * sin2Theta;
+		M.at<float>(row, col) = M.at<float>(col, row) = (covCol - covRow) * sin2Theta / 2 + covRC * cos2Theta;
+
+		for (i = 0; i < N; i++)
+        {
+			if (i != row && i != col)
+            {
+				covRI = M.at<float>(row, i);
+				covCI = M.at<float>(col, i);
+				M.at<float>(row, i) = M.at<float>(i, row) = covRI * cosTheta + covCI * sinTheta;
+				M.at<float>(col, i) = M.at<float>(i, col) = covCI * cosTheta - covRI * sinTheta;
+			}
+		}
+		if (itCnt == 0)
+        {	
+			eVec[row][row] = cosTheta;
+			eVec[col][row] = -sinTheta;
+			eVec[row][col] = sinTheta;
+			eVec[col][col] = cosTheta;
+		}
+		else
+        {
+			for (i = 0; i < N; i++)
+            {		
+				eVecRI = eVec[row][i];
+				eVecCI = eVec[col][i];
+				eVec[row][i] = eVecRI * cosTheta + eVecCI * sinTheta;
+				eVec[col][i] = eVecCI * cosTheta - eVecRI * sinTheta;
+			}
+		}
+		itCnt++;
 	}
-    avg = avg / static_cast<float>(pCount);
-    for (int i = 0; i < pCount; ++i)
-		pVectors[i] = pVectors[i] - avg;
+	for (i = 0; i < N; i++)
+    {
+		eVal[i] = M.at<float>(i, i);
+	}
+}
 
-    for (int c = 0; c < 2; ++c)
-	{
-		for (int r = c; r < 2; ++r)
-		{
-            float& acc = matrix22.at<float>(c, r);
-			acc = 0.0f;
-			// cov(X, Y) = E[(X - x)(Y - y)]
-			for (int i = 0; i < pCount; ++i)
-				acc += pVectors[i][c] * pVectors[i][r];
-			acc /= static_cast<float>(pCount);
+void jacobiSolver(ImMat M, std::vector<float> &eVal, std::vector<ImPoint3D> &eVec, float precision, float iteration)
+{
+    IM_ASSERT(M.w == M.h && M.h == 3);
+    int N = M.w;
+    eVal = std::vector<float>(N, 0.f);
+    eVec = std::vector<ImPoint3D>(N, ImPoint3D(0.0f, 0.0f, 0.0f));
+	float max;
+	int row, col, i, j, itCnt = 0;
+	float theta, sinTheta, cosTheta, sin2Theta, cos2Theta, covRow, covCol, covRC, covRI, covCI, eVecRI, eVecCI;
+	while (1)
+    {
+		//get max value
+		max = fabs(M.at<float>(0, 1));
+		row = 0; col = 1;
+		for (i = 0; i < N; i++)
+        {
+			for (j = 0; j < N; j++)
+            {
+				if (i != j && fabs(M.at<float>(i, j)) > max)
+                {
+					max = fabs(M.at<float>(i, j));
+					row = i; col = j;
+				}
+			}
+		}
+		//check whether to stop
+		if (itCnt > iteration || max < precision) break;
 
-			matrix22.at<float>(r, c) = acc;	// covariance matrix is symmetric
+		//jacobi
+		if (M.at<float>(row, row) == M.at<float>(col, col))
+			theta = M_PI / 4;
+		else
+			theta = atan(2 * M.at<float>(row, col) / (M.at<float>(row, row) - M.at<float>(col, col))) / 2;
+
+		covRow = M.at<float>(row, row);
+		covCol = M.at<float>(col, col);
+		covRC = M.at<float>(row, col);
+		sinTheta = sin(theta);
+		cosTheta = cos(theta);
+		sin2Theta = sin(2 * theta);
+		cos2Theta = cos(2 * theta);
+		M.at<float>(row, row) = covRow * cosTheta * cosTheta + covCol * sinTheta * sinTheta + covRC * sin2Theta;
+		M.at<float>(col, col) = covRow * sinTheta * sinTheta + covCol * cosTheta * cosTheta - covRC * sin2Theta;
+		M.at<float>(row, col) = M.at<float>(col, row) = (covCol - covRow) * sin2Theta / 2 + covRC * cos2Theta;
+
+		for (i = 0; i < N; i++)
+        {
+			if (i != row && i != col)
+            {
+				covRI = M.at<float>(row, i);
+				covCI = M.at<float>(col, i);
+				M.at<float>(row, i) = M.at<float>(i, row) = covRI * cosTheta + covCI * sinTheta;
+				M.at<float>(col, i) = M.at<float>(i, col) = covCI * cosTheta - covRI * sinTheta;
+			}
+		}
+		if (itCnt == 0)
+        {	
+			eVec[row][row] = cosTheta;
+			eVec[col][row] = -sinTheta;
+			eVec[row][col] = sinTheta;
+			eVec[col][col] = cosTheta;
+		}
+		else
+        {
+			for (i = 0; i < N; i++)
+            {		
+				eVecRI = eVec[row][i];
+				eVecCI = eVec[col][i];
+				eVec[row][i] = eVecRI * cosTheta + eVecCI * sinTheta;
+				eVec[col][i] = eVecCI * cosTheta - eVecRI * sinTheta;
+			}
+		}
+		itCnt++;
+	}
+	for (i = 0; i < N; i++)
+    {
+		eVal[i] = M.at<float>(i, i);
+	}
+}
+
+void schmidtOrthogonal(ImPoint &u, ImPoint &v)
+{
+	u = u.normalize();
+    float val = u.dot(v);
+	v -= u * val;
+	v = v.normalize();
+}
+
+void schmidtOrthogonal(ImPoint3D &u, ImPoint3D &v, ImPoint3D &w)
+{
+	u = u.normalize();
+    float val = u.dot(v);
+	v -= u * val;
+	v = v.normalize();
+	w = u.cross(v);
+}
+
+void calcCenterDimension(std::vector<ImPoint> &vertices, std::vector<ImPoint> &axis, ImPoint &center, ImPoint &halfDimension)
+{
+	assert(axis.size() == 2);
+	std::vector<ImPoint>::iterator iter;
+	ImPoint maxP(DBL_MIN, DBL_MIN);
+	ImPoint minP(DBL_MAX, DBL_MAX);
+	for (iter = vertices.begin(); iter != vertices.end(); ++iter)
+    {
+		for (int i = 0; i < 2; i++)
+        {
+			minP[i] = std::fmin(minP[i], (*iter).dot(axis[i]));
+			maxP[i] = std::fmax(maxP[i], (*iter).dot(axis[i]));
 		}
 	}
-    return matrix22;
+	halfDimension = (maxP - minP) / 2.0f;
+	center = halfDimension + minP;
+    ImPoint temp1(axis[0] * center.x);
+    ImPoint temp2(axis[1] * center.y);
+	center = temp1 + temp2;
+}
+
+void calcCenterDimension(std::vector<ImPoint3D> &vertices, std::vector<ImPoint3D> &axis, ImPoint3D &center, ImPoint3D &halfDimension)
+{
+	assert(axis.size() == 3);
+	std::vector<ImPoint3D>::iterator iter;
+	ImPoint3D maxP(DBL_MIN, DBL_MIN, DBL_MIN);
+	ImPoint3D minP(DBL_MAX, DBL_MAX, DBL_MAX);
+	for (iter = vertices.begin(); iter != vertices.end(); ++iter)
+    {
+		for (int i = 0; i < 3; i++)
+        {
+			minP[i] = std::fmin(minP[i], (*iter).dot(axis[i]));
+			maxP[i] = std::fmax(maxP[i], (*iter).dot(axis[i]));
+		}
+	}
+	halfDimension = (maxP - minP) / 2.0f;
+	center = halfDimension + minP;
+    ImPoint3D temp1(axis[0] * center.x);
+    ImPoint3D temp2(axis[1] * center.y);
+    ImPoint3D temp3(axis[2] * center.z);
+	center = temp1 + temp2 + temp3;
+}
+
+void calcOrientedBoundingBox(std::vector<ImPoint> &vertices, std::vector<ImPoint> &axis, ImPoint &center, ImPoint &halfDimension)
+{
+	std::vector<ImPoint> verticesCP = vertices;
+	std::vector<float> eVal;
+    ImPoint avgPos;
+	ImGui::ImMat covar = calcCovarMatrix(verticesCP, avgPos);
+	jacobiSolver(covar, eVal, axis);
+    int maxIdx = 0;
+    for (int i = 1; i < 2; i++)
+    {
+		if (eVal[maxIdx] < eVal[i]) maxIdx = i;
+	}
+	schmidtOrthogonal(axis[maxIdx], axis[(maxIdx + 1) % 2]);
+	calcCenterDimension(vertices, axis, center, halfDimension);
+    std::cout << "";
+}
+
+void calcOrientedBoundingBox(std::vector<ImPoint3D> &vertices, std::vector<ImPoint3D> &axis, ImPoint3D &center, ImPoint3D &halfDimension)
+{
+	std::vector<ImPoint3D> verticesCP = vertices;
+	std::vector<float> eVal;
+    ImPoint3D avgPos;
+	ImGui::ImMat covar = calcCovarMatrix(verticesCP, avgPos);
+	jacobiSolver(covar, eVal, axis);
+	int maxIdx = 0;
+	for (int i = 1; i < 3; i++)
+    {
+		if (eVal[maxIdx] < eVal[i]) maxIdx = i;
+	}
+	schmidtOrthogonal(axis[maxIdx], axis[(maxIdx + 1) % 3], axis[(maxIdx + 2) % 3]);
+	calcCenterDimension(vertices, axis, center, halfDimension);
 }
 // #tag Implementation End, Jimmy
 } // namespace ImGui
