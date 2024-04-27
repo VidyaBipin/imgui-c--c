@@ -97,6 +97,8 @@ _OPTION(IMGUI_DX10                  "Build ImGui Direct10 backends(Windows only)
 _OPTION(IMGUI_DX11                  "Build ImGui Direct11 backends(Windows only)" ON IF WIN32)
 _OPTION(IMGUI_DX12                  "Build ImGui Direct12 backends(Windows only)" ON IF WIN32)
 _OPTION(IMGUI_FREETYPE              "Build ImGui with FreeType support" OFF)
+_OPTION(IMGUI_BUILD_DITHER          "Build ImGui with Dither support" OFF)
+_OPTION(IMGUI_BUILD_POTRACE         "Build ImGui with Potace support" OFF)
 _OPTION(IMGUI_ICONS                 "Internal Icons build in library" ON)
 _OPTION(IMGUI_APPS                  "build apps base on imgui" ON)
 _OPTION(IMGUI_SKIP_INSTALL          "Skip imgui install" ON)
@@ -945,6 +947,7 @@ if(IMGUI_VULKAN_SHADER)
 endif(IMGUI_VULKAN_SHADER)
 
 # Potrace
+if (IMGUI_BUILD_POTRACE)
 add_subdirectory(addon/Potrace)
 set(IMGUI_INC_DIRS
     ${IMGUI_INC_DIRS}
@@ -954,8 +957,10 @@ set(LINK_LIBS
     ${LINK_LIBS}
     ${POTRACE_LIBRARYS}
 )
+endif(IMGUI_BUILD_POTRACE)
 
 # Dither
+if (IMGUI_BUILD_DITHER)
 add_subdirectory(addon/Dither)
 set(IMGUI_INC_DIRS
     ${IMGUI_INC_DIRS}
@@ -965,6 +970,7 @@ set(LINK_LIBS
     ${LINK_LIBS}
     ${DITHER_LIBRARYS}
 )
+endif(IMGUI_BUILD_DITHER)
 
 # ImGuiFileDialog
 set(IMGUI_SRC

@@ -12,7 +12,6 @@ if (POLICY CMP0068)
 endif()
 
 option(BUILD_DITHER_STATIC          "Set to ON to build Static Library"  ON)
-option(BUILD_DITHER_TEST            "Set to ON to build LLama test"  OFF)
 
 ## core library
 SET(DITHER_SOURCE_FILES
@@ -72,7 +71,7 @@ if (NOT BUILD_DITHER_STATIC)
 set_target_properties(dither PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
-if (BUILD_DITHER_TEST)
+if (IMGUI_BUILD_EXAMPLE)
 # Apple try to find openmp if we using clang
 if (APPLE)
     if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
@@ -141,7 +140,7 @@ target_link_libraries(
     dither
     ${LINK_LIBS}
 )
-endif(BUILD_DITHER_TEST)
+endif(IMGUI_BUILD_EXAMPLE)
 
 get_directory_property(hasParent PARENT_DIRECTORY)
 if(hasParent)

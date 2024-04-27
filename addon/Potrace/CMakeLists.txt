@@ -12,7 +12,6 @@ if (POLICY CMP0068)
 endif()
 
 option(BUILD_POTRACE_STATIC          "Set to ON to build Static Library"  ON)
-option(BUILD_POTRACE_TEST            "Set to ON to build LLama test"  OFF)
 
 ## core library
 set(POTRACE_SOURCE_FILES
@@ -70,7 +69,7 @@ if (NOT BUILD_POTRACE_STATIC)
 set_target_properties(potrace PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
-if (BUILD_POTRACE_TEST)
+if (IMGUI_BUILD_EXAMPLE)
 add_executable(
     potrace_test
     test/main.cpp
@@ -81,7 +80,7 @@ target_link_libraries(
     potrace_test
     potrace
 )
-endif(BUILD_POTRACE_TEST)
+endif(IMGUI_BUILD_EXAMPLE)
 
 get_directory_property(hasParent PARENT_DIRECTORY)
 if(hasParent)
