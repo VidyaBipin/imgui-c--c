@@ -35,6 +35,7 @@
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
 //  2024-XX-XX: Platform: Added support for multiple windows via the ImGuiPlatformIO interface.
+//  2024-04-19: Vulkan: Added convenience support for Volk via IMGUI_IMPL_VULKAN_USE_VOLK define (you can also use IMGUI_IMPL_VULKAN_NO_PROTOTYPES + wrap Volk via ImGui_ImplVulkan_LoadFunctions().)
 //  2024-02-14: *BREAKING CHANGE*: Moved RenderPass parameter from ImGui_ImplVulkan_Init() function to ImGui_ImplVulkan_InitInfo structure. Not required when using dynamic rendering.
 //  2024-02-12: *BREAKING CHANGE*: Dynamic rendering now require filling PipelineRenderingCreateInfo structure.
 //  2024-01-19: Vulkan: Fixed vkAcquireNextImageKHR() validation errors in VulkanSDK 1.3.275 by allocating one extra semaphore than in-flight frames. (#7236)
@@ -112,12 +113,13 @@ void ImGui_ImplVulkanH_CreateWindowCommandBuffers(VkPhysicalDevice physical_devi
 
 // Vulkan prototypes for use with custom loaders
 // (see description of IMGUI_IMPL_VULKAN_NO_PROTOTYPES in imgui_impl_vulkan.h
-#ifdef VK_NO_PROTOTYPES
+#if defined(VK_NO_PROTOTYPES) && !defined(VOLK_H_)
+#define IMGUI_IMPL_VULKAN_USE_LOADER
 static bool g_FunctionsLoaded = false;
 #else
 static bool g_FunctionsLoaded = true;
 #endif
-#ifdef VK_NO_PROTOTYPES
+#ifdef IMGUI_IMPL_VULKAN_USE_LOADER
 #define IMGUI_VULKAN_FUNC_MAP(IMGUI_VULKAN_FUNC_MAP_MACRO) \
     IMGUI_VULKAN_FUNC_MAP_MACRO(vkAllocateCommandBuffers) \
     IMGUI_VULKAN_FUNC_MAP_MACRO(vkAllocateDescriptorSets) \
@@ -195,7 +197,7 @@ static bool g_FunctionsLoaded = true;
 #define IMGUI_VULKAN_FUNC_DEF(func) static PFN_##func func;
 IMGUI_VULKAN_FUNC_MAP(IMGUI_VULKAN_FUNC_DEF)
 #undef IMGUI_VULKAN_FUNC_DEF
-#endif // VK_NO_PROTOTYPES
+#endif // IMGUI_IMPL_VULKAN_USE_LOADER
 
 #ifdef IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING
 static PFN_vkCmdBeginRenderingKHR   ImGuiImplVulkanFuncs_vkCmdBeginRenderingKHR;
@@ -247,7 +249,8 @@ struct ImGui_ImplVulkan_Data
     VkPipelineCreateFlags       PipelineCreateFlags;
     VkDescriptorSetLayout       DescriptorSetLayout;
     VkPipelineLayout            PipelineLayout;
-    VkPipeline                  Pipeline;
+    VkPipeline                  Pipeline;               // pipeline for main render pass (created by app)
+    VkPipeline                  PipelineForViewports;   // pipeline for secondary viewports (created by backend)
     VkShaderModule              ShaderModuleVert;
     VkShaderModule              ShaderModuleFrag;
 
@@ -1115,6 +1118,7 @@ void    ImGui_ImplVulkan_DestroyDeviceObjects()
     if (bd->DescriptorSetLayout)  { vkDestroyDescriptorSetLayout(v->Device, bd->DescriptorSetLayout, v->Allocator); bd->DescriptorSetLayout = VK_NULL_HANDLE; }
     if (bd->PipelineLayout)       { vkDestroyPipelineLayout(v->Device, bd->PipelineLayout, v->Allocator); bd->PipelineLayout = VK_NULL_HANDLE; }
     if (bd->Pipeline)             { vkDestroyPipeline(v->Device, bd->Pipeline, v->Allocator); bd->Pipeline = VK_NULL_HANDLE; }
+    if (bd->PipelineForViewports) { vkDestroyPipeline(v->Device, bd->PipelineForViewports, v->Allocator); bd->PipelineForViewports = VK_NULL_HANDLE; }
 }
 
 bool    ImGui_ImplVulkan_LoadFunctions(PFN_vkVoidFunction(*loader_func)(const char* function_name, void* user_data), void* user_data)
@@ -1122,8 +1126,8 @@ bool    ImGui_ImplVulkan_LoadFunctions(PFN_vkVoidFunction(*loader_func)(const ch
     // Load function pointers
     // You can use the default Vulkan loader using:
     //      ImGui_ImplVulkan_LoadFunctions([](const char* function_name, void*) { return vkGetInstanceProcAddr(your_vk_isntance, function_name); });
-    // But this would be equivalent to not setting VK_NO_PROTOTYPES.
-#ifdef VK_NO_PROTOTYPES
+    // But this would be roughly equivalent to not setting VK_NO_PROTOTYPES.
+#ifdef IMGUI_IMPL_VULKAN_USE_LOADER
 #define IMGUI_VULKAN_FUNC_LOAD(func) \
     func = reinterpret_cast<decltype(func)>(loader_func(#func, user_data)); \
     if (func == nullptr)   \
@@ -1152,7 +1156,7 @@ bool    ImGui_ImplVulkan_Init(ImGui_ImplVulkan_InitInfo* info)
     if (info->UseDynamicRendering)
     {
 #ifdef IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING
-#ifndef VK_NO_PROTOTYPES
+#ifndef IMGUI_IMPL_VULKAN_USE_LOADER
         ImGuiImplVulkanFuncs_vkCmdBeginRenderingKHR = reinterpret_cast<PFN_vkCmdBeginRenderingKHR>(vkGetInstanceProcAddr(info->Instance, "vkCmdBeginRenderingKHR"));
         ImGuiImplVulkanFuncs_vkCmdEndRenderingKHR = reinterpret_cast<PFN_vkCmdEndRenderingKHR>(vkGetInstanceProcAddr(info->Instance, "vkCmdEndRenderingKHR"));
 #endif
@@ -1480,8 +1484,6 @@ void ImGui_ImplVulkanH_CreateWindowSwapChain(VkPhysicalDevice physical_device, V
     wd->ImageCount = 0;
     if (wd->RenderPass)
         vkDestroyRenderPass(device, wd->RenderPass, allocator);
-    if (wd->Pipeline)
-        vkDestroyPipeline(device, wd->Pipeline, allocator);
 
     // If min image count was not specified, request different count of images dependent on selected present mode
     if (min_image_count == 0)
@@ -1651,7 +1653,6 @@ void ImGui_ImplVulkanH_DestroyWindow(VkInstance instance, VkDevice device, ImGui
     IM_FREE(wd->FrameSemaphores);
     wd->Frames = nullptr;
     wd->FrameSemaphores = nullptr;
-    vkDestroyPipeline(device, wd->Pipeline, allocator);
     vkDestroyRenderPass(device, wd->RenderPass, allocator);
     vkDestroySwapchainKHR(device, wd->Swapchain, allocator);
     vkDestroySurfaceKHR(instance, wd->Surface, allocator);
@@ -1739,6 +1740,10 @@ static void ImGui_ImplVulkan_CreateWindow(ImGuiViewport* viewport)
     wd->UseDynamicRendering = v->UseDynamicRendering;
     ImGui_ImplVulkanH_CreateOrResizeWindow(v->Instance, v->PhysicalDevice, v->Device, wd, v->QueueFamily, v->Allocator, (int)viewport->Size.x, (int)viewport->Size.y, v->MinImageCount);
     vd->WindowOwned = true;
+
+    // Create pipeline (shared by all secondary viewports)
+    if (bd->PipelineForViewports == VK_NULL_HANDLE)
+        ImGui_ImplVulkan_CreatePipeline(v->Device, v->Allocator, VK_NULL_HANDLE, wd->RenderPass, VK_SAMPLE_COUNT_1_BIT, &bd->PipelineForViewports, 0);
 }
 
 static void ImGui_ImplVulkan_DestroyWindow(ImGuiViewport* viewport)
@@ -1853,7 +1858,7 @@ static void ImGui_ImplVulkan_RenderWindow(ImGuiViewport* viewport, void*)
         }
     }
 
-    ImGui_ImplVulkan_RenderDrawData(viewport->DrawData, fd->CommandBuffer, wd->Pipeline);
+    ImGui_ImplVulkan_RenderDrawData(viewport->DrawData, fd->CommandBuffer, bd->PipelineForViewports);
 
     {
 #ifdef IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING
