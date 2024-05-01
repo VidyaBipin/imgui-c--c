@@ -180,12 +180,7 @@ static bool Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     CleanupVulkanWindow();
-#if IMGUI_VULKAN_SHADER
-    ImGui::ImVulkanShaderClear();
-    CleanupVulkan(true);
-#else
     CleanupVulkan();
-#endif
     SDL_DestroyWindow(window);
     ImGui::UpdatePlatformWindows();
     return done;
@@ -462,9 +457,6 @@ int main(int argc, char** argv)
         property.application.Application_Finalize(&property.handle);
 
     // Cleanup
-#if IMGUI_VULKAN_SHADER
-    //ImGui::ImVulkanShaderClear();
-#endif
     err = vkDeviceWaitIdle(g_Device);
     check_vk_result(err);
     ImGui_ImplVulkan_Shutdown();
