@@ -2708,8 +2708,8 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template, float
     ImFontConfig font_cfg = font_cfg_template ? *font_cfg_template : ImFontConfig();
     if (!font_cfg_template)
     {
-        font_cfg.OversampleH = 1;
-        font_cfg.OversampleV = 1;
+        font_cfg.OversampleH = 2;
+        font_cfg.OversampleV = 2;
         font_cfg.PixelSnapH = true;
     }
     if (font_cfg.SizePixels <= 0.0f)
@@ -2777,8 +2777,8 @@ ImFont* ImFontAtlas::AddFontDefault(const ImFontConfig* font_cfg_template, float
 #if !IMGUI_FONT_NO_LATIN
     ImFontConfig ascii_config;
     const float ascii_font_size = 14.0f * scale;
-    ascii_config.OversampleH    = 2;
-    ascii_config.OversampleV    = 2;
+    ascii_config.OversampleH    = 4;
+    ascii_config.OversampleV    = 4;
     ascii_config.MergeMode      = true; 
     ascii_config.PixelSnapH     = true;
     ascii_config.SizePixels     = ascii_font_size * 1.0f;
@@ -3194,7 +3194,9 @@ static bool ImFontAtlasBuildWithStbTruetype(ImFontAtlas* atlas)
     if (atlas->TexDesiredWidth > 0)
         atlas->TexWidth = atlas->TexDesiredWidth;
     else
-        atlas->TexWidth = (surface_sqrt >= 4096 * 0.7f) ? 4096 : (surface_sqrt >= 2048 * 0.7f) ? 2048 : (surface_sqrt >= 1024 * 0.7f) ? 1024 : 512;
+        //atlas->TexWidth = (surface_sqrt >= 4096 * 0.7f) ? 4096 : (surface_sqrt >= 2048 * 0.7f) ? 2048 : (surface_sqrt >= 1024 * 0.7f) ? 1024 : 512;
+        // modify by Dicky for more textures for font, GL/Vulkan has limited for texture size as 16kx16k
+        atlas->TexWidth = (surface_sqrt >= 4096 * 0.7f) ? 8192 : (surface_sqrt >= 2048 * 0.7f) ? 4196 : (surface_sqrt >= 1024 * 0.7f) ? 2048 : 1024;
 
     // 5. Start packing
     // Pack our extra data rectangles first, so it will be on the upper-left corner of our texture (UV will have small values).
