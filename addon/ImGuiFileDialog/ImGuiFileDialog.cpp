@@ -75,7 +75,7 @@ SOFTWARE.
 #ifndef PATH_MAX
 #define PATH_MAX 260
 #endif  // PATH_MAX
-#elif defined(__linux__) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__APPLE__) || defined(__EMSCRIPTEN__)
+#elif defined(__linux__) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__) || defined(__EMSCRIPTEN__)
 #define _IGFD_UNIX_
 #define stricmp strcasecmp
 #include <sys/types.h>
@@ -102,7 +102,6 @@ SOFTWARE.
 // STB IMAGE LIBS
 ///////////////////////////////
 
-#pragma region Common defines
 // add by dicky
 const std::string video_file_dis = "*.mp4 *.mov *.mkv *.mxf *.avi *.webm *.ts";
 const std::string video_file_suffix = ".mp4,.mov,.mkv,.mxf,.avi,.webm,.ts";
@@ -148,12 +147,6 @@ const std::string media_filter = "Media files (" + video_file_dis + " " + image_
 #ifndef IS_FLOAT_EQUAL
 #define IS_FLOAT_EQUAL(a, b) (fabs((a) - (b)) < FLT_EPSILON)
 #endif  // IS_FLOAT_EQUAL
-
-#pragma endregion
-
-#pragma region IGFD NAMESPACE
-
-#pragma region CUSTOMIZATION DEFINES
 
 ///////////////////////////////
 // COMBOBOX
@@ -1729,7 +1722,7 @@ bool IGFD::FileInfos::FinalizeFileTypeParsing(const size_t& vMaxDotToExtract) {
             if (countExtDot > 1U) {  // multi layer ext
                 auto count = countExtDot;
                 while (count > 0 && lpt != std::string::npos && lvl < fileExtLevels.size()) {
-                    ++lpt, ++lvl;
+                    ++lpt; ++lvl;
                     if (fileNameExt.size() > lpt) {
                         lpt = fileNameExt.find_first_of('.', lpt);
                         if (lpt != std::string::npos) {

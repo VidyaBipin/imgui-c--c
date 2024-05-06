@@ -29,6 +29,6 @@ IMGUI_API void ImUpdateTextures(); // update internal textures, check need destr
 IMGUI_API void ImDestroyTextures(); // clean internal textures
 IMGUI_API size_t ImGetTextureCount();
 
-IMGUI_API void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, ImVec2 size, float zoom_size = 256.f, float* offset_x = nullptr, float* offset_y = nullptr, float* tf_x = nullptr, float* tf_y = nullptr, bool bLandscape = true, bool out_border = false, const ImVec2& uvMin = ImVec2(0, 0), const ImVec2& uvMax = ImVec2(1, 1));
+IMGUI_API void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, ImVec2 size, float zoom_size = 256.f, ImU32 back_color = IM_COL32_BLACK, int short_key = 0, float* offset_x = nullptr, float* offset_y = nullptr, float* tf_x = nullptr, float* tf_y = nullptr, bool bLandscape = true, bool out_border = false, const ImVec2& uvMin = ImVec2(0, 0), const ImVec2& uvMax = ImVec2(1, 1));
 IMGUI_API void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTextureID texture2, ImVec2 pos, ImVec2 size, float& split, bool horizontal = true, float zoom_size = 256.f, float* offset_x = nullptr, float* offset_y = nullptr, float* tf_x = nullptr, float* tf_y = nullptr, bool bLandscape = true, bool out_border = false);
 } // namespace ImGui

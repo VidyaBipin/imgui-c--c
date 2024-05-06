@@ -1178,10 +1178,10 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
     }
 }
 
-void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, ImVec2 size, float zoom_size, float* offset_x, float* offset_y, float* tf_x, float* tf_y, bool bLandscape, bool out_border, const ImVec2& uvMin, const ImVec2& uvMax)
+void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, ImVec2 size, float zoom_size, ImU32 back_color, int short_key, float* offset_x, float* offset_y, float* tf_x, float* tf_y, bool bLandscape, bool out_border, const ImVec2& uvMin, const ImVec2& uvMax)
 {
     // draw background
-    draw_list->AddRectFilled(pos, pos + size, IM_COL32_BLACK);
+    draw_list->AddRectFilled(pos, pos + size, back_color);
     if (texture)
     {
         ImGuiIO& io = ImGui::GetIO();
@@ -1239,7 +1239,10 @@ void ImShowVideoWindow(ImDrawList *draw_list, ImTextureID texture, ImVec2 pos, I
         static float texture_zoom = scale_range.x;
         ImGui::SetCursorScreenPos(pos);
         ImGui::InvisibleButton(("##video_window" + std::to_string((long long)texture)).c_str(), size);
-        bool zoom = ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift);
+        bool zoom = short_key == 0 ? ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift) : 
+                    short_key == 1 ? ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl) : 
+                    short_key == 2 ? ImGui::IsKeyDown(ImGuiKey_LeftAlt) || ImGui::IsKeyDown(ImGuiKey_RightAlt) : 
+                                    ImGui::IsKeyDown(ImGuiKey_LeftSuper) || ImGui::IsKeyDown(ImGuiKey_RightSuper);
         if (zoom && ImGui::IsItemHovered())
         {
             ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
