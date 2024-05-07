@@ -971,6 +971,7 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
 {
     ImGuiIO& io = ImGui::GetIO();
     float img_split = split;
+    static bool drag_handle = false;
     if (!texture1 && !texture2)
     {
         return;
@@ -1049,11 +1050,12 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
             {
                 ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
             }
-            if (video_rc.Contains(io.MousePos) && (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || (handle.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left))))
+            if (drag_handle || (video_rc.Contains(io.MousePos) && (handle.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left))))
             {
                 auto _split = (io.MousePos.x - _offset_x) / adj_w;
                 img_split = ImClamp(_split, 0.f, 1.f);
                 split = img_split;
+                drag_handle = true;
             }
         }
     }
@@ -1090,11 +1092,12 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
             {
                 ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
             }
-            if (video_rc.Contains(io.MousePos) && (ImGui::IsMouseDragging(ImGuiMouseButton_Left) || (handle.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left))))
+            if (drag_handle || (video_rc.Contains(io.MousePos) && (handle.Contains(io.MousePos) && ImGui::IsMouseDown(ImGuiMouseButton_Left))))
             {
                 auto _split = (io.MousePos.y - _offset_y) / adj_h;
                 img_split = ImClamp(_split, 0.f, 1.f);
                 split = img_split;
+                drag_handle = true;
             }
         }
     }
@@ -1175,6 +1178,10 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
             ImGui::ImTextureToFile(texture2, file_path);
         }
         ImGuiFileDialog::Instance()->Close();
+    }
+    if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
+    {
+        drag_handle = false;
     }
 }
 
