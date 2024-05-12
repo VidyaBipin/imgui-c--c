@@ -700,7 +700,7 @@ void Spinner(const char *label, const Args&... args)
     };
 
     SpinnerConfig config(SpinnerType{Type}, args...);
-    if (config.m_SpinnerType < sizeof(spinner_draw_funcs))
+    if (config.m_SpinnerType < sizeof(spinner_draw_funcs) / sizeof(spinner_draw_funcs[0]))
     {
         spinner_draw_funcs[config.m_SpinnerType].func(label, config);
     }
