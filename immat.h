@@ -707,7 +707,7 @@ public:
     template<typename T> ImMat& eye(T scale);
     // invert dim = 2 only
     template<typename T> ImMat inv() const;
-    // diag dim = 2 only
+    // diag
     template<typename T> ImMat diag() const;
     // rand
     template<typename T> ImMat& randn(T mean, T stddev, int seed = -1);
@@ -2330,13 +2330,18 @@ template<typename T>
 inline ImMat ImMat::diag() const
 {
     assert(device == IM_DD_CPU);
-    assert(dims == 2);
+    assert(dims <= 2);
     assert(total() > 0);
     ImGui::ImMat diag_mat;
     int dl = std::max(w, h);
     diag_mat.create_type(dl, dl, type);
     for(int i = 0; i < dl; i++)
-        diag_mat.at<T>(i,i) = at<T>(i, 0);
+    {
+        if (dims == 2)
+            diag_mat.at<T>(i,i) = at<T>(i, 0);
+        else
+            diag_mat.at<T>(i,i) = at<T>(i);
+    }
     return diag_mat;
 }
 
