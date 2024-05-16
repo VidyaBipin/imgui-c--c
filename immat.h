@@ -5531,10 +5531,12 @@ namespace ImGui
 class IMGUI_API ImKalman
 {
 public:
+    ImKalman() {};
     ImKalman(int state_size, int mea_size);
     ~ImKalman() {};
 
 public:
+    void initiate(int state_size, int mea_size);
     void covariance(float noise_covariance, float measurement_noise_covariance);
     void update(ImMat& Y);
     ImMat& predicted();

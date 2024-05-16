@@ -1479,6 +1479,11 @@ void ImMat::print(std::string name)
 // Kalman class
 ImKalman::ImKalman(int state_size,int mea_size)
 {
+    initiate(state_size, mea_size);
+}
+
+void ImKalman::initiate(int state_size,int mea_size)
+{
     transitionMatrix.create_type(state_size, state_size, IM_DT_FLOAT32);
     measurementMatrix.create_type(state_size, mea_size, IM_DT_FLOAT32);
     processNoiseCov.create_type(state_size, state_size, IM_DT_FLOAT32);
