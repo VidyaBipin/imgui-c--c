@@ -1504,7 +1504,7 @@ void ImKalman::initiate(int state_size,int mea_size)
     {
         for (int y = 0; y < state_size; y++)
         {
-            if (x > y && (x - state_size / 2 == y || y + state_size / 2 == x))
+            if (x > y && (x - (state_size + 1) / 2 == y || y + (state_size + 1) / 2 == x))
                 transitionMatrix.at<float>(x, y) = 1.f;
         }
     }
