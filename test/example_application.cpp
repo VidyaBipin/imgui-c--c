@@ -456,7 +456,7 @@ void Example::DrawMatDemo()
     draw_mat.draw_circle(draw_mat.w / 2, draw_mat.h / 2, draw_mat.w / 2 - 1, ImPixel(1.0, 1.0, 1.0, 1.0));
 
     std::string text_str = "字体测试\nFont Test\n字体Test\nFont测试";
-    ImGui::DrawTextToMat(draw_mat, ImPoint(50, 50), text_str.c_str(), text_color, 1.0);
+    ImGui::DrawTextToMat(draw_mat, ImPoint(50, 50), text_str.c_str(), text_color);
 
     // ImMat crop
     ImGui::ImMat crop_img = draw_mat.crop(ImPoint(20, 20), ImPoint(200, 200));
@@ -552,7 +552,7 @@ void Example::DrawRotateDemo()
         draw_mat.draw_circle(cx, cy, r, t, ImPixel(1, 0, 0, 1));
     }
     // draw rotate text test
-    auto tmat = ImGui::CreateTextMat("Mat", ImPixel(1,1,0,1), 1.0, true);
+    auto tmat = ImGui::CreateTextMat("Mat", ImPixel(1,1,0,1), ImPixel(0,0,0,0), 1.0, true);
     auto trmat = ImGui::MatRotate(tmat, angle);
     ImGui::ImageMatCopyTo(trmat, draw_mat, ImPoint(cx - trmat.w / 2, cy - trmat.h / 2));
     ImGui::ImMatToTexture(draw_mat, DrawMatTexture);
@@ -607,7 +607,7 @@ void Example::DrawFishCircleDemo()
                 {
                     for (int tc = 1; tc <= 9; tc++)
                     {
-                        auto tmat = ImGui::CreateTextMat(std::to_string(tc * 10).c_str(), ImPixel(1,1,1,1), 1.0, true);
+                        auto tmat = ImGui::CreateTextMat(std::to_string(tc * 10).c_str(), ImPixel(1,1,1,1), ImPixel(0,0,0,0), 1.0, true);
                         auto trmat = ImGui::MatRotate(tmat, 270);
                         ImGui::ImageMatCopyTo(trmat, custom_mat, ImPoint(cx + rtc[tc] * ct - 32, cy - rtc[tc] * st - 16));
                     }
@@ -617,7 +617,7 @@ void Example::DrawFishCircleDemo()
                 {
                     for (int tc = 1; tc <= 9; tc++)
                     {
-                        auto tmat = ImGui::CreateTextMat(std::to_string(tc * 10).c_str(), ImPixel(1,1,1,1), 1.0);
+                        auto tmat = ImGui::CreateTextMat(std::to_string(tc * 10).c_str(), ImPixel(1,1,1,1), ImPixel(0,0,0,0), 1.0);
                         auto trmat = ImGui::MatRotate(tmat, 180);
                         ImGui::ImageMatCopyTo(trmat, custom_mat, ImPoint(cx + rtc[tc] * ct - 16, cy - rtc[tc] * st + 8));
                     }
@@ -627,7 +627,7 @@ void Example::DrawFishCircleDemo()
                 {
                     for (int tc = 1; tc <= 9; tc++)
                     {
-                        auto tmat = ImGui::CreateTextMat(std::to_string(tc * 10).c_str(), ImPixel(1,1,1,1), 1.0, true);
+                        auto tmat = ImGui::CreateTextMat(std::to_string(tc * 10).c_str(), ImPixel(1,1,1,1), ImPixel(0,0,0,0), 1.0, true);
                         auto trmat = ImGui::MatRotate(tmat, 90);
                         ImGui::ImageMatCopyTo(trmat, custom_mat, ImPoint(cx + rtc[tc] * ct, cy - rtc[tc] * st - 16));
                     }
@@ -637,7 +637,7 @@ void Example::DrawFishCircleDemo()
                 {
                     for (int tc = 1; tc <= 9; tc++)
                     {
-                        auto tmat = ImGui::CreateTextMat(std::to_string(tc * 10).c_str(), ImPixel(1,1,1,1), 1.0);
+                        auto tmat = ImGui::CreateTextMat(std::to_string(tc * 10).c_str(), ImPixel(1,1,1,1), ImPixel(0,0,0,0), 1.0);
                         ImGui::ImageMatCopyTo(tmat, custom_mat, ImPoint(cx + rtc[tc] * ct - 16, cy - rtc[tc] * st - 24));
                     }
                 }
@@ -648,7 +648,7 @@ void Example::DrawFishCircleDemo()
             int degree = (i + 9) % 36 * 10;
             char degree_str[4];
             snprintf(degree_str, 4, "%03d", degree);
-            auto tmat = ImGui::CreateTextMat(degree_str, ImPixel(1,1,1,1), 1.0);
+            auto tmat = ImGui::CreateTextMat(degree_str, ImPixel(1,1,1,1), ImPixel(0,0,0,0), 1.0);
             ImGui::ImMat dmat(tmat.w, tmat.h * 3, 4, 1u, 4);
             ImGui::ImageMatCopyTo(tmat, dmat, ImPoint(0, tmat.h * 1.5));
             auto trmat = ImGui::MatRotate(dmat, 360 - degree);

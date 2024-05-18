@@ -3195,8 +3195,8 @@ static const ImVec2 GetTextSize(const ImWchar c)
         return ImVec2(0, 0);
     const int V1 = (int)(glyph->V1 * atlas->TexHeight);
     const int V0 = (int)(glyph->V0 * atlas->TexHeight);
-    float scale_x = c < 0x80 ? 2.0 : 1.0;
-    float scale_y = c < 0x80 ? 2.0 : 1.0;
+    float scale_x = c < 0x80 ? 4.0 : 2.0;
+    float scale_y = 2.0; //c < 0x80 ? 2.0 : 1.0;
     float width = glyph->X0 * scale_x + glyph->AdvanceX * scale_x;
     float height = glyph->Y0 * scale_y + V1 - V0;
     return ImVec2(width, height);
@@ -3205,8 +3205,8 @@ static const ImVec2 GetTextSize(const ImWchar c)
 static const unsigned char* GetTextData(const ImWchar c, ImVec2& size, ImVec4& rect, int& output_stride, int& char_width, int& char_height)
 {
     ImFontAtlas* atlas = GetIO().Fonts;
-    float scale_x = c < 0x80 ? 2.0 : 1.0;
-    float scale_y = c < 0x80 ? 2.0 : 1.0;
+    float scale_x = c < 0x80 ? 4.0 : 2.0;
+    float scale_y = 2.0; //c < 0x80 ? 2.0 : 1.0;
     unsigned char* bitmap;
     int _out_width, _out_height;
     atlas->GetTexDataAsAlpha8(&bitmap, &_out_width, &_out_height);
@@ -3254,7 +3254,7 @@ void DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, const ImPixel
             if (c == '\r')
                 continue;
         }
-        float scale_internal = c < 0x80 ? 0.5 : 1.0;
+        float scale_internal = c < 0x80 ? 0.25 : 0.5;
         int output_stride = 0, char_width = 0, char_height = 0;
         ImVec2 size = {0, 0};
         ImVec4 rect = {0, 0, 0, 0};
@@ -3282,7 +3282,7 @@ void DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, const ImPixel
     }
 }
 
-ImMat CreateTextMat(const char* str, const ImPixel& color, float scale, bool square)
+ImMat CreateTextMat(const char* str, const ImPixel& color, const ImPixel& bk_color, float scale, bool square)
 {
     ImMat dst;
     if (!str || strlen(str) == 0)
@@ -3312,7 +3312,7 @@ ImMat CreateTextMat(const char* str, const ImPixel& color, float scale, bool squ
             if (c == '\r')
                 continue;
         }
-        float scale_internal = c < 0x80 ? 0.5 : 1.0;
+        float scale_internal = c < 0x80 ? 0.25 : 0.5;
         auto char_size = GetTextSize(c);
         line_width += ceil(char_size.x) * scale_internal;
         if (max_line_width < line_width) max_line_width = line_width;
@@ -3330,6 +3330,13 @@ ImMat CreateTextMat(const char* str, const ImPixel& color, float scale, bool squ
         text_height = text_width = length;
     }
     dst.create(ceil(text_width), ceil(text_height), 4, 1u, 4);
+    for (int y = 0; y < text_height; y++)
+    {
+        for (int x = 0; x < text_width; x++)
+        {
+            dst.set_pixel(x, y, bk_color);
+        }
+    }
     DrawTextToMat(dst, ImPoint(x_offset, y_offset), str, color, scale);
     return dst;
 }

@@ -5577,8 +5577,8 @@ IMGUI_API ImMat MatRotate(const ImMat& mat, float angle);
 IMGUI_API ImMat MatWarpAffine(const ImMat& mat, const ImMat& M, ImSize dsize);
 IMGUI_API ImMat MatWarpPerspective(const ImMat& src, const ImMat& M, ImSize dsize, ImInterpolateMode mode = IM_INTERPOLATE_NEAREST);
 IMGUI_API ImMat GrayToImage(const ImMat& mat);
-IMGUI_API ImMat CreateTextMat(const char* str, const ImPixel& color, float scale, bool square = false);
-IMGUI_API void  DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, const ImPixel& color, float scale);
+IMGUI_API ImMat CreateTextMat(const char* str, const ImPixel& color, const ImPixel& bk_color = ImPixel(0,0,0,0), float scale = 1.f, bool square = false);
+IMGUI_API void  DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, const ImPixel& color, float scale = 1.f);
 IMGUI_API void  ImageMatCopyTo(const ImMat& src, ImMat& dst, ImPoint pos);
 } // namespace ImGui
 
