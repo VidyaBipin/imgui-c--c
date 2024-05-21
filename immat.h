@@ -5570,6 +5570,7 @@ IMGUI_API void calcCenterDimension(std::vector<ImPoint> &vertices, std::vector<I
 IMGUI_API void calcCenterDimension(std::vector<ImPoint3D> &vertices, std::vector<ImPoint3D> &axis, ImPoint3D &center, ImPoint3D &halfDimension);
 IMGUI_API void calcOrientedBoundingBox(std::vector<ImPoint> &vertices, std::vector<ImPoint> &axis, ImPoint &center, ImPoint &halfDimension);
 IMGUI_API void calcOrientedBoundingBox(std::vector<ImPoint3D> &vertices, std::vector<ImPoint3D> &axis, ImPoint3D &center, ImPoint3D &halfDimension);
+IMGUI_API void findContours(const ImMat& src, std::vector<std::vector<ImPoint>>& contours);
 
 // draw utils
 IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);

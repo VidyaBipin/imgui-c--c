@@ -518,6 +518,18 @@ void Example::DrawMatDemo()
     ImGui::ImMat threshold_mat = gray_threshold_mat.cvtToARGB();
     ImGui::ImageMatCopyTo(threshold_mat, draw_mat, ImPoint(0, draw_mat.h - o_size * 2));
 
+    // ImMat findContours
+    static std::vector<std::vector<ImPoint>> contours;
+    ImGui::findContours(gray_mat, contours);
+    for( size_t i = 0; i< contours.size(); i++ )
+    {
+        for (int j = 0; j < contours[i].size() - 1; ++j)
+        {
+            draw_mat.draw_line(contours[i][j], contours[i][j + 1], ImPixel(0.0, 1.0, 0.0, 1.0), 1);
+        }
+        draw_mat.draw_line(contours[i][contours[i].size() - 1], contours[i][0], ImPixel(0.0, 1.0, 0.0, 1.0), 1);
+    }
+
     draw_mat.draw_rectangle(ImPoint(0, 0), ImPoint(draw_mat.w, draw_mat.h), ImPixel(0, 0, 1, 1));
     ImGui::ImMatToTexture(draw_mat, DrawMatTexture);
     

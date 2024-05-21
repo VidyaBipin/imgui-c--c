@@ -5290,4 +5290,276 @@ void calcOrientedBoundingBox(std::vector<ImPoint3D> &vertices, std::vector<ImPoi
 	calcCenterDimension(vertices, axis, center, halfDimension);
 }
 // #tag Implementation End, Jimmy
+
+// FindContours
+#define HOLE_BORDER 1
+#define OUTER_BORDER 2
+//====================== Border ==========================================//
+typedef struct Border
+{
+	int seq_num {0};
+	int border_type {1};
+} Border;
+//====================== Corner ==========================================//
+typedef struct Corner
+{
+    void reset()
+    {
+        parent = -1;
+        first_child = -1;
+        next_sibling = -1;
+    }
+	Border border;
+	int parent;
+	int first_child;
+	int next_sibling;
+} Corner;
+
+//===========================Algorithm==================================//
+static void stepCCW(ImPoint& current, ImPoint pivot)
+{
+    //step around a pixel CCW
+	if (current.x > pivot.x) { current.x = pivot.x; current.y = pivot.y - 1; }
+	else if (current.x < pivot.x) { current.x = pivot.x; current.y = pivot.y + 1; }
+	else if (current.y > pivot.y) { current.x = pivot.x + 1; current.y = pivot.y; }
+	else if (current.y < pivot.y) { current.x = pivot.x - 1; current.y = pivot.y; }
+}
+
+static void stepCW(ImPoint& current, ImPoint pivot)
+{
+    //step around a pixel CW
+	if (current.x > pivot.x) { current.x = pivot.x; current.y = pivot.y + 1; }
+	else if (current.x < pivot.x) { current.x = pivot.x; current.y = pivot.y - 1; }
+	else if (current.y > pivot.y) { current.x = pivot.x - 1; current.y = pivot.y; }
+	else if (current.y < pivot.y) { current.x = pivot.x + 1; current.y = pivot.y; }
+}
+
+static void markExamined(ImPoint mark, ImPoint center, bool checked[4])
+{
+    //marks a pixel as examined after passing through
+	//p3.row, p3.col + 1
+	int loc = -1;
+	//    3
+	//  2 x 0
+	//    1
+	if (mark.x > center.x) loc = 0;
+	else if (mark.x < center.x) loc = 2;
+	else if (mark.y > center.y) loc = 1;
+	else if (mark.y < center.y) loc = 3;
+
+	if (loc == -1) perror("Error: markExamined Failed");
+
+	checked[loc] = true;
+	return;
+}
+
+static void followBorder(ImGui::ImMat& image, int numrows, int numcols, int row, int col, ImPoint p2, Border NBD, std::vector<std::vector<ImPoint>>& contour_vector, std::vector<int>& contour_counter)
+{
+	ImPoint current = p2;
+	ImPoint start(col, row);
+	
+	auto pixelOutOfBounds = [](ImPoint p, int numrows, int numcols)
+	{
+		return (p.x >= numcols || p.y >= numrows || p.x < 0 || p.y < 0);
+	};
+	//(3.1)
+	//Starting from (i2, j2), look around clockwise the pixels in the neighborhood of (i, j) and find a nonzero pixel.
+	//Let (i1, j1) be the first found nonzero pixel. If no nonzero pixel is found, assign -NBD to fij and go to (4).
+	do
+    {
+		stepCW(current, start);
+		if (current == p2)
+        {
+			image.at<int32_t>(start.x, start.y) = -NBD.seq_num;
+			std::vector<ImPoint> temp;
+			temp.push_back(start);
+            contour_vector.push_back(temp);
+            contour_counter.push_back(1);
+			return;
+		}
+	} while (pixelOutOfBounds(current, numrows, numcols) || image.at<int32_t>(current.x, current.y) == 0);
+	
+	std::vector<ImPoint> point_storage;
+
+	ImPoint p1 = current;
+
+	//(3.2)
+	//(i2, j2) <- (i1, j1) and (i3, j3) <- (i, j).
+
+	ImPoint p3 = start;
+	ImPoint p4;
+	p2 = p1;
+	bool checked[4];
+	while (true)
+    {
+		//(3.3)
+		//Starting from the next element of the pixel(i2, j2) in the counterclockwise order, examine counterclockwise the pixels in the
+		//neighborhood of the current pixel(i3, j3) to find a nonzero pixel and let the first one be(i4, j4).
+		current = p2;
+
+		for (int i = 0; i < 4; i++)
+			checked[i] = false;
+
+		do
+        {
+			markExamined(current, p3, checked);
+			stepCCW(current, p3);
+		} while (pixelOutOfBounds(current, numrows, numcols) || image.at<int32_t>(current.x, current.y) == 0);
+		p4 = current;
+
+		//Change the value fi3, j3 of the pixel(i3, j3) as follows :
+		//	If the pixel(i3, j3 + 1) is a 0 - pixel examined in the substep(3.3) then fi3, j3 <- - NBD.
+		//	If the pixel(i3, j3 + 1) is not a 0 - pixel examined in the substep(3.3) and fi3, j3 = 1, then fi3, j3 ←NBD.
+		//	Otherwise, do not change fi3, j3.
+
+		if ((p3.x + 1 >= numcols || image.at<int32_t>(p3.x + 1, p3.y) == 0) && checked[0])
+        {
+			image.at<int32_t>(p3.x, p3.y) = -NBD.seq_num;
+		}
+		else if (p3.x + 1 < numcols && image.at<int32_t>(p3.x, p3.y) == 1)
+        {
+			image.at<int32_t>(p3.x, p3.y) = NBD.seq_num;
+		}
+
+        point_storage.push_back(p3);
+		//(3.5)
+		//If(i4, j4) = (i, j) and (i3, j3) = (i1, j1) (coming back to the starting point), then go to(4);
+		//otherwise, (i2, j2) <- (i3, j3), (i3, j3) <- (i4, j4), and go back to(3.3).
+		if (start == p4 && p1 == p3)
+        {
+			contour_vector.push_back(point_storage);
+            contour_counter.push_back(point_storage.size());
+			return;
+		}
+
+		p2 = p3;
+		p3 = p4;
+	}
+}
+
+void findContours(const ImGui::ImMat& src, std::vector<std::vector<ImPoint>>& _contours)
+{
+    _contours.clear();
+	ImGui::ImMat image;
+	image.create_type(src.w, src.h, IM_DT_INT32);
+	int numrows = src.h;
+	int numcols = src.w;
+
+	Border NBD;
+	Border LNBD;
+
+	for (int i = 0; i < numrows; ++i) { for (int j = 0; j < numcols; ++j) image.at<int32_t>(j, i) = src.at<uint8_t>(j, i); }
+
+	LNBD.border_type = HOLE_BORDER;
+	NBD.border_type = HOLE_BORDER;
+	NBD.seq_num = 1;
+
+	std::vector<Corner> hierarchy_vector;
+	Corner temp_corner;
+    temp_corner.reset();
+	temp_corner.border = NBD;
+    hierarchy_vector.push_back(temp_corner);
+
+	//add in padding for both contour and hierarchy have the same offset.
+	std::vector<std::vector<ImPoint>> contour_vector;
+	ImPoint border(-1, -1);
+	std::vector<ImPoint> padding;
+	padding.push_back(border);
+    contour_vector.push_back(padding);
+
+	std::vector<int> contour_counter;
+    contour_counter.push_back(1);
+
+	ImPoint p2;
+	bool border_start_found;
+
+	for (int r = 0; r < numrows; r++)
+    {
+		LNBD.seq_num = 1;
+		LNBD.border_type = HOLE_BORDER;
+		for (int c = 0; c < numcols; c++)
+        {
+			border_start_found = false;
+			//Phase 1: Find border
+			//If fij = 1 and fi, j-1 = 0, then decide that the pixel (i, j) is the border following starting point
+			//of an outer border, increment NBD, and (i2, j2) <- (i, j - 1).
+			if ((image.at<int32_t>(c, r) == 1 && c - 1 < 0) || (image.at<int32_t>(c, r) == 1 && image.at<int32_t>(c - 1, r) == 0))
+            {
+				NBD.border_type = OUTER_BORDER;
+				NBD.seq_num += 1;
+				p2 = ImPoint(c - 1, r);
+				border_start_found = true;
+			}
+
+			//Else if fij >= 1 and fi,j+1 = 0, then decide that the pixel (i, j) is the border following
+			//starting point of a hole border, increment NBD, (i2, j2) ←(i, j + 1), and LNBD ← fij in case fij > 1.
+			else if (c + 1 < numcols && (image.at<int32_t>(c, r) >= 1 && image.at<int32_t>(c + 1, r) == 0))
+            {
+				NBD.border_type = HOLE_BORDER;
+				NBD.seq_num += 1;
+				if (image.at<int32_t>(c, r) > 1 && LNBD.seq_num - 1 >= 0 && LNBD.seq_num - 1 < hierarchy_vector.size())
+                {
+					LNBD.seq_num = image.at<int32_t>(c, r);
+					LNBD.border_type = hierarchy_vector[LNBD.seq_num - 1].border.border_type;
+				}
+				p2 = ImPoint(c + 1, r);
+				border_start_found = true;
+			}
+
+			if (border_start_found)
+            {
+				//Phase 2: Store Parent
+                temp_corner.reset();
+				if (NBD.border_type == LNBD.border_type)
+                {
+					temp_corner.parent = LNBD.seq_num - 1 >= 0 && LNBD.seq_num - 1 < hierarchy_vector.size() ? hierarchy_vector[LNBD.seq_num - 1].parent : -1;
+					if (temp_corner.parent - 1 >= 0 && temp_corner.parent - 1 < hierarchy_vector.size())
+					{
+						temp_corner.next_sibling = hierarchy_vector[temp_corner.parent - 1].first_child;
+						hierarchy_vector[temp_corner.parent - 1].first_child = NBD.seq_num;
+					}
+					temp_corner.border = NBD;
+                    hierarchy_vector.push_back(temp_corner);
+				}
+				else if (LNBD.seq_num - 1 >= 0 && LNBD.seq_num - 1 < hierarchy_vector.size())
+                {
+					if (hierarchy_vector[LNBD.seq_num - 1].first_child != -1)
+                    {
+						temp_corner.next_sibling = hierarchy_vector[LNBD.seq_num - 1].first_child;
+					}
+
+					temp_corner.parent = LNBD.seq_num;
+					hierarchy_vector[LNBD.seq_num - 1].first_child = NBD.seq_num;
+					temp_corner.border = NBD;
+                    hierarchy_vector.push_back(temp_corner);
+				}
+
+				//Phase 3: Follow border
+				followBorder(image, numrows, numcols, r, c, p2, NBD, contour_vector, contour_counter);
+			}
+
+			//Phase 4: Continue to next border
+			//If fij != 1, then LNBD <- abs( fij ) and resume the raster scan from the pixel(i, j + 1).
+			//The algorithm terminates when the scan reaches the lower right corner of the picture.
+			if (abs(image.at<int32_t>(c, r)) > 1 && LNBD.seq_num - 1 >= 0 && LNBD.seq_num - 1 < hierarchy_vector.size())
+            {
+				LNBD.seq_num = abs(image.at<int32_t>(c, r));
+				LNBD.border_type = hierarchy_vector[LNBD.seq_num - 1].border.border_type;
+			}
+		}
+	}
+
+	if (hierarchy_vector.size() != contour_counter.size() || hierarchy_vector.size() != contour_vector.size()) printf("Storage offset error");
+
+    for (int i = 0; i < contour_vector.size(); ++i)
+    {
+        std::vector<ImPoint> points;
+        for (int j = 0; j < contour_counter[i]; ++j)
+        {
+			if (contour_vector[i][j].x > 0 && contour_vector[i][j].y > 0) points.push_back(contour_vector[i][j]);
+        }
+		if (points.size() > 0) _contours.push_back(points);
+    }
+}
+
 } // namespace ImGui
