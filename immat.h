@@ -335,6 +335,17 @@ enum ImInterpolateMode {
     IM_NB_INTERP_MODE
 };
 
+enum ImColorXYZSystem {
+    IM_COLOR_XYZ_SRGB = 0,
+    IM_COLOR_XYZ_ADOBE,
+    IM_COLOR_XYZ_APPLE,
+    IM_COLOR_XYZ_BRUCE,
+    IM_COLOR_XYZ_PAL,
+    IM_COLOR_XYZ_NTSC,
+    IM_COLOR_XYZ_SMPTE,
+    IM_COLOR_XYZ_CIE,
+};
+
 #define IM_MAT_FLAGS_NONE               (0 << 0)
 // 0-7 bits for video
 #define IM_MAT_FLAGS_VIDEO_FRAME        (1 << 0)
@@ -982,12 +993,13 @@ public:
     //  7 = YUV420
     //  8 = YUV422
     //  9 = YUV444
-    // 10 = YUVA
-    // 11 = NV12
-    // 12 = P010LE
-    // 13 = LAB
-    // 14 = HSV
-    // 15 = HLS
+    // 10 = YUV440
+    // 11 = YUVA
+    // 12 = NV12
+    // 13 = P010LE
+    // 14 = LAB
+    // 15 = HSV
+    // 16 = HLS
     ImColorFormat color_format;
 
     // range

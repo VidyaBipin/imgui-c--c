@@ -816,3 +816,88 @@ SHADER_STORE_RGBA
 SHADER_STORE_RGB
 SHADER_CONV_MAIN
 ;
+
+#define SHADER_MAT_R2X \
+" \n\
+sfpmat3 matrix_mat_r2x = { \n\
+    {sfp(convert_matrix_r2x[0]), sfp(convert_matrix_r2x[3]), sfp(convert_matrix_r2x[6])}, \n\
+    {sfp(convert_matrix_r2x[1]), sfp(convert_matrix_r2x[4]), sfp(convert_matrix_r2x[7])}, \n\
+    {sfp(convert_matrix_r2x[2]), sfp(convert_matrix_r2x[5]), sfp(convert_matrix_r2x[8])}, \n\
+}; \
+"
+
+#define RGB2LAB_MAIN \
+" \n\
+void main() \n\
+{ \n\
+    int gx = int(gl_GlobalInvocationID.x); \n\
+    int gy = int(gl_GlobalInvocationID.y); \n\
+    if (gx >= p.out_w || gy >= p.out_h) \n\
+        return; \n\
+    sfpvec4 rgba; \n\
+    if (p.in_format == CF_BGR || p.in_format == CF_RGB) \n\
+        rgba = sfpvec4(load_rgb(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type), sfp(1.0f)); \n\
+    else \n\
+        rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec3 xyz = matrix_mat_r2x * rgba.rgb; \n\
+    sfpvec3 lab = xyz2lab(xyz); \n\
+    store_rgb_float_no_clamp(lab, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+} \
+"
+
+static const char RGB2LAB_data[] = 
+SHADER_HEADER
+SHADER_INPUT_OUTPUT_DATA
+R"(
+layout (binding = 8) readonly buffer mat_r2x        { float         convert_matrix_r2x[]; };
+)"
+SHADER_PARAM_CONV
+SHADER_LOAD_RGBA
+SHADER_LOAD_RGB
+SHADER_STORE_RGB_FLOAT_NO_CLAMP
+SHADER_MAT_R2X
+SHADER_XYZ_TO_LAB
+RGB2LAB_MAIN
+;
+
+#define SHADER_MAT_X2R \
+" \n\
+sfpmat3 matrix_mat_x2r = { \n\
+    {sfp(convert_matrix_x2r[0]), sfp(convert_matrix_x2r[3]), sfp(convert_matrix_x2r[6])}, \n\
+    {sfp(convert_matrix_x2r[1]), sfp(convert_matrix_x2r[4]), sfp(convert_matrix_x2r[7])}, \n\
+    {sfp(convert_matrix_x2r[2]), sfp(convert_matrix_x2r[5]), sfp(convert_matrix_x2r[8])}, \n\
+}; \
+"
+
+#define LAB2RGB_MAIN \
+" \n\
+void main() \n\
+{ \n\
+    int gx = int(gl_GlobalInvocationID.x); \n\
+    int gy = int(gl_GlobalInvocationID.y); \n\
+    if (gx >= p.out_w || gy >= p.out_h) \n\
+        return; \n\
+    sfpvec3 lab = load_rgb(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec3 xyz = lab2xyz(lab); \n\
+    sfpvec3 rgb = matrix_mat_x2r * xyz; \n\
+    if (p.out_format == CF_BGR || p.out_format == CF_RGB) \n\
+        store_rgb(rgb, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+    else \n\
+        store_rgba(sfpvec4(rgb, sfp(1.0)), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+} \
+"
+
+static const char LAB2RGB_data[] = 
+SHADER_HEADER
+SHADER_INPUT_OUTPUT_DATA
+R"(
+layout (binding = 8) readonly buffer mat_x2r        { float         convert_matrix_x2r[]; };
+)"
+SHADER_PARAM_CONV
+SHADER_LOAD_RGB
+SHADER_STORE_RGBA
+SHADER_STORE_RGB
+SHADER_MAT_X2R
+SHADER_LAB_TO_XYZ
+LAB2RGB_MAIN
+;

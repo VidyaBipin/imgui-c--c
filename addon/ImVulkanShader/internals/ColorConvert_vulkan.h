@@ -23,6 +23,9 @@ public:
 
     double YUV2RGB(const ImMat& im_YUV, ImMat & im_RGB, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC, bool mirror = false) const;
     double YUV2RGB(const ImMat& im_Y, const ImMat& im_U, const ImMat& im_V, ImMat & im_RGB, ImInterpolateMode type = IM_INTERPOLATE_BICUBIC, bool mirror = false) const;
+    
+    double RGB2LAB(const ImMat& im_RGB, ImMat& im_LAB, ImColorXYZSystem s, int reference_white) const;
+    double LAB2RGB(const ImMat& im_LAB, ImMat& im_RGB, ImColorXYZSystem s, int reference_white) const;
 
 public:
     const VulkanDevice* vkdev;
@@ -31,6 +34,8 @@ public:
     Pipeline * pipeline_gray_rgb = nullptr;
     Pipeline * pipeline_conv = nullptr;
     Pipeline * pipeline_y_u_v_rgb = nullptr;
+    Pipeline * pipeline_rgb_lab = nullptr;
+    Pipeline * pipeline_lab_rgb = nullptr;
     VkCompute * cmd = nullptr;
     Option opt;
 
@@ -42,6 +47,8 @@ private:
     void upload_param(const VkMat& Im, VkMat& dst) const;
 
     bool UploadParam(const VkMat& src, VkMat& dst, ImInterpolateMode type);
+
+    void upload_param(const VkMat& Im, VkMat& dst, ImColorXYZSystem s, int reference_white) const;
 
     std::string mErrMsg;
 };

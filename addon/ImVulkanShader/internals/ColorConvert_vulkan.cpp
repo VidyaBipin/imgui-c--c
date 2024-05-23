@@ -6,6 +6,7 @@
 namespace ImGui 
 {
 extern const ImMat * color_table[2][2][4];
+extern const ImMat * xyz_color_table[2][2][8];
 ColorConvert_vulkan::ColorConvert_vulkan(int gpu)
 {
     vkdev = get_gpu_device(gpu);
@@ -54,6 +55,20 @@ ColorConvert_vulkan::ColorConvert_vulkan(int gpu)
         spirv_data.clear();
     }
 
+    if (compile_spirv_module(RGB2LAB_data, opt, spirv_data) == 0)
+    {
+        pipeline_rgb_lab = new Pipeline(vkdev);
+        pipeline_rgb_lab->create(spirv_data.data(), spirv_data.size() * 4, specializations);
+        spirv_data.clear();
+    }
+
+    if (compile_spirv_module(LAB2RGB_data, opt, spirv_data) == 0)
+    {
+        pipeline_lab_rgb = new Pipeline(vkdev);
+        pipeline_lab_rgb->create(spirv_data.data(), spirv_data.size() * 4, specializations);
+        spirv_data.clear();
+    }
+
     cmd->reset();
 }
 
@@ -66,6 +81,8 @@ ColorConvert_vulkan::~ColorConvert_vulkan()
         if (pipeline_gray_rgb) { delete pipeline_gray_rgb; pipeline_gray_rgb = nullptr; }
         if (pipeline_conv) { delete pipeline_conv; pipeline_conv = nullptr; }
         if (pipeline_y_u_v_rgb) { delete pipeline_y_u_v_rgb; pipeline_y_u_v_rgb = nullptr; }
+        if (pipeline_rgb_lab) { delete pipeline_rgb_lab; pipeline_rgb_lab = nullptr; }
+        if (pipeline_lab_rgb) { delete pipeline_lab_rgb; pipeline_lab_rgb = nullptr; }
 
         if (cmd) { delete cmd; cmd = nullptr; }
         if (opt.blob_vkallocator) { vkdev->reclaim_blob_allocator(opt.blob_vkallocator); opt.blob_vkallocator = nullptr; }
@@ -939,6 +956,149 @@ double ColorConvert_vulkan::Conv(const ImMat& im, ImMat & om) const
     cmd->reset();
 
     om.copy_attribute(im);
+    return ret;
+}
+
+// RGB <-> LAB functions
+void ColorConvert_vulkan::upload_param(const VkMat& Im, VkMat& dst, ImColorXYZSystem s, int reference_white) const
+{
+    VkMat vkCscCoefs;
+    Pipeline * pipeline = nullptr;
+    if (dst.color_format == IM_CF_LAB)
+    {
+        // RGB -> LAB
+        const ImMat cscCoefs = *xyz_color_table[0][reference_white][s];
+        cmd->record_clone(cscCoefs, vkCscCoefs, opt);
+        pipeline = pipeline_rgb_lab;
+    }
+    else if (Im.color_format == IM_CF_LAB)
+    {
+        // LAB-> RGB
+        const ImMat cscCoefs = *xyz_color_table[1][reference_white][s];
+        cmd->record_clone(cscCoefs, vkCscCoefs, opt);
+        pipeline = pipeline_lab_rgb;
+    }
+    
+    if (!pipeline || vkCscCoefs.empty()) return;
+    std::vector<VkMat> bindings(9);
+    if      (dst.type == IM_DT_INT8)    bindings[0] = dst;
+    else if (dst.type == IM_DT_INT16 || dst.type == IM_DT_INT16_BE)   bindings[1] = dst;
+    else if (dst.type == IM_DT_FLOAT16) bindings[2] = dst;
+    else if (dst.type == IM_DT_FLOAT32) bindings[3] = dst;
+    if      (Im.type == IM_DT_INT8)    bindings[4] = Im;
+    else if (Im.type == IM_DT_INT16 || Im.type == IM_DT_INT16_BE)   bindings[5] = Im;
+    else if (Im.type == IM_DT_FLOAT16) bindings[6] = Im;
+    else if (Im.type == IM_DT_FLOAT32) bindings[7] = Im;
+    bindings[8] = vkCscCoefs;
+
+    std::vector<vk_constant_type> constants(10);
+    constants[0].i = Im.w;
+    constants[1].i = Im.h;
+    constants[2].i = Im.c;
+    constants[3].i = Im.color_format;
+    constants[4].i = Im.type;
+    constants[5].i = dst.w;
+    constants[6].i = dst.h;
+    constants[7].i = dst.c;
+    constants[8].i = dst.color_format;
+    constants[9].i = dst.type;
+    cmd->record_pipeline(pipeline, bindings, constants, dst);
+}
+
+double ColorConvert_vulkan::RGB2LAB(const ImMat& im_RGB, ImMat& im_LAB, ImColorXYZSystem s, int reference_white) const
+{
+    double ret = -1.f;
+    if (!vkdev || !pipeline_rgb_lab || !cmd)
+    {
+        return ret;
+    }
+
+    VkMat dst_gpu;
+    dst_gpu.create_type(im_RGB.w, im_RGB.h, 3, IM_DT_FLOAT32, opt.blob_vkallocator);
+    dst_gpu.color_format = IM_CF_LAB;
+
+    VkMat src_gpu;
+    if (im_RGB.device == IM_DD_VULKAN)
+    {
+        src_gpu = im_RGB;
+    }
+    else if (im_RGB.device == IM_DD_CPU)
+    {
+        cmd->record_clone(im_RGB, src_gpu, opt);
+    }
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
+    upload_param(src_gpu, dst_gpu, s, reference_white);
+
+    #ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
+
+    // download
+    if (im_LAB.device == IM_DD_CPU)
+        cmd->record_clone(dst_gpu, im_LAB, opt);
+    else if (im_LAB.device == IM_DD_VULKAN)
+        im_LAB = dst_gpu;
+    cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#else
+    ret = 1.f;
+#endif
+    cmd->reset();
+
+    return ret;
+}
+
+double ColorConvert_vulkan::LAB2RGB(const ImMat& im_LAB, ImMat& im_RGB, ImColorXYZSystem s, int reference_white) const
+{
+    double ret = -1.f;
+    if (!vkdev || !pipeline_rgb_lab || !cmd)
+    {
+        return ret;
+    }
+
+    VkMat dst_gpu;
+    int channel = im_RGB.color_format == IM_CF_BGR || im_RGB.color_format == IM_CF_RGB ? 3 : 4;
+    dst_gpu.create_type(im_LAB.w, im_LAB.h, channel, im_RGB.type, opt.blob_vkallocator);
+    dst_gpu.color_format = im_RGB.color_format;
+
+    VkMat src_gpu;
+    if (im_LAB.device == IM_DD_VULKAN)
+    {
+        src_gpu = im_LAB;
+    }
+    else if (im_LAB.device == IM_DD_CPU)
+    {
+        cmd->record_clone(im_LAB, src_gpu, opt);
+    }
+
+#ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_start();
+#endif
+
+    upload_param(src_gpu, dst_gpu, s, reference_white);
+
+    #ifdef VULKAN_SHADER_BENCHMARK
+    cmd->benchmark_end();
+#endif
+
+    // download
+    if (im_RGB.device == IM_DD_CPU)
+        cmd->record_clone(dst_gpu, im_RGB, opt);
+    else if (im_RGB.device == IM_DD_VULKAN)
+        im_RGB = dst_gpu;
+    cmd->submit_and_wait();
+#ifdef VULKAN_SHADER_BENCHMARK
+    ret = cmd->benchmark();
+#else
+    ret = 1.f;
+#endif
+    cmd->reset();
+
     return ret;
 }
 } // namespace ImGui 

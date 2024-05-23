@@ -186,6 +186,9 @@ void main()
 #define CF_YUVA     11 \n\
 #define CF_NV12     12 \n\
 #define CF_P010LE   13 \n\
+#define CF_LAB      14 \n\
+#define CF_HSV      15 \n\
+#define CF_HLS      16 \n\
 #define INTERPOLATE_NONE        0 \n\
 #define INTERPOLATE_NEAREST     1 \n\
 #define INTERPOLATE_BILINEAR    2 \n\
@@ -220,7 +223,7 @@ ivec3 color_format_mapping_vec3(int format) \n\
     else if (format == CF_RGB) \n\
         return ivec3(2, 1, 0); \n\
     else \n\
-        return ivec3(0, 0, 0); \n\
+        return ivec3(0, 1, 2); \n\
 } \n\
 ivec4 color_format_mapping_vec4(int format) \n\
 { \n\
@@ -233,7 +236,7 @@ ivec4 color_format_mapping_vec4(int format) \n\
     else if (format == CF_RGBA) \n\
         return ivec4(3, 2, 1, 0); \n\
     else \n\
-        return ivec4(0, 0, 0, 0); \n\
+        return ivec4(0, 1, 2, 3); \n\
 } \n\
 \
 uint16_t BE2LE_16BIT(uint16_t a) \n\
@@ -1723,6 +1726,37 @@ sfpvec4 hsv_to_rgb(sfpvec4 hsv) \n\
     return rgba; \n\
 } \
 "
+
+#define SHADER_XYZ_TO_LAB \
+" \n\
+sfpvec3 xyz2lab(sfpvec3 xyz) \n\
+{ \n\
+    sfpvec3 n = xyz / sfpvec3(sfp(95.047), sfp(100.0), sfp(108.883)); \n\
+    sfpvec3 c0 = pow(n, sfpvec3(sfp(1.0) / sfp(3.0))); \n\
+    sfpvec3 c1 = (sfp(7.787) * n) + (sfp(16.0) / sfp(116.0)); \n\
+    sfpvec3 v = mix(c0, c1, step(n, sfpvec3(0.008856))); \n\
+    return sfpvec3((sfp(116.0) * v.y) - sfp(16.0), \n\
+                    sfp(500.0) * (v.x - v.y), \n\
+                    sfp(200.0) * (v.y - v.z)); \n\
+} \
+"
+
+#define SHADER_LAB_TO_XYZ \
+" \n\
+sfpvec3 lab2xyz(sfpvec3 lab) \n\
+{ \n\
+    sfp fy = ( lab.x + sfp(16.0) ) / sfp(116.0); \n\
+    sfp fx = lab.y / sfp(500.0) + fy; \n\
+    sfp fz = fy - lab.z / sfp(200.0); \n\
+    sfpvec3 CIE_WHITE = sfpvec3(0.95045592705, 1.0, 1.08905775076); \n\
+    return CIE_WHITE * sfp(100.0) * sfpvec3( \n\
+            ( fx > sfp(0.206897) ) ? fx * fx * fx : ( fx - sfp(16.0) / sfp(116.0) ) / sfp(7.787), \n\
+            ( fy > sfp(0.206897) ) ? fy * fy * fy : ( fy - sfp(16.0) / sfp(116.0) ) / sfp(7.787), \n\
+            ( fz > sfp(0.206897) ) ? fz * fz * fz : ( fz - sfp(16.0) / sfp(116.0) ) / sfp(7.787) \n\
+    ); \n\
+} \
+"
+
 #define SHADER_LOAD_RGB_IMAGE \
 SHADER_LOAD_GRAY \
 SHADER_LOAD_RGB \
