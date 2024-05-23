@@ -321,7 +321,7 @@ enum ImColorFormat {
     IM_CF_P010LE,
     IM_CF_LAB,
     IM_CF_HSV,
-    IM_CF_HLS,
+    IM_CF_HSL,
 };
 
 enum ImInterpolateMode {
@@ -578,7 +578,7 @@ static inline int GetChannelCountByColorFormat(ImColorFormat fmt)
         case IM_CF_YUVA:
             return 4;
         case IM_CF_LAB:
-        case IM_CF_HLS:
+        case IM_CF_HSL:
         case IM_CF_HSV:
             return 3;
         default:
@@ -766,7 +766,7 @@ public:
     IMGUI_API ImMat cvtToLAB() const;
     IMGUI_API ImMat cvtToGray() const;
     IMGUI_API ImMat cvtToHSV() const;
-    IMGUI_API ImMat cvtToHLS() const;
+    IMGUI_API ImMat cvtToHSL() const;
     IMGUI_API ImMat cvtToRGB() const;
     IMGUI_API ImMat cvtToARGB() const;
 

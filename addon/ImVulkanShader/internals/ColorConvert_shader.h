@@ -901,3 +901,117 @@ SHADER_MAT_X2R
 SHADER_LAB_TO_XYZ
 LAB2RGB_MAIN
 ;
+
+#define RGB2HSL_MAIN \
+" \n\
+void main() \n\
+{ \n\
+    int gx = int(gl_GlobalInvocationID.x); \n\
+    int gy = int(gl_GlobalInvocationID.y); \n\
+    if (gx >= p.out_w || gy >= p.out_h) \n\
+        return; \n\
+    sfpvec4 rgba; \n\
+    if (p.in_format == CF_BGR || p.in_format == CF_RGB) \n\
+        rgba = sfpvec4(load_rgb(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type), sfp(1.0f)); \n\
+    else \n\
+        rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec3 hsl = rgb_to_hsl(rgba.rgb); \n\
+    store_rgb_float_no_clamp(hsl, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+} \
+"
+
+static const char RGB2HSL_data[] = 
+SHADER_HEADER
+SHADER_INPUT_OUTPUT_DATA
+SHADER_PARAM_CONV
+SHADER_LOAD_RGBA
+SHADER_LOAD_RGB
+SHADER_STORE_RGB_FLOAT_NO_CLAMP
+SHADER_RGB_TO_HSL
+RGB2HSL_MAIN
+;
+
+#define HSL2RGB_MAIN \
+" \n\
+void main() \n\
+{ \n\
+    int gx = int(gl_GlobalInvocationID.x); \n\
+    int gy = int(gl_GlobalInvocationID.y); \n\
+    if (gx >= p.out_w || gy >= p.out_h) \n\
+        return; \n\
+    sfpvec3 hsl = load_rgb(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec3 rgb = hsl_to_rgb(hsl); \n\
+    if (p.out_format == CF_BGR || p.out_format == CF_RGB) \n\
+        store_rgb(rgb, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+    else \n\
+        store_rgba(sfpvec4(rgb, sfp(1.0)), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+} \
+"
+
+static const char HSL2RGB_data[] = 
+SHADER_HEADER
+SHADER_INPUT_OUTPUT_DATA
+SHADER_PARAM_CONV
+SHADER_LOAD_RGB
+SHADER_STORE_RGBA
+SHADER_STORE_RGB
+SHADER_HSL_TO_RGB
+HSL2RGB_MAIN
+;
+
+#define RGB2HSV_MAIN \
+" \n\
+void main() \n\
+{ \n\
+    int gx = int(gl_GlobalInvocationID.x); \n\
+    int gy = int(gl_GlobalInvocationID.y); \n\
+    if (gx >= p.out_w || gy >= p.out_h) \n\
+        return; \n\
+    sfpvec4 rgba; \n\
+    if (p.in_format == CF_BGR || p.in_format == CF_RGB) \n\
+        rgba = sfpvec4(load_rgb(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type), sfp(1.0f)); \n\
+    else \n\
+        rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec3 hsv = rgb_to_hsv(rgba.rgb); \n\
+    store_rgb_float_no_clamp(hsv, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+} \
+"
+
+static const char RGB2HSV_data[] = 
+SHADER_HEADER
+SHADER_INPUT_OUTPUT_DATA
+SHADER_PARAM_CONV
+SHADER_LOAD_RGBA
+SHADER_LOAD_RGB
+SHADER_STORE_RGB_FLOAT_NO_CLAMP
+SHADER_RGB_TO_HSV
+RGB2HSV_MAIN
+;
+
+#define HSV2RGB_MAIN \
+" \n\
+void main() \n\
+{ \n\
+    int gx = int(gl_GlobalInvocationID.x); \n\
+    int gy = int(gl_GlobalInvocationID.y); \n\
+    if (gx >= p.out_w || gy >= p.out_h) \n\
+        return; \n\
+    sfpvec3 hsv = load_rgb(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    sfpvec3 rgb = hsv_to_rgb(hsv); \n\
+    if (p.out_format == CF_BGR || p.out_format == CF_RGB) \n\
+        store_rgb(rgb, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+    else \n\
+        store_rgba(sfpvec4(rgb, sfp(1.0)), gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+} \
+"
+
+static const char HSV2RGB_data[] = 
+SHADER_HEADER
+SHADER_INPUT_OUTPUT_DATA
+SHADER_PARAM_CONV
+SHADER_LOAD_RGB
+SHADER_STORE_RGBA
+SHADER_STORE_RGB
+SHADER_HSV_TO_RGB
+HSV2RGB_MAIN
+;

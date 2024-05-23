@@ -27,6 +27,12 @@ public:
     double RGB2LAB(const ImMat& im_RGB, ImMat& im_LAB, ImColorXYZSystem s, int reference_white) const;
     double LAB2RGB(const ImMat& im_LAB, ImMat& im_RGB, ImColorXYZSystem s, int reference_white) const;
 
+    double RGB2HSL(const ImMat& im_RGB, ImMat& im_HSL) const;
+    double HSL2RGB(const ImMat& im_HSL, ImMat& im_RGB) const;
+
+    double RGB2HSV(const ImMat& im_RGB, ImMat& im_HSV) const;
+    double HSV2RGB(const ImMat& im_HSV, ImMat& im_RGB) const;
+
 public:
     const VulkanDevice* vkdev;
     Pipeline * pipeline_yuv_rgb = nullptr;
@@ -36,6 +42,10 @@ public:
     Pipeline * pipeline_y_u_v_rgb = nullptr;
     Pipeline * pipeline_rgb_lab = nullptr;
     Pipeline * pipeline_lab_rgb = nullptr;
+    Pipeline * pipeline_rgb_hsl = nullptr;
+    Pipeline * pipeline_hsl_rgb = nullptr;
+    Pipeline * pipeline_rgb_hsv = nullptr;
+    Pipeline * pipeline_hsv_rgb = nullptr;
     VkCompute * cmd = nullptr;
     Option opt;
 
@@ -45,10 +55,10 @@ private:
     void upload_param(const VkMat& Im_RGB, VkMat& dst, ImColorFormat color_format, ImColorSpace color_space, ImColorRange color_range, int video_shift) const;
     void upload_param(const VkMat& Im, VkMat& dst, ImColorSpace color_space, ImColorRange color_range, int video_depth, int video_shift) const;
     void upload_param(const VkMat& Im, VkMat& dst) const;
+    void upload_param(const VkMat& Im, VkMat& dst, ImColorXYZSystem s, int reference_white) const;
+    void upload_param(const VkMat& Im, VkMat& dst, bool b_hsl) const;
 
     bool UploadParam(const VkMat& src, VkMat& dst, ImInterpolateMode type);
-
-    void upload_param(const VkMat& Im, VkMat& dst, ImColorXYZSystem s, int reference_white) const;
 
     std::string mErrMsg;
 };

@@ -20,7 +20,7 @@ layout (push_constant) uniform parameter \n\
 
 #define SHADER_MAIN \
 " \n\
-sfpvec2 hs_to_point(sfpvec4 hs) \n\
+sfpvec2 hs_to_point(sfpvec3 hs) \n\
 { \n\
     sfpvec2 point = sfpvec2(0.f); \n\
     sfp angle = hs.x * sfp(0.017453); \n\
@@ -65,7 +65,7 @@ void main() \n\
     if (mod(float(gx), 4) != 0 || mod(float(gy), 4) != 0) // reduce to half size\n\
         return; \n\
     sfpvec4 rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.format, p.type); \n\
-    sfpvec4 hs = rgb_to_hsl(rgba); \n\
+    sfpvec3 hs = rgb_to_hsl(rgba.rgb); \n\
     sfpvec2 vector_point = hs_to_point(hs); \n\
     int length = int(hs.z * sfp(20.f)); \n\
     ivec2 point; \n\
@@ -89,7 +89,7 @@ R"(
 layout (binding = 4) restrict buffer alpha_blob { int alpha_blob_data[]; };
 )"
 SHADER_LOAD_RGBA
-SHADER_RGBA_TO_HSL
+SHADER_RGB_TO_HSL
 SHADER_MAIN
 ;
 
@@ -180,16 +180,15 @@ void merge(int x, int y) \n\
     if (dist <= sfp(1.f)) \n\
     { \n\
         sfp angle = clamp(point_to_angle(point), sfp(0.f), sfp(360.f)); \n\
-        sfpvec4 rgba = hsv_to_rgb(sfpvec4(angle, dist, sfp(1.f), sfp(1.f))); \n\
+        sfpvec3 rgb = hsv_to_rgb(sfpvec3(angle, dist, sfp(1.f))); \n\
         int offset = y * p.w + x; \n\
         int alpha = int(alpha_blob_data[offset] * p.intensity); \n\
         if (alpha > 0) \n\
         { \n\
-            rgba.a = sfp(clamp(alpha / 255.f, 0.f, 1.f)); \n\
-            store_rgba(rgba, x, y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+            sfp fa = sfp(clamp(alpha / 255.f, 0.f, 1.f)); \n\
+            store_rgba(sfpvec4(rgb, fa), x, y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
         } else { \n\
-            rgba.a = sfp(0.f); \n\
-            store_rgba(rgba, x, y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
+            store_rgba(sfpvec4(rgb, sfp(0.f)), x, y, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
         } \n\
     } \n\
 } \
@@ -216,8 +215,7 @@ R"(
 layout (binding = 4) readonly buffer alpha_blob { int alpha_blob_data[]; };
 )"
 SHADER_STORE_RGBA
-SHADER_HSL_TO_RGBA
-SHADER_HSV_TO_RGBA
+SHADER_HSV_TO_RGB
 SHADER_MERGE
 SHADER_MERGE_MAIN
 ;

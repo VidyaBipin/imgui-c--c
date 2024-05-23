@@ -1305,7 +1305,7 @@ ImMat ImMat::cvtToHSV() const
     return m;
 }
 
-ImMat ImMat::cvtToHLS() const
+ImMat ImMat::cvtToHSL() const
 {
     assert(device == IM_DD_CPU);
     assert(color_format == IM_CF_BGR || color_format == IM_CF_BGRA || color_format == IM_CF_ABGR);
@@ -1321,7 +1321,7 @@ ImMat ImMat::cvtToHLS() const
             m.set_pixel(_w, _h, hls);
         }
     }
-    m.color_format = IM_CF_HLS;
+    m.color_format = IM_CF_HSL;
     return m;
 }
 
@@ -1351,7 +1351,7 @@ ImMat ImMat::cvtToRGB() const
                 case IM_CF_HSV:
                     HSVtoRGB(pixel.r, pixel.g, pixel.b, rgb.r, rgb.g, rgb.b);
                 break;
-                case IM_CF_HLS:
+                case IM_CF_HSL:
                     HLS2RGB(pixel.r, pixel.g, pixel.b, &rgb.r, &rgb.g, &rgb.b);
                 break;
                 default: break;
@@ -1390,7 +1390,7 @@ ImMat ImMat::cvtToARGB() const
                     HSVtoRGB(pixel.r, pixel.g, pixel.b, rgb.r, rgb.g, rgb.b);
                     rgb.a = 1;
                 break;
-                case IM_CF_HLS:
+                case IM_CF_HSL:
                     HLS2RGB(pixel.r, pixel.g, pixel.b, &rgb.r, &rgb.g, &rgb.b);
                     rgb.a = 1;
                 break;

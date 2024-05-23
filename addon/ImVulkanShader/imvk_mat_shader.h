@@ -1619,21 +1619,21 @@ layout (push_constant) uniform parameter \n\
 } p; \n\
 "
 
-#define SHADER_RGBA_TO_HSL \
+#define SHADER_RGB_TO_HSL \
 " \n\
-sfpvec4 rgb_to_hsl(sfpvec4 rgba) \n\
+sfpvec3 rgb_to_hsl(sfpvec3 rgb) \n\
 { \n\
-    sfpvec4 hsl = sfpvec4(0.f); \n\
-    sfp vmax = max(max(rgba.r, rgba.g), rgba.b); \n\
-    sfp vmin = min(min(rgba.r, rgba.g), rgba.b); \n\
+    sfpvec3 hsl = sfpvec3(0.f); \n\
+    sfp vmax = max(max(rgb.r, rgb.g), rgb.b); \n\
+    sfp vmin = min(min(rgb.r, rgb.g), rgb.b); \n\
     if (vmax == vmin) \n\
         hsl.x = sfp(0.f); \n\
-    else if (vmax == rgba.r) \n\
-        hsl.x = sfp(60.f) * (rgba.g - rgba.b) / (vmax - vmin); \n\
-    else if (vmax == rgba.g) \n\
-        hsl.x = sfp(60.f) * (sfp(2.0f) + (rgba.b - rgba.r) / (vmax - vmin)); \n\
-    else if (vmax == rgba.b) \n\
-        hsl.x = sfp(60.f) * (sfp(4.0f) + (rgba.r - rgba.g) / (vmax - vmin)); \n\
+    else if (vmax == rgb.r) \n\
+        hsl.x = sfp(60.f) * (rgb.g - rgb.b) / (vmax - vmin); \n\
+    else if (vmax == rgb.g) \n\
+        hsl.x = sfp(60.f) * (sfp(2.0f) + (rgb.b - rgb.r) / (vmax - vmin)); \n\
+    else if (vmax == rgb.b) \n\
+        hsl.x = sfp(60.f) * (sfp(4.0f) + (rgb.r - rgb.g) / (vmax - vmin)); \n\
     \n\
     hsl.z = (vmax + vmin) / sfp(2.f); \n\
     \n\
@@ -1645,21 +1645,21 @@ sfpvec4 rgb_to_hsl(sfpvec4 rgba) \n\
 } \
 "
 
-#define SHADER_RGBA_TO_HSV \
+#define SHADER_RGB_TO_HSV \
 " \n\
-sfpvec4 rgb_to_hsv(sfpvec4 rgba) \n\
+sfpvec3 rgb_to_hsv(sfpvec3 rgb) \n\
 { \n\
-    sfpvec4 hsv = sfpvec4(0.f); \n\
-    sfp vmax = max(max(rgba.r, rgba.g), rgba.b); \n\
-    sfp vmin = min(min(rgba.r, rgba.g), rgba.b); \n\
+    sfpvec3 hsv = sfpvec3(0.f); \n\
+    sfp vmax = max(max(rgb.r, rgb.g), rgb.b); \n\
+    sfp vmin = min(min(rgb.r, rgb.g), rgb.b); \n\
     if (vmax == vmin) \n\
         hsv.x = sfp(0.f); \n\
-    else if (vmax == rgba.r) \n\
-        hsv.x = sfp(60.f) * (rgba.g - rgba.b) / (vmax - vmin); \n\
-    else if (vmax == rgba.g) \n\
-        hsv.x = sfp(60.f) * (sfp(2.0f) + (rgba.b - rgba.r) / (vmax - vmin)); \n\
-    else if (vmax == rgba.b) \n\
-        hsv.x = sfp(60.f) * (sfp(4.0f) + (rgba.r - rgba.g) / (vmax - vmin)); \n\
+    else if (vmax == rgb.r) \n\
+        hsv.x = sfp(60.f) * (rgb.g - rgb.b) / (vmax - vmin); \n\
+    else if (vmax == rgb.g) \n\
+        hsv.x = sfp(60.f) * (sfp(2.0f) + (rgb.b - rgb.r) / (vmax - vmin)); \n\
+    else if (vmax == rgb.b) \n\
+        hsv.x = sfp(60.f) * (sfp(4.0f) + (rgb.r - rgb.g) / (vmax - vmin)); \n\
     \n\
     if (vmax == sfp(0.f)) \n\
         hsv.y = sfp(0.f); \n\
@@ -1671,41 +1671,41 @@ sfpvec4 rgb_to_hsv(sfpvec4 rgba) \n\
 } \
 "
 
-#define SHADER_HSL_TO_RGBA \
+#define SHADER_HSL_TO_RGB \
 " \n\
-sfpvec4 hsl_to_rgb(sfpvec4 hsl) \n\
+sfpvec3 hsl_to_rgb(sfpvec3 hsl) \n\
 { \n\
-    sfpvec4 rgba = sfpvec4(sfpvec3(0.f), sfp(1.f)); \n\
+    sfpvec3 rgb = sfpvec3(0.f); \n\
     sfp c = (sfp(1.f) - abs(sfp(2.f) * hsl.z - sfp(1.f))) * hsl.y; \n\
     sfp h = hsl.x / sfp(60.f); \n\
     sfp x = c * (sfp(1.f) - abs(mod(h, sfp(2.f)) -  sfp(1.f))); \n\
     sfp m = hsl.z - c / sfp(2.0f); \n\
     if (h >= sfp(0.f) && h < sfp(1.f)) \n\
-        rgba = sfpvec4(c, x, 0, 1); \n\
+        rgb = sfpvec3(c, x, 0); \n\
     else if (h >= sfp(1.f) && h < sfp(2.f)) \n\
-        rgba = sfpvec4(x, c, 0, 1); \n\
+        rgb = sfpvec3(x, c, 0); \n\
     else if (h >= sfp(2.f) && h < sfp(3.f)) \n\
-        rgba = sfpvec4(0, c, x, 1); \n\
+        rgb = sfpvec3(0, c, x); \n\
     else if (h >= sfp(3.f) && h < sfp(4.f)) \n\
-        rgba = sfpvec4(0, x, c, 1); \n\
+        rgb = sfpvec3(0, x, c); \n\
     else if (h >= sfp(4.f) && h < sfp(5.f)) \n\
-        rgba = sfpvec4(x, 0, c, 1); \n\
+        rgb = sfpvec3(x, 0, c); \n\
     else if (h >= sfp(5.f) && h < sfp(6.f)) \n\
-        rgba = sfpvec4(c, 0, x, 1); \n\
-    rgba.rgb += m; \n\
-    return rgba; \n\
+        rgb = sfpvec3(c, 0, x); \n\
+    rgb += m; \n\
+    return rgb; \n\
 } \
 "
 
-#define SHADER_HSV_TO_RGBA \
+#define SHADER_HSV_TO_RGB \
 " \n\
-sfpvec4 hsv_to_rgb(sfpvec4 hsv) \n\
+sfpvec3 hsv_to_rgb(sfpvec3 hsv) \n\
 { \n\
-    sfpvec4 rgba = sfpvec4(sfpvec3(0.f), sfp(1.f)); \n\
+    sfpvec3 rgb = sfpvec3(0.f); \n\
     sfp angle = hsv.x / sfp(360.f); \n\
     if (hsv.y == sfp(0.f)) \n\
     { \n\
-        rgba.r = rgba.g = rgba.b = hsv.z; \n\
+        rgb.r = rgb.g = rgb.b = hsv.z; \n\
     } \n\
     else \n\
     { \n\
@@ -1716,14 +1716,14 @@ sfpvec4 hsv_to_rgb(sfpvec4 hsv) \n\
         sfp p = hsv.z * (sfp(1.0f) - hsv.y); \n\
         sfp q = hsv.z * (sfp(1.0f) - hsv.y * f); \n\
         sfp t = hsv.z * (sfp(1.0f) - hsv.y * (sfp(1.0f) - f)); \n\
-        if      (i == 0) { rgba.r = v; rgba.g = t; rgba.b = p; } \n\
-        else if (i == 1) { rgba.r = q; rgba.g = v; rgba.b = p; } \n\
-        else if (i == 2) { rgba.r = p; rgba.g = v; rgba.b = t; } \n\
-        else if (i == 3) { rgba.r = p; rgba.g = q; rgba.b = v; } \n\
-        else if (i == 4) { rgba.r = t; rgba.g = p; rgba.b = v; } \n\
-        else             { rgba.r = v; rgba.g = p; rgba.b = q; } \n\
+        if      (i == 0) { rgb.r = v; rgb.g = t; rgb.b = p; } \n\
+        else if (i == 1) { rgb.r = q; rgb.g = v; rgb.b = p; } \n\
+        else if (i == 2) { rgb.r = p; rgb.g = v; rgb.b = t; } \n\
+        else if (i == 3) { rgb.r = p; rgb.g = q; rgb.b = v; } \n\
+        else if (i == 4) { rgb.r = t; rgb.g = p; rgb.b = v; } \n\
+        else             { rgb.r = v; rgb.g = p; rgb.b = q; } \n\
     } \n\
-    return rgba; \n\
+    return rgb; \n\
 } \
 "
 
