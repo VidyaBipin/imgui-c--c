@@ -362,7 +362,7 @@ void ShowExtraWidgetDemoWindow()
         ImGui::SliderFloat("Speed", &velocity, 0.0f, 10.0f, "velocity = %.3f");
         
         static ImVec2 selected{0, 0};
-        constexpr int sidex = 10, sidey = 21;
+        constexpr int sidex = 10, sidey = 22;
 
         float widget_size = 50.f;
         static ImColor spinner_filling_meb_bg;
@@ -590,6 +590,10 @@ void ShowExtraWidgetDemoWindow()
                     case 205: ImGui::Spinner<e_st_dots>("SpinnerDotsX13", Radius{16}, Thickness{2.3}, Color{ImColor(255, 255, 255)}, FloatPtr{&nextdot}, Speed{1 * velocity}, Dots{13}, MinThickness{-1.f}, Mode{2}); ImGui::ShowTooltipOnHover("SpinnerDotsX13"); break;
                     case 206: ImGui::Spinner<e_st_angle>("SpinnerAng", Radius{16}, Thickness{2}, Color{ImColor(255, 255, 255)}, BgColor{ImColor(255, 255, 255, 128)}, Speed{2.8f * velocity}, Angle{PI_DIV_2}, Mode{4}); ImGui::ShowTooltipOnHover("SpinnerAng"); break;
                     case 207: ImGui::SpinnerTwinAng180("SpinnerTwinAngX", 16, 12, 2, ImColor(255, 255, 255), ImColor(255, 0, 0), 0.5f * velocity, PI_DIV_4, 2); ImGui::ShowTooltipOnHover("SpinnerTwinAngX"); break;
+                    case 208: ImGui::SpinnerAng8("SpinnerAng8", 21, 2, ImColor(255, 255, 255), 0, 8.f * velocity, PI_DIV_4 * 6, 3, 0.5f); ImGui::ShowTooltipOnHover("SpinnerAng8"); break;
+                    case 209: ImGui::SpinnerAng8("SpinnerAng8.1", 14.5, 2.5, ImColor(255, 255, 255), 0, 4 * velocity, PI_DIV_4, 4, 0.5f); ImGui::ShowTooltipOnHover("SpinnerAng8.1"); break;
+                    case 210: ImGui::SpinnerAng8("SpinnerAng8.2", 12, 2.5, ImColor(255, 255, 255), 0, 5 * velocity, 5.0f, 5, 0.75f); ImGui::ShowTooltipOnHover("SpinnerAng8.2"); break;
+                    case 211: ImGui::SpinnerAng8("SpinnerAng8.3", 19, 2.5, ImColor(255, 255, 255), 0, 5 * velocity, 5.0f, 0, 0.70f); ImGui::ShowTooltipOnHover("SpinnerAng8.3"); break;
 
                     // ...
                     default: break;

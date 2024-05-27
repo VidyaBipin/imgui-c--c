@@ -156,21 +156,47 @@ void ImGui::SpinnerAng(const char *label, float radius, float thickness, const I
 {
     SPINNER_HEADER(pos, size, centre, num_segments);                            // Get the position, size, centre, and number of segments of the spinner using the SPINNER_HEADER macro.
     float start = (float)ImGui::GetTime() * speed;                        // The start angle of the spinner is calculated based on the current time and the specified speed.
-    radius = (mode == 2) ? (0.8f + ImCos(start) * 0.2f) * radius : radius;
+    float b = 0.f;
+    switch (mode) {
+    case 1: b = damped_gravity(ImSin(start * 1.1f)) * angle; break;
+    case 2: radius = (0.8f + ImCos(start) * 0.2f) * radius; break;
+    case 3: b = damped_infinity(1.f, (float)start * 1.1f).second; break;
+    }
+
     auto radiusmode = [radius, mode] (float a) { switch (mode) { case 4: return damped_trifolium(a) * radius; } return radius; };
     circle([&] (int i) {                                                         // Draw the background of the spinner using the `circle` function, with the specified background color and thickness.
         const float a = start + (i * (PI_2 / (num_segments - 1)));               // Calculate the angle for each segment based on the start angle and the number of segments.
         return ImVec2(ImCos(a) * radiusmode(a), ImSin(a) * radiusmode(a));
     }, color_alpha(bg, 1.f), thickness);
 
-    float b = 0.f;
-    switch (mode) {
-    case 1: b = damped_gravity(ImSin(start * 1.1f)) * angle; break;
-    case 3: b = damped_infinity(1.f, (float)start * 1.1f).second; break;
-    }
     circle([&] (int i) {                                                        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
         const float a = start - b + (i * angle / num_segments);
         return ImVec2(ImCos(a) * radiusmode(a), ImSin(a) * radiusmode(a));
+    }, color_alpha(color, 1.f), thickness);
+}
+
+void ImGui::SpinnerAng8(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bg, float speed, float angle, int mode, float rkoef)
+{
+    SPINNER_HEADER(pos, size, centre, num_segments);                            // Get the position, size, centre, and number of segments of the spinner using the SPINNER_HEADER macro.
+    float start = (float)ImGui::GetTime() * speed;                        // The start angle of the spinner is calculated based on the current time and the specified speed.
+    float b = 0.f, kb = 1.f;
+    switch (mode) {
+    case 1: b = damped_gravity(ImSin(start * 1.1f)) * angle; break;
+    case 2: radius = (0.8f + ImCos(start) * 0.2f) * radius; break;
+    case 3: b = damped_infinity(1.f, (float)start * 1.1f).second; break;
+    case 5: kb = 2.f; break;
+    }
+    auto radiusmode = [radius, mode, kb] (float a, float k) { switch (mode) { case 4: return damped_trifolium(a) * radius; } return radius * k * kb; };
+    float centerx_save = centre.x;
+    centre.x = centerx_save + radius * (1.f - rkoef);
+    circle([&] (int i) {                                                        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
+        const float a = start - b + (i * angle / num_segments);
+        return ImVec2(ImCos(a) * radiusmode(a, rkoef), ImSin(a) * radiusmode(a, rkoef));
+    }, color_alpha(color, 1.f), thickness);
+    centre.x = centerx_save - radius * rkoef;
+    circle([&] (int i) {                                                        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
+        const float a = start - b + (i * angle / num_segments);
+        return ImVec2(ImCos(-a) * radiusmode(a, 1.f - rkoef), ImSin(-a) * radiusmode(a, 1.f - rkoef));
     }, color_alpha(color, 1.f), thickness);
 }
 
