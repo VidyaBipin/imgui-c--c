@@ -736,7 +736,7 @@ void TextEditor::HandleKeyboardInputs()
 		//ImGui::CaptureKeyboardFromApp(true);
 
 		ImGuiIO& io = ImGui::GetIO();
-		auto isOSX = io.ConfigMacOSXBehaviors;
+		auto isOSX = false; //io.ConfigMacOSXBehaviors; // modify by Dicky since imgui 19070 already swap ctrl/cmd key
 		auto alt = io.KeyAlt;
 		auto ctrl = io.KeyCtrl;
 		auto shift = io.KeyShift;
@@ -821,8 +821,10 @@ void TextEditor::HandleMouseInputs()
 {
 	ImGuiIO& io = ImGui::GetIO();
 	auto shift = io.KeyShift;
-	auto ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
-	auto alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+	// modify by Dicky since imgui 19070 already swap ctrl/cmd
+	auto ctrl = io.KeyCtrl; //io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
+	auto alt = io.KeyAlt; //io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+	// modify by Dicky end
     if (ImGui::IsMouseReleased(0))
     {
         mSelecting = false;
