@@ -1758,7 +1758,7 @@ namespace IMGUIZMO_NAMESPACE
 #if IMGUI_VERSION_NUM >= 18723
          ImGui::SetNextFrameWantCaptureMouse(true);
 #else
-         ImGui::CaptureMouseFromApp();
+         ImGui::SetNextFrameWantCaptureMouse();
 #endif
          const float signedLength = IntersectRayPlane(gContext.mRayOrigin, gContext.mRayVector, gContext.mTranslationPlan);
          const float len = fabsf(signedLength); // near plan
@@ -1833,7 +1833,7 @@ namespace IMGUIZMO_NAMESPACE
 #if IMGUI_VERSION_NUM >= 18723
             ImGui::SetNextFrameWantCaptureMouse(true);
 #else
-            ImGui::CaptureMouseFromApp();
+            ImGui::SetNextFrameWantCaptureMouse();
 #endif
          }
          if (CanActivate() && type != MT_NONE)
@@ -1882,7 +1882,7 @@ namespace IMGUIZMO_NAMESPACE
 #if IMGUI_VERSION_NUM >= 18723
             ImGui::SetNextFrameWantCaptureMouse(true);
 #else
-            ImGui::CaptureMouseFromApp();
+            ImGui::SetNextFrameWantCaptureMouse();
 #endif
          }
          if (CanActivate() && type != MT_NONE)
@@ -1909,7 +1909,7 @@ namespace IMGUIZMO_NAMESPACE
 #if IMGUI_VERSION_NUM >= 18723
          ImGui::SetNextFrameWantCaptureMouse(true);
 #else
-         ImGui::CaptureMouseFromApp();
+         ImGui::SetNextFrameWantCaptureMouse();
 #endif
          const float len = IntersectRayPlane(gContext.mRayOrigin, gContext.mRayVector, gContext.mTranslationPlan);
          vec_t newPos = gContext.mRayOrigin + gContext.mRayVector * len;
@@ -2004,7 +2004,7 @@ namespace IMGUIZMO_NAMESPACE
 #if IMGUI_VERSION_NUM >= 18723
             ImGui::SetNextFrameWantCaptureMouse(true);
 #else
-            ImGui::CaptureMouseFromApp();
+            ImGui::SetNextFrameWantCaptureMouse();
 #endif
          }
 
@@ -2042,7 +2042,7 @@ namespace IMGUIZMO_NAMESPACE
 #if IMGUI_VERSION_NUM >= 18723
          ImGui::SetNextFrameWantCaptureMouse(true);
 #else
-         ImGui::CaptureMouseFromApp();
+         ImGui::SetNextFrameWantCaptureMouse();
 #endif
          gContext.mRotationAngle = ComputeAngleOnPlan();
          if (snap)

@@ -2205,12 +2205,12 @@ bool ImGui::SliderScalar2D(char const* pLabel, float* fValueX, float* fValueY, c
     }
 
     if (drag_mouse)
-        ImGui::CaptureMouseFromApp();
+        ImGui::SetNextFrameWantCaptureMouse();
 
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Left) && drag_mouse)
     {
         drag_mouse = false;
-        ImGui::CaptureMouseFromApp(false);
+        ImGui::SetNextFrameWantCaptureMouse(false);
     }
 
     ImGui::EndChild();
@@ -2409,12 +2409,12 @@ bool ImGui::SliderScalar3D(char const* pLabel, float* pValueX, float* pValueY, f
     }
 
     if (drag_mouse)
-        ImGui::CaptureMouseFromApp();
+        ImGui::SetNextFrameWantCaptureMouse();
 
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Left) && drag_mouse)
     {
         drag_mouse = false;
-        ImGui::CaptureMouseFromApp(false);
+        ImGui::SetNextFrameWantCaptureMouse(false);
     }
 
     pDrawList->AddText(
@@ -2844,7 +2844,7 @@ bool ImGui::RangeSelect2D(char const* pLabel, float* pCurMinX, float* pCurMinY, 
 						pDrawList->AddLine(oDragZone.Max, oDragZone.Max - ImVec2(0.0f, oRegionRect.GetHeight() * 0.2f), uFrameCol, 1.0f);
 						if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsMouseHoveringRect(oDragZone.Min, oDragZone.Max))
 						{
-                            ImGui::CaptureMouseFromApp();
+                            ImGui::SetNextFrameWantCaptureMouse();
 							ImVec2 vDragDelta = ImGui::GetMousePos() - oDragZone.GetCenter();
 							if (*pCurMinX <= fBoundMinX && vDragDelta.x < 0.0f)
 							{
@@ -2877,12 +2877,12 @@ bool ImGui::RangeSelect2D(char const* pLabel, float* pCurMinX, float* pCurMinY, 
 	}
 
     if (drag_mouse)
-        ImGui::CaptureMouseFromApp();
+        ImGui::SetNextFrameWantCaptureMouse();
 
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Left) && drag_mouse)
     {
         drag_mouse = false;
-        ImGui::CaptureMouseFromApp(false);
+        ImGui::SetNextFrameWantCaptureMouse(false);
     }
 
 	char pBufferMinX[16];
@@ -3147,7 +3147,7 @@ bool ImGui::BezierSelect(const char *label, const ImVec2 size, float P[5])
             ImGui::SetTooltip("(%4.3f, %4.3f)", P[selected * 2 + 0], P[selected * 2 + 1]);
             if (ImGui::IsMouseDown(ImGuiMouseButton_Left) || ImGui::IsMouseDragging(ImGuiMouseButton_Left))
             {
-                ImGui::CaptureMouseFromApp();
+                ImGui::SetNextFrameWantCaptureMouse();
                 float &px = (P[selected * 2 + 0] += ImGui::GetIO().MouseDelta.x / Canvas.x);
                 float &py = (P[selected * 2 + 1] -= ImGui::GetIO().MouseDelta.y / Canvas.y);
                 if (AREA_CONSTRAINED) {
@@ -3159,7 +3159,7 @@ bool ImGui::BezierSelect(const char *label, const ImVec2 size, float P[5])
         }
     }
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
-        ImGui::CaptureMouseFromApp(false);
+        ImGui::SetNextFrameWantCaptureMouse(false);
     // draw curve
     {
         ImColor color(ImGui::GetStyle().Colors[ImGuiCol_PlotLines]);

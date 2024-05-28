@@ -176,7 +176,7 @@ void ImGui::ShowSplineDemo()
         {
             if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
             {
-                ImGui::CaptureMouseFromApp(true);
+                ImGui::SetNextFrameWantCaptureMouse(true);
                 dragging_dot = p - points.begin();
             }
             else if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
@@ -203,7 +203,7 @@ void ImGui::ShowSplineDemo()
     }
     if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
     {
-        ImGui::CaptureMouseFromApp(false);
+        ImGui::SetNextFrameWantCaptureMouse(false);
         dragging_dot = -1;
     }
 }
