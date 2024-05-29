@@ -1859,7 +1859,7 @@ void TabWindow::render()
 
     ImVec2 windowSize = ImGui::GetWindowSize();
     windowSize.x-=/*2.f**/ImGui::GetStyle().WindowPadding.x;	// It should be 2.f*ImGui::GetStyle().WindowPadding.x, but ImGui::GetStyle().WindowPadding.x seems to work better...
-    windowSize.y-=(2.f*ImGui::GetStyle().WindowPadding.y+ImGui::GetCurrentWindow()->TitleBarHeight());
+    windowSize.y-=(2.f*ImGui::GetStyle().WindowPadding.y+ImGui::GetCurrentWindow()->TitleBarHeight);
     TabWindowDragData& dd = gDragData;
 
     static int frameCnt = -1;
