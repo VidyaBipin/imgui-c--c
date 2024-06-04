@@ -1,3 +1,7 @@
+[![Win](https://github.com/aiekick/ImCoolBar/actions/workflows/Win.yml/badge.svg)](https://github.com/aiekick/ImCoolBar/actions/workflows/Win.yml)
+[![Linux](https://github.com/aiekick/ImCoolBar/actions/workflows/Linux.yml/badge.svg)](https://github.com/aiekick/ImCoolBar/actions/workflows/Linux.yml)
+[![Osx](https://github.com/aiekick/ImCoolBar/actions/workflows/Osx.yml/badge.svg)](https://github.com/aiekick/ImCoolBar/actions/workflows/Osx.yml)
+
 # ImCoolbar
 
 # Minimal Sample
@@ -13,7 +17,7 @@
 		return res;
 	};
 		
-	if (ImGui::BeginCoolBar("##CoolBarMain", ImCoolBarFlags_Horizontal, ImVec2(0.5f, 1.0f))) {
+	if (ImGui::BeginCoolBar("##CoolBarMain", ImCoolBar_Horizontal, ImVec2(0.5f, 1.0f))) {
 		if (ImGui::CoolBarItem()) {
 			if (coolbar_button("A")) {
 			

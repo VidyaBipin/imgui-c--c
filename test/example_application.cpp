@@ -90,7 +90,7 @@ static inline void gray_bar(ImGui::ImMat& image, int x1,int y1,int x2,int y2,int
     }
 }
 
-static void Show_Coolbar_demo_window()
+static void Show_Coolbar_demo_window(bool* p_open = NULL)
 {
     auto coolbar_button     = [](const char* label) -> bool
     {
@@ -100,6 +100,7 @@ static void Show_Coolbar_demo_window()
         ImGui::SetWindowFontScale(1.0);
 		return res;
 	};
+    static bool show_imcoolbar_metrics = false;
     ImGui::ImCoolBarConfig config;
     auto viewport = ImGui::GetWindowViewport();
     config.anchor = ImVec2(0.5, 1.0);
@@ -192,6 +193,7 @@ static void Show_Coolbar_demo_window()
 		}
 		ImGui::EndCoolBar();
 	}
+    ImGui::ShowCoolBarMetrics(p_open ? p_open : &show_imcoolbar_metrics);
 }
 
 class Example
@@ -1243,7 +1245,7 @@ bool Example_Frame(void* handle, bool app_will_quit)
     // Show ImCoolbar Window
     if (example->show_coolbar_window)
     {
-        Show_Coolbar_demo_window();
+        Show_Coolbar_demo_window(&example->show_coolbar_window);
     }
 
     // Show 3D orient widget

@@ -189,7 +189,7 @@ bool LoadStyle(const char* filename,ImGuiStyle& style)
                 else if (strcmp(name, "WindowRounding")==0)		{npf=1;pf[0]=&style.WindowRounding;}
                 else if (strcmp(name, "WindowBorderSize")==0)	{npf=1;pf[0]=&style.WindowBorderSize;}
                 else if (strcmp(name, "WindowMinSize")==0)		{npf=2;pf[0]=&style.WindowMinSize.x;pf[1]=&style.WindowMinSize.y;}
-                else if (strcmp(name, "WindowMenuButtonPosition")==0)   {npi=1;pi[0]=&style.WindowMenuButtonPosition;}
+                else if (strcmp(name, "WindowMenuButtonPosition")==0)   {npi=1;pi[0]=(int*)&style.WindowMenuButtonPosition;}
                 else if (strcmp(name, "WindowTitleAlign")==0)       {npf=2;pf[0]=&style.WindowTitleAlign.x;pf[1]=&style.WindowTitleAlign.y;}
                 else if (strcmp(name, "WindowFillAlphaDefault")==0) {npf=1;pf[0]=&WindowFillAlphaDefault;}  // For backward compatibility
                 else if (strcmp(name, "ChildRounding")==0 ||
@@ -215,7 +215,7 @@ bool LoadStyle(const char* filename,ImGuiStyle& style)
                 else if (strcmp(name, "TabBorderSize")==0)              {npf=1;pf[0]=&style.TabBorderSize;}
                 else if (strcmp(name, "TabMinWidthForUnselectedCloseButton")==0 ||
                          strcmp(name, "TabMinWidthForCloseButton")==0)  {npf=1;pf[0]=&style.TabMinWidthForCloseButton;}
-                else if (strcmp(name, "ColorButtonPosition")==0)        {npi=1;pi[0]=&style.ColorButtonPosition;}
+                else if (strcmp(name, "ColorButtonPosition")==0)        {npi=1;pi[0]=(int*)&style.ColorButtonPosition;}
                 else if (strcmp(name, "ButtonTextAlign")==0)        {npf=2;pf[0]=&style.ButtonTextAlign.x;pf[1]=&style.ButtonTextAlign.y;}
                 else if (strcmp(name, "SelectableTextAlign")==0)        {npf=2;pf[0]=&style.SelectableTextAlign.x;pf[1]=&style.SelectableTextAlign.y;}
                 else if (strcmp(name, "DisplayWindowPadding")==0)   {npf=2;pf[0]=&style.DisplayWindowPadding.x;pf[1]=&style.DisplayWindowPadding.y;}

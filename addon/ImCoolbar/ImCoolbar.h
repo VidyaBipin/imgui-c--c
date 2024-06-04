@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2023 Stephane Cuillerdier (aka Aiekick)
+Copyright (c) 2024 Stephane Cuillerdier (aka Aiekick)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -61,5 +61,6 @@ IMGUI_API void EndCoolBar();
 IMGUI_API bool CoolBarItem();
 IMGUI_API float GetCoolBarItemWidth();
 IMGUI_API float GetCoolBarItemScale();
+IMGUI_API void ShowCoolBarMetrics(bool* vOpened);
 
 }  // namespace ImGui
