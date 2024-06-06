@@ -1476,6 +1476,11 @@ void ImMat::print(std::string name)
     std::cout << "]" << std::endl;
 }
 
+void ImMat::print_shape(std::string name)
+{
+    std::cout << name << "(" << w << "x" << h << "x" << c << ")" << std::endl;
+}
+
 // Kalman class
 ImKalman::ImKalman(int state_size,int mea_size)
 {

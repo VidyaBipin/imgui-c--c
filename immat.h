@@ -897,6 +897,7 @@ public:
 
     // debug
     IMGUI_API void print(std::string name = {});
+    IMGUI_API void print_shape(std::string name = {});
 
     // convenient access float vec element
     float& operator[](size_t i);
