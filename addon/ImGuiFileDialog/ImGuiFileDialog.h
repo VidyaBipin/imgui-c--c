@@ -418,7 +418,7 @@ public:
     const FilterInfos& GetSelectedFilter() const;
     void ParseFilters(const char* vFilters);                            // Parse filter syntax, detect and parse filter collection
     void SetSelectedFilterWithExt(const std::string& vFilter);          // Select filter
-    bool m_FillFileStyle(std::shared_ptr<FileInfos> vFileInfos) const;  // fill with the good style
+    bool FillFileStyle(std::shared_ptr<FileInfos> vFileInfos) const;  // fill with the good style
     void SetFileStyle(const IGFD_FileStyleFlags& vFlags, const char* vCriteria, const FileStyle& vInfos);  // Set FileStyle
     void SetFileStyle(const IGFD_FileStyleFlags& vFlags,
         const char* vCriteria,
@@ -606,7 +606,7 @@ private:
 #endif
     static void m_CompleteFileInfos(const std::shared_ptr<FileInfos>& vInfos);     // set time and date infos of a file (detail view mode)
     void m_RemoveFileNameInSelection(const std::string& vFileName);                // selection : remove a file name
-    void m_m_AddFileNameInSelection(const std::string& vFileName, bool vSetLastSelectionFileName);  // selection : add a file name
+    void m_AddFileNameInSelection(const std::string& vFileName, bool vSetLastSelectionFileName);  // selection : add a file name
     void m_AddFile(const FileDialogInternal& vFileDialogInternal,
         const std::string& vPath,
         const std::string& vFileName,
@@ -660,12 +660,12 @@ public:
     void SetCurrentPath(const std::string& vCurrentPath);                  // set the current path
     void SetDefaultFileName(const std::string& vFileName);
     bool SelectDirectory(const std::shared_ptr<FileInfos>& vInfos);  // enter directory
-    void SelectFileName(const FileDialogInternal& vFileDialogInternal,
-        const std::shared_ptr<FileInfos>& vInfos);  // select filename
+    void SelectAllFileNames();
+    void SelectFileName(const FileDialogInternal& vFileDialogInternal, const std::shared_ptr<FileInfos>& vInfos);  // add a filename in selection
+    void SelectOrDeselectFileName(const FileDialogInternal& vFileDialogInternal,const std::shared_ptr<FileInfos>& vInfos);  // add/remove a filename in selection
     void SetCurrentDir(const std::string& vPath);   // define current directory for scan
     void ScanDir(const FileDialogInternal& vFileDialogInternal,
         const std::string& vPath);  // scan the directory for retrieve the file list
-
     std::string GetResultingPath();
     std::string GetResultingFileName(FileDialogInternal& vFileDialogInternal, IGFD_ResultMode vFlag);
     std::string GetResultingFilePathName(FileDialogInternal& vFileDialogInternal, IGFD_ResultMode vFlag);
@@ -1260,8 +1260,6 @@ IGFD_C_API void ManageGPUThumbnails(  // must be call in gpu zone, possibly a th
                                       // / destroy the textures
     ImGuiFileDialog* vContextPtr);    // ImGuiFileDialog context
 #endif                                // USE_THUMBNAILS
-
-#pragma endregion
 
 // Demo Window add By Dicky
 #if IMGUI_BUILD_EXAMPLE
