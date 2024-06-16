@@ -3278,7 +3278,7 @@ ImMat GrayInfernoMap(const ImMat& mat)
                 break;
                 default: break;
             }
-            int _idx = floor(index * UINT8_MAX);
+            int _idx = ImClamp((int)floor(index * UINT8_MAX), (int)0, (int)255);
             dst.set_pixel(col, row, ImPixel(r[_idx], g[_idx], b[_idx], 1.0f));
         }
     }
