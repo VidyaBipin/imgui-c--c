@@ -34,7 +34,7 @@
 // allocating more bytes keeps us safe from SEGV_ACCERR failure
 #define IM_MALLOC_OVERREAD 64
 
-#define OMP_THREADS 1
+#define OMP_THREADS 2
 // exchange-add operation for atomic operations on reference counters
 #if defined __riscv && !defined __riscv_atomic
 // riscv target without A extension
@@ -807,7 +807,7 @@ public:
     // simple filters
     IMGUI_API ImMat blur(int kernel_size, float sigma = 1.0f); // Gaussian Blur
     IMGUI_API ImMat adaptive_threshold(float maxValue, int kernel_size, float delta);
-    IMGUI_API ImMat resize(float w, float h, int interpolate = 0) const; // interpolate_linear = 0 interpolate_nearest = 1
+    IMGUI_API ImMat resize(float w, float h, ImInterpolateMode interpolate = IM_INTERPOLATE_BILINEAR) const;
 
     // copy to
     IMGUI_API void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);

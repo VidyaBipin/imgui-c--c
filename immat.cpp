@@ -753,7 +753,22 @@ ImMat ImMat::threshold(float thres)
     return ImMat();
 }
 
-ImMat ImMat::resize(float _w, float _h, int interpolate) const
+static inline void interpolate_cubic(float fx, float* coeffs)
+{
+    const float A = -0.75f;
+
+    float fx0 = fx + 1;
+    float fx1 = fx;
+    float fx2 = 1 - fx;
+    // float fx3 = 2 - fx;
+
+    coeffs[0] = A * fx0 * fx0 * fx0 - 5 * A * fx0 * fx0 + 8 * A * fx0 - 4 * A;
+    coeffs[1] = (A + 2) * fx1 * fx1 * fx1 - (A + 3) * fx1 * fx1 + 1;
+    coeffs[2] = (A + 2) * fx2 * fx2 * fx2 - (A + 3) * fx2 * fx2 + 1;
+    coeffs[3] = 1.f - coeffs[0] - coeffs[1] - coeffs[2];
+}
+
+ImMat ImMat::resize(float _w, float _h, ImInterpolateMode interpolate) const
 {
     assert(device == IM_DD_CPU);
     assert(dims == 2 || dims == 3);
@@ -761,7 +776,7 @@ ImMat ImMat::resize(float _w, float _h, int interpolate) const
     ImMat m((int)(_w), (int)(_h), (int)c, (size_t)elemsize, elempack);
     double scale_x = (double)w / _w;
 	double scale_y = (double)h / _h;
-    ImPixel p00, p01, p10, p11, av;
+    ImPixel p00, p01, p02, p03, p10, p11, p12, p13, p20, p21, p22, p23, p30, p31,p32,p33, av;
 
     for (int j = 0; j < _h; ++j)
 	{
@@ -771,7 +786,6 @@ ImMat ImMat::resize(float _w, float _h, int interpolate) const
 		sy = std::min(sy, h - 2);
 		sy = std::max(0, sy);
         const auto mw = m.w;
-        #pragma omp parallel for num_threads(OMP_THREADS)
 		for (int i = 0; i < mw; ++i)
 		{
 			float fx = (float)((i + 0.5) * scale_x - 0.5);
@@ -784,8 +798,39 @@ ImMat ImMat::resize(float _w, float _h, int interpolate) const
 			if (sx >= w - 1) {
 				fx = 0, sx = w - 2;
 			}
-            if (interpolate == 0)
+            if (interpolate == IM_INTERPOLATE_BICUBIC)
             {
+                // bicubic
+                p00 = get_pixel(sx - 1, sy - 1);
+                p01 = get_pixel(sx    , sy - 1);
+                p02 = get_pixel(sx + 1, sy - 1);
+                p03 = get_pixel(sx + 2, sy - 1);
+                p10 = get_pixel(sx - 1, sy    );
+                p11 = get_pixel(sx    , sy    );
+                p12 = get_pixel(sx + 1, sy    );
+                p13 = get_pixel(sx + 2, sy    );
+                p20 = get_pixel(sx - 1, sy + 1);
+                p21 = get_pixel(sx    , sy + 1);
+                p22 = get_pixel(sx + 1, sy + 1);
+                p23 = get_pixel(sx + 2, sy + 1);
+                p30 = get_pixel(sx - 1, sy + 2);
+                p31 = get_pixel(sx    , sy + 2);
+                p32 = get_pixel(sx + 1, sy + 2);
+                p33 = get_pixel(sx + 2, sy + 2);
+                float x_coeffs[4];
+                float y_coeffs[4];
+                interpolate_cubic(fx, x_coeffs);
+                interpolate_cubic(fy, y_coeffs);
+                auto v0 = p00 * x_coeffs[0] + p01 * x_coeffs[1] + p02 * x_coeffs[2] + p03 * x_coeffs[3];
+                auto v1 = p10 * x_coeffs[0] + p11 * x_coeffs[1] + p12 * x_coeffs[2] + p13 * x_coeffs[3];
+                auto v2 = p20 * x_coeffs[0] + p21 * x_coeffs[1] + p22 * x_coeffs[2] + p23 * x_coeffs[3];
+                auto v3 = p30 * x_coeffs[0] + p31 * x_coeffs[1] + p32 * x_coeffs[2] + p33 * x_coeffs[3];
+                av = v0 * y_coeffs[0] + v1 * y_coeffs[1] + v2 * y_coeffs[2] + v3 * y_coeffs[3];
+                av.a = 1;
+            }
+            else if (interpolate == IM_INTERPOLATE_BILINEAR)
+            {
+                // linear
                 p00 = get_pixel(sx, sy);
                 p01 = get_pixel(sx, sy + 1);
                 p10 = get_pixel(sx + 1, sy);
@@ -798,6 +843,7 @@ ImMat ImMat::resize(float _w, float _h, int interpolate) const
             }
             else
             {
+                // nearest
                 av = get_pixel(sx, sy);
             }
             m.set_pixel(i, j, av);
