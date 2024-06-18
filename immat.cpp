@@ -1079,7 +1079,21 @@ void ImMat::clean(ImPixel color)
 
 static void RGB2XYZ(float R, float G, float B, float *X, float *Y, float *Z)
 {
-    
+    if (R > 0.04045f)
+        R = pow((R + 0.055f) / 1.055f, 2.4);
+    else
+        R /= 12.92f;
+
+    if (G > 0.04045f)
+        G = pow((G + 0.055f) / 1.055f, 2.4);
+    else
+        G /= 12.92f;
+
+    if (B > 0.04045f)
+        B = pow((B + 0.055f) / 1.055f, 2.4);
+    else
+        B /= 12.92f;
+
 	*X = 0.412453f * R + 0.357580f * G + 0.180423f * B;
 	*Y = 0.212671f * R + 0.715160f * G + 0.072169f * B;
 	*Z = 0.019334f * R + 0.119193f * G + 0.950227f * B;
@@ -1167,6 +1181,21 @@ static void XYZ2RGB(float X, float Y, float Z, float *R, float *G, float *B)
 	RR =  3.240479f * X - 1.537150f * Y - 0.498535f * Z;
 	GG = -0.969256f * X + 1.875992f * Y + 0.041556f * Z;
 	BB =  0.055648f * X - 0.204043f * Y + 1.057311f * Z;
+
+    if (RR > 0.0031308f)
+        RR = 1.055f * pow(RR, 1./2.4) - 0.055f;
+    else
+        RR *= 12.92f;
+
+    if (GG > 0.0031308f)
+        GG = 1.055f * pow(GG, 1./2.4) - 0.055f;
+    else
+        GG *= 12.92f;
+
+    if (BB > 0.0031308f)
+        BB = 1.055f * pow(BB, 1./2.4) - 0.055f;
+    else
+        BB *= 12.92f;
 
 	*R = std::min(1.f, std::max(RR, 0.0f));
 	*G = std::min(1.f, std::max(GG, 0.0f));
