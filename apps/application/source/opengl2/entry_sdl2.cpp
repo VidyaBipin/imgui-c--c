@@ -4,16 +4,19 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl2.h"
 #include <stdio.h>
-#include <SDL.h>
-#include <SDL_opengl.h>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <cerrno>
-#include "application.h"
 #if IMGUI_VULKAN_SHADER
 #include <ImVulkanShader.h>
 #endif
+#ifdef IMGUI_IMPL_OPENGL_LOADER_GLEW
+#include <GL/glew.h>
+#endif
+#include <SDL.h>
+#include <SDL_opengl.h>
+#include "application.h"
 
 void Application_FullScreen(bool on)
 {
@@ -288,6 +291,11 @@ int main(int argc, char** argv)
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
 
+#ifdef IMGUI_IMPL_OPENGL_LOADER_GLEW
+    if (glewInit() != GLEW_OK) std::cout << "There is a problem\n ";
+    std::cout << glGetString(GL_VERSION) << "\n"; 
+#endif
+
     if (property.docking) io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
     if (property.viewport)io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
     if (!property.auto_merge) io.ConfigViewportsNoAutoMerge = true;
@@ -309,8 +317,6 @@ int main(int argc, char** argv)
 #if IMGUI_VULKAN_SHADER
     ImGui::ImVulkanShaderInit();
 #endif
-
-    ImVec4 clear_color = ImVec4(0.f, 0.f, 0.f, 1.f);
 
     // Main loop
     bool done = false;
@@ -359,6 +365,8 @@ int main(int argc, char** argv)
         ImGui_ImplOpenGL2_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
+        glClearColor(0.0, 0.0, 0.0, 0.0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
 
         if (!paths.empty())
         {
@@ -378,10 +386,6 @@ int main(int argc, char** argv)
 #endif
         // Rendering
         ImGui::Render();
-        SDL_GL_MakeCurrent(window, gl_context);
-        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
         // Update and Render additional Platform Windows
         // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.

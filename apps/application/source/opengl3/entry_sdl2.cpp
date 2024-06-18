@@ -13,6 +13,9 @@
 #include <ImVulkanShader.h>
 #endif
 #include <SDL.h>
+#ifdef IMGUI_IMPL_OPENGL_LOADER_GLEW
+#include <GL/glew.h>
+#endif
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <SDL_opengles2.h>
 #else
@@ -351,6 +354,11 @@ int main(int argc, char** argv)
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
 
+#ifdef IMGUI_IMPL_OPENGL_LOADER_GLEW
+    if (glewInit() != GLEW_OK) std::cout << "There is a problem\n ";
+    std::cout << glGetString(GL_VERSION) << "\n"; 
+#endif
+
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
     if (property.docking) io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
     if (property.viewport)io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
@@ -372,8 +380,6 @@ int main(int argc, char** argv)
 #if IMGUI_VULKAN_SHADER
     ImGui::ImVulkanShaderInit();
 #endif
-
-    ImVec4 clear_color = ImVec4(0.f, 0.f, 0.f, 1.f);
 
     // Main loop
     bool done = false;
@@ -434,8 +440,9 @@ int main(int argc, char** argv)
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
-
         ImGui::NewFrame();
+        glClearColor(0.0, 0.0, 0.0, 0.0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
         
         if (property.application.Application_Frame)
             app_done = property.application.Application_Frame(property.handle, done);
@@ -448,10 +455,6 @@ int main(int argc, char** argv)
 #endif
         // Rendering
         ImGui::Render();
-        SDL_GL_MakeCurrent(window, gl_context);
-        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         // Update and Render additional Platform Windows

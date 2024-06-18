@@ -18,6 +18,7 @@
 #cmakedefine01 IMGUI_EMSCRIPTEN
 #cmakedefine01 IMGUI_BUILD_EXAMPLE
 #cmakedefine01 IMGUI_OPENGL
+#cmakedefine01 IMGUI_GLM
 #cmakedefine01 IMGUI_ENABLE_FREETYPE
 #cmakedefine01 IMGUI_GLEW
 #cmakedefine01 IMGUI_SDL2

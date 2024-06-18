@@ -198,6 +198,10 @@ if(PKG_CONFIG_FOUND)
     if(SDL2_FOUND)
         message("imgui sdl2 found")
     endif()
+    pkg_search_module(GLM REQUIRED glm)
+    if (GLM_FOUND)
+        message("imgui glm found")
+    endif(GLM_FOUND)
 endif(PKG_CONFIG_FOUND)
 else()
 set(IMGUI_STATIC ON CACHE BOOL "Enable Static ImGui Build by Force" FORCE)
@@ -310,6 +314,14 @@ if(OPENGL_FOUND)
         ${OPENGL_LIBRARIES}
     )
 endif(OPENGL_FOUND)
+
+if(GLM_FOUND)
+    set(IMGUI_GLM ON)
+    set(IMGUI_INC_DIRS
+        ${IMGUI_INC_DIRS}
+        ${GLM_INCLUDE_DIRS}
+    )
+endif(GLM_FOUND)
 
 if (OpenSSL_FOUND)
     set(IMGUI_INC_DIRS
@@ -1207,7 +1219,6 @@ set(IMGUI_INCS
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/ImGuiZMOquat.h
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/vgConfig.h
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/vGizmo.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/vGizmoMath.h
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmoQuat/vgMath.h
 )
 
@@ -1229,12 +1240,14 @@ set(IMGUI_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiOrient.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiZmo.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/model.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/mesh.cpp
 )
 set(IMGUI_INCS
     ${IMGUI_INCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiOrient.h
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiZmo.h
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/model.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/mesh.h
 )
 
 set(IMGUI_INC_DIRS
@@ -1701,6 +1714,16 @@ if (IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
         imgui
         ${LINK_LIBS}
     )
+    add_executable(
+        example_objviewer
+        test/example_objviewer.cpp
+        ${IMGUI_APP_SRC}
+    )
+    target_link_libraries(
+        example_objviewer
+        imgui
+        ${LINK_LIBS}
+    )
     set (FONT_SRC test/show_fonts.cpp)
     add_executable(
         show_fonts
@@ -1712,7 +1735,6 @@ if (IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
         imgui
         ${LINK_LIBS}
     )
-
     add_executable(ImMaskCreatorTest
         addon/ImMaskCreator/Src/ImMaskCreatorTest.cpp
         ${IMGUI_APP_SRC}

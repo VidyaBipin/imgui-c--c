@@ -11,6 +11,9 @@
 #if IMGUI_VULKAN_SHADER
 #include <ImVulkanShader.h>
 #endif
+#ifdef IMGUI_IMPL_OPENGL_LOADER_GLEW
+#include <GL/glew.h>
+#endif
 #ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
 #endif
@@ -339,6 +342,11 @@ int main(int argc, char** argv)
     
     glfwSwapInterval(1); // Enable vsync
 
+#ifdef IMGUI_IMPL_OPENGL_LOADER_GLEW
+    if (glewInit() != GLEW_OK) std::cout << "There is a problem\n ";
+    std::cout << glGetString(GL_VERSION) << "\n"; 
+#endif
+
     // Get/Set frame buffer scale
 #if !defined(__APPLE__) && GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >=3
     float x_scale, y_scale;
@@ -376,8 +384,6 @@ int main(int argc, char** argv)
     ImGui::ImVulkanShaderInit();
 #endif
 
-    ImVec4 clear_color = ImVec4(0.f, 0.f, 0.f, 1.f);
-
     // Main loop
     bool done = false;
     bool app_done = false;
@@ -397,6 +403,8 @@ int main(int argc, char** argv)
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        glClearColor(0.0, 0.0, 0.0, 0.0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
         
         if (property.application.Application_Frame)
             app_done = property.application.Application_Frame(property.handle, done);
@@ -409,12 +417,6 @@ int main(int argc, char** argv)
 #endif
         // Rendering
         ImGui::Render();
-        glfwMakeContextCurrent(window);
-        int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
-        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         // Update and Render additional Platform Windows
         // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.

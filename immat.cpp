@@ -102,10 +102,13 @@ void ImMat::set_pixel(int x, int y, ImPixel color)
     assert(dims == 3 || dims == 2);
     x = std::max(0, std::min(x, w - 1));
     y = std::max(0, std::min(y, h - 1));
-    color.r = std::max(0.f, std::min(color.r, 1.f));
-    color.g = std::max(0.f, std::min(color.g, 1.f));
-    color.b = std::max(0.f, std::min(color.b, 1.f));
-    color.a = std::max(0.f, std::min(color.a, 1.f));
+    if (color_format != IM_CF_LAB && color_format != IM_CF_HSV && color_format != IM_CF_HSL)
+    {
+        color.r = std::max(0.f, std::min(color.r, 1.f));
+        color.g = std::max(0.f, std::min(color.g, 1.f));
+        color.b = std::max(0.f, std::min(color.b, 1.f));
+        color.a = std::max(0.f, std::min(color.a, 1.f));
+    }
     if (dims == 3)
     {
         switch (type)
@@ -1215,6 +1218,7 @@ ImMat ImMat::cvtToLAB() const
     assert(color_format == IM_CF_BGR || color_format == IM_CF_BGRA || color_format == IM_CF_ABGR);
     assert(total() > 0);
     ImMat m(w, h, 3, (size_t)4u);
+    m.color_format = IM_CF_LAB;
     for (int _h = 0; _h < h; _h++)
     {
         for (int _w = 0; _w < w; _w++)
@@ -1225,7 +1229,6 @@ ImMat ImMat::cvtToLAB() const
             m.set_pixel(_w, _h, lab);
         }
     }
-    m.color_format = IM_CF_LAB;
     return m;
 }
 
@@ -1366,6 +1369,7 @@ ImMat ImMat::cvtToHSV() const
     assert(color_format == IM_CF_BGR || color_format == IM_CF_BGRA);
     assert(total() > 0);
     ImMat m(w, h, 3, (size_t)4u);
+    m.color_format = IM_CF_HSV;
     for (int _h = 0; _h < h; _h++)
     {
         for (int _w = 0; _w < w; _w++)
@@ -1376,7 +1380,6 @@ ImMat ImMat::cvtToHSV() const
             m.set_pixel(_w, _h, hsv);
         }
     }
-    m.color_format = IM_CF_HSV;
     return m;
 }
 
@@ -1386,6 +1389,7 @@ ImMat ImMat::cvtToHSL() const
     assert(color_format == IM_CF_BGR || color_format == IM_CF_BGRA || color_format == IM_CF_ABGR);
     assert(total() > 0);
     ImMat m(w, h, 3, (size_t)4u);
+    m.color_format = IM_CF_HSL;
     for (int _h = 0; _h < h; _h++)
     {
         for (int _w = 0; _w < w; _w++)
@@ -1396,7 +1400,6 @@ ImMat ImMat::cvtToHSL() const
             m.set_pixel(_w, _h, hls);
         }
     }
-    m.color_format = IM_CF_HSL;
     return m;
 }
 
