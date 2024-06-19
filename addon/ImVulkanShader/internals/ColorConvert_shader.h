@@ -839,6 +839,10 @@ void main() \n\
         rgba = sfpvec4(load_rgb(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type), sfp(1.0f)); \n\
     else \n\
         rgba = load_rgba(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
+    // SRGB -> LRGB \n\
+    if (rgba.r > sfp(0.04045)) rgba.r = pow((rgba.r + sfp(0.055)) / sfp(1.055), sfp(2.4)); else rgba.r = rgba.r / sfp(12.92); \n\
+    if (rgba.g > sfp(0.04045)) rgba.g = pow((rgba.g + sfp(0.055)) / sfp(1.055), sfp(2.4)); else rgba.g = rgba.g / sfp(12.92); \n\
+    if (rgba.b > sfp(0.04045)) rgba.b = pow((rgba.b + sfp(0.055)) / sfp(1.055), sfp(2.4)); else rgba.b = rgba.b / sfp(12.92); \n\
     sfpvec3 xyz = matrix_mat_r2x * rgba.rgb; \n\
     sfpvec3 lab = xyz2lab(xyz); \n\
     store_rgb_float_no_clamp(lab, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
@@ -880,6 +884,10 @@ void main() \n\
     sfpvec3 lab = load_rgb(gx, gy, p.w, p.h, p.cstep, p.in_format, p.in_type); \n\
     sfpvec3 xyz = lab2xyz(lab); \n\
     sfpvec3 rgb = matrix_mat_x2r * xyz; \n\
+    // LRGB -> SRGB \n\
+    if (rgb.r > sfp(0.0031308)) rgb.r = sfp(1.055) * pow(rgb.r, sfp(1.0 / 2.4)) - sfp(0.055); else rgb.r = rgb.r * sfp(12.92); \n\
+    if (rgb.g > sfp(0.0031308)) rgb.g = sfp(1.055) * pow(rgb.g, sfp(1.0 / 2.4)) - sfp(0.055); else rgb.g = rgb.g * sfp(12.92); \n\
+    if (rgb.b > sfp(0.0031308)) rgb.b = sfp(1.055) * pow(rgb.b, sfp(1.0 / 2.4)) - sfp(0.055); else rgb.b = rgb.b * sfp(12.92); \n\
     if (p.out_format == CF_BGR || p.out_format == CF_RGB) \n\
         store_rgb(rgb, gx, gy, p.out_w, p.out_h, p.out_cstep, p.out_format, p.out_type); \n\
     else \n\

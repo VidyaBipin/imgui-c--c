@@ -130,19 +130,14 @@ static bool Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
         }
 
         // Resize swap chain?
-        int width, height;
-        SDL_GetWindowSize(window, &width, &height);
-        if (g_SwapChainRebuild || width > property.width || height > property.height)
+        int fb_width, fb_height;
+        SDL_GetWindowSize(window, &fb_width, &fb_height);
+        if (fb_width > 0 && fb_height > 0 && (g_SwapChainRebuild || g_MainWindowData.Width != fb_width || g_MainWindowData.Height != fb_height))
         {
-            if (width > 0 && height > 0)
-            {
-                ImGui_ImplVulkan_SetMinImageCount(g_MinImageCount);
-                ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, &g_MainWindowData, g_QueueFamily, g_Allocator, width, height, g_MinImageCount);
-                g_MainWindowData.FrameIndex = 0;
-                g_SwapChainRebuild = false;
-                property.width = width;
-                property.height = height;
-            }
+            ImGui_ImplVulkan_SetMinImageCount(g_MinImageCount);
+            ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, &g_MainWindowData, g_QueueFamily, g_Allocator, fb_width, fb_height, g_MinImageCount);
+            g_MainWindowData.FrameIndex = 0;
+            g_SwapChainRebuild = false;
         }
 
         // Start the Dear ImGui frame
@@ -412,19 +407,16 @@ int main(int argc, char** argv)
         }
 
         // Resize swap chain?
-        int width, height;
-        SDL_GetWindowSize(window, &width, &height);
-        if (g_SwapChainRebuild || width > property.width || height > property.height)
+        int fb_width, fb_height;
+        SDL_GetWindowSize(window, &fb_width, &fb_height);
+        if (fb_width > 0 && fb_height > 0 && (g_SwapChainRebuild || g_MainWindowData.Width != fb_width || g_MainWindowData.Height != fb_height))
         {
-            if (width > 0 && height > 0)
-            {
-                ImGui_ImplVulkan_SetMinImageCount(g_MinImageCount);
-                ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, &g_MainWindowData, g_QueueFamily, g_Allocator, width, height, g_MinImageCount);
-                g_MainWindowData.FrameIndex = 0;
-                g_SwapChainRebuild = false;
-                property.width = width;
-                property.height = height;
-            }
+            ImGui_ImplVulkan_SetMinImageCount(g_MinImageCount);
+            ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, &g_MainWindowData, g_QueueFamily, g_Allocator, fb_width, fb_height, g_MinImageCount);
+            g_MainWindowData.FrameIndex = 0;
+            g_SwapChainRebuild = false;
+            property.width = fb_width;
+            property.height = fb_height;
         }
 
         // Start the Dear ImGui frame

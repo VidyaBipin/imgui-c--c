@@ -32,8 +32,7 @@ sfpmat3 matrix_mat_r2x = { \n\
 }; \n\
 sfpvec3 rgb_to_xyz(sfpvec4 rgba) \n\
 { \n\
-    sfpvec3 rgb = rgba.rgb; \n\
-    sfpvec3 xyz = rgb * matrix_mat_r2x; \n\
+    sfpvec3 xyz = rgba.rgb * matrix_mat_r2x; \n\
     sfp sum = xyz.x + xyz.y + xyz.z; \n\
     if (sum == sfp(0.f)) \n\
         sum = sfp(1.f); \n\
