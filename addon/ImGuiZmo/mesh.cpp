@@ -15,25 +15,61 @@ Mesh::Mesh(const std::string path)
     tx = ty = 0.0;  
 
 	object_path = path;
-	// Initialize shaders
+	
+    // Initialize shaders
+    initialize_shaders();
+
+    // Initialize global mesh
+    generate_buffers();
+
+    // read the mesh file (obj and mesh file)
+    parse_file_and_bind();   
+}
+
+Mesh::Mesh(const ImGui::ImMat& image, const ImGui::ImMat& map, const float depth_scale)
+{
+    // Init param
+    eye = vec3(0.0, 0.0, 5.0); 
+    up = vec3(0.0, 1.0, 0.0);
+    center = vec3(0.0, 0.0, 0.0);
+    amount = 5;
+    sx = sy = 1.0;   
+    tx = ty = 0.0;
+
+    // Initialize shaders
+    initialize_shaders();
+
+    // Initialize global mesh
+    generate_buffers();
+
+    // parser with RGBD data
+    parse_image_and_bind(image, map, depth_scale);
+}
+
+void Mesh::initialize_shaders()
+{
     char GlslVersionString[32] = "# version 330 core\n";
 
     const GLchar* vertex_shader = 
     "layout (location = 0) in vec3 position;\n"
     "layout (location = 1) in vec3 normal;\n"
+    "layout (location = 2) in vec3 color;\n"
     "uniform mat4 modelview;\n"
     "uniform mat4 projection;\n"
     "out vec3 mynormal;\n"
     "out vec4 myvertex;\n"
+    "out vec4 mycolor;\n"
     "void main(){\n"
     "    gl_Position = projection * modelview * vec4(position, 1.0f);\n"
     "    mynormal = normal;\n"
     "    myvertex = vec4(position, 1.0f);\n"
+    "    mycolor = vec4(color, 1.0f);\n"
     "}\n";
 
     const GLchar* fragment_shader = 
     "in vec3 mynormal;\n"
     "in vec4 myvertex;\n"
+    "in vec4 mycolor;\n"
     "const int num_lights = 5;\n"
     "out vec4 fragColor;\n"
     "uniform mat4 modelview;\n"
@@ -52,7 +88,7 @@ Mesh::Mesh(const std::string path)
     "    return lighting;\n"
     "}\n"
     "void main (void){\n"
-    "    vec4 finalcolor = vec4(0.0f);\n"
+    "    vec4 finalcolor = mycolor;\n"
     "    finalcolor += ambient;\n"
     "    const vec3 eyepos = vec3(0,0,0);\n"
     "    vec3 mypos = myvertex.xyz / myvertex.w;\n"
@@ -133,25 +169,24 @@ Mesh::Mesh(const std::string path)
     shininesscol = glGetUniformLocation(shaderprogram,"shininess") ;    
     projectionPos = glGetUniformLocation(shaderprogram, "projection");
     modelviewPos = glGetUniformLocation(shaderprogram, "modelview");
-
-    // Initialize global mesh
-    generate_buffers();
-    // read the mesh file (obj and mesh file)
-    parse_and_bind();   
 }
 
-void Mesh::generate_buffers(){
+void Mesh::generate_buffers()
+{
 	glGenVertexArrays(1, &vertex_array);
 	glGenBuffers(1, &vertex_buffer);
 	glGenBuffers(1, &normal_buffer);
 	glGenBuffers(1, &index_buffer);
+    glGenBuffers(1, &color_buffer);
 }
 
-void Mesh::destroy_buffers(){
+void Mesh::destroy_buffers()
+{
 	glDeleteVertexArrays(1, &vertex_array);
 	glDeleteBuffers(1, &vertex_buffer);
 	glDeleteBuffers(1, &normal_buffer);
 	glDeleteBuffers(1, &index_buffer);
+    glDeleteBuffers(1, &color_buffer);
 }
 
 void Mesh::set_view_size(float width, float height)
@@ -172,7 +207,8 @@ void Mesh::set_angle(float angleX, float angleY)
     glUniformMatrix4fv(projectionPos, 1, GL_FALSE, &projection[0][0]);
 }
 
-void Mesh::parse_and_bind(){
+void Mesh::parse_file_and_bind()
+{
 	FILE* fp;
 	// fp >> 
 	float minY = INFINITY, minZ = INFINITY;
@@ -189,6 +225,7 @@ void Mesh::parse_and_bind(){
 	if (extension == "obj")
 	{
 		float x, y, z;
+        float r, g, b;
 		int fx, fy, fz, ignore;
 		int c1, c2;
 		
@@ -203,9 +240,11 @@ void Mesh::parse_and_bind(){
 			// c2 == 'v' or c2 == 'f'
 			c2 = fgetc(fp);
 			if ((c1 == 'v') && (c2 == ' ')) {
-				// scan the 3 floating number and scan it to x,y and z.
-				fscanf(fp, "%f %f %f", &x, &y, &z);
+				// scan the first 3 floating number and scan it to x,y and z.
+                // scan the last 3 floating number and scan it to r,g and b.
+				fscanf(fp, "%f %f %f %f %f %f", &x, &y, &z, &r, &g, &b);
 				objectVertices.push_back(vec3(x, y, z));
+                objectColors.push_back(vec3(r, g, b));
 				if (y < minY) minY = y;
 				if (z < minZ) minZ = z;
 				if (y > maxY) maxY = y;
@@ -240,6 +279,7 @@ void Mesh::parse_and_bind(){
 		for (int i = 0; i < numVertices; ++i) {
 			fscanf(fp, " %f %f %f", &x, &y, &z);
 			objectVertices.push_back(vec3(x, y, z));
+            objectColors.push_back(vec3(0.5, 0.5, 0.5));
 			float normal_x = 0.0;
 			float normal_y = 0.0;
 			float normal_z = 1.0;
@@ -292,6 +332,123 @@ void Mesh::parse_and_bind(){
 	glEnableVertexAttribArray(1); // This allows usage of layout location 1 in the vertex shader
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 
+    // Bind vertices to layout location 2
+	glBindBuffer(GL_ARRAY_BUFFER, color_buffer );
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * objectColors.size(), &objectColors[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(2); // This allows usage of layout location 2 in the vertex shader
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer );
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * objectIndices.size(), &objectIndices[0], GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+void Mesh::parse_image_and_bind(const ImGui::ImMat& image, const ImGui::ImMat& map, const float depth_scale)
+{
+    float minY = INFINITY, minZ = INFINITY;
+	float maxY = -INFINITY, maxZ = -INFINITY;
+    if (image.empty() || map.empty())
+        return;
+    float w_scale = (float)image.w / (float)map.w;
+    float h_scale = (float)image.h / (float)map.h;
+    std::vector<ImPoint3D> faces;
+    for (int y = 0; y < map.h - 2; y++)
+    {
+        for (int x = 1; x < map.w - 2; x++)
+        {
+            ImPoint3D face1 = ImPoint3D((y + 1) * map.w + x, (y + 2) * map.w + x, (y + 1) * map.w + x + 1);
+            faces.push_back(face1);
+            ImPoint3D face2 = ImPoint3D((y + 1) * map.w + x + 1, (y + 2) * map.w + x, (y + 2) * map.w + x + 1);
+            faces.push_back(face2);
+        }
+    }
+    std::vector<std::pair<ImPoint3D, ImPoint3D>> vertices;
+    std::vector<ImPoint3D> normals;
+    for (int y = 0; y < map.h; y++)
+    {
+        for (int x = 0; x < map.w; x++)
+        {
+            float flen = std::min(map.w / 2, map.h / 2);
+            flen = sqrt(flen*flen*2);
+            float _x = (float)x - map.w / 2;
+            float _y = (float)(map.h - y) - map.h / 2;
+            float _z = map.at<float>(x,y) * depth_scale;
+            ImPixel pixel = image.get_pixel(x * w_scale, y * h_scale);
+            std::pair<ImPoint3D, ImPoint3D> vertice;
+            vertice.first = ImPoint3D(_x / flen, _y / flen, _z);
+            vertice.second = ImPoint3D(pixel.r, pixel.g, pixel.b);
+            vertices.push_back(vertice);
+            normals.push_back(ImPoint3D(0,0,0));
+        }
+    }
+    for (auto face : faces)
+    {
+        auto v1 = vertices[(int)face.x].first;
+        auto v2 = vertices[(int)face.y].first;
+        auto v3 = vertices[(int)face.z].first;
+        auto v11 = v2 - v1, v12 = v3 - v1;
+        auto v21 = v3 - v2, v22 = v1 - v2;
+        auto v31 = v1 - v3, v32 = v2 - v3;
+        auto vn1 = v11.cross(v12);
+        auto vn2 = v21.cross(v22);
+        auto vn3 = v31.cross(v32);
+        normals[(int)face.x] += vn1;
+        normals[(int)face.y] += vn2;
+        normals[(int)face.z] += vn3;
+        normals[(int)face.x] = normals[(int)face.x].normalize();
+        normals[(int)face.y] = normals[(int)face.y].normalize();
+        normals[(int)face.z] = normals[(int)face.z].normalize();
+    }
+    for (auto vertice : vertices)
+    {
+        objectVertices.push_back(vec3(vertice.first.x, vertice.first.y, vertice.first.z));
+        if (vertice.first.y < minY) minY = vertice.first.y;
+		if (vertice.first.z < minZ) minZ = vertice.first.z;
+		if (vertice.first.y > maxY) maxY = vertice.first.y;
+		if (vertice.first.z > maxZ) maxZ = vertice.first.z;
+        objectColors.push_back(vec3(vertice.second.x, vertice.second.y, vertice.second.z));
+    }
+    for (auto normal : normals)
+    {
+        objectNormals.push_back(vec3(normal.x, normal.y, normal.z));
+    }
+    for (auto face : faces)
+    {
+        objectIndices.push_back((int)face.x);
+        objectIndices.push_back((int)face.y);
+        objectIndices.push_back((int)face.z);
+    }
+
+    // adjust the vertex position 
+	float avgY = (minY + maxY) / 2.0f - 0.02f;
+	float avgZ = (minZ + maxZ) / 2.0f;
+	for (unsigned int i = 0; i < objectVertices.size(); ++i) {
+		vec3 shiftedVertex = (objectVertices[i] - vec3(0.0f, avgY, avgZ)) * vec3(1.58f, 1.58f, 1.58f);
+		objectVertices[i] = shiftedVertex;
+	}
+
+	glBindVertexArray(vertex_array);
+
+	// Bind vertices to layout location 0
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer );
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * objectVertices.size(), &objectVertices[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0); // This allows usage of layout location 0 in the vertex shader
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+
+	// Bind normals to layout location 1
+	glBindBuffer(GL_ARRAY_BUFFER, normal_buffer );
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * objectNormals.size(), &objectNormals[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(1); // This allows usage of layout location 1 in the vertex shader
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+
+    // Bind vertices to layout location 2
+	glBindBuffer(GL_ARRAY_BUFFER, color_buffer );
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * objectColors.size(), &objectColors[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(2); // This allows usage of layout location 2 in the vertex shader
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer );
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * objectIndices.size(), &objectIndices[0], GL_STATIC_DRAW);
 
@@ -301,7 +458,7 @@ void Mesh::parse_and_bind(){
 
 void Mesh::display(float& ambient_slider, float& diffuse_slider, float& specular_slider, float& shininess_slider, bool custom_color, float& light_position, float& light_color)
 {
-    glClearColor(0.1, 0.1, 0.1, 1.0);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
     modelview = glm::lookAt(eye,center,up); 
     glUniformMatrix4fv(modelviewPos, 1, GL_FALSE, &modelview[0][0]);

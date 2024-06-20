@@ -13,7 +13,7 @@
 #include <ImVulkanShader.h>
 #endif
 #include <SDL.h>
-#ifdef IMGUI_IMPL_OPENGL_LOADER_GLEW
+#if IMGUI_GLEW
 #include <GL/glew.h>
 #endif
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -354,7 +354,7 @@ int main(int argc, char** argv)
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
 
-#ifdef IMGUI_IMPL_OPENGL_LOADER_GLEW
+#if IMGUI_GLEW
     if (glewInit() != GLEW_OK) std::cout << "There is a problem\n ";
     std::cout << glGetString(GL_VERSION) << "\n"; 
 #endif

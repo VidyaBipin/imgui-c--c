@@ -3,7 +3,6 @@
 #include <imgui_helper.h>
 #include <ImGuiFileDialog.h>
 #include <application.h>
-#include <ImGuiZmo.h>
 #include <immat.h>
 #include <mesh.h>
 #include <GL/glew.h>
@@ -11,68 +10,29 @@
 
 static gl::Mesh * mesh = nullptr;
 
-static float cameraView[16] =
-{   
-    1.f, 0.f, 0.f, 0.f,
-    0.f, 1.f, 0.f, 0.f,
-    0.f, 0.f, 1.f, 0.f,
-    0.f, 0.f, 0.f, 1.f
-};
-
-static const float identityMatrix[16] =
-{
-    1.f, 0.f, 0.f, 0.f,
-    0.f, 1.f, 0.f, 0.f,
-    0.f, 0.f, 1.f, 0.f,
-    0.f, 0.f, 0.f, 1.f
-};
-
 static void show_main_view()
 {
     auto& io = ImGui::GetIO();
     const ImVec2 Canvas_size = ImGui::GetWindowSize();
-    static float cameraProjection[16];
     static float camYAngle = ImDegToRad(90.f);
     static float camXAngle = ImDegToRad(0.f);
     static float ambient[4] = {0.05, 0.05, 0.05, 1};
     static float diffusion[4] = {0.2, 0.2, 0.2, 1};
     static float specular[4] = {0.5, 0.5, 0.5, 1};
-    static float light_positions[20] = {0.0f, 6.5f};
+    static float light_positions[20] = {10.0f, 10.0f, 10.0f};
     static float light_colors[20] = {1.0f, 1.0f, 1.0f};
-    static float shininess = 10; 
+    static float shininess = 1; 
     static bool custom_color = false;
     bool bControlHoverd = false;
     bool bAnyPopup = ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopupId);
 
     auto cameraViewUpdate = [&]()
     {
-        if (mesh)
-        {
-            ImGuizmo::Perspective(mesh->fovy, Canvas_size.x / Canvas_size.y, mesh->zNear, mesh->zFar, cameraProjection, mesh->tx, mesh->ty);
-            mesh->set_angle(camXAngle, camYAngle);
-            ImGuizmo::LookAt(glm::value_ptr(mesh->eye), glm::value_ptr(mesh->center), glm::value_ptr(mesh->up), cameraView);
-            ImGuizmo::SetOrthographic(false);
-        }
+        if (mesh) mesh->set_angle(camXAngle, camYAngle);
     };
-
-    ImGuizmo::SetDrawlist();
-    ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, Canvas_size.x, Canvas_size.y);
 
     if (mesh)
     {
-        float viewManipulateRight = ImGui::GetWindowPos().x + Canvas_size.x;
-        float viewManipulateTop = ImGui::GetWindowPos().y;
-        if (ImGuizmo::ViewManipulate(cameraView, mesh->amount, ImVec2(viewManipulateRight - 256, viewManipulateTop + 64), ImVec2(128, 128), 0x10101010, &camXAngle, &camYAngle))
-        {
-            cameraViewUpdate();
-            bControlHoverd = true;
-            if (ImGui::BeginTooltip())
-            {
-                ImGui::Text("X: %.3f", ImRadToDeg(camXAngle));
-                ImGui::Text("Y: %.3f", ImRadToDeg(camYAngle));
-                ImGui::EndTooltip();
-            }
-        }
         mesh->display(*ambient, *diffusion, *specular, shininess, custom_color, *light_positions, *light_colors);
     }
 
@@ -135,7 +95,7 @@ static void show_main_view()
                 ImGui::SliderFloat3("Ambient R, G, B", &ambient[0], 0.0f, 1.0f);
                 ImGui::SliderFloat3("Diffusion R, G, B", &diffusion[0], 0.0f, 1.0f);
                 ImGui::SliderFloat3("Specular R, G, B", &specular[0], 0.0f, 1.0f);
-                ImGui::SliderFloat("Shininess", &shininess, 0.0f, 150.0f);
+                ImGui::SliderFloat("Shininess", &shininess, 0.0f, 10.0f);
             }
             ImGui::Separator(); 
             ImGui::TextColored({0.0f,1.0f,1.0f,1.0f}, "Lighting"); 
@@ -145,7 +105,7 @@ static void show_main_view()
                 ImGui::Separator(); 
                 ImGui::Text("%s", light_name.c_str()); 
                 ImGui::Separator(); 
-                ImGui::SliderFloat3((light_name + " positions").c_str(), &light_positions[4 * i], -25.0f, 25.0f);
+                ImGui::SliderFloat3((light_name + " positions").c_str(), &light_positions[4 * i], -100.0f, 100.0f);
                 ImGui::SliderFloat3((light_name + " colors").c_str(), &light_colors[4 * i], 0.0f, 1.0f);
                 light_positions[(4 * i) + 3] = 1.0f;
                 light_colors[(4 * i) + 3] = 1.0f;
@@ -184,21 +144,29 @@ static void show_main_view()
     {
         if (io.MouseWheel < -FLT_EPSILON)
         {
-            mesh->amount -= 0.1;
-            if (mesh->amount < 1.f) mesh->amount = 1.f;
+            mesh->ty -= 0.25;
             cameraViewUpdate();
         }
         else if (io.MouseWheel > FLT_EPSILON)
         {
-            mesh->amount += 0.1;
-            if (mesh->amount > 10.f) mesh->amount = 10.f;
+            mesh->ty += 0.25;
+            cameraViewUpdate();
+        }
+        else if (io.MouseWheelH < -FLT_EPSILON)
+        {
+            mesh->tx -= 0.25;
+            cameraViewUpdate();
+        }
+        else if (io.MouseWheelH > FLT_EPSILON)
+        {
+            mesh->tx += 0.25;
             cameraViewUpdate();
         }
 
         if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
         {
-            mesh->tx += io.MouseDelta.x / Canvas_size.x / mesh->amount * 10;
-            mesh->ty -= io.MouseDelta.y / Canvas_size.y / mesh->amount * 10;
+            camYAngle += io.MouseDelta.x / Canvas_size.x / mesh->amount * 20;
+            camXAngle += io.MouseDelta.y / Canvas_size.y / mesh->amount * 20;
             cameraViewUpdate();
         }
     }

@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <immat.h>
 #include <vector>
 #include <fstream>
 #include <sstream>
@@ -18,16 +19,18 @@ namespace gl {
 class Mesh{
 public:
     Mesh(const std::string path);
+    Mesh(const ImGui::ImMat& image, const ImGui::ImMat& map, const float depth_scale = 1.0);
     ~Mesh() { destroy_buffers(); };
 
     std::vector <vec3> objectVertices;
     std::vector <vec3> objectNormals;
+    std::vector <vec3> objectColors;
     std::vector <unsigned int> objectIndices;    
 
     int render_mode = 0;
     float sx = 1.f, sy = 1.f; 
     float tx = 0.f, ty = 0.f; 
-    float fovy = 90.0f;
+    float fovy = 70.0f;
     float zFar = 99.0f;
     float zNear = 0.1f;
     float amount = 5.f;
@@ -37,7 +40,7 @@ public:
 
 private:
     float view_width = 800, view_height = 600;
-    GLuint vertex_array, vertex_buffer, normal_buffer, index_buffer;
+    GLuint vertex_array, vertex_buffer, normal_buffer, index_buffer, color_buffer;
     std::string object_path; 
     GLuint vertexshader, fragmentshader, shaderprogram;
     mat4 projection, modelview;
@@ -52,9 +55,11 @@ private:
     GLuint emissioncol; 
     GLuint shininesscol; 
 
+    void initialize_shaders();
     void generate_buffers();
     void destroy_buffers();
-    void parse_and_bind();
+    void parse_file_and_bind();
+    void parse_image_and_bind(const ImGui::ImMat& image, const ImGui::ImMat& map, const float depth_scale);
     inline void bind(){glBindVertexArray(vertex_array);}
 public:
     void set_view_size(float width, float height);

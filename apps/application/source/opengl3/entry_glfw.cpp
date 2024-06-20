@@ -11,7 +11,7 @@
 #if IMGUI_VULKAN_SHADER
 #include <ImVulkanShader.h>
 #endif
-#ifdef IMGUI_IMPL_OPENGL_LOADER_GLEW
+#if IMGUI_GLEW
 #include <GL/glew.h>
 #endif
 #ifdef __APPLE__
@@ -342,7 +342,7 @@ int main(int argc, char** argv)
     
     glfwSwapInterval(1); // Enable vsync
 
-#ifdef IMGUI_IMPL_OPENGL_LOADER_GLEW
+#if IMGUI_GLEW
     if (glewInit() != GLEW_OK) std::cout << "There is a problem\n ";
     std::cout << glGetString(GL_VERSION) << "\n"; 
 #endif
