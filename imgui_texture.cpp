@@ -1159,6 +1159,7 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
             config.path = ".";
             config.countSelectionMax = 1;
             config.flags = ImGuiFileDialogFlags_ShowBookmark |
+                            ImGuiFileDialogFlags_DontShowHiddenFiles |
                             ImGuiFileDialogFlags_CaseInsensitiveExtention |
                             ImGuiFileDialogFlags_ConfirmOverwrite |
                             ImGuiFileDialogFlags_Modal;

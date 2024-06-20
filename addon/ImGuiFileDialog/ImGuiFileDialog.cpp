@@ -2941,8 +2941,8 @@ void IGFD::ThumbnailFeature::m_ThreadThumbnailFileDatasExtractionFunc() {
                                 if (newX < w) {
                                     newY = DisplayMode_ThumbailsList_ImageHeight;
                                 }
-                                const auto newWidth         = (int)newX;
-                                const auto newHeight        = (int)newY;
+                                const auto newWidth         = (int)newX * 4;    // modify by Dicky for zoom preview
+                                const auto newHeight        = (int)newY * 4;    // modify by Dicky for zoom preview
                                 const auto newBufSize       = (size_t)(newWidth * newHeight * 4U);  //-V112 //-V1028
                                 auto resizedData            = new uint8_t[newBufSize];
                                 const auto* resizeSucceeded = stbir_resize_uint8_linear(datas, w, h, 0, resizedData, newWidth, newHeight, 0, stbir_pixel_layout::STBIR_RGBA);  //-V112
@@ -4699,7 +4699,14 @@ void IGFD::FileDialog::m_DrawThumbnailsListView(ImVec2 vSize) {
                             m_AddThumbnailToLoad(infos_ptr);
                         }
                         if (th->isReadyToDisplay && th->textureID) {
-                            ImGui::Image((ImTextureID)th->textureID, ImVec2((float)th->textureWidth, (float)th->textureHeight));
+                            // add by Dicky for bigger preview
+                            ImGui::Image((ImTextureID)th->textureID, ImVec2((float)th->textureWidth / 4, (float)th->textureHeight / 4));
+                            if (ImGui::IsItemHovered() && ImGui::BeginTooltip())
+                            {
+                                ImGui::Image((ImTextureID)th->textureID, ImVec2((float)th->textureWidth, (float)th->textureHeight));
+                                ImGui::EndTooltip();
+                            }
+                            // add by Dicky end
                         }
                         m_DisplayFileInfosTooltip(i, column_id++, infos_ptr);
                     }
