@@ -517,7 +517,7 @@ void Example::DrawMatDemo()
     // ImMat adaptive_threshold
     ImGui::ImMat gray_mat = affine_img.cvtToGray();
     ImGui::ImMat gray_threshold_mat = gray_mat.adaptive_threshold(1.0, gray_mat.w / 10, 0.1);
-    ImGui::ImMat threshold_mat = gray_threshold_mat.cvtToARGB();
+    ImGui::ImMat threshold_mat = gray_threshold_mat.cvtToRGB(IM_CF_ABGR, IM_DT_INT8, false);
     ImGui::ImageMatCopyTo(threshold_mat, draw_mat, ImPoint(0, draw_mat.h - o_size * 2));
 
     // ImMat findContours

@@ -777,6 +777,7 @@ ImMat ImMat::resize(float _w, float _h, ImInterpolateMode interpolate) const
     assert(dims == 2 || dims == 3);
     assert(w > 0 && h > 0 && _w > 0 && _h > 0);
     ImMat m((int)(_w), (int)(_h), (int)c, (size_t)elemsize, elempack);
+    m.color_format = color_format;
     double scale_x = (double)w / _w;
 	double scale_y = (double)h / _h;
     ImPixel p00, p01, p02, p03, p10, p11, p12, p13, p20, p21, p22, p23, p30, p31,p32,p33, av;
@@ -1082,20 +1083,23 @@ void ImMat::clean(ImPixel color)
 
 static void RGB2XYZ(float R, float G, float B, float *X, float *Y, float *Z)
 {
-    if (R > 0.04045f)
-        R = pow((R + 0.055f) / 1.055f, 2.4);
-    else
-        R /= 12.92f;
+    //if (gamma_correction)
+    {
+        if (R > 0.04045f)
+            R = pow((R + 0.055f) / 1.055f, 2.4);
+        else
+            R /= 12.92f;
 
-    if (G > 0.04045f)
-        G = pow((G + 0.055f) / 1.055f, 2.4);
-    else
-        G /= 12.92f;
+        if (G > 0.04045f)
+            G = pow((G + 0.055f) / 1.055f, 2.4);
+        else
+            G /= 12.92f;
 
-    if (B > 0.04045f)
-        B = pow((B + 0.055f) / 1.055f, 2.4);
-    else
-        B /= 12.92f;
+        if (B > 0.04045f)
+            B = pow((B + 0.055f) / 1.055f, 2.4);
+        else
+            B /= 12.92f;
+    }
 
 	*X = 0.412453f * R + 0.357580f * G + 0.180423f * B;
 	*Y = 0.212671f * R + 0.715160f * G + 0.072169f * B;
@@ -1185,20 +1189,23 @@ static void XYZ2RGB(float X, float Y, float Z, float *R, float *G, float *B)
 	GG = -0.969256f * X + 1.875992f * Y + 0.041556f * Z;
 	BB =  0.055648f * X - 0.204043f * Y + 1.057311f * Z;
 
-    if (RR > 0.0031308f)
-        RR = 1.055f * pow(RR, 1./2.4) - 0.055f;
-    else
-        RR *= 12.92f;
+    //if (gamma_correction)
+    {
+        if (RR > 0.0031308f)
+            RR = 1.055f * pow(RR, 1./2.4) - 0.055f;
+        else
+            RR *= 12.92f;
 
-    if (GG > 0.0031308f)
-        GG = 1.055f * pow(GG, 1./2.4) - 0.055f;
-    else
-        GG *= 12.92f;
+        if (GG > 0.0031308f)
+            GG = 1.055f * pow(GG, 1./2.4) - 0.055f;
+        else
+            GG *= 12.92f;
 
-    if (BB > 0.0031308f)
-        BB = 1.055f * pow(BB, 1./2.4) - 0.055f;
-    else
-        BB *= 12.92f;
+        if (BB > 0.0031308f)
+            BB = 1.055f * pow(BB, 1./2.4) - 0.055f;
+        else
+            BB *= 12.92f;
+    }
 
 	*R = std::min(1.f, std::max(RR, 0.0f));
 	*G = std::min(1.f, std::max(GG, 0.0f));
@@ -1298,7 +1305,7 @@ static void HSVtoRGB(float h, float s, float v, float& out_r, float& out_g, floa
     }
 }
 
-static void RGB2HLS(float r, float g, float b, float *h, float *l, float *s)
+static void RGB2HSL(float r, float g, float b, float *h, float *s, float *l)
 {
     float cmax = std::max(r, std::max(g, b));
     float cmin = std::min(r, std::min(g, b));
@@ -1328,7 +1335,7 @@ static void RGB2HLS(float r, float g, float b, float *h, float *l, float *s)
     *s = ss;
 }
 
-static float HLS2RGBvalue(float n1, float n2, float hue)
+static float HSL2RGBvalue(float n1, float n2, float hue)
 {
     if(hue > 360)
         hue -= 360;
@@ -1344,7 +1351,7 @@ static float HLS2RGBvalue(float n1, float n2, float hue)
         return n1;
 }
 
-static void HLS2RGB(float h, float l, float s, float *r, float *g, float *b)
+static void HSL2RGB(float h, float s, float l, float *r, float *g, float *b)
 {
     float cmax,cmin;
 
@@ -1357,9 +1364,9 @@ static void HLS2RGB(float h, float l, float s, float *r, float *g, float *b)
     if(s == 0){
         *r = *g = *b = l;
     }else{
-        *r = HLS2RGBvalue(cmin,cmax,h+120);
-        *g = HLS2RGBvalue(cmin,cmax,h);
-        *b = HLS2RGBvalue(cmin,cmax,h-120);
+        *r = HSL2RGBvalue(cmin,cmax,h+120);
+        *g = HSL2RGBvalue(cmin,cmax,h);
+        *b = HSL2RGBvalue(cmin,cmax,h-120);
     }
 }
 
@@ -1396,56 +1403,26 @@ ImMat ImMat::cvtToHSL() const
         {
             auto pixel = get_pixel(_w, _h);
             ImPixel hls;
-            RGB2HLS(pixel.r, pixel.g, pixel.b, &hls.r, &hls.g, &hls.b);
+            RGB2HSL(pixel.r, pixel.g, pixel.b, &hls.r, &hls.g, &hls.b);
             m.set_pixel(_w, _h, hls);
         }
     }
     return m;
 }
 
-ImMat ImMat::cvtToRGB() const
+ImMat ImMat::cvtToRGB(ImColorFormat format, ImDataType dtype, bool planar) const
 {
     assert(device == IM_DD_CPU);
     assert(color_format != IM_CF_BGR && color_format != IM_CF_BGRA && color_format != IM_CF_ABGR);
+    assert(format == IM_CF_BGR || format == IM_CF_RGB || format == IM_CF_ABGR || format == IM_CF_BGRA || format == IM_CF_ARGB || format == IM_CF_RGBA);
     assert(total() > 0);
-    ImMat m(w, h, 3, (size_t)1u, 3);
-    for (int _h = 0; _h < h; _h++)
-    {
-        for (int _w = 0; _w < w; _w++)
-        {
-            auto pixel = get_pixel(_w, _h);
-            ImPixel rgb;
-            switch (color_format)
-            {
-                case IM_CF_LAB:
-                    Lab2RGB(pixel.r, pixel.g, pixel.b, &rgb.r, &rgb.g, &rgb.b);
-                    break;
-                case IM_CF_GRAY:
-                    rgb.r = 
-                    rgb.g = 
-                    rgb.b = pixel.r;
-                    rgb.a = 1;
-                break;
-                case IM_CF_HSV:
-                    HSVtoRGB(pixel.r, pixel.g, pixel.b, rgb.r, rgb.g, rgb.b);
-                break;
-                case IM_CF_HSL:
-                    HLS2RGB(pixel.r, pixel.g, pixel.b, &rgb.r, &rgb.g, &rgb.b);
-                break;
-                default: break;
-            }
-            m.set_pixel(_w, _h, rgb);
-        }
-    }
-    return m;
-}
-
-ImMat ImMat::cvtToARGB() const
-{
-    assert(device == IM_DD_CPU);
-    assert(color_format != IM_CF_BGR && color_format != IM_CF_BGRA && color_format != IM_CF_ABGR);
-    assert(total() > 0);
-    ImMat m(w, h, 4, (size_t)1u, 4);
+    int c = 4;
+    if (format == IM_CF_BGR || format == IM_CF_RGB) c = 3;
+    if (dtype == IM_DT_UNDEFINED) dtype = this->type;
+    ImMat m;
+    m.create_type(w, h, c, dtype);
+    m.color_format = format;
+    m.elempack = planar ? 1 : c;
     for (int _h = 0; _h < h; _h++)
     {
         for (int _w = 0; _w < w; _w++)
@@ -1469,7 +1446,7 @@ ImMat ImMat::cvtToARGB() const
                     rgb.a = 1;
                 break;
                 case IM_CF_HSL:
-                    HLS2RGB(pixel.r, pixel.g, pixel.b, &rgb.r, &rgb.g, &rgb.b);
+                    HSL2RGB(pixel.r, pixel.g, pixel.b, &rgb.r, &rgb.g, &rgb.b);
                     rgb.a = 1;
                 break;
                 default: break;
@@ -1477,7 +1454,6 @@ ImMat ImMat::cvtToARGB() const
             m.set_pixel(_w, _h, rgb);
         }
     }
-
     return m;
 }
 
@@ -5632,7 +5608,7 @@ void findContours(const ImGui::ImMat& src, std::vector<std::vector<ImPoint>>& _c
 		}
 	}
 
-	if (hierarchy_vector.size() != contour_counter.size() || hierarchy_vector.size() != contour_vector.size()) printf("Storage offset error");
+	//if (hierarchy_vector.size() != contour_counter.size() || hierarchy_vector.size() != contour_vector.size()) printf("Storage offset error\n");
 
     for (int i = 0; i < contour_vector.size(); ++i)
     {
