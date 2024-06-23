@@ -914,6 +914,7 @@ ImMat ImMat::crop(ImPoint p1, ImPoint p2) const
     if (x2 > w) x2 = w;
     if (y2 > h) y2 = h;
     ImMat dst(x2 - x1, y2 - y1, c, elemsize, elempack);
+    dst.color_format = color_format;
 
     if (dims == 1)
     {
@@ -941,6 +942,7 @@ ImMat ImMat::crop(ImPoint p1, ImPoint p2) const
     }
     else if (dims == 3)
     {
+        #pragma omp parallel for num_threads(OMP_THREADS)
         for (int _c = 0; _c < c; _c++)
         {
             for (int i = y1; i < y2; i++)
@@ -1106,7 +1108,6 @@ static void RGB2XYZ(float R, float G, float B, float *X, float *Y, float *Z)
 	*Z = 0.019334f * R + 0.119193f * G + 0.950227f * B;
 }
 
-
 static void XYZ2Lab(float X, float Y, float Z, float *L, float *a, float *b)
 {
     const float param_13 = 1.0f / 3.0f;
@@ -1180,7 +1181,6 @@ static void Lab2XYZ(float L, float a, float b, float *X, float *Y, float *Z)
 	(*Y) *=	Yn;
 	(*Z) *= Zn;
 }
-
 
 static void XYZ2RGB(float X, float Y, float Z, float *R, float *G, float *B)
 {
