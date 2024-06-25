@@ -633,11 +633,12 @@ static void destroy_texture(ImTexture* tex)
 #endif
 }
 
-void ImDestroyTexture(ImTextureID texture)
+void ImDestroyTexture(ImTextureID* texture_ptr)
 {
     //fprintf(stderr, "[Destroy ImTexture]:%lu\n", g_Textures.size());
+    if (!texture_ptr || !*texture_ptr) return;
     g_tex_mutex.lock();
-    auto textureIt = ImFindTexture(texture);
+    auto textureIt = ImFindTexture(*texture_ptr);
     if (textureIt == g_Textures.end())
     {
         g_tex_mutex.unlock();
@@ -652,6 +653,7 @@ void ImDestroyTexture(ImTextureID texture)
     destroy_texture(&(*textureIt));
     g_Textures.erase(textureIt);
     g_tex_mutex.unlock();
+    *texture_ptr = nullptr;
 }
 
 void ImDestroyTextures()
@@ -918,8 +920,7 @@ void ImMatToTexture(const ImGui::ImMat& mat, ImTextureID& texture)
         if (mat.w != image_width || mat.h != image_height)
         {
             // mat changed
-            ImGui::ImDestroyTexture(texture);
-            texture = nullptr;
+            ImGui::ImDestroyTexture(&texture);
         }
     }
     ImGui::ImGenerateOrUpdateTexture(texture, mat.w, mat.h, mat.c, (const unsigned char *)&mat, true);

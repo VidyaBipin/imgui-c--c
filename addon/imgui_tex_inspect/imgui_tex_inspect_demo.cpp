@@ -411,12 +411,8 @@ void ShowImGuiTexInspectDemo(bool* p_open)
         {
             if (ImGuiFileDialog::Instance()->IsOk())
             {
-                if (testTex.texture)
-                {
-                    ImGui::ImDestroyTexture(testTex.texture);
-                    testTex.texture = nullptr;
-                    testTex.size = ImVec2(0,0);
-                }
+                ImGui::ImDestroyTexture(&testTex.texture);
+                testTex.size = ImVec2(0,0);
                 auto file_path = ImGuiFileDialog::Instance()->GetFilePathName();
                 auto texture = ImGui::ImLoadTexture(file_path.c_str());
                 if (texture)

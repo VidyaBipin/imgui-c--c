@@ -11,7 +11,7 @@ IMGUI_API ImTextureID ImCreateTexture(const void* data, int width, int height, i
 IMGUI_API ImTextureID ImLoadTexture(const char* path);
 IMGUI_API ImTextureID ImLoadTexture(const unsigned int * data, size_t size);
 IMGUI_API void ImLoadImageToMat(const char* path, ImMat& mat, bool gray = false);
-IMGUI_API void ImDestroyTexture(ImTextureID texture);
+IMGUI_API void ImDestroyTexture(ImTextureID* texture_ptr);
 IMGUI_API int ImGetTextureWidth(ImTextureID texture);
 IMGUI_API int ImGetTextureHeight(ImTextureID texture);
 IMGUI_API int ImGetTextureData(ImTextureID texture, void* data);

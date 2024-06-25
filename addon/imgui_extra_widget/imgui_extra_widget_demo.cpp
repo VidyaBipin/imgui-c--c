@@ -1101,7 +1101,7 @@ void ShowImFFTDemoWindow()
     if (spectrogram.empty())
     {
         ImGui::ImSpectrogram(time_domain, spectrogram, 128);
-        if (spectrogram_texture) { ImGui::ImDestroyTexture(spectrogram_texture); spectrogram_texture = nullptr; }
+        ImGui::ImDestroyTexture(&spectrogram_texture);
         ImGui::ImMatToTexture(spectrogram, spectrogram_texture);
     }
     // init frequency domain data
@@ -1340,7 +1340,7 @@ void ShowImSTFTDemoWindow()
             ImGui::ImSpectrogram(time_domain, spectrogram, 2048);
         else
             ImGui::ImSpectrogram(time_domain, spectrogram, 512, true, 128);
-        if (spectrogram_texture) { ImGui::ImDestroyTexture(spectrogram_texture); spectrogram_texture = nullptr; }
+        ImGui::ImDestroyTexture(&spectrogram_texture);
         ImGui::ImMatToTexture(spectrogram, spectrogram_texture);
     }
     

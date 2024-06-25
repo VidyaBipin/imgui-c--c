@@ -217,9 +217,9 @@ public:
         if (data)
             free(data); 
         ImGui::ReleaseTabWindow();
-        if (ImageTexture) { ImGui::ImDestroyTexture(ImageTexture); ImageTexture = 0; }
-        if (DrawMatTexture) { ImGui::ImDestroyTexture(DrawMatTexture); DrawMatTexture = 0; }
-        if (CustomDrawTexture) { ImGui::ImDestroyTexture(CustomDrawTexture); CustomDrawTexture = 0; }
+        ImGui::ImDestroyTexture(&ImageTexture);
+        ImGui::ImDestroyTexture(&DrawMatTexture);
+        ImGui::ImDestroyTexture(&CustomDrawTexture);
     }
 
 public:
@@ -582,7 +582,7 @@ void Example::DrawFishCircleDemo()
     change |= ImGui::RadioButton("Equidistance",  &graphic_type, 1); ImGui::SameLine();
     change |= ImGui::RadioButton("Equisolid",  &graphic_type, 2); ImGui::SameLine();
     change |= ImGui::RadioButton("Stereographic",  &graphic_type, 3);
-    if (change && CustomDrawTexture) { ImGui::ImDestroyTexture(CustomDrawTexture); CustomDrawTexture = nullptr; }
+    ImGui::ImDestroyTexture(&CustomDrawTexture);
     auto HSVtoRGB = [](float t)
     {
         float r, g, b;
@@ -785,8 +785,7 @@ void Example_Initialize(void** handle)
         if (vThumbnail_Info && vThumbnail_Info->textureID)
         {
             ImTextureID texID = (ImTextureID)vThumbnail_Info->textureID;
-            ImGui::ImDestroyTexture(texID);
-            vThumbnail_Info->textureID = nullptr;
+            ImGui::ImDestroyTexture(&texID);
             std::cout << "Thumbnail destory texture" << std::endl;
         }
     });

@@ -156,6 +156,6 @@ void ShowAddonsTabWindow()
 }
 void  ReleaseTabWindow()
 {
-    if (textue) { ImGui::ImDestroyTexture(textue); textue = nullptr; }
+    ImGui::ImDestroyTexture(&textue);
 }
 } // namespace ImGui
