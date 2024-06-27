@@ -30,7 +30,7 @@
 // Volk headers
 #ifdef IMGUI_IMPL_VULKAN_USE_VOLK
 #define VOLK_IMPLEMENTATION
-#include <Volk/volk.h>
+#include <volk.h>
 #endif
 #include <fstream>
 #include <sstream>
@@ -482,9 +482,9 @@ int main(int, char**)
     int window_height = 960;
     float window_scale = 1;
 
+    // Create window with Vulkan context
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow* window = glfwCreateWindow(window_width, window_height, "Dear ImGui GLFW+Vulkan example", nullptr, nullptr);
-
     if (!glfwVulkanSupported())
     {
         printf("GLFW: Vulkan Not Supported\n");
