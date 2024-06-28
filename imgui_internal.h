@@ -56,6 +56,7 @@ Index of this file:
 #include <limits.h>     // INT_MIN, INT_MAX
 #include <string>       // add by dicky for language support
 #include <map>          // add by dicky for language support
+#include <thread>       // add by Dicky for thread safe
 
 // Enable SSE intrinsics if available
 #if (defined __SSE__ || defined __x86_64__ || defined _M_X64 || (defined(_M_IX86_FP) && (_M_IX86_FP >= 1))) && !defined(IMGUI_DISABLE_SSE)
@@ -2559,6 +2560,9 @@ struct ImGuiContext
     ImVector<char>          TempBuffer;                         // Temporary text buffer
     char                    TempKeychordName[64];
 
+    // add by Dicky thread safe
+    std::thread::id         MainThreadID;
+
     ImGuiContext(ImFontAtlas* shared_font_atlas)
     {
         IO.Ctx = this;
@@ -2777,6 +2781,10 @@ struct ImGuiContext
         FramerateSecPerFrameAccum = 0.0f;
         WantCaptureMouseNextFrame = WantCaptureKeyboardNextFrame = WantTextInputNextFrame = -1;
         memset(TempKeychordName, 0, sizeof(TempKeychordName));
+
+        // add by Dicky
+        MainThreadID = std::this_thread::get_id();
+        // add by Dicky end
     }
 };
 
@@ -3375,6 +3383,7 @@ namespace ImGui
     // - You are calling ImGui functions after ImGui::EndFrame()/ImGui::Render() and before the next ImGui::NewFrame(), which is also illegal.
     inline    ImGuiWindow*  GetCurrentWindowRead()      { ImGuiContext& g = *GImGui; return g.CurrentWindow; }
     inline    ImGuiWindow*  GetCurrentWindow()          { ImGuiContext& g = *GImGui; g.CurrentWindow->WriteAccessed = true; return g.CurrentWindow; }
+    inline    bool          IsMainThread()              { ImGuiContext& g = *GImGui; return std::this_thread::get_id() == g.MainThreadID; }
     IMGUI_API ImGuiWindow*  FindWindowByID(ImGuiID id);
     IMGUI_API ImGuiWindow*  FindWindowByName(const char* name);
     IMGUI_API void          UpdateWindowParentAndRootLinks(ImGuiWindow* window, ImGuiWindowFlags flags, ImGuiWindow* parent_window);

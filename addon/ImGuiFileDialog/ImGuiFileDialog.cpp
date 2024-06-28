@@ -5398,7 +5398,7 @@ IGFD_C_API void SetDestroyThumbnailCallback(ImGuiFileDialog* vContextPtr, const 
 }
 
 IGFD_C_API void ManageGPUThumbnails(ImGuiFileDialog* vContextPtr) {
-    if (vContextPtr != nullptr) {
+    if (ImGui::IsMainThread() && vContextPtr != nullptr) { // modify by Dicky for check rendering in main thread
         vContextPtr->ManageGPUThumbnails();
     }
 }
