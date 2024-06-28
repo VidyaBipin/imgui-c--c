@@ -763,33 +763,6 @@ void Example_Initialize(void** handle)
     *handle = new Example();
     Example * example = (Example *)*handle;
     ImPlot::CreateContext();
-#ifdef USE_THUMBNAILS
-    ImGuiFileDialog::Instance()->SetCreateThumbnailCallback([](IGFD_Thumbnail_Info *vThumbnail_Info) -> void
-    {
-        if (vThumbnail_Info && 
-            vThumbnail_Info->isReadyToUpload && 
-            vThumbnail_Info->textureFileDatas)
-        {
-            auto texture = ImGui::ImCreateTexture(vThumbnail_Info->textureFileDatas, vThumbnail_Info->textureWidth, vThumbnail_Info->textureHeight, vThumbnail_Info->textureChannels);
-            vThumbnail_Info->textureID = (void*)texture;
-            delete[] vThumbnail_Info->textureFileDatas;
-            vThumbnail_Info->textureFileDatas = nullptr;
-
-            vThumbnail_Info->isReadyToUpload = false;
-            vThumbnail_Info->isReadyToDisplay = true;
-            std::cout << "Thumbnail create texture" << std::endl;
-        }
-    });
-    ImGuiFileDialog::Instance()->SetDestroyThumbnailCallback([](IGFD_Thumbnail_Info* vThumbnail_Info)
-    {
-        if (vThumbnail_Info && vThumbnail_Info->textureID)
-        {
-            ImTextureID texID = (ImTextureID)vThumbnail_Info->textureID;
-            ImGui::ImDestroyTexture(&texID);
-            std::cout << "Thumbnail destory texture" << std::endl;
-        }
-    });
-#endif
 }
 
 void Example_Finalize(void** handle)
@@ -810,10 +783,6 @@ bool Example_Frame(void* handle, bool app_will_quit)
     Example * example = (Example *)handle;
     if (!example)
         return true;
-
-#ifdef USE_THUMBNAILS
-	ImGuiFileDialog::Instance()->ManageGPUThumbnails();
-#endif
 
     if (!example->ImageTexture) 
     {

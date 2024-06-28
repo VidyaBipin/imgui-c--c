@@ -3720,6 +3720,33 @@ IGFD::FileDialog::FileDialog() : PlacesFeature(), KeyExplorerFeature(), Thumbnai
 #ifdef USE_PLACES_FEATURE
     m_InitPlaces(m_FileDialogInternal);
 #endif
+// add by Dicky
+#ifdef USE_THUMBNAILS
+    SetCreateThumbnailCallback([](IGFD_Thumbnail_Info *vThumbnail_Info) -> void
+    {
+        if (vThumbnail_Info && 
+            vThumbnail_Info->isReadyToUpload && 
+            vThumbnail_Info->textureFileDatas)
+        {
+            auto texture = ImGui::ImCreateTexture(vThumbnail_Info->textureFileDatas, vThumbnail_Info->textureWidth, vThumbnail_Info->textureHeight, vThumbnail_Info->textureChannels);
+            vThumbnail_Info->textureID = (void*)texture;
+            delete[] vThumbnail_Info->textureFileDatas;
+            vThumbnail_Info->textureFileDatas = nullptr;
+
+            vThumbnail_Info->isReadyToUpload = false;
+            vThumbnail_Info->isReadyToDisplay = true;
+        }
+    });
+    SetDestroyThumbnailCallback([](IGFD_Thumbnail_Info* vThumbnail_Info)
+    {
+        if (vThumbnail_Info && vThumbnail_Info->textureID)
+        {
+            ImTextureID texID = (ImTextureID)vThumbnail_Info->textureID;
+            ImGui::ImDestroyTexture(&texID);
+        }
+    });
+#endif
+// add by Dicky end
 	SetDarkStyle(); // add By Dicky
 }
 IGFD::FileDialog::~FileDialog() = default;
@@ -3844,7 +3871,11 @@ void IGFD::FileDialog::OpenDialog(const std::string& vKey, const std::string& vT
 
 bool IGFD::FileDialog::Display(const std::string& vKey, ImGuiWindowFlags vFlags, ImVec2 vMinSize, ImVec2 vMaxSize) {
     bool res = false;
-
+// add by Dicku
+#ifdef USE_THUMBNAILS
+	ManageGPUThumbnails();
+#endif
+// add by Dicku end
     if (m_FileDialogInternal.showDialog && m_FileDialogInternal.dLGkey == vKey) {
         if (m_FileDialogInternal.puUseCustomLocale) setlocale(m_FileDialogInternal.localeCategory, m_FileDialogInternal.localeBegin.c_str());
 
