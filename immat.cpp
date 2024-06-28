@@ -5621,4 +5621,141 @@ void findContours(const ImGui::ImMat& src, std::vector<std::vector<ImPoint>>& _c
     }
 }
 
+/***************************
+ * FastGlobalImageSmoothing
+****************************/
+// Build LUT for bilateral kernel weight
+void prepareBLFKernel(std::vector<float>& BLFKernel, const double sigma)
+{
+	const int max_size_of_filter = 195075;
+	BLFKernel.resize(max_size_of_filter);
+
+	for (int m = 0; m < max_size_of_filter; m++)
+    {
+		BLFKernel[m] = (float)exp(-sqrt((double)m) / (sigma)); // Kernel LUT
+	}
+}
+
+void solve_tridiagonal_in_place_destructive(float x[], const size_t N, const float a[], const float b[], float c[])
+{
+	int n;
+
+	c[0] = c[0] / b[0];
+	x[0] = x[0] / b[0];
+
+	// loop from 1 to N - 1 inclusive 
+	for (n = 1; n < N; n++) {
+		float m = (float)(1.0 / (b[n] - a[n] * c[n - 1]));
+		c[n] = c[n] * m;
+		x[n] = (x[n] - a[n] * x[n - 1]) * m;
+	}
+
+	// loop from N - 2 to 0 inclusive 
+	for (n = N - 2; n >= 0; n--) {
+		x[n] = x[n] - c[n] * x[n + 1];
+	}
+}
+
+void FGS_simple(float* image, float* joint_image, const int width, const int height, const int nChannels, 
+                const int nChannels_guide, const float sigma, const float lambda, const int solver_iteration, const float solver_attenuation)
+{
+	int color_diff = 0;
+
+	if (joint_image == nullptr) joint_image = image;
+
+	float *a_vec = new float[width];
+	float *b_vec = new float[width];
+	float *c_vec = new float[width];
+	float *x_vec = new float[width];
+	float *c_ori_vec = new float[width];
+
+	float *a2_vec = new float[width];
+	float *b2_vec = new float[width];
+	float *c2_vec = new float[width];
+	float *x2_vec = new float[width];
+	float *c2_ori_vec = new float[width];
+
+	std::vector<float> BLFKernelI;
+	prepareBLFKernel(BLFKernelI, sigma);
+
+	//Variation of lambda (NEW)
+	float lambda_in = (float)1.5*lambda*pow(4.0, solver_iteration - 1) / (pow(4.0, solver_iteration) - 1.0);
+	for (int iter = 0; iter < solver_iteration; iter++)
+	{
+		//for each row
+		for (int i = 0; i < height; i++)
+		{
+			memset(a_vec, 0, sizeof(float)*width);
+			memset(b_vec, 0, sizeof(float)*width);
+			memset(c_vec, 0, sizeof(float)*width);
+			memset(c_ori_vec, 0, sizeof(float)*width);
+			memset(x_vec, 0, sizeof(float)*width);
+			for (int j = 1; j < width; j++)
+			{
+				int color_diff = 0;
+				// compute bilateral weight for all channels
+				for (int c = 0; c < nChannels_guide; c++)
+					color_diff += powf(joint_image[nChannels_guide * (i * width + j) + c] - joint_image[nChannels_guide * (i * width + j - 1) + c], 2);
+
+				a_vec[j] = -lambda_in * BLFKernelI[color_diff];		//WLS
+			}
+			for (int j = 0; j < width - 1; j++) {
+				c_ori_vec[j] = a_vec[j + 1];
+			}
+			for (int j = 0; j < width; j++) {
+				b_vec[j] = 1.f - a_vec[j] - c_ori_vec[j];		//WLS
+			}
+			for (int c = 0; c < nChannels; c++)
+			{
+				memcpy(c_vec, c_ori_vec, sizeof(float)*width);
+				for (int j = 0; j < width; j++) {
+					x_vec[j] = image[nChannels * (i * width + j) + c];
+				}
+				solve_tridiagonal_in_place_destructive(x_vec, width, a_vec, b_vec, c_vec);
+				for (int j = 0; j < width; j++) {
+					image[nChannels * (i * width + j) + c] = x_vec[j];
+				}
+			}
+		}
+
+		//for each column
+		for (int j = 0; j < width; j++)
+		{
+			memset(a2_vec, 0, sizeof(float)*height);
+			memset(b2_vec, 0, sizeof(float)*height);
+			memset(c2_vec, 0, sizeof(float)*height);
+			memset(c2_ori_vec, 0, sizeof(float)*height);
+			memset(x2_vec, 0, sizeof(float)*height);
+			for (int i = 1; i < height; i++)
+			{
+				int color_diff = 0;
+				// compute bilateral weight for all channels
+				for (int c = 0; c < nChannels_guide; c++)
+					color_diff += powf(joint_image[nChannels_guide * (i * width + j) + c] - joint_image[nChannels_guide * ((i - 1) * width + j) + c], 2);
+
+				a2_vec[i] = -lambda_in * BLFKernelI[color_diff];		//WLS
+			}
+			for (int i = 0; i < height - 1; i++) {
+				c2_ori_vec[i] = a2_vec[i + 1];
+			}
+			for (int i = 0; i < height; i++) {
+				b2_vec[i] = 1.f - a2_vec[i] - c2_ori_vec[i];		//WLS
+			}
+			for (int c = 0; c < nChannels; c++)
+			{
+				memcpy(c2_vec, c2_ori_vec, sizeof(float)*height);
+				for (int i = 0; i < height; i++) {
+					x2_vec[i] = image[nChannels * (i * width + j) + c];
+				}
+				solve_tridiagonal_in_place_destructive(x2_vec, height, a2_vec, b2_vec, c2_vec);
+				for (int i = 0; i < height; i++) {
+					image[nChannels * (i * width + j) + c] = x2_vec[i];
+				}
+			}
+		}
+
+		//Variation of lambda (NEW)
+		lambda_in /= solver_attenuation;
+	}	//iter	
+}
 } // namespace ImGui

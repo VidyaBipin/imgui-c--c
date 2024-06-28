@@ -5597,4 +5597,13 @@ IMGUI_API void  DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, co
 IMGUI_API void  ImageMatCopyTo(const ImMat& src, ImMat& dst, ImPoint pos);
 } // namespace ImGui
 
+// fast-global-smooth filter
+namespace ImGui
+{
+IMGUI_API void prepareBLFKernel(std::vector<float>& BLFKernel, const double sigma);
+IMGUI_API void solve_tridiagonal_in_place_destructive(float x[], const size_t N, const float a[], const float b[], float c[]);
+IMGUI_API void FGS_simple(float* image, float* joint_image, const int width, const int height, const int nChannels, 
+                const int nChannels_guide, const float sigma, const float lambda, const int solver_iteration, const float solver_attenuation);
+} // namespace ImGui
+
 #endif /* __IMMAT_H__ */
