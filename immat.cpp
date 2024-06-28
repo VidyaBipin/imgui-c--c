@@ -5669,11 +5669,11 @@ void FGS_simple(float* image, float* joint_image, const int width, const int hei
 	float *x_vec = new float[width];
 	float *c_ori_vec = new float[width];
 
-	float *a2_vec = new float[width];
-	float *b2_vec = new float[width];
-	float *c2_vec = new float[width];
-	float *x2_vec = new float[width];
-	float *c2_ori_vec = new float[width];
+	float *a2_vec = new float[height];
+	float *b2_vec = new float[height];
+	float *c2_vec = new float[height];
+	float *x2_vec = new float[height];
+	float *c2_ori_vec = new float[height];
 
 	std::vector<float> BLFKernelI;
 	prepareBLFKernel(BLFKernelI, sigma);
@@ -5757,5 +5757,15 @@ void FGS_simple(float* image, float* joint_image, const int width, const int hei
 		//Variation of lambda (NEW)
 		lambda_in /= solver_attenuation;
 	}	//iter	
+    if (a_vec)      delete [] a_vec;
+    if (b_vec)      delete [] b_vec;
+    if (c_vec)      delete [] c_vec;
+    if (x_vec)      delete [] x_vec;
+    if (c_ori_vec)  delete [] c_ori_vec;
+    if (a2_vec)     delete [] a2_vec;
+    if (b2_vec)     delete [] b2_vec;
+    if (c2_vec)     delete [] c2_vec;
+    if (x2_vec)     delete [] x2_vec;
+    if (c2_ori_vec) delete [] c2_ori_vec;
 }
 } // namespace ImGui
