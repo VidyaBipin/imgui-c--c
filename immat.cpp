@@ -97,12 +97,12 @@ ImPixel ImMat::get_pixel(ImPoint p) const
     return get_pixel((int)p.x, (int)p.y);
 }
 
-void ImMat::set_pixel(int x, int y, ImPixel color)
+void ImMat::set_pixel(int x, int y, ImPixel color, bool norm)
 {
     assert(dims == 3 || dims == 2);
     x = std::max(0, std::min(x, w - 1));
     y = std::max(0, std::min(y, h - 1));
-    if (color_format != IM_CF_LAB && color_format != IM_CF_HSV && color_format != IM_CF_HSL)
+    if (norm && (color_format != IM_CF_LAB && color_format != IM_CF_HSV && color_format != IM_CF_HSL))
     {
         color.r = std::max(0.f, std::min(color.r, 1.f));
         color.g = std::max(0.f, std::min(color.g, 1.f));
@@ -174,9 +174,9 @@ void ImMat::set_pixel(int x, int y, ImPixel color)
     }
 }
 
-void ImMat::set_pixel(ImPoint p, ImPixel color)
+void ImMat::set_pixel(ImPoint p, ImPixel color, bool norm)
 {
-    set_pixel((int)p.x, (int)p.y, color);
+    set_pixel((int)p.x, (int)p.y, color, norm);
 }
 
 void ImMat::alphablend(int x, int y, float alpha, ImPixel color)
@@ -771,7 +771,7 @@ static inline void interpolate_cubic(float fx, float* coeffs)
     coeffs[3] = 1.f - coeffs[0] - coeffs[1] - coeffs[2];
 }
 
-ImMat ImMat::resize(float _w, float _h, ImInterpolateMode interpolate) const
+ImMat ImMat::resize(float _w, float _h, ImInterpolateMode interpolate, bool norm) const
 {
     assert(device == IM_DD_CPU);
     assert(dims == 2 || dims == 3);
@@ -850,7 +850,7 @@ ImMat ImMat::resize(float _w, float _h, ImInterpolateMode interpolate) const
                 // nearest
                 av = get_pixel(sx, sy);
             }
-            m.set_pixel(i, j, av);
+            m.set_pixel(i, j, av, norm);
 		}
 	}
     return m;

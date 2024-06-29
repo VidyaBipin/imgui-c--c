@@ -778,8 +778,8 @@ public:
     IMGUI_API void get_pixel(ImPoint p, ImPixel& color) const;
     IMGUI_API ImPixel get_pixel(int x, int y) const;
     IMGUI_API ImPixel get_pixel(ImPoint p) const;
-    IMGUI_API void set_pixel(int x, int y, ImPixel color);
-    IMGUI_API void set_pixel(ImPoint p, ImPixel color);
+    IMGUI_API void set_pixel(int x, int y, ImPixel color, bool norm = true);
+    IMGUI_API void set_pixel(ImPoint p, ImPixel color, bool norm = true);
     IMGUI_API void alphablend(int x, int y, float alpha, ImPixel color);
     IMGUI_API void alphablend(int x, int y, ImPixel color);
     IMGUI_API void draw_line(float x1, float y1, float x2, float y2, float t, ImPixel color);
@@ -807,7 +807,7 @@ public:
     // simple filters
     IMGUI_API ImMat blur(int kernel_size, float sigma = 1.0f); // Gaussian Blur
     IMGUI_API ImMat adaptive_threshold(float maxValue, int kernel_size, float delta);
-    IMGUI_API ImMat resize(float w, float h, ImInterpolateMode interpolate = IM_INTERPOLATE_BILINEAR) const;
+    IMGUI_API ImMat resize(float w, float h, ImInterpolateMode interpolate = IM_INTERPOLATE_BILINEAR, bool norm = true) const;
 
     // copy to
     IMGUI_API void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);
