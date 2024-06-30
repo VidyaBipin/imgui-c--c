@@ -5503,8 +5503,11 @@ void ImGui::EndFrame()
     g.FrameCountEnded = g.FrameCount;
 
     // Add By Dicky For Power Save
-    g.IO.FrameCountSinceLastUpdate++;
-    g.IO.FrameCountSinceLastEvent++;
+    if (!g.IO.MouseStrawed)
+    {
+        g.IO.FrameCountSinceLastUpdate++;
+        g.IO.FrameCountSinceLastEvent++;
+    }
     // Add By Dicky end
 
     // Initiate moving window + handle left-click and right-click focus
