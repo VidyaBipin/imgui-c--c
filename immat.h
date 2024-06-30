@@ -768,7 +768,6 @@ public:
     IMGUI_API ImMat cvtToHSV() const;
     IMGUI_API ImMat cvtToHSL() const;
     IMGUI_API ImMat cvtToRGB(ImColorFormat format = IM_CF_BGR, ImDataType dtype = IM_DT_UNDEFINED, bool planar = true) const;
-    //IMGUI_API ImMat cvtToARGB(ImColorFormat format = IM_CF_ABGR, bool planar = true) const;
 
     // some draw function only support 3 dims
     // mat default ordination is ncwh
