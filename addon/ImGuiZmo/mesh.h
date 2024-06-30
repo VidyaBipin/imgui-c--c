@@ -16,7 +16,7 @@ typedef glm::vec3 vec3;
 typedef glm::vec4 vec4; 
 
 namespace gl {
-class Mesh{
+class IMGUI_API Mesh{
 public:
     Mesh(const std::string path);
     Mesh(const ImGui::ImMat& image, const ImGui::ImMat& map, const float depth_scale = 1.0);
