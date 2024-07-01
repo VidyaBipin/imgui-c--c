@@ -1,4 +1,4 @@
-// dear imgui, v1.90.9 WIP
+// dear imgui, v1.90.9
 // (headers)
 
 // Help:
@@ -27,8 +27,8 @@
 
 // Library Version
 // (Integer encoded as XYYZZ for use in #if preprocessor conditionals, e.g. '#if IMGUI_VERSION_NUM >= 12345')
-#define IMGUI_VERSION       "1.90.9 WIP"
-#define IMGUI_VERSION_NUM   19084
+#define IMGUI_VERSION       "1.90.9"
+#define IMGUI_VERSION_NUM   19090
 #define IMGUI_HAS_TABLE
 #define IMGUI_HAS_VIEWPORT          // Viewport WIP branch
 #define IMGUI_HAS_DOCK              // Docking WIP branch
@@ -589,7 +589,9 @@ namespace ImGui
     IMGUI_API float         GetWindowWidth();                           // get current window width (shortcut for GetWindowSize().x)
     IMGUI_API float         GetWindowHeight();                          // get current window height (shortcut for GetWindowSize().y)
     IMGUI_API ImGuiViewport*GetWindowViewport();                        // get viewport currently associated to the current window.
-    IMGUI_API float         GetWindowFontScale();                       // add by Dicky, get current window font scale
+    // add by Dicky
+    IMGUI_API float         GetWindowFontScale();                       // get current window font scale
+	// add by Dicky end
 
     // Window manipulation
     // - Prefer using SetNextXXX functions (before Begin) rather that SetXXX functions (after Begin).
@@ -1096,6 +1098,7 @@ namespace ImGui
     // Disabling [BETA API]
     // - Disable all user interactions and dim items visuals (applying style.DisabledAlpha over current colors)
     // - Those can be nested but it cannot be used to enable an already disabled section (a single BeginDisabled(true) in the stack is enough to keep everything disabled)
+    // - Tooltips windows by exception are opted out of disabling.
     // - BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling BeginDisabled(False)/EndDisabled() best to avoid it.
     IMGUI_API void          BeginDisabled(bool disabled = true);
     IMGUI_API void          EndDisabled();
@@ -1165,7 +1168,9 @@ namespace ImGui
     IMGUI_API ImU32         ColorConvertFloat4ToU32(const ImVec4& in);
     IMGUI_API void          ColorConvertRGBtoHSV(float r, float g, float b, float& out_h, float& out_s, float& out_v);
     IMGUI_API void          ColorConvertHSVtoRGB(float h, float s, float v, float& out_r, float& out_g, float& out_b);
-    IMGUI_API void          ColorBrightnessU32(ImU32& in, float bright); // add by Dicky for change color brightness
+    // add by Dicky 
+    IMGUI_API void          ColorBrightnessU32(ImU32& in, float bright); // for change color brightness
+    // add by Dicky end
 
     // Inputs Utilities: Keyboard/Mouse/Gamepad
     // - the ImGuiKey enum contains all possible keyboard, mouse and gamepad inputs (e.g. ImGuiKey_A, ImGuiKey_MouseLeft, ImGuiKey_GamepadDpadUp...).
@@ -2058,7 +2063,7 @@ enum ImGuiSliderFlags_
     ImGuiSliderFlags_Logarithmic            = 1 << 5,       // Make the widget logarithmic (linear otherwise). Consider using ImGuiSliderFlags_NoRoundToFormat with this if using a format-string with small amount of digits.
     ImGuiSliderFlags_NoRoundToFormat        = 1 << 6,       // Disable rounding underlying value to match precision of the display format string (e.g. %.3f values are rounded to those 3 digits).
     ImGuiSliderFlags_NoInput                = 1 << 7,       // Disable CTRL+Click or Enter key allowing to input text directly into the widget.
-    ImGuisliderFlags_WrapAround             = 1 << 8,       // Enable wrapping around from max to min and from min to max (only supported by DragXXX() functions for now.
+    ImGuiSliderFlags_WrapAround             = 1 << 8,       // Enable wrapping around from max to min and from min to max (only supported by DragXXX() functions for now.
     // add By Dicky
     ImGuiSliderFlags_Mark                   = 1 << 16,       // add mark on handle
     ImGuiSliderFlags_Stick                  = 1 << 17,       // Stick style
@@ -3044,8 +3049,10 @@ IM_MSVC_RUNTIME_CHECKS_RESTORE
 #define IM_COL32_WHITE       IM_COL32(255,255,255,255)  // Opaque white = 0xFFFFFFFF
 #define IM_COL32_BLACK       IM_COL32(0,0,0,255)        // Opaque black
 #define IM_COL32_BLACK_TRANS IM_COL32(0,0,0,0)          // Transparent black = 0x00000000
-#define IM_COL32_INVERSE(C)  ((~(ImU32)(C)) | IM_COL32_A_MASK)                                  // Add By Dicky for inverse color
-#define IM_COL32_ALPHA(C,A)  (((ImU32)(C) & ~IM_COL32_A_MASK) | ((ImU32)(A)<<IM_COL32_A_SHIFT)) // Add By Dicky for change color alpha
+// Add By Dicky 
+#define IM_COL32_INVERSE(C)  ((~(ImU32)(C)) | IM_COL32_A_MASK)                                  // for inverse color
+#define IM_COL32_ALPHA(C,A)  (((ImU32)(C) & ~IM_COL32_A_MASK) | ((ImU32)(A)<<IM_COL32_A_SHIFT)) // for change color alpha
+// Add By Dicky end
 // Helper: ImColor() implicitly converts colors to either ImU32 (packed 4x1 byte) or ImVec4 (4x1 float)
 // Prefer using IM_COL32() macros if you want a guaranteed compile-time ImU32 for usage with ImDrawList API.
 // **Avoid storing ImColor! Store either u32 of ImVec4. This is not a full-featured color class. MAY OBSOLETE.
