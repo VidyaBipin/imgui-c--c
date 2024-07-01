@@ -15,6 +15,7 @@ void ImMat::get_pixel(int x, int y, ImPixel& color) const
     assert(dims == 3 || dims == 2);
     x = std::max(0, std::min(x, w - 1));
     y = std::max(0, std::min(y, h - 1));
+    color.a = 1.0; // in case mat channel less then 3
     if (dims == 3)
     {
         switch (type)
