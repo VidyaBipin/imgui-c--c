@@ -1413,7 +1413,6 @@ ImMat ImMat::cvtToHSL() const
 ImMat ImMat::cvtToRGB(ImColorFormat format, ImDataType dtype, bool planar) const
 {
     assert(device == IM_DD_CPU);
-    assert(color_format != IM_CF_BGR && color_format != IM_CF_BGRA && color_format != IM_CF_ABGR);
     assert(format == IM_CF_BGR || format == IM_CF_RGB || format == IM_CF_ABGR || format == IM_CF_BGRA || format == IM_CF_ARGB || format == IM_CF_RGBA);
     assert(total() > 0);
     int c = 4;
@@ -1449,7 +1448,12 @@ ImMat ImMat::cvtToRGB(ImColorFormat format, ImDataType dtype, bool planar) const
                     HSL2RGB(pixel.r, pixel.g, pixel.b, &rgb.r, &rgb.g, &rgb.b);
                     rgb.a = 1;
                 break;
-                default: rgb = pixel; rgb.a = 1.0; break;
+                case IM_CF_BGR:
+                case IM_CF_RGB:
+                    rgb = pixel; 
+                    rgb.a = 1.0; 
+                break;
+                default: rgb = pixel; break;
             }
             m.set_pixel(_w, _h, rgb);
         }
