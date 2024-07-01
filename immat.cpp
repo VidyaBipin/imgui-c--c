@@ -1449,7 +1449,7 @@ ImMat ImMat::cvtToRGB(ImColorFormat format, ImDataType dtype, bool planar) const
                     HSL2RGB(pixel.r, pixel.g, pixel.b, &rgb.r, &rgb.g, &rgb.b);
                     rgb.a = 1;
                 break;
-                default: break;
+                default: rgb = pixel; rgb.a = 1.0; break;
             }
             m.set_pixel(_w, _h, rgb);
         }
