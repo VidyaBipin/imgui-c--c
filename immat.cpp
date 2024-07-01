@@ -743,17 +743,84 @@ ImMat ImMat::threshold(float thres)
     assert(device == IM_DD_CPU);
     assert(dims == 2);
     ImMat m = clone();
-    float _thres = thres * 255;
+    float _thres = type == IM_DT_FLOAT32 ? thres : thres * 255;
     #pragma omp parallel for num_threads(OMP_THREADS)
     for (int y = 0; y < h; y++)
     {
         for (int x = 0; x < w; x++)
         {
-            float p = (float)at<uint8_t>(x, y);
-            m.at<uint8_t>(x, y) = p < _thres ? 0 : 255;
+            if (type == IM_DT_FLOAT32)
+            {
+                float p = at<float>(x, y);
+                m.at<float>(x, y) = p > _thres ? 1.0 : 0.0;
+            }
+            else
+            {
+                float p = (float)at<uint8_t>(x, y);
+                m.at<uint8_t>(x, y) = p < _thres ? 0 : 255;
+            }
         }
     }
-    return ImMat();
+    return m;
+}
+
+ImMat ImMat::dilate()
+{
+    assert(device == IM_DD_CPU);
+    assert(dims == 2);
+    ImMat m;
+    m.create_like(*this);
+    for (int y = 0; y < h; ++y)
+    {
+        for (int x = 0; x < w; ++x)
+        {
+            float maxV = 0;
+            for (int yi = y - 1; yi <= y + 1; yi++)
+            {
+                for (int xi = x - 1; xi <= x + 1; xi++)
+                {					
+                    if (xi < 0 || xi >= w || yi < 0 || yi >= h)
+                    {
+                        continue;
+                    }	
+                    ImPixel p = get_pixel(xi, yi);
+                    maxV = std::max(maxV, p.r);			
+                }
+            }
+            m.set_pixel(x, y, ImPixel(maxV, 0, 0, 0));
+        }
+    }
+    return m;
+}
+
+ImMat ImMat::erode()
+{
+    assert(device == IM_DD_CPU);
+    assert(dims == 2);
+    ImMat m;
+    m.create_like(*this);
+    for (int y = 0; y < h; ++y)
+    {
+        for (int x = 0; x < w; ++x)
+        {
+            float minV = 1.0;
+            for (int yi = y - 1; yi <= y + 1; yi++)
+			{
+				for (int xi = x - 1; xi <= x + 1; xi++)
+				{					
+					if (xi < 0|| xi >= w || yi < 0 || yi >= h)
+					{
+						continue;
+					}		
+                    ImPixel p = get_pixel(xi, yi);
+					minV = std::min(minV, p.r);			
+				}
+			}
+			m.set_pixel(x, y, ImPixel(minV, 0, 0, 0));
+        }
+    }
+
+    return m;
 }
 
 static inline void interpolate_cubic(float fx, float* coeffs)
