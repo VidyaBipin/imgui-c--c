@@ -1095,8 +1095,6 @@ static int find_default_vulkan_device_index()
 
 int create_gpu_instance()
 {
-    //destroy_gpu_instance();
-
     MutexLockGuard lock(g_instance_lock);
 
     if (g_instance.created != 0)
@@ -1693,11 +1691,20 @@ int create_gpu_instance()
             gpu_info.support_VK_EXT_buffer_device_address = 0;
         }
 
+#if 0
         if (gpu_info.support_VK_KHR_cooperative_matrix)
         {
             // we prefer khr extension
             gpu_info.support_VK_NV_cooperative_matrix = 0;
         }
+#else
+        if (gpu_info.support_VK_NV_cooperative_matrix)
+        {
+            // we prefer NV extension
+            gpu_info.support_VK_KHR_cooperative_matrix = 0;
+        }
+#endif
+
 
         // check features
         gpu_info.support_fp16_packed = true;
