@@ -15,6 +15,9 @@ if(POLICY CMP0025)
     # reference from https://cmake.org/cmake/help/latest/policy/CMP0025.html
     cmake_policy(SET CMP0025 NEW)
 endif()
+if(POLICY CMP0072)
+    cmake_policy(SET CMP0072 NEW)
+endif()
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -1497,7 +1500,7 @@ endif(IMGUI_STATIC)
 
 set(IMGUI_VERSION_MAJOR 1)
 set(IMGUI_VERSION_MINOR 90)
-set(IMGUI_VERSION_PATCH 90)
+set(IMGUI_VERSION_PATCH 93)
 string(TIMESTAMP IMGUI_VERSION_BUILD "%y%m%d")
 set(IMGUI_VERSION_STRING ${IMGUI_VERSION_MAJOR}.${IMGUI_VERSION_MINOR}.${IMGUI_VERSION_PATCH})
 add_definitions(-DIMGUI_VERSION_MAJOR=${IMGUI_VERSION_MAJOR})
