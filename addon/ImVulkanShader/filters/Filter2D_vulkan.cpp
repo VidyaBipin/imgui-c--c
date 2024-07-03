@@ -78,7 +78,7 @@ double Filter2D_vulkan::filter(const ImMat& src, ImMat& dst) const
     }
 
     VkMat dst_gpu;
-    dst_gpu.create_type(src.w, src.h, src.c, dst.type, opt.blob_vkallocator);
+    dst_gpu.create_like(src, opt.blob_vkallocator);
 
     VkMat src_gpu;
     if (src.device == IM_DD_VULKAN)
