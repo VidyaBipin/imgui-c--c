@@ -364,6 +364,7 @@ set(VKSHADER_SRCS
     filters/ColorInvert_vulkan.cpp
     filters/Bilateral_vulkan.cpp
     filters/Box_vulkan.cpp
+    filters/Gaussian_vulkan.cpp
     filters/Dilation_vulkan.cpp
     filters/Erosion_vulkan.cpp
     filters/USM_vulkan.cpp
@@ -393,6 +394,7 @@ set(VKSHADER_INCS
     filters/Bilateral_shader.h
     filters/Bilateral_vulkan.h
     filters/Box_vulkan.h
+    filters/Gaussian_vulkan.h
     filters/Dilation_shader.h
     filters/Dilation_vulkan.h
     filters/Erosion_shader.h
@@ -517,7 +519,7 @@ endif(VKSHADER_VULKAN_PREBUILD)
 
 set(VKSHADER_VERSION_MAJOR 1)
 set(VKSHADER_VERSION_MINOR 13)
-set(VKSHADER_VERSION_PATCH 5)
+set(VKSHADER_VERSION_PATCH 6)
 string(TIMESTAMP VKSHADER_VERSION_BUILD "%y%m%d")
 set(VKSHADER_VERSION_STRING ${VKSHADER_VERSION_MAJOR}.${VKSHADER_VERSION_MINOR}.${VKSHADER_VERSION_PATCH})
 add_definitions(-DVKSHADER_VERSION_MAJOR=${VKSHADER_VERSION_MAJOR})
