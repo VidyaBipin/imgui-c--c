@@ -924,6 +924,11 @@ ImMat ImMat::resize(float _w, float _h, ImInterpolateMode interpolate, bool norm
     return m;
 }
 
+ImMat ImMat::resize(ImPoint scale, ImInterpolateMode interpolate, bool norm) const
+{
+    return resize(w * scale.x, h * scale.y, interpolate, norm);
+}
+
 void ImMat::copy_to(ImMat & mat, ImPoint offset, float alpha)
 {
     // assert mat same as this

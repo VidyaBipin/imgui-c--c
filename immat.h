@@ -809,6 +809,7 @@ public:
     IMGUI_API ImMat blur(int kernel_size, float sigma = 1.0f); // Gaussian Blur
     IMGUI_API ImMat adaptive_threshold(float maxValue, int kernel_size, float delta);
     IMGUI_API ImMat resize(float w, float h, ImInterpolateMode interpolate = IM_INTERPOLATE_BILINEAR, bool norm = true) const;
+    IMGUI_API ImMat resize(ImPoint scale, ImInterpolateMode interpolate = IM_INTERPOLATE_BILINEAR, bool norm = true) const;
 
     // copy to
     IMGUI_API void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);
