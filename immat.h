@@ -802,8 +802,8 @@ public:
     IMGUI_API ImMat lowpass(float lambda);
     IMGUI_API ImMat highpass(float lambda);
     IMGUI_API ImMat threshold(float thres);
-    IMGUI_API ImMat dilate();
-    IMGUI_API ImMat erode();
+    IMGUI_API ImMat dilate(int radius = 1);
+    IMGUI_API ImMat erode(int radius = 1);
 
     // simple filters
     IMGUI_API ImMat blur(int kernel_size, float sigma = 1.0f); // Gaussian Blur

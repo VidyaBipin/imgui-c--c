@@ -765,7 +765,7 @@ ImMat ImMat::threshold(float thres)
     return m;
 }
 
-ImMat ImMat::dilate()
+ImMat ImMat::dilate(int radius)
 {
     assert(device == IM_DD_CPU);
     assert(dims == 2);
@@ -776,9 +776,9 @@ ImMat ImMat::dilate()
         for (int x = 0; x < w; ++x)
         {
             float maxV = 0;
-            for (int yi = y - 1; yi <= y + 1; yi++)
+            for (int yi = y - radius; yi <= y + radius; yi++)
             {
-                for (int xi = x - 1; xi <= x + 1; xi++)
+                for (int xi = x - radius; xi <= x + radius; xi++)
                 {					
                     if (xi < 0 || xi >= w || yi < 0 || yi >= h)
                     {
@@ -794,7 +794,7 @@ ImMat ImMat::dilate()
     return m;
 }
 
-ImMat ImMat::erode()
+ImMat ImMat::erode(int radius)
 {
     assert(device == IM_DD_CPU);
     assert(dims == 2);
@@ -805,9 +805,9 @@ ImMat ImMat::erode()
         for (int x = 0; x < w; ++x)
         {
             float minV = 1.0;
-            for (int yi = y - 1; yi <= y + 1; yi++)
+            for (int yi = y - radius; yi <= y + radius; yi++)
 			{
-				for (int xi = x - 1; xi <= x + 1; xi++)
+				for (int xi = x - radius; xi <= x + radius; xi++)
 				{					
 					if (xi < 0|| xi >= w || yi < 0 || yi >= h)
 					{
