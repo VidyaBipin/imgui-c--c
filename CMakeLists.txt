@@ -1248,15 +1248,25 @@ set(IMGUI_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiOrient.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiZmo.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/model.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/mesh.cpp
 )
 set(IMGUI_INCS
     ${IMGUI_INCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiOrient.h
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/ImGuiZmo.h
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/model.h
+)
+
+if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+set(IMGUI_SRC
+    ${IMGUI_SRC}
+    ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/mesh.cpp
+)
+set(IMGUI_INCS
+    ${IMGUI_INCS}
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImGuiZmo/mesh.h
 )
+endif()
+
 
 set(IMGUI_INC_DIRS
     ${IMGUI_INC_DIRS}
@@ -1762,18 +1772,6 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
         PREFIX ""
         SUFFIX ".html"
         LINK_FLAGS "--shell-file ${IMGUI_SHELL_FILE}"
-    )
-    set(IMGUI_WEB_OBJ_DIR ${PROJECT_BINARY_DIR}/web_obj/)
-    set(IMGUI_TEST_FILE ${PROJECT_SOURCE_DIR}/test/test.obj)
-    set_target_properties(
-        obj_viewer
-        PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${IMGUI_WEB_OBJ_DIR}
-        RUNTIME_OUTPUT_DIRECTORY ${IMGUI_WEB_OBJ_DIR}
-        OUTPUT_NAME "index"
-        PREFIX ""
-        SUFFIX ".html"
-        LINK_FLAGS "--shell-file ${IMGUI_SHELL_FILE} --preload-file ${IMGUI_TEST_FILE}@/tmp/test.obj"
     )
 endif()
 endif(IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)

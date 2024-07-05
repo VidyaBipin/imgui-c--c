@@ -10,8 +10,10 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
+#if !defined(__EMSCRIPTEN__)
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+#endif
 
 #ifdef _WIN32
 #define PATH_SEP '\\'
@@ -555,6 +557,7 @@ IMGUI_API int StringAppend(ImVector<char>& v,const char* fmt, ...);
 // ImGui Theme generator
 IMGUI_API void ThemeGenerator(const char* name, bool* p_open = NULL, ImGuiWindowFlags flags = 0);
 
+#if !defined(__EMSCRIPTEN__)
 class Encrypt {
 private:
     Encrypt() {}
@@ -778,6 +781,7 @@ private:
     unsigned char salt[PKCS5_SALT_LEN] = "CodeWin";
 };
 IMGUI_API void ImDecryptFile(const std::string path, const std::string key, std::vector<uint8_t>& data);
+#endif
 } // ImGuiHelper
 
 static inline ImPoint Vec2Point(ImVec2 in) { return ImPoint(in.x, in.y); }

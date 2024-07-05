@@ -3,6 +3,10 @@ project(ImMaskCreator VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+    set(ImMaskCreator_STATIC ON)
+endif()
+
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|aarch64)")
 elseif(CMAKE_OSX_ARCHITECTURES MATCHES "x86" OR CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86|x86_64|AMD64)")
     if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")

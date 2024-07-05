@@ -1956,6 +1956,7 @@ std::string MillisecToString(int64_t millisec, int show_millisec)
     return oss.str();
 }
 
+#if !defined(__EMSCRIPTEN__)
 void ImDecryptFile(const std::string path, const std::string key, std::vector<uint8_t>& data)
 {
     data.clear();
@@ -1980,6 +1981,7 @@ void ImDecryptFile(const std::string path, const std::string key, std::vector<ui
     std::cout << "decrypt length:" << check_len << std::endl;
     munmap((void *)memblock_enc, sb_enc.st_size);
 }
+#endif
 } //namespace ImGuiHelper
 
 namespace base64 
