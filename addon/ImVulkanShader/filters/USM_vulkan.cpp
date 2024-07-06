@@ -204,6 +204,7 @@ double USM_vulkan::filter(const ImMat& src, ImMat& dst, float sigma, float amoun
 
     VkMat dst_gpu;
     dst_gpu.create_type(src.w, src.h, 4, dst.type, opt.blob_vkallocator);
+    dst_gpu.elempack = src.elempack;
 
     VkMat src_gpu;
     if (src.device == IM_DD_VULKAN)
