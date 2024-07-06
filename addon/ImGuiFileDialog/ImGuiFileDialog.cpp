@@ -3749,7 +3749,12 @@ IGFD::FileDialog::FileDialog() : PlacesFeature(), KeyExplorerFeature(), Thumbnai
 // add by Dicky end
 	SetDarkStyle(); // add By Dicky
 }
-IGFD::FileDialog::~FileDialog() = default;
+// modify by Dicky
+IGFD::FileDialog::~FileDialog()
+{
+    m_QuitFrame();
+}
+// modify by Dicky end
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Set Info Style (Add By Dicky) //////////////////////////////////////////////////////////////
@@ -3858,7 +3863,7 @@ void IGFD::FileDialog::OpenDialog(const std::string& vKey, const std::string& vT
     if (m_FileDialogInternal.showDialog)  // if already opened, quit
         return;
     m_FileDialogInternal.configureDialog(vKey, vTitle, vFilters, vConfig);
-    // Add By Dicky
+// Add By Dicky
 #ifdef USE_PLACES_FEATURE
 	m_PlacesPaneShown = vConfig.flags & ImGuiFileDialogFlags_ShowBookmark ? true : false;
 #endif // USE_PLACES_FEATURE
@@ -3871,11 +3876,6 @@ void IGFD::FileDialog::OpenDialog(const std::string& vKey, const std::string& vT
 
 bool IGFD::FileDialog::Display(const std::string& vKey, ImGuiWindowFlags vFlags, ImVec2 vMinSize, ImVec2 vMaxSize) {
     bool res = false;
-// add by Dicku
-#ifdef USE_THUMBNAILS
-	ManageGPUThumbnails();
-#endif
-// add by Dicku end
     if (m_FileDialogInternal.showDialog && m_FileDialogInternal.dLGkey == vKey) {
         if (m_FileDialogInternal.puUseCustomLocale) setlocale(m_FileDialogInternal.localeCategory, m_FileDialogInternal.localeBegin.c_str());
 
@@ -3994,7 +3994,11 @@ bool IGFD::FileDialog::Display(const std::string& vKey, ImGuiWindowFlags vFlags,
 
         if (m_FileDialogInternal.puUseCustomLocale) setlocale(m_FileDialogInternal.localeCategory, m_FileDialogInternal.localeEnd.c_str());
     }
-
+// add by Dicky
+#ifdef USE_THUMBNAILS
+	ManageGPUThumbnails();
+#endif
+// add by Dicky end
     return res;
 }
 

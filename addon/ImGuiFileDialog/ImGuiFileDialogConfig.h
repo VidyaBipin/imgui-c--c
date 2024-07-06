@@ -121,6 +121,8 @@
 #define fileEntryString ICON_IGFD_FILE
 #define OverWriteDialogConfirmButtonString ICON_IGFD_OK " Confirm"
 #define OverWriteDialogCancelButtonString ICON_IGFD_CANCEL " Cancel"
+#define DisplayMode_FilesList_ButtonString u8"\uf15c"
+#define DisplayMode_ThumbailsList_ButtonString u8"\uf1c5"
 #endif
 #define fileNameString "Select Name :"
 #define dirNameString "Select Path :"
