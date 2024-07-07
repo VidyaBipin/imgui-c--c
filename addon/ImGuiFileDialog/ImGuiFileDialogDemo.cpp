@@ -176,7 +176,7 @@ void show_file_dialog_demo_window(bool * open)
 			RadioButtonLabeled_BitWize<ImGuiFileDialogFlags>("Hide Column Date", "Hide Column file Date by default", &flags, ImGuiFileDialogFlags_HideColumnDate);
 
 			RadioButtonLabeled_BitWize<ImGuiFileDialogFlags>("Case Insensitive Extentions", "will not take into account the case of file extentions",
-				&flags, ImGuiFileDialogFlags_CaseInsensitiveExtention);
+				&flags, ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering);
 			// add by Dicky
 			RadioButtonLabeled_BitWize<ImGuiFileDialogFlags>("ShowBookmark", "Display bookmark panel when opened", &flags, ImGuiFileDialogFlags_ShowBookmark);
 			RadioButtonLabeled_BitWize<ImGuiFileDialogFlags>("DisableDragDrop", "Disable Drag-Drop for items", &flags, ImGuiFileDialogFlags_DisableDragDrop);

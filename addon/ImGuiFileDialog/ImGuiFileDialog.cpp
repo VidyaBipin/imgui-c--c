@@ -1025,9 +1025,7 @@ std::string IGFD::Utils::FormatFileSize(size_t vByteSize) {
         static double lo = 1024.0;
         static double ko = 1024.0 * 1024.0;
         static double mo = 1024.0 * 1024.0 * 1024.0;
-
-        auto v = (double)vByteSize;
-
+        const auto v = static_cast<double>(vByteSize);
         if (v < lo)
             return RoundNumber(v, 0) + " " + fileSizeBytes;  // octet
         else if (v < ko)
@@ -1040,6 +1038,73 @@ std::string IGFD::Utils::FormatFileSize(size_t vByteSize) {
 
     return "0 " fileSizeBytes;
 }
+
+// https://cplusplus.com/reference/cstdlib/strtod/
+bool IGFD::Utils::M_IsAValidCharForADigit(const char& c) {
+    return c == '.' ||              // .5
+           c == '-' || c == '+' ||  // -2.5 or +2.5
+           c == 'e' || c == 'E' ||  // 1e5 or 1E5
+           c == 'x' || c == 'X' ||  // 0x14 or 0X14
+           c == 'p' || c == 'P' ||  // 6.2p2 or 3.2P-5
+           std::isdigit(c);         // 0-9
+}
+
+bool IGFD::Utils::M_ExtractNumFromStringAtPos(const std::string& str, size_t& pos, double& vOutNum) {
+    char buf[64 + 1];
+    size_t buf_p     = 0;
+    bool is_last_ext = false;
+    const auto& ss   = str.size();
+    while (ss > 1 && pos < ss) {
+        const char& c = str.at(pos);
+        if (buf_p < 32 && M_IsAValidCharForADigit(c)) {
+            buf[buf_p++] = c;
+        } else {
+            break;
+        }
+        ++pos;
+    }
+    if (buf_p != 0) {
+        buf[buf_p] = '\0';
+        try {
+            char* endPtr;
+            vOutNum = strtod(buf, &endPtr);
+            if (endPtr != buf) {
+                return true;
+            }
+        } catch (...) {
+        }
+    }
+    return false;
+}
+
+// Fonction de comparaison naturelle entre deux cha￮nes
+bool IGFD::Utils::NaturalCompare(const std::string& vA, const std::string& vB, bool vInsensitiveCase, bool vDescending) {
+    std::size_t ia = 0, ib = 0;
+    double nA, nB;
+    const auto& as = vA.size();
+    const auto& bs = vB.size();
+    while (ia < as && ib < bs) {
+        const char& ca = vInsensitiveCase ? std::tolower(vA[ia]) : vA[ia];
+        const char& cb = vInsensitiveCase ? std::tolower(vB[ib]) : vB[ib];
+        if (M_IsAValidCharForADigit(ca) &&  //
+            M_IsAValidCharForADigit(cb)) {
+            if (M_ExtractNumFromStringAtPos(vA, ia, nA) &&  //
+                M_ExtractNumFromStringAtPos(vB, ib, nB)) {
+                if (nA != nB) {
+                    return vDescending ? nA > nB : nA < nB;
+                }
+            }
+        } else {
+            if (ca != cb) {
+                return vDescending ? ca > cb : ca < cb;
+            }
+            ++ia;
+            ++ib;
+        }
+    }
+    return vDescending ? as > bs : as < bs;  // toto1 < toto1+
+}
+
 
 IGFD::FileStyle::FileStyle() : color(0, 0, 0, 0) {
 }
@@ -1776,6 +1841,18 @@ void IGFD::FileManager::SortFields(const FileDialogInternal& vFileDialogInternal
     m_SortFields(vFileDialogInternal, m_FileList, m_FilteredFileList);
 }
 
+bool IGFD::FileManager::M_SortStrings(const FileDialogInternal& vFileDialogInternal, const bool vInsensitiveCase, const bool vDescendingOrder, const std::string& vA, const std::string& vB) {
+    if (vFileDialogInternal.getDialogConfig().flags & ImGuiFileDialogFlags_NaturalSorting) {
+        return IGFD::Utils::NaturalCompare(vA, vB, vInsensitiveCase, vDescendingOrder);
+    } else if (vInsensitiveCase) {
+        const auto ret = stricmp(vA.c_str(), vB.c_str());
+        return vDescendingOrder ? (ret > 0) : (ret < 0);
+    } else {
+        const auto ret = strcmp(vA.c_str(), vB.c_str());
+        return vDescendingOrder ? (ret > 0) : (ret < 0);
+    }
+}
+
 void IGFD::FileManager::m_SortFields(const FileDialogInternal& vFileDialogInternal, std::vector<std::shared_ptr<FileInfos> >& vFileInfosList, std::vector<std::shared_ptr<FileInfos> >& vFileInfosFilteredList) {
     if (sortingField != SortingFieldEnum::FIELD_NONE) {
         headerFileName = tableHeaderFileNameString;
@@ -1791,7 +1868,7 @@ void IGFD::FileManager::m_SortFields(const FileDialogInternal& vFileDialogIntern
 #ifdef USE_CUSTOM_SORTING_ICON
             headerFileName = tableHeaderAscendingIcon + headerFileName;
 #endif  // USE_CUSTOM_SORTING_ICON
-            std::sort(vFileInfosList.begin(), vFileInfosList.end(), [](const std::shared_ptr<FileInfos>& a, const std::shared_ptr<FileInfos>& b) -> bool {
+            std::sort(vFileInfosList.begin(), vFileInfosList.end(), [&vFileDialogInternal](const std::shared_ptr<FileInfos>& a, const std::shared_ptr<FileInfos>& b) -> bool {
                 if (!a.use_count() || !b.use_count()) return false;
                 // tofix : this code fail in c:\\Users with the link "All users". got a invalid comparator
                 /*
@@ -1810,13 +1887,13 @@ void IGFD::FileManager::m_SortFields(const FileDialogInternal& vFileDialogIntern
                 }
                 */
                 if (a->fileType != b->fileType) return (a->fileType < b->fileType);    // directories first
-                return (stricmp(a->fileNameExt.c_str(), b->fileNameExt.c_str()) < 0);  // sort in insensitive case
+                return M_SortStrings(vFileDialogInternal, true, false, a->fileNameExt, b->fileNameExt);  // sort in insensitive case
             });
         } else {
 #ifdef USE_CUSTOM_SORTING_ICON
             headerFileName = tableHeaderDescendingIcon + headerFileName;
 #endif  // USE_CUSTOM_SORTING_ICON
-            std::sort(vFileInfosList.begin(), vFileInfosList.end(), [](const std::shared_ptr<FileInfos>& a, const std::shared_ptr<FileInfos>& b) -> bool {
+            std::sort(vFileInfosList.begin(), vFileInfosList.end(), [&vFileDialogInternal](const std::shared_ptr<FileInfos>& a, const std::shared_ptr<FileInfos>& b) -> bool {
                 if (!a.use_count() || !b.use_count()) return false;
                 // tofix : this code fail in c:\\Users with the link "All users". got a invalid comparator
                 /*
@@ -1835,7 +1912,7 @@ void IGFD::FileManager::m_SortFields(const FileDialogInternal& vFileDialogIntern
                 }
                 */
                 if (a->fileType != b->fileType) return (a->fileType > b->fileType);    // directories last
-                return (stricmp(a->fileNameExt.c_str(), b->fileNameExt.c_str()) > 0);  // sort in insensitive case
+                return M_SortStrings(vFileDialogInternal, true, true, a->fileNameExt, b->fileNameExt);  // sort in insensitive case
             });
         }
     } else if (sortingField == SortingFieldEnum::FIELD_TYPE) {
@@ -1843,19 +1920,19 @@ void IGFD::FileManager::m_SortFields(const FileDialogInternal& vFileDialogIntern
 #ifdef USE_CUSTOM_SORTING_ICON
             headerFileType = tableHeaderAscendingIcon + headerFileType;
 #endif  // USE_CUSTOM_SORTING_ICON
-            std::sort(vFileInfosList.begin(), vFileInfosList.end(), [](const std::shared_ptr<FileInfos>& a, const std::shared_ptr<FileInfos>& b) -> bool {
+            std::sort(vFileInfosList.begin(), vFileInfosList.end(), [&vFileDialogInternal](const std::shared_ptr<FileInfos>& a, const std::shared_ptr<FileInfos>& b) -> bool {
                 if (!a.use_count() || !b.use_count()) return false;
                 if (a->fileType != b->fileType) return (a->fileType < b->fileType);  // directory in first
-                return (a->fileExtLevels[0] < b->fileExtLevels[0]);                  // else
+                return M_SortStrings(vFileDialogInternal, true, false, a->fileExtLevels[0], b->fileExtLevels[0]);  // sort in sensitive case
             });
         } else {
 #ifdef USE_CUSTOM_SORTING_ICON
             headerFileType = tableHeaderDescendingIcon + headerFileType;
 #endif  // USE_CUSTOM_SORTING_ICON
-            std::sort(vFileInfosList.begin(), vFileInfosList.end(), [](const std::shared_ptr<FileInfos>& a, const std::shared_ptr<FileInfos>& b) -> bool {
+            std::sort(vFileInfosList.begin(), vFileInfosList.end(), [&vFileDialogInternal](const std::shared_ptr<FileInfos>& a, const std::shared_ptr<FileInfos>& b) -> bool {
                 if (!a.use_count() || !b.use_count()) return false;
                 if (a->fileType != b->fileType) return (a->fileType > b->fileType);  // directory in last
-                return (a->fileExtLevels[0] > b->fileExtLevels[0]);                  // else
+                return M_SortStrings(vFileDialogInternal, true, true, a->fileExtLevels[0], b->fileExtLevels[0]);  // sort in sensitive case
             });
         }
     } else if (sortingField == SortingFieldEnum::FIELD_SIZE) {
@@ -1960,8 +2037,8 @@ void IGFD::FileManager::ClearPathLists() {
 void IGFD::FileManager::m_AddFile(const FileDialogInternal& vFileDialogInternal, const std::string& vPath, const std::string& vFileName, const FileType& vFileType) {
     auto infos_ptr = FileInfos::create();
 
-    infos_ptr->filePath          = vPath;
-    infos_ptr->fileNameExt       = vFileName;
+    infos_ptr->filePath              = vPath;
+    infos_ptr->fileNameExt           = vFileName;
     infos_ptr->fileNameExt_optimized = Utils::LowerCaseString(infos_ptr->fileNameExt);
     infos_ptr->fileType              = vFileType;
 
@@ -1970,13 +2047,14 @@ void IGFD::FileManager::m_AddFile(const FileDialogInternal& vFileDialogInternal,
     }
 
     if (infos_ptr->fileNameExt != ".." && (vFileDialogInternal.getDialogConfig().flags & ImGuiFileDialogFlags_DontShowHiddenFiles) && infos_ptr->fileNameExt[0] == '.') {  // dont show hidden files
-        if (!vFileDialogInternal.filterManager.dLGFilters.empty() || (vFileDialogInternal.filterManager.dLGFilters.empty() && infos_ptr->fileNameExt != ".")) {  // except "." if in directory mode //-V728
+        if (!vFileDialogInternal.filterManager.dLGFilters.empty() || (vFileDialogInternal.filterManager.dLGFilters.empty() && infos_ptr->fileNameExt != ".")) {            // except "." if in directory mode //-V728
             return;
         }
     }
 
     if (infos_ptr->FinalizeFileTypeParsing(vFileDialogInternal.filterManager.GetSelectedFilter().count_dots)) {
-        if (!vFileDialogInternal.filterManager.IsCoveredByFilters(*infos_ptr.get(), (vFileDialogInternal.getDialogConfig().flags & ImGuiFileDialogFlags_CaseInsensitiveExtention) != 0)) {
+        if (!vFileDialogInternal.filterManager.IsCoveredByFilters(*infos_ptr.get(),  //
+                                                                  (vFileDialogInternal.getDialogConfig().flags & ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering) != 0)) {
             return;
         }
     }
@@ -3031,7 +3109,7 @@ void IGFD::ThumbnailFeature::m_AddThumbnailToDestroy(const IGFD_Thumbnail_Info& 
 }
 
 void IGFD::ThumbnailFeature::m_DrawDisplayModeToolBar() {
-    if (IMGUI_RADIO_BUTTON(DisplayMode_FilesList_ButtonString, m_DisplayMode == DisplayModeEnum::FILE_LIST)) m_DisplayMode = DisplayModeEnum::FILE_LIST;
+    if (IMGUI_RADIO_BUTTON(DisplayMode_FilesList_ButtonString, m_DisplayMode == DisplayModeEnum::FILE_LIST)) { m_DisplayMode = DisplayModeEnum::FILE_LIST; m_StopThumbnailFileDatasExtraction(); } // modify by Dicky
     if (ImGui::IsItemHovered()) ImGui::SetTooltip(DisplayMode_FilesList_ButtonHelp);
     ImGui::SameLine();
     if (IMGUI_RADIO_BUTTON(DisplayMode_ThumbailsList_ButtonString, m_DisplayMode == DisplayModeEnum::THUMBNAILS_LIST)) m_DisplayMode = DisplayModeEnum::THUMBNAILS_LIST;
@@ -3746,15 +3824,13 @@ IGFD::FileDialog::FileDialog() : PlacesFeature(), KeyExplorerFeature(), Thumbnai
         }
     });
 #endif
-// add by Dicky end
-	SetDarkStyle(); // add By Dicky
+	SetDarkStyle();
 }
-// modify by Dicky
+
 IGFD::FileDialog::~FileDialog()
 {
     m_QuitFrame();
 }
-// modify by Dicky end
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 ///// Set Info Style (Add By Dicky) //////////////////////////////////////////////////////////////
@@ -3876,6 +3952,7 @@ void IGFD::FileDialog::OpenDialog(const std::string& vKey, const std::string& vT
 
 bool IGFD::FileDialog::Display(const std::string& vKey, ImGuiWindowFlags vFlags, ImVec2 vMinSize, ImVec2 vMaxSize) {
     bool res = false;
+
     if (m_FileDialogInternal.showDialog && m_FileDialogInternal.dLGkey == vKey) {
         if (m_FileDialogInternal.puUseCustomLocale) setlocale(m_FileDialogInternal.localeCategory, m_FileDialogInternal.localeBegin.c_str());
 

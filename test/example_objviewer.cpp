@@ -59,7 +59,7 @@ static void show_main_view()
             config.path = ".";
             config.countSelectionMax = 1;
             config.userDatas = IGFDUserDatas("Open Model");
-            config.flags = ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_DontShowHiddenFiles | ImGuiFileDialogFlags_CaseInsensitiveExtention | ImGuiFileDialogFlags_DisableCreateDirectoryButton | ImGuiFileDialogFlags_Modal;
+            config.flags = ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_DontShowHiddenFiles | ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering | ImGuiFileDialogFlags_DisableCreateDirectoryButton | ImGuiFileDialogFlags_Modal;
             ImGuiFileDialog::Instance()->OpenDialog("##OpenFileDlgKey", ICON_IGFD_FOLDER_OPEN " Choose OBJ File", 
                                                     "3D Object file(*.obj){.obj}",
                                                     config);
