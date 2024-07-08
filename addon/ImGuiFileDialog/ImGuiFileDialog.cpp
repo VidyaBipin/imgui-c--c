@@ -1039,45 +1039,64 @@ std::string IGFD::Utils::FormatFileSize(size_t vByteSize) {
     return "0 " fileSizeBytes;
 }
 
-// https://cplusplus.com/reference/cstdlib/strtod/
-bool IGFD::Utils::M_IsAValidCharForADigit(const char& c) {
-    return c == '.' ||              // .5
-           c == '-' || c == '+' ||  // -2.5 or +2.5
-           c == 'e' || c == 'E' ||  // 1e5 or 1E5
+// https://cplusplus.com/reference/cstdlib/strtod
+bool IGFD::Utils::M_IsAValidCharExt(const char& c) {
+    return c == '.' ||            // .5
+           c == '-' || c == '+';  // -2.5 or +2.5;
+}
+
+// https://cplusplus.com/reference/cstdlib/strtod
+bool IGFD::Utils::M_IsAValidCharSuffix(const char& c) {
+    return c == 'e' || c == 'E' ||  // 1e5 or 1E5
            c == 'x' || c == 'X' ||  // 0x14 or 0X14
-           c == 'p' || c == 'P' ||  // 6.2p2 or 3.2P-5
-           std::isdigit(c);         // 0-9
+           c == 'p' || c == 'P';    // 6.2p2 or 3.2P-5
 }
 
 bool IGFD::Utils::M_ExtractNumFromStringAtPos(const std::string& str, size_t& pos, double& vOutNum) {
-    char buf[64 + 1];
-    size_t buf_p     = 0;
-    bool is_last_ext = false;
-    const auto& ss   = str.size();
-    while (ss > 1 && pos < ss) {
-        const char& c = str.at(pos);
-        if (buf_p < 32 && M_IsAValidCharForADigit(c)) {
-            buf[buf_p++] = c;
-        } else {
-            break;
-        }
-        ++pos;
-    }
-    if (buf_p != 0) {
-        buf[buf_p] = '\0';
-        try {
-            char* endPtr;
-            vOutNum = strtod(buf, &endPtr);
-            if (endPtr != buf) {
-                return true;
+    if (!str.empty() && pos < str.size()) {
+        const char fc = str.at(pos);  // first char
+        // if the first char is not possible for a number we quit
+        if (std::isdigit(fc) || M_IsAValidCharExt(fc)) {
+            static constexpr size_t COUNT_CHAR = 64;
+            char buf[COUNT_CHAR + 1];
+            size_t buf_p        = 0;
+            bool is_last_digit  = false;
+            bool is_last_suffix = false;
+            const auto& ss      = str.size();
+            while (ss > 1 && pos < ss && buf_p < COUNT_CHAR) {
+                const char& c = str.at(pos);
+                // a suffix must be after a number
+                if (is_last_digit && M_IsAValidCharSuffix(c)) {
+                    is_last_suffix = true;
+                    buf[buf_p++]   = c;
+                } else if (std::isdigit(c)) {
+                    is_last_suffix = false;
+                    is_last_digit  = true;
+                    buf[buf_p++]   = c;
+                } else if (M_IsAValidCharExt(c)) {
+                    is_last_digit = false;
+                    buf[buf_p++]  = c;
+                } else {
+                    break;
+                }
+                ++pos;
             }
-        } catch (...) {
+            // if the last char is a suffix so its not a number
+            if (buf_p != 0 && !is_last_suffix) {
+                buf[buf_p] = '\0';
+                char* endPtr;
+                vOutNum = strtod(buf, &endPtr);
+                // the edge cases for numbers will be next filtered by strtod
+                if (endPtr != buf) {
+                    return true;
+                }
+            }
         }
     }
     return false;
 }
 
-// Fonction de comparaison naturelle entre deux cha￮nes
+// Fonction de comparaison naturelle entre deux cha�nes
 bool IGFD::Utils::NaturalCompare(const std::string& vA, const std::string& vB, bool vInsensitiveCase, bool vDescending) {
     std::size_t ia = 0, ib = 0;
     double nA, nB;
@@ -1086,13 +1105,12 @@ bool IGFD::Utils::NaturalCompare(const std::string& vA, const std::string& vB, b
     while (ia < as && ib < bs) {
         const char& ca = vInsensitiveCase ? std::tolower(vA[ia]) : vA[ia];
         const char& cb = vInsensitiveCase ? std::tolower(vB[ib]) : vB[ib];
-        if (M_IsAValidCharForADigit(ca) &&  //
-            M_IsAValidCharForADigit(cb)) {
-            if (M_ExtractNumFromStringAtPos(vA, ia, nA) &&  //
-                M_ExtractNumFromStringAtPos(vB, ib, nB)) {
-                if (nA != nB) {
-                    return vDescending ? nA > nB : nA < nB;
-                }
+        // we cannot start a number extraction from suffixs
+        const auto rA = M_ExtractNumFromStringAtPos(vA, ia, nA);
+        const auto rB = M_ExtractNumFromStringAtPos(vB, ib, nB);
+        if (rA && rB) {
+            if (nA != nB) {
+                return vDescending ? nA > nB : nA < nB;
             }
         } else {
             if (ca != cb) {
@@ -1868,52 +1886,22 @@ void IGFD::FileManager::m_SortFields(const FileDialogInternal& vFileDialogIntern
 #ifdef USE_CUSTOM_SORTING_ICON
             headerFileName = tableHeaderAscendingIcon + headerFileName;
 #endif  // USE_CUSTOM_SORTING_ICON
-            std::sort(vFileInfosList.begin(), vFileInfosList.end(), [&vFileDialogInternal](const std::shared_ptr<FileInfos>& a, const std::shared_ptr<FileInfos>& b) -> bool {
-                if (!a.use_count() || !b.use_count()) return false;
-                // tofix : this code fail in c:\\Users with the link "All users". got a invalid comparator
-                /*
-                // use code from
-                https://github.com/jackm97/ImGuiFileDialog/commit/bf40515f5a1de3043e60562dc1a494ee7ecd3571
-                // strict ordering for file/directory types beginning in '.'
-                // common on _IGFD_WIN_ platforms
-                if (a->fileNameExt[0] == '.' && b->fileNameExt[0] != '.')
-                    return false;
-                if (a->fileNameExt[0] != '.' && b->fileNameExt[0] == '.')
-                    return true;
-                if (a->fileNameExt[0] == '.' && b->fileNameExt[0] == '.')
-                {
-                    return (stricmp(a->fileNameExt.c_str(), b->fileNameExt.c_str()) < 0); // sort in insensitive
-                case
-                }
-                */
-                if (a->fileType != b->fileType) return (a->fileType < b->fileType);    // directories first
-                return M_SortStrings(vFileDialogInternal, true, false, a->fileNameExt, b->fileNameExt);  // sort in insensitive case
-            });
+            std::sort(vFileInfosList.begin(), vFileInfosList.end(), //
+                      [&vFileDialogInternal](const std::shared_ptr<FileInfos>& a, const std::shared_ptr<FileInfos>& b) -> bool {
+                          if (!a.use_count() || !b.use_count()) return false;
+                          if (a->fileType != b->fileType) return (a->fileType < b->fileType);                      // directories first
+                          return M_SortStrings(vFileDialogInternal, true, false, a->fileNameExt, b->fileNameExt);  // sort in insensitive case
+                      });
         } else {
 #ifdef USE_CUSTOM_SORTING_ICON
             headerFileName = tableHeaderDescendingIcon + headerFileName;
-#endif  // USE_CUSTOM_SORTING_ICON
-            std::sort(vFileInfosList.begin(), vFileInfosList.end(), [&vFileDialogInternal](const std::shared_ptr<FileInfos>& a, const std::shared_ptr<FileInfos>& b) -> bool {
-                if (!a.use_count() || !b.use_count()) return false;
-                // tofix : this code fail in c:\\Users with the link "All users". got a invalid comparator
-                /*
-                // use code from
-                https://github.com/jackm97/ImGuiFileDialog/commit/bf40515f5a1de3043e60562dc1a494ee7ecd3571
-                // strict ordering for file/directory types beginning in '.'
-                // common on _IGFD_WIN_ platforms
-                if (a->fileNameExt[0] == '.' && b->fileNameExt[0] != '.')
-                    return false;
-                if (a->fileNameExt[0] != '.' && b->fileNameExt[0] == '.')
-                    return true;
-                if (a->fileNameExt[0] == '.' && b->fileNameExt[0] == '.')
-                {
-                    return (stricmp(a->fileNameExt.c_str(), b->fileNameExt.c_str()) > 0); // sort in insensitive
-                case
-                }
-                */
-                if (a->fileType != b->fileType) return (a->fileType > b->fileType);    // directories last
-                return M_SortStrings(vFileDialogInternal, true, true, a->fileNameExt, b->fileNameExt);  // sort in insensitive case
-            });
+#endif // USE_CUSTOM_SORTING_ICON
+            std::sort(vFileInfosList.begin(), vFileInfosList.end(),  //
+                      [&vFileDialogInternal](const std::shared_ptr<FileInfos>& a, const std::shared_ptr<FileInfos>& b) -> bool {
+                          if (!a.use_count() || !b.use_count()) return false;
+                          if (a->fileType != b->fileType) return (a->fileType > b->fileType);                     // directories last
+                          return M_SortStrings(vFileDialogInternal, true, true, a->fileNameExt, b->fileNameExt);  // sort in insensitive case
+                      });
         }
     } else if (sortingField == SortingFieldEnum::FIELD_TYPE) {
         if (sortingDirection[1]) {
@@ -2772,10 +2760,12 @@ std::string IGFD::FileManager::GetResultingFileName(FileDialogInternal& vFileDia
 std::string IGFD::FileManager::GetResultingFilePathName(FileDialogInternal& vFileDialogInternal, IGFD_ResultMode vFlag) {
     if (!dLGDirectoryMode) {  // if not directory mode
         auto result          = GetResultingPath();
-        const auto& filename = GetResultingFileName(vFileDialogInternal, vFlag);
-        if (!filename.empty()) {
-            if (m_FileSystemPtr != nullptr && m_FileSystemPtr->IsFileExist(filename)) {
-                result = filename; // #144, exist file, so absolute, so return it (maybe set by user in inputText)
+        const auto& file_path_name = GetResultingFileName(vFileDialogInternal, vFlag);
+        if (!file_path_name.empty()) {
+            if (m_FileSystemPtr != nullptr && 
+                file_path_name.find(IGFD::Utils::GetPathSeparator()) != std::string::npos &&  // check if a path
+                m_FileSystemPtr->IsFileExist(file_path_name)) { // do that only if filename is a path, not only a file name 
+                result = file_path_name; // #144, exist file, so absolute, so return it (maybe set by user in inputText)
             } else { // #144, else concate path with current filename
 #ifdef _IGFD_UNIX_
                 if (fsRoot != result)
@@ -2783,11 +2773,11 @@ std::string IGFD::FileManager::GetResultingFilePathName(FileDialogInternal& vFil
                 {
                     result += IGFD::Utils::GetPathSeparator();
                 }
-                result += filename;
+                result += file_path_name;
             }
         }
 
-        return result;
+        return result;  // file mode
     }
     return GetResultingPath();  // modify by Dicky directory mode
 }
