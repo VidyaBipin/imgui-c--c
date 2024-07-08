@@ -106,6 +106,18 @@ enum ImGuiFileDialogFlags_ {
 	ImGuiFileDialogFlags_PathDecompositionShort       = (1 << 17),    // show Path Decomposition only current and parents
     ImGuiFileDialogFlags_DisableDragDrop              = (1 << 18),    // disable drag drop support
     ImGuiFileDialogFlags_AllowDirectorySelect         = (1 << 19),    // allow directory select even we have filter string 
+
+    ImGuiFileDialogFlags_OpenFile_Default = ImGuiFileDialogFlags_ShowBookmark |
+                                            ImGuiFileDialogFlags_DontShowHiddenFiles |
+                                            ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering |
+                                            ImGuiFileDialogFlags_DisableCreateDirectoryButton |
+                                            ImGuiFileDialogFlags_Modal,
+
+    ImGuiFileDialogFlags_SaveFile_Default = ImGuiFileDialogFlags_ShowBookmark |
+                                            ImGuiFileDialogFlags_DontShowHiddenFiles |
+                                            ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering |
+                                            ImGuiFileDialogFlags_ConfirmOverwrite |
+                                            ImGuiFileDialogFlags_Modal,
     // add by dicky end
     // default behavior when no flags is defined. seems to be the more common cases
     ImGuiFileDialogFlags_Default = ImGuiFileDialogFlags_ConfirmOverwrite |  //

@@ -688,10 +688,7 @@ void Example::DrawFishCircleDemo()
                 IGFD::FileDialogConfig config;
                 config.path = ".";
                 config.countSelectionMax = 1;
-                config.flags = ImGuiFileDialogFlags_ShowBookmark |
-                            ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering |
-                            ImGuiFileDialogFlags_ConfirmOverwrite |
-                            ImGuiFileDialogFlags_Modal;
+                config.flags = ImGuiFileDialogFlags_SaveFile_Default;
                 ImGuiFileDialog::Instance()->OpenDialog(dialog_id.c_str(), ICON_IGFD_FOLDER_OPEN " Choose File", 
                                                         "Image files (*.png *.gif *.jpg *.jpeg *.tiff *.webp){.png,.gif,.jpg,.jpeg,.tiff,.webp}",
                                                         config);

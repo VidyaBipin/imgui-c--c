@@ -1159,11 +1159,7 @@ void ImShowVideoWindowCompare(ImDrawList *draw_list, ImTextureID texture1, ImTex
             IGFD::FileDialogConfig config;
             config.path = ".";
             config.countSelectionMax = 1;
-            config.flags = ImGuiFileDialogFlags_ShowBookmark |
-                            ImGuiFileDialogFlags_DontShowHiddenFiles |
-                            ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering |
-                            ImGuiFileDialogFlags_ConfirmOverwrite |
-                            ImGuiFileDialogFlags_Modal;
+            config.flags = ImGuiFileDialogFlags_SaveFile_Default;
             ImGuiFileDialog::Instance()->OpenDialog(dialog_id.c_str(), ICON_IGFD_FOLDER_OPEN " Choose File", 
                                                     image_filter.c_str(),
                                                     config);

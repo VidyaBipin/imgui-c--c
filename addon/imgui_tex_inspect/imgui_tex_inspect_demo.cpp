@@ -389,7 +389,7 @@ void ShowImGuiTexInspectDemo(bool* p_open)
             config.path = ".";
             config.countSelectionMax = 1;
             config.userDatas = IGFDUserDatas("TexInspect");
-            config.flags = ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_DontShowHiddenFiles | ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering | ImGuiFileDialogFlags_DisableCreateDirectoryButton | ImGuiFileDialogFlags_Modal;
+            config.flags = ImGuiFileDialogFlags_OpenFile_Default;
             ImGuiFileDialog::Instance()->OpenDialog("##TexInspectDemoFileDlgKey", "Choose Image File", 
                                                     image_filter.c_str(),
                                                     config);

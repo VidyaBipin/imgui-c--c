@@ -68,7 +68,7 @@ static bool _AppFrame(void* handle, bool closeApp)
             IGFD::FileDialogConfig config;
             config.path = ".";
             config.countSelectionMax = 1;
-            config.flags = ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_Modal;
+            config.flags = ImGuiFileDialogFlags_OpenFile_Default;
             ImGuiFileDialog::Instance()->OpenDialog("LoadJsonFileDlgKey", ICON_IGFD_FOLDER_OPEN " 打开JSON文件", 
                                                     filters,
                                                     config);
@@ -79,7 +79,7 @@ static bool _AppFrame(void* handle, bool closeApp)
             IGFD::FileDialogConfig config;
             config.path = ".";
             config.countSelectionMax = 1;
-            config.flags = ImGuiFileDialogFlags_ShowBookmark | ImGuiFileDialogFlags_Modal;
+            config.flags = ImGuiFileDialogFlags_SaveFile_Default;
             ImGuiFileDialog::Instance()->OpenDialog("SaveJsonFileDlgKey", ICON_IGFD_FOLDER_OPEN " 打开JSON文件", 
                                                     filters,
                                                     config);
