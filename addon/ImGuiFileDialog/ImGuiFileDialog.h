@@ -118,6 +118,14 @@ enum ImGuiFileDialogFlags_ {
                                             ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering |
                                             ImGuiFileDialogFlags_ConfirmOverwrite |
                                             ImGuiFileDialogFlags_Modal,
+
+    ImGuiFileDialogFlags_OpenFileEmb_Default = ImGuiFileDialogFlags_NoDialog |
+                                            ImGuiFileDialogFlags_HideColumnDate |
+                                            ImGuiFileDialogFlags_ShowBookmark |
+                                            ImGuiFileDialogFlags_DontShowHiddenFiles |
+                                            ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering | 
+                                            ImGuiFileDialogFlags_DisableCreateDirectoryButton |
+                                            ImGuiFileDialogFlags_PathDecompositionShort,
     // add by dicky end
     // default behavior when no flags is defined. seems to be the more common cases
     ImGuiFileDialogFlags_Default = ImGuiFileDialogFlags_ConfirmOverwrite |  //
