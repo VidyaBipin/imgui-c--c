@@ -1760,6 +1760,31 @@ if (IMGUI_BUILD_EXAMPLE AND IMGUI_APPS)
     target_link_libraries(ImMaskCreatorTest PRIVATE
         ImMaskCreator
     )
+    if (IMGUI_BUILD_DITHER)
+        add_executable(
+            DitherTest
+            test/DitherTest.cpp
+            ${IMGUI_APP_SRC}
+        )
+
+        target_link_libraries(
+            DitherTest
+            imgui
+            ${LINK_LIBS}
+        )
+    endif(IMGUI_BUILD_DITHER)
+    if (IMGUI_BUILD_POTRACE)
+        add_executable(
+            PotraceTest
+            test/PotraceTest.cpp
+            ${IMGUI_APP_SRC}
+        )
+        target_link_libraries(
+            PotraceTest
+            imgui
+            ${LINK_LIBS}
+        )
+    endif(IMGUI_BUILD_POTRACE)
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     set(IMGUI_SHELL_FILE ${PROJECT_SOURCE_DIR}/test/shell_minimal.html)
     set(IMGUI_WEB_DIR ${PROJECT_BINARY_DIR}/web/)
