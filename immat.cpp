@@ -765,20 +765,30 @@ ImMat ImMat::threshold(float thres)
     return m;
 }
 
-ImMat ImMat::dilate(int radius)
+ImMat ImMat::dilate(int radius, uint8_t flags)
 {
     assert(device == IM_DD_CPU);
     assert(dims == 2);
     ImMat m;
+    int x_start = 0, x_end = 0, y_start = 0, y_end = 0;
+    if (flags == 0) 
+    {
+        x_start = y_start = - radius;
+        x_end = y_end = radius;
+    }
+    if (flags & MORPH_FLAGS_RIGHT) x_start = - radius;
+    if (flags & MORPH_FLAGS_LEFT) x_end = radius;
+    if (flags & MORPH_FLAGS_BOTTOM) y_start = - radius;
+    if (flags & MORPH_FLAGS_TOP) y_end = radius;
     m.create_like(*this);
     for (int y = 0; y < h; ++y)
     {
         for (int x = 0; x < w; ++x)
         {
             float maxV = 0;
-            for (int yi = y - radius; yi <= y + radius; yi++)
+            for (int yi = y + y_start; yi <= y + y_end; yi++)
             {
-                for (int xi = x - radius; xi <= x + radius; xi++)
+                for (int xi = x + x_start; xi <= x + x_end; xi++)
                 {					
                     if (xi < 0 || xi >= w || yi < 0 || yi >= h)
                     {
@@ -794,20 +804,30 @@ ImMat ImMat::dilate(int radius)
     return m;
 }
 
-ImMat ImMat::erode(int radius)
+ImMat ImMat::erode(int radius, uint8_t flags)
 {
     assert(device == IM_DD_CPU);
     assert(dims == 2);
     ImMat m;
+    int x_start = 0, x_end = 0, y_start = 0, y_end = 0;
+    if (flags == 0) 
+    {
+        x_start = y_start = - radius;
+        x_end = y_end = radius;
+    }
+    if (flags & MORPH_FLAGS_LEFT) x_start = - radius;
+    if (flags & MORPH_FLAGS_RIGHT) x_end = radius;
+    if (flags & MORPH_FLAGS_TOP) y_start = - radius;
+    if (flags & MORPH_FLAGS_BOTTOM) y_end = radius;
     m.create_like(*this);
     for (int y = 0; y < h; ++y)
     {
         for (int x = 0; x < w; ++x)
         {
             float minV = 1.0;
-            for (int yi = y - radius; yi <= y + radius; yi++)
+            for (int yi = y + y_start; yi <= y + y_end; yi++)
 			{
-				for (int xi = x - radius; xi <= x + radius; xi++)
+				for (int xi = x + x_start; xi <= x + x_end; xi++)
 				{					
 					if (xi < 0|| xi >= w || yi < 0 || yi >= h)
 					{

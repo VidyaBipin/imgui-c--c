@@ -802,8 +802,12 @@ public:
     IMGUI_API ImMat lowpass(float lambda);
     IMGUI_API ImMat highpass(float lambda);
     IMGUI_API ImMat threshold(float thres);
-    IMGUI_API ImMat dilate(int radius = 1);
-    IMGUI_API ImMat erode(int radius = 1);
+    #define MORPH_FLAGS_LEFT    (1 << 0)
+    #define MORPH_FLAGS_RIGHT   (1 << 1)
+    #define MORPH_FLAGS_TOP     (1 << 2)
+    #define MORPH_FLAGS_BOTTOM  (1 << 3)
+    IMGUI_API ImMat dilate(int radius = 1, uint8_t flags = 0xFF);
+    IMGUI_API ImMat erode(int radius = 1, uint8_t flags = 0xFF);
 
     // simple filters
     IMGUI_API ImMat blur(int kernel_size, float sigma = 1.0f); // Gaussian Blur
