@@ -85,6 +85,7 @@ double Resize_vulkan::Resize(const ImMat& src, ImMat& dst, float fx, float fy, I
     VkMat dst_gpu;
     dst_gpu.create_type(dst_width, dst_height, channels, dst.type, opt.blob_vkallocator);
     dst_gpu.color_format = color_format;
+    dst_gpu.elempack = src.elempack;
 
     VkMat src_gpu;
     if (src.device == IM_DD_VULKAN)
