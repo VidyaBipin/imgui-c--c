@@ -3885,6 +3885,1298 @@ bool ImGui::BalanceSelector(char const* label, ImVec2 const size, ImVec4 * rgba,
     return reset;
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Interactions
+//////////////////////////////////////////////////////////////////////////
+enum ImTriangulatorNodeType0
+{
+	ImTriangulatorNodeType_Convex,
+	ImTriangulatorNodeType_Ear,
+	ImTriangulatorNodeType_Reflex
+};
+
+struct ImTriangulatorNode0
+{
+	ImTriangulatorNodeType0  Type;
+	int                     Index;
+	ImVec2                  Pos;
+	ImTriangulatorNode0* Next;
+	ImTriangulatorNode0* Prev;
+	void    Unlink()
+	{
+		Next->Prev = Prev; Prev->Next = Next;
+	}
+};
+
+struct ImTriangulatorNodeSpan0
+{
+	ImTriangulatorNode0** Data = NULL;
+	int                     Size = 0;
+	void    push_back( ImTriangulatorNode0* node )
+	{
+		Data[ Size++ ] = node;
+	}
+	void    find_erase_unsorted( int idx )
+	{
+		for ( int i = Size - 1; i >= 0; i-- ) if ( Data[ i ]->Index == idx )
+		{
+			Data[ i ] = Data[ Size - 1 ]; Size--; return;
+		}
+	}
+};
+
+struct ImTriangulator0
+{
+	static int EstimateTriangleCount( int points_count )
+	{
+		return ( points_count < 3 ) ? 0 : points_count - 2;
+	}
+	static int EstimateScratchBufferSize( int points_count )
+	{
+		return sizeof( ImTriangulatorNode0 ) * points_count + sizeof( ImTriangulatorNode0* ) * points_count * 2;
+	}
+	void    Init( const std::vector<ImVec2>& points, void* scratch_buffer )
+    {
+		IM_ASSERT( scratch_buffer != NULL && points.size() >= 3 );
+		_TrianglesLeft = EstimateTriangleCount( points.size() );
+		_Nodes = ( ImTriangulatorNode0* )scratch_buffer;                          // points_count x Node
+		_Ears.Data = ( ImTriangulatorNode0** )( _Nodes + points.size() );                // points_count x Node*
+		_Reflexes.Data = ( ImTriangulatorNode0** )( _Nodes + points.size() ) + points.size(); // points_count x Node*
+		BuildNodes( points );
+		BuildReflexes();
+		BuildEars();
+	}
+	void    GetNextTriangle( unsigned int out_triangle[ 3 ] )     // Return relative indexes for next triangle
+    {
+		if ( _Ears.Size == 0 )
+		{
+			FlipNodeList();
+
+			ImTriangulatorNode0* node = _Nodes;
+			for ( int i = _TrianglesLeft; i >= 0; i--, node = node->Next )
+				node->Type = ImTriangulatorNodeType_Convex;
+			_Reflexes.Size = 0;
+			BuildReflexes();
+			BuildEars();
+
+			// If we still don't have ears, it means geometry is degenerated.
+			if ( _Ears.Size == 0 )
+			{
+				// Return first triangle available, mimicking the behavior of convex fill.
+				IM_ASSERT( _TrianglesLeft > 0 ); // Geometry is degenerated
+				_Ears.Data[ 0 ] = _Nodes;
+				_Ears.Size = 1;
+			}
+		}
+
+		ImTriangulatorNode0* ear = _Ears.Data[ --_Ears.Size ];
+		out_triangle[ 0 ] = ear->Prev->Index;
+		out_triangle[ 1 ] = ear->Index;
+		out_triangle[ 2 ] = ear->Next->Index;
+
+		ear->Unlink();
+		if ( ear == _Nodes )
+			_Nodes = ear->Next;
+
+		ReclassifyNode( ear->Prev );
+		ReclassifyNode( ear->Next );
+		_TrianglesLeft--;
+	}
+	// Internal functions
+	void    BuildNodes( const std::vector<ImVec2>& points )
+    {
+		for ( int i = 0; i < points.size(); i++ )
+		{
+			_Nodes[ i ].Type = ImTriangulatorNodeType_Convex;
+			_Nodes[ i ].Index = i;
+			_Nodes[ i ].Pos = points[ i ];
+			_Nodes[ i ].Next = _Nodes + i + 1;
+			_Nodes[ i ].Prev = _Nodes + i - 1;
+		}
+		_Nodes[ 0 ].Prev = _Nodes + points.size() - 1;
+		_Nodes[ points.size() - 1 ].Next = _Nodes;
+	}
+	void    BuildReflexes()
+    {
+		ImTriangulatorNode0* n1 = _Nodes;
+		for ( int i = _TrianglesLeft; i >= 0; i--, n1 = n1->Next )
+		{
+			if ( ImTriangleIsClockwise( n1->Prev->Pos, n1->Pos, n1->Next->Pos ) )
+				continue;
+			n1->Type = ImTriangulatorNodeType_Reflex;
+			_Reflexes.push_back( n1 );
+		}
+	}
+	void    BuildEars()
+    {
+		ImTriangulatorNode0* n1 = _Nodes;
+		for ( int i = _TrianglesLeft; i >= 0; i--, n1 = n1->Next )
+		{
+			if ( n1->Type != ImTriangulatorNodeType_Convex )
+				continue;
+			if ( !IsEar( n1->Prev->Index, n1->Index, n1->Next->Index, n1->Prev->Pos, n1->Pos, n1->Next->Pos ) )
+				continue;
+			n1->Type = ImTriangulatorNodeType_Ear;
+			_Ears.push_back( n1 );
+		}
+	}
+	void    FlipNodeList()
+    {
+		ImTriangulatorNode0* prev = _Nodes;
+		ImTriangulatorNode0* temp = _Nodes;
+		ImTriangulatorNode0* current = _Nodes->Next;
+		prev->Next = prev;
+		prev->Prev = prev;
+		while ( current != _Nodes )
+		{
+			temp = current->Next;
+
+			current->Next = prev;
+			prev->Prev = current;
+			_Nodes->Next = current;
+			current->Prev = _Nodes;
+
+			prev = current;
+			current = temp;
+		}
+		_Nodes = prev;
+	}
+	bool    IsEar( int i0, int i1, int i2, const ImVec2& v0, const ImVec2& v1, const ImVec2& v2 ) const
+    {
+		ImTriangulatorNode0** p_end = _Reflexes.Data + _Reflexes.Size;
+		for ( ImTriangulatorNode0** p = _Reflexes.Data; p < p_end; p++ )
+		{
+			ImTriangulatorNode0* reflex = *p;
+			if ( reflex->Index != i0 && reflex->Index != i1 && reflex->Index != i2 )
+				if ( ImTriangleContainsPoint( v0, v1, v2, reflex->Pos ) )
+					return false;
+		}
+		return true;
+	}
+	void    ReclassifyNode( ImTriangulatorNode0* node )
+    {
+		// Classify node
+		ImTriangulatorNodeType0 type;
+		const ImTriangulatorNode0* n0 = node->Prev;
+		const ImTriangulatorNode0* n2 = node->Next;
+		if ( !ImTriangleIsClockwise( n0->Pos, node->Pos, n2->Pos ) )
+			type = ImTriangulatorNodeType_Reflex;
+		else if ( IsEar( n0->Index, node->Index, n2->Index, n0->Pos, node->Pos, n2->Pos ) )
+			type = ImTriangulatorNodeType_Ear;
+		else
+			type = ImTriangulatorNodeType_Convex;
+
+		// Update lists when a type changes
+		if ( type == node->Type )
+			return;
+		if ( node->Type == ImTriangulatorNodeType_Reflex )
+			_Reflexes.find_erase_unsorted( node->Index );
+		else if ( node->Type == ImTriangulatorNodeType_Ear )
+			_Ears.find_erase_unsorted( node->Index );
+		if ( type == ImTriangulatorNodeType_Reflex )
+			_Reflexes.push_back( node );
+		else if ( type == ImTriangulatorNodeType_Ear )
+			_Ears.push_back( node );
+		node->Type = type;
+	}
+
+	// Internal members
+	int                     _TrianglesLeft = 0;
+	ImTriangulatorNode0* _Nodes = NULL;
+	ImTriangulatorNodeSpan0  _Ears;
+	ImTriangulatorNodeSpan0  _Reflexes;
+};
+
+static bool IsTriangleContains( ImVec2 a, ImVec2 b, ImVec2 c, ImVec2 p )
+{
+	// Compute vectors
+	ImVec2 v0 = { c.x - a.x, c.y - a.y };
+	ImVec2 v1 = { b.x - a.x, b.y - a.y };
+	ImVec2 v2 = { p.x - a.x, p.y - a.y };
+	// Compute dot products
+	float dot00 = v0.x * v0.y + v0.y * v0.y;
+	float dot01 = v0.x * v1.x + v0.y * v1.y;
+	float dot02 = v0.x * v2.x + v0.y * v2.y;
+	float dot11 = v1.x * v1.x + v1.y * v1.y;
+	float dot12 = v1.x * v2.x + v1.y * v2.y;
+	// Compute barycentric coordinates
+	float invDenom = 1.0f / ( dot00 * dot11 - dot01 * dot01 );
+	float u = ( dot11 * dot02 - dot01 * dot12 ) * invDenom;
+	float v = ( dot00 * dot12 - dot01 * dot02 ) * invDenom;
+	// Check if point is in triangle
+	return ( u >= 0.0f ) && ( v >= 0.0f ) && ( u + v < 1.0f );
+}
+
+bool ImGui::IsPolyConvexContains(const std::vector<ImVec2>& pts, ImVec2 p )
+{
+	IM_ASSERT( pts.size() >= 3 );
+	for ( int k = 2; k < pts.size(); ++k )
+	{
+		ImVec2 a = pts[ 0 ];
+		ImVec2 b = pts[ k - 1 ];
+		ImVec2 c = pts[ k ];
+		if ( ImTriangleContainsPoint( a, b, c, p ) )
+			return true;
+	}
+	return false;
+}
+
+bool ImGui::IsPolyConcaveContains(const std::vector<ImVec2>& pts, ImVec2 p )
+{
+	IM_ASSERT( pts.size() >= 3 );
+	ImRect bb;
+	bb.Min = ImVec2( FLT_MAX, FLT_MAX );
+	bb.Max = ImVec2( -FLT_MAX, -FLT_MAX );
+	for ( int k = 0; k < pts.size(); ++k )
+	{
+		bb.Min.x = ImMin( bb.Min.x, pts[ k ].x );
+		bb.Min.y = ImMin( bb.Min.y, pts[ k ].y );
+		bb.Max.x = ImMax( bb.Max.x, pts[ k ].x );
+		bb.Max.y = ImMax( bb.Max.y, pts[ k ].y );
+	}
+	if ( !bb.ContainsWithPad( p, ImVec2( 1.0f, 1.0f ) ) )
+		return false;
+	ImDrawListSharedData* _Data = ImGui::GetCurrentWindow()->DrawList->_Data;
+	ImTriangulator0 triangulator;
+	unsigned int triangle[ 3 ];
+	{
+		// Non Anti-aliased Fill
+		const int idx_count = ( pts.size() - 2 ) * 3;
+		triangulator.Init( pts, _Data->TempBuffer.Data );
+		while ( triangulator._TrianglesLeft > 0 )
+		{
+			triangulator.GetNextTriangle( triangle );
+			if ( ImTriangleContainsPoint( pts[ triangle[ 0 ] ], pts[ triangle[ 1 ] ], pts[ triangle[ 2 ] ], p ) )
+				return true;
+		}
+	}
+	return false;
+}
+
+bool ImGui::IsPolyWithHoleContains( const std::vector<ImVec2>& pts, ImVec2 p, ImRect* p_bb, int gap, int strokeWidth )
+{
+	ImVector<ImVec2> scanHits;
+	ImVec2 min, max; // polygon min/max points
+	float y;
+	bool isMinMaxDone = false;
+	// find the orthagonal bounding box
+	// probably can put this as a predefined
+	if ( !isMinMaxDone )
+	{
+		min.x = min.y = FLT_MAX;
+		max.x = max.y = FLT_MIN;
+		//for ( auto p : poly )
+		for ( int i = 0; i < pts.size(); ++i )
+		{
+			ImVec2 p = pts[ i ];
+			if ( p.x < min.x )
+				min.x = p.x;
+			if ( p.y < min.y )
+				min.y = p.y;
+			if ( p.x > max.x )
+				max.x = p.x;
+			if ( p.y > max.y )
+				max.y = p.y;
+		}
+		isMinMaxDone = true;
+	}
+	ImRect bb;
+	if ( p_bb == NULL )
+	{
+		bb.Min = min;
+		bb.Max = max;
+	}
+	else
+	{
+		bb = *p_bb;
+	}
+	if ( !bb.ContainsWithPad( p, ImVec2( 1.0f, 1.0f ) ) )
+		return false;
+	// Bounds check
+	if ( ( max.x < 0 ) || ( max.y < 0 ) )
+		return false;
+	// Vertically clip
+	if ( min.y <= 0 )
+		min.y = 0;
+	// so we know we start on the outside of the object we step out by 1.
+	min.x -= 1;
+	max.x += 1;
+	// Initialise our starting conditions
+	y = min.y;
+	struct ImVec2CompX
+	{
+		static int IMGUI_CDECL Comp( const void* lhs, const void* rhs )
+		{
+			if ( ( ( const ImVec2* )lhs )->x > ( ( const ImVec2* )rhs )->x )
+				return +1;
+			if ( ( ( const ImVec2* )lhs )->x < ( ( const ImVec2* )rhs )->x )
+				return -1;
+			return 0;
+		}
+	};
+	while ( y < max.y )
+	{
+		scanHits.clear();
+		{
+			int jump = 1;
+			ImVec2 fp = pts[ 0 ];
+			for ( size_t i = 0; i < pts.size() - 1; i++ )
+			{
+				ImVec2 pa = pts[ i ];
+				ImVec2 pb = pts[ i + 1 ];
+				// jump double/dud points
+				if ( pa.x == pb.x && pa.y == pb.y ) continue;
+				// if we encounter our hull/poly start point, then we've now created the
+				// closed
+				// hull, jump the next segment and reset the first-point
+				if ( ( !jump ) && ( fp.x == pb.x ) && ( fp.y == pb.y ) )
+				{
+					if ( i < pts.size() - 2 )
+					{
+						fp = pts[ i + 2 ];
+						jump = 1;
+						i++;
+					}
+				}
+				else
+				{
+					jump = 0;
+				}
+				// test to see if this segment makes the scan-cut.
+				if ( ( pa.y > pb.y && y < pa.y && y > pb.y ) || ( pa.y < pb.y && y > pa.y && y < pb.y ) )
+				{
+					ImVec2 intersect;
+					intersect.y = y;
+					if ( pa.x == pb.x )
+					{
+						intersect.x = pa.x;
+					}
+					else
+					{
+						intersect.x = ( pb.x - pa.x ) / ( pb.y - pa.y ) * ( y - pa.y ) + pa.x;
+					}
+					scanHits.push_back( intersect );
+				}
+			}
+			// Sort the scan hits by X, so we have a proper left->right ordering
+			ImQsort( &scanHits[ 0 ], scanHits.size(), sizeof( ImVec2 ), &ImVec2CompX::Comp );
+			// generate the line segments.
+			int i = 0;
+			int l = scanHits.size() - 1; // we need pairs of points, this prevents segfault.
+			for ( i = 0; i < l; i += 2 )
+			{
+				ImVec2 a = scanHits[ i ];
+				ImVec2 b = scanHits[ i + 1 ];
+				if ( ImRect( a, b ).ContainsWithPad( p, ImVec2( 0.0f, ( float )strokeWidth ) ) )
+				{
+					scanHits.clear();
+					return true;
+				}
+			}
+		}
+		y += gap;
+	}
+	return false;
+}
+
+bool ImGui::IsMouseHoveringPolyConvex( const ImVec2& r_min, const ImVec2& r_max, const std::vector<ImVec2>& pts, bool clip )
+{
+	bool well_form = true;
+	for ( int k = 0; k < pts.size(); ++k )
+	{
+		well_form &= ImRect( r_min, r_max ).Contains( pts[ k ] );
+	}
+	IM_ASSERT( well_form );
+	ImGuiContext& g = *ImGui::GetCurrentContext();
+	// Clip
+	ImRect rect_clipped( r_min, r_max );
+	if ( clip )
+		rect_clipped.ClipWith( g.CurrentWindow->ClipRect );
+	// Hit testing, expanded for touch input
+	if ( !rect_clipped.ContainsWithPad( g.IO.MousePos, g.Style.TouchExtraPadding ) )
+		return false;
+	if ( !IsPolyConvexContains( pts, g.IO.MousePos ) )
+		return false;
+	return true;
+}
+
+bool ImGui::ItemHoverablePolyConvex( const ImRect& bb, ImGuiID id, const std::vector<ImVec2>& pts, ImGuiItemFlags item_flags )
+{
+	ImGuiContext& g = *GImGui;
+	ImGuiWindow* window = g.CurrentWindow;
+	bool well_form = true;
+	for ( int k = 0; k < pts.size(); ++k )
+	{
+		well_form &= bb.Contains( pts[ k ] );
+	}
+	IM_ASSERT( well_form );
+	if ( g.HoveredWindow != window )
+		return false;
+	if ( !ImGui::IsMouseHoveringRect( bb.Min, bb.Max ) )
+		return false;
+	if ( !IsMouseHoveringPolyConvex( bb.Min, bb.Max, pts ) )
+		return false;
+	if ( g.HoveredId != 0 && g.HoveredId != id && !g.HoveredIdAllowOverlap )
+		return false;
+	if ( g.ActiveId != 0 && g.ActiveId != id && !g.ActiveIdAllowOverlap )
+		if ( !g.ActiveIdFromShortcut )
+			return false;
+	// Done with rectangle culling so we can perform heavier checks now.
+	if ( !( item_flags & ImGuiItemFlags_NoWindowHoverableCheck ) && !ImGui::IsWindowContentHoverable( window, ImGuiHoveredFlags_None ) )
+	{
+		g.HoveredIdIsDisabled = true;
+		return false;
+	}
+	// We exceptionally allow this function to be called with id==0 to allow using it for easy high-level
+	// hover test in widgets code. We could also decide to split this function is two.
+	if ( id != 0 )
+	{
+		// Drag source doesn't report as hovered
+		if ( g.DragDropActive && g.DragDropPayload.SourceId == id && !( g.DragDropSourceFlags & ImGuiDragDropFlags_SourceNoDisableHover ) )
+			return false;
+		ImGui::SetHoveredID( id );
+		// AllowOverlap mode (rarely used) requires previous frame HoveredId to be null or to match.
+		// This allows using patterns where a later submitted widget overlaps a previous one. Generally perceived as a front-to-back hit-test.
+		if ( item_flags & ImGuiItemFlags_AllowOverlap )
+		{
+			g.HoveredIdAllowOverlap = true;
+			if ( g.HoveredIdPreviousFrame != id )
+				return false;
+		}
+		// Display shortcut (only works with mouse)
+		if ( id == g.LastItemData.ID && ( g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HasShortcut ) )
+			if ( ImGui::IsItemHovered( ImGuiHoveredFlags_ForTooltip | ImGuiHoveredFlags_DelayNormal ) )
+				ImGui::SetTooltip( "%s", ImGui::GetKeyChordName( g.LastItemData.Shortcut ) );
+	}
+	// When disabled we'll return false but still set HoveredId
+	if ( item_flags & ImGuiItemFlags_Disabled )
+	{
+		// Release active id if turning disabled
+		if ( g.ActiveId == id && id != 0 )
+			ImGui::ClearActiveID();
+		g.HoveredIdIsDisabled = true;
+		return false;
+	}
+
+#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	if ( id != 0 )
+	{
+		// [DEBUG] Item Picker tool!
+		// We perform the check here because reaching is path is rare (1~ time a frame),
+		// making the cost of this tool near-zero! We could get better call-stack and support picking non-hovered
+		// items if we performed the test in ItemAdd(), but that would incur a bigger runtime cost.
+		if ( g.DebugItemPickerActive && g.HoveredIdPreviousFrame == id )
+			ImGui::GetForegroundDrawList()->AddRect( bb.Min, bb.Max, IM_COL32( 255, 255, 0, 255 ) );
+		if ( g.DebugItemPickerBreakId == id )
+			IM_DEBUG_BREAK();
+	}
+#endif
+
+	if ( g.NavDisableMouseHover )
+		return false;
+	return true;
+}
+
+bool ImGui::IsMouseHoveringPolyConcave( const ImVec2& r_min, const ImVec2& r_max, const std::vector<ImVec2>& pts, bool clip )
+{
+	bool well_form = true;
+	for ( int k = 0; k < pts.size(); ++k )
+	{
+		well_form &= ImRect( r_min, r_max ).Contains( pts[ k ] );
+	}
+	IM_ASSERT( well_form );
+	ImGuiContext& g = *ImGui::GetCurrentContext();
+	// Clip
+	ImRect rect_clipped( r_min, r_max );
+	if ( clip )
+		rect_clipped.ClipWith( g.CurrentWindow->ClipRect );
+	// Hit testing, expanded for touch input
+	if ( !rect_clipped.ContainsWithPad( g.IO.MousePos, g.Style.TouchExtraPadding ) )
+		return false;
+	if ( !IsPolyConcaveContains( pts, g.IO.MousePos ) )
+		return false;
+	return true;
+}
+
+bool ImGui::ItemHoverablePolyConcave( const ImRect& bb, ImGuiID id, const std::vector<ImVec2>& pts, ImGuiItemFlags item_flags )
+{
+	ImGuiContext& g = *GImGui;
+	ImGuiWindow* window = g.CurrentWindow;
+	bool well_form = true;
+	for ( int k = 0; k < pts.size(); ++k )
+	{
+		well_form &= bb.Contains( pts[ k ] );
+	}
+	IM_ASSERT( well_form );
+	if ( g.HoveredWindow != window )
+		return false;
+	if ( !ImGui::IsMouseHoveringRect( bb.Min, bb.Max ) )
+		return false;
+	if ( !IsMouseHoveringPolyConcave( bb.Min, bb.Max, pts ) )
+		return false;
+	if ( g.HoveredId != 0 && g.HoveredId != id && !g.HoveredIdAllowOverlap )
+		return false;
+	if ( g.ActiveId != 0 && g.ActiveId != id && !g.ActiveIdAllowOverlap )
+		if ( !g.ActiveIdFromShortcut )
+			return false;
+	// Done with rectangle culling so we can perform heavier checks now.
+	if ( !( item_flags & ImGuiItemFlags_NoWindowHoverableCheck ) && !ImGui::IsWindowContentHoverable( window, ImGuiHoveredFlags_None ) )
+	{
+		g.HoveredIdIsDisabled = true;
+		return false;
+	}
+	// We exceptionally allow this function to be called with id==0 to allow using it for easy high-level
+	// hover test in widgets code. We could also decide to split this function is two.
+	if ( id != 0 )
+	{
+		// Drag source doesn't report as hovered
+		if ( g.DragDropActive && g.DragDropPayload.SourceId == id && !( g.DragDropSourceFlags & ImGuiDragDropFlags_SourceNoDisableHover ) )
+			return false;
+		ImGui::SetHoveredID( id );
+		// AllowOverlap mode (rarely used) requires previous frame HoveredId to be null or to match.
+		// This allows using patterns where a later submitted widget overlaps a previous one. Generally perceived as a front-to-back hit-test.
+		if ( item_flags & ImGuiItemFlags_AllowOverlap )
+		{
+			g.HoveredIdAllowOverlap = true;
+			if ( g.HoveredIdPreviousFrame != id )
+				return false;
+		}
+		// Display shortcut (only works with mouse)
+		if ( id == g.LastItemData.ID && ( g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HasShortcut ) )
+			if ( ImGui::IsItemHovered( ImGuiHoveredFlags_ForTooltip | ImGuiHoveredFlags_DelayNormal ) )
+				ImGui::SetTooltip( "%s", ImGui::GetKeyChordName( g.LastItemData.Shortcut ) );
+	}
+	// When disabled we'll return false but still set HoveredId
+	if ( item_flags & ImGuiItemFlags_Disabled )
+	{
+		// Release active id if turning disabled
+		if ( g.ActiveId == id && id != 0 )
+			ImGui::ClearActiveID();
+		g.HoveredIdIsDisabled = true;
+		return false;
+	}
+
+#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	if ( id != 0 )
+	{
+		// [DEBUG] Item Picker tool!
+		// We perform the check here because reaching is path is rare (1~ time a frame),
+		// making the cost of this tool near-zero! We could get better call-stack and support picking non-hovered
+		// items if we performed the test in ItemAdd(), but that would incur a bigger runtime cost.
+		if ( g.DebugItemPickerActive && g.HoveredIdPreviousFrame == id )
+			ImGui::GetForegroundDrawList()->AddRect( bb.Min, bb.Max, IM_COL32( 255, 255, 0, 255 ) );
+		if ( g.DebugItemPickerBreakId == id )
+			IM_DEBUG_BREAK();
+	}
+#endif
+
+	if ( g.NavDisableMouseHover )
+		return false;
+	return true;
+}
+
+bool ImGui::IsMouseHoveringPolyWithHole( const ImVec2& r_min, const ImVec2& r_max, const std::vector<ImVec2>& pts, bool clip )
+{
+	bool well_form = true;
+	for ( int k = 0; k < pts.size(); ++k )
+	{
+		well_form &= ImRect( r_min, r_max ).Contains( pts[ k ] );
+	}
+	IM_ASSERT( well_form );
+	ImGuiContext& g = *ImGui::GetCurrentContext();
+	// Clip
+	ImRect rect_clipped( r_min, r_max );
+	if ( clip )
+		rect_clipped.ClipWith( g.CurrentWindow->ClipRect );
+	// Hit testing, expanded for touch input
+	if ( !rect_clipped.ContainsWithPad( g.IO.MousePos, g.Style.TouchExtraPadding ) )
+		return false;
+	if ( !IsPolyWithHoleContains( pts, g.IO.MousePos ) )
+		return false;
+	return true;
+}
+
+bool ImGui::ItemHoverablePolyWithHole( const ImRect& bb, ImGuiID id, const std::vector<ImVec2>& pts, ImGuiItemFlags item_flags )
+{
+	ImGuiContext& g = *GImGui;
+	ImGuiWindow* window = g.CurrentWindow;
+	bool well_form = true;
+	for ( int k = 0; k < pts.size(); ++k )
+	{
+		well_form &= bb.Contains( pts[ k ] );
+	}
+	IM_ASSERT( well_form );
+	if ( g.HoveredWindow != window )
+		return false;
+	if ( !ImGui::IsMouseHoveringRect( bb.Min, bb.Max ) )
+		return false;
+	if ( !IsMouseHoveringPolyWithHole( bb.Min, bb.Max, pts ) )
+		return false;
+	if ( g.HoveredId != 0 && g.HoveredId != id && !g.HoveredIdAllowOverlap )
+		return false;
+	if ( g.ActiveId != 0 && g.ActiveId != id && !g.ActiveIdAllowOverlap )
+		if ( !g.ActiveIdFromShortcut )
+			return false;
+	// Done with rectangle culling so we can perform heavier checks now.
+	if ( !( item_flags & ImGuiItemFlags_NoWindowHoverableCheck ) && !ImGui::IsWindowContentHoverable( window, ImGuiHoveredFlags_None ) )
+	{
+		g.HoveredIdIsDisabled = true;
+		return false;
+	}
+	// We exceptionally allow this function to be called with id==0 to allow using it for easy high-level
+	// hover test in widgets code. We could also decide to split this function is two.
+	if ( id != 0 )
+	{
+		// Drag source doesn't report as hovered
+		if ( g.DragDropActive && g.DragDropPayload.SourceId == id && !( g.DragDropSourceFlags & ImGuiDragDropFlags_SourceNoDisableHover ) )
+			return false;
+		ImGui::SetHoveredID( id );
+		// AllowOverlap mode (rarely used) requires previous frame HoveredId to be null or to match.
+		// This allows using patterns where a later submitted widget overlaps a previous one. Generally perceived as a front-to-back hit-test.
+		if ( item_flags & ImGuiItemFlags_AllowOverlap )
+		{
+			g.HoveredIdAllowOverlap = true;
+			if ( g.HoveredIdPreviousFrame != id )
+				return false;
+		}
+		// Display shortcut (only works with mouse)
+		if ( id == g.LastItemData.ID && ( g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HasShortcut ) )
+			if ( ImGui::IsItemHovered( ImGuiHoveredFlags_ForTooltip | ImGuiHoveredFlags_DelayNormal ) )
+				ImGui::SetTooltip( "%s", ImGui::GetKeyChordName( g.LastItemData.Shortcut ) );
+	}
+	// When disabled we'll return false but still set HoveredId
+	if ( item_flags & ImGuiItemFlags_Disabled )
+	{
+		// Release active id if turning disabled
+		if ( g.ActiveId == id && id != 0 )
+			ImGui::ClearActiveID();
+		g.HoveredIdIsDisabled = true;
+		return false;
+	}
+
+#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+	if ( id != 0 )
+	{
+		// [DEBUG] Item Picker tool!
+		// We perform the check here because reaching is path is rare (1~ time a frame),
+		// making the cost of this tool near-zero! We could get better call-stack and support picking non-hovered
+		// items if we performed the test in ItemAdd(), but that would incur a bigger runtime cost.
+		if ( g.DebugItemPickerActive && g.HoveredIdPreviousFrame == id )
+			ImGui::GetForegroundDrawList()->AddRect( bb.Min, bb.Max, IM_COL32( 255, 255, 0, 255 ) );
+		if ( g.DebugItemPickerBreakId == id )
+			IM_DEBUG_BREAK();
+	}
+#endif
+
+	if ( g.NavDisableMouseHover )
+		return false;
+	return true;
+}
+
+void ImGui::DrawShapeWithHole( ImDrawList* draw, const std::vector<ImVec2>& poly, ImU32 color, ImRect* p_bb, int gap, int strokeWidth )
+{
+	ImVector<ImVec2> scanHits;
+	ImVec2 min, max; // polygon min/max points
+	ImGuiIO io = ImGui::GetIO();
+	float y;
+	bool isMinMaxDone = false;
+	// find the orthagonal bounding box
+	// probably can put this as a predefined
+	if ( !isMinMaxDone )
+	{
+		min.x = min.y = FLT_MAX;
+		max.x = max.y = FLT_MIN;
+		//for ( auto p : poly )
+		for ( int i = 0; i < poly.size(); ++i )
+		{
+			ImVec2 p = poly[ i ];
+			if ( p.x < min.x )
+				min.x = p.x;
+			if ( p.y < min.y )
+				min.y = p.y;
+			if ( p.x > max.x )
+				max.x = p.x;
+			if ( p.y > max.y )
+				max.y = p.y;
+		}
+		isMinMaxDone = true;
+	}
+	ImRect bb;
+	if ( p_bb == NULL )
+	{
+		bb.Min = min;
+		bb.Max = max;
+	}
+	else
+	{
+		bb = *p_bb;
+	}
+	// Bounds check
+	if ( ( max.x < 0 ) || ( min.x > io.DisplaySize.x ) || ( max.y < 0 ) || ( min.y > io.DisplaySize.y ) )
+		return;
+	// Vertically clip
+	if ( min.y <= 0 )
+		min.y = 0;
+	if ( max.y > io.DisplaySize.y )
+		max.y = io.DisplaySize.y;
+	// so we know we start on the outside of the object we step out by 1.
+	min.x -= 1;
+	max.x += 1;
+	// Initialise our starting conditions
+	y = min.y;
+	struct ImVec2CompX
+	{
+		static int IMGUI_CDECL Comp( const void* lhs, const void* rhs )
+		{
+			if ( ( ( const ImVec2* )lhs )->x > ( ( const ImVec2* )rhs )->x )
+				return +1;
+			if ( ( ( const ImVec2* )lhs )->x < ( ( const ImVec2* )rhs )->x )
+				return -1;
+			return 0;
+		}
+	};
+	draw->PushClipRect( bb.Min, bb.Max, true );
+	// Go through each scan line iteratively, jumping by 'gap' pixels each time
+	while ( y < max.y )
+	{
+		scanHits.clear();
+		{
+			int jump = 1;
+			ImVec2 fp = poly[ 0 ];
+			for ( size_t i = 0; i < poly.size() - 1; i++ )
+			{
+				ImVec2 pa = poly[ i ];
+				ImVec2 pb = poly[ i + 1 ];
+				// jump double/dud points
+				if ( pa.x == pb.x && pa.y == pb.y ) continue;
+				// if we encounter our hull/poly start point, then we've now created the
+				// closed
+				// hull, jump the next segment and reset the first-point
+				if ( ( !jump ) && ( fp.x == pb.x ) && ( fp.y == pb.y ) )
+				{
+					if ( i < poly.size() - 2 )
+					{
+						fp = poly[ i + 2 ];
+						jump = 1;
+						i++;
+					}
+				}
+				else
+				{
+					jump = 0;
+				}
+				// test to see if this segment makes the scan-cut.
+				if ( ( pa.y > pb.y && y < pa.y && y > pb.y ) || ( pa.y < pb.y && y > pa.y && y < pb.y ) )
+				{
+					ImVec2 intersect;
+					intersect.y = y;
+					if ( pa.x == pb.x )
+					{
+						intersect.x = pa.x;
+					}
+					else
+					{
+						intersect.x = ( pb.x - pa.x ) / ( pb.y - pa.y ) * ( y - pa.y ) + pa.x;
+					}
+					scanHits.push_back( intersect );
+				}
+			}
+			// Sort the scan hits by X, so we have a proper left->right ordering
+			ImQsort( &scanHits[ 0 ], scanHits.size(), sizeof( ImVec2 ), &ImVec2CompX::Comp );
+			// generate the line segments.
+			{
+				int i = 0;
+				int l = scanHits.size() - 1; // we need pairs of points, this prevents segfault.
+				for ( i = 0; i < l; i += 2 )
+				{
+					draw->AddLine( scanHits[ i ], scanHits[ i + 1 ], color, ( float )strokeWidth );
+				}
+			}
+		}
+		y += gap;
+	} // for each scan line
+	draw->PopClipRect();
+	scanHits.clear();
+}
+
+static void GetTrianglePointer( ImVec2& a, ImVec2& b, ImVec2& c, ImVec2 targetPoint, float angle, float height )
+{
+	//// Simple Work around to have approximatively the tip on the target point
+	//// TODO: Find better solution
+	//if ( thickness > 0.0f )
+	//	targetPoint += ImVec2( 0.0f, thickness * 0.5f );
+	float cos2pi_3 = ImCos( ( 2.0f / 3.0f ) * IM_PI );
+	float sin2pi_3 = ImSin( ( 2.0f / 3.0f ) * IM_PI );
+	// minus to have the pointer turning in positive
+	// PI/2 to have the triangle pointing up when angle == 0.0f
+	float cos0 = ImCos( -angle - IM_PI * 0.5f );
+	float sin0 = ImSin( -angle - IM_PI * 0.5f );
+	ImVec2 center = targetPoint + ImVec2( -1.0f, 0.0f );
+	b = ImVec2( cos2pi_3 - 1.0f, sin2pi_3 );
+	c = ImVec2( cos2pi_3 - 1.0f, -sin2pi_3 );
+	a = targetPoint;
+	b = ImRotate( b, cos0, sin0 ) * 2.0f * height / 3.0f + targetPoint;
+	c = ImRotate( c, cos0, sin0 ) * 2.0f * height / 3.0f + targetPoint;
+}
+
+void ImGui::DrawTriangleCursor( ImDrawList* pDrawList, ImVec2 targetPoint, float angle, float size, float thickness, ImU32 col )
+{
+	ImVec2 a, b, c;
+	GetTrianglePointer( a, b, c, targetPoint, angle, size );
+	pDrawList->AddTriangle( a, b, c, col, thickness );
+}
+
+void ImGui::DrawTriangleCursorFilled( ImDrawList* pDrawList, ImVec2 targetPoint, float angle, float size, ImU32 col )
+{
+	ImVec2 a, b, c;
+	GetTrianglePointer( a, b, c, targetPoint, angle, size );
+	pDrawList->AddTriangleFilled( a, b, c, col );
+}
+
+static void GetRotatePoints( ImVec2* pts, int pts_count, ImVec2 pivot, float angle )
+{
+	float cos0 = ImCos( angle );
+	float sin0 = ImSin( angle );
+	ImVec2 t;
+	for ( int k = 0; k < pts_count; ++k )
+	{
+		t = pts[ k ] - pivot;
+		ImVec2 r;
+		r.x = t.x * cos0 - t.y * sin0;
+		r.y = t.x * sin0 + t.y * cos0;
+		pts[ k ] = r + pivot;
+	}
+}
+
+static void ImInternalGetSignetVertices( ImVec2* pts, int pts_count, ImVec2 targetPoint, float width, float height, float height_ratio, float align01, float angle, float thickness )
+{
+	//// Simple Work around to have approximatively the tip on the target point
+	//// TODO: Find better solution
+	//if ( thickness > 0.0f )
+	//	targetPoint += ImVec2( 0.0f, thickness * 0.5f );
+	float left = ImLerp( targetPoint.x - width, targetPoint.x, align01 );
+	float right = left + width;
+	float top = ImLerp( targetPoint.y, targetPoint.y + height, height_ratio );
+	float bottom = targetPoint.y + height;
+	pts[ 0 ] = targetPoint;
+	pts[ 1 ] = ImVec2( left, top );
+	pts[ 2 ] = ImVec2( left, bottom );
+	pts[ 3 ] = ImVec2( right, bottom );
+	pts[ 4 ] = ImVec2( right, top );
+	GetRotatePoints( &pts[ 0 ], pts_count, targetPoint, angle );
+}
+
+void ImGui::DrawSignetCursor( ImDrawList* pDrawList, ImVec2 targetPoint, float width, float height, float height_ratio, float align01, float angle, float thickness, ImU32 col )
+{
+	ImVec2 pts[ 5 ];
+	ImInternalGetSignetVertices( &pts[ 0 ], 5, targetPoint, width, height, height_ratio, align01, angle, thickness );
+	pDrawList->AddPolyline( &pts[ 0 ], 5, col, ImDrawFlags_Closed, thickness );
+}
+
+void ImGui::DrawSignetFilledCursor( ImDrawList* pDrawList, ImVec2 targetPoint, float width, float height, float height_ratio, float align01, float angle, ImU32 col )
+{
+	ImVec2 pts[ 5 ];
+	ImInternalGetSignetVertices( &pts[ 0 ], 5, targetPoint, width, height, height_ratio, align01, angle, 0.0f );
+	pDrawList->AddConvexPolyFilled( &pts[ 0 ], 5, col );
+}
+
+void ImGui::SetCurrentWindowBackgroundImage( ImTextureID id, ImVec2 imgSize, bool fixedSize, ImU32 col )
+{
+	float ar = imgSize.x / imgSize.y;
+	ImGuiWindow* window = ImGui::GetCurrentWindow();
+	ImDrawList* drawList = ImGui::GetBackgroundDrawList();
+	ImVec2 cur = window->InnerRect.Min;
+	ImVec2 uv;
+	ImVec2 winSize = ImGui::GetWindowSize();
+	if ( fixedSize )
+	{
+		uv.x = winSize.x / imgSize.x;
+		uv.y = winSize.y / imgSize.y;
+	}
+	else
+	{
+		if ( winSize.x > winSize.y )
+		{
+			if ( imgSize.x > imgSize.y )
+			{
+				uv.x = 1.0f;
+				uv.y = winSize.y / winSize.x;
+			}
+			else
+			{
+				uv.x = winSize.y / winSize.x;
+				uv.y = 1.0f;
+			}
+		}
+		else
+		{
+			if ( imgSize.x > imgSize.y )
+			{
+				uv.x = winSize.x / winSize.y;
+				uv.y = 1.0f;
+			}
+			else
+			{
+				uv.x = 1.0f;
+				uv.y = winSize.y / winSize.x;
+			}
+		}
+	}
+	drawList->AddImageRounded( id, cur, cur + winSize, ImVec2( 0.0f, 0.0f ), uv, col, window->WindowRounding );
+}
+
+void ImGui::DrawLinearLineGraduation( ImDrawList* drawlist, ImVec2 start, ImVec2 end,
+                                    float mainLineThickness, ImU32 mainCol,
+                                    int division0, float height0, float thickness0, float angle0, ImU32 col0,
+                                    int division1, float height1, float thickness1, float angle1, ImU32 col1,
+                                    int division2, float height2, float thickness2, float angle2, ImU32 col2 )
+{
+	if ( mainLineThickness < 0.5f ||
+		( thickness0 < 0.5f &&
+		thickness1 < 0.5f &&
+		thickness2 < 0.5f ) )
+		return;
+	if ( ( mainCol & IM_COL32_A_MASK ) == 0 &&
+		( ( col0 | col1 | col2 ) & IM_COL32_A_MASK ) == 0 )
+		return;
+	ImVec2 delta = end - start;
+	float length = delta.length(); // ImLength( delta );
+	ImVec2 forward = delta / length; // ImNormalized( delta );
+	ImVec2 up = ImVec2(forward.y, -forward.x); // ImAntiHalfTurn( forward );
+	if ( division0 > 0 )
+	{
+		float dx0 = length / ( ( float )division0 );
+		float inv_div0 = 1.0f / ( ( float )division0 );
+		ImVec2 up0;
+		if ( angle0 != 0.0f )
+		{
+			float cos0 = ImCos( -angle0 );
+			float sin0 = ImSin( -angle0 );
+			up0 = ImRotate( up, cos0, sin0 );
+		}
+		else
+		{
+			up0 = up;
+		}
+		for ( int k = 0; k <= division0; ++k )
+		{
+			float fk = ( float )k;
+			float t = fk * inv_div0;
+			ImVec2 v = ImLerp( start, end, t );
+			drawlist->AddLine( v, v + up0 * height0, col0, thickness0 );
+		}
+	}
+	if ( division0 > 0 && division1 > 0 )
+	{
+		float dx0 = length / ( ( float )division0 );
+		float inv_div0 = 1.0f / ( ( float )division0 );
+		float dx1 = dx0 / ( ( float )division1 );
+		float inv_div1 = 1.0f / ( ( float )division1 );
+		ImVec2 up1;
+		if ( angle1 != 0.0f )
+		{
+			float cos0 = ImCos( -angle1 );
+			float sin0 = ImSin( -angle1 );
+			up1 = ImRotate( up, cos0, sin0 );
+		}
+		else
+		{
+			up1 = up;
+		}
+		for ( int p = 0; p < division0; ++p )
+		{
+			float fp = ( float )p;
+			float t0 = fp * inv_div0;
+			ImVec2 v0 = ImLerp( start, end, t0 );
+			for ( int k = 1; k < division1; ++k )
+			{
+				float fk = ( float )k;
+				float t1 = fk * inv_div1;
+				ImVec2 v = v0 + forward * (fk * dx1);
+				drawlist->AddLine( v, v + up1 * height1, col1, thickness1 );
+			}
+		}
+	}
+	if ( division0 > 0 && division1 > 0 && division2 > 0 )
+	{
+		float dx0 = length / ( ( float )division0 );
+		float inv_div0 = 1.0f / ( ( float )division0 );
+		float dx1 = dx0 / ( ( float )division1 );
+		float inv_div1 = 1.0f / ( ( float )division1 );
+		float dx2 = dx1 / ( ( float )division2 );
+		float inv_div2 = 1.0f / ( ( float )division2 );
+		ImVec2 up2;
+		if ( angle2 != 0.0f )
+		{
+			float cos0 = ImCos( -angle2 );
+			float sin0 = ImSin( -angle2 );
+			up2 = ImRotate( up, cos0, sin0 );
+		}
+		else
+		{
+			up2 = up;
+		}
+		for ( int p = 0; p < division0; ++p )
+		{
+			float fp = ( float )p;
+			float t0 = fp * inv_div0;
+			ImVec2 v0 = ImLerp( start, end, t0 );
+			for ( int q = 0; q < division1; ++q )
+			{
+				float fk = ( float )q;
+				ImVec2 v1 = v0 + forward * (fk * dx1);
+				for ( int k = 1; k < division2; ++k )
+				{
+					float fk = ( float )k;
+					ImVec2 v = v1 + forward * ( fk * dx2 );
+					drawlist->AddLine( v, v + up2 * height2, col2, thickness2 );
+				}
+			}
+		}
+	}
+	drawlist->AddLine( start, end, mainCol, mainLineThickness );
+}
+
+void ImGui::DrawLogLineGraduation( ImDrawList* drawlist, ImVec2 start, ImVec2 end,
+                                    float mainLineThickness, ImU32 mainCol,
+                                    int division0, float height0, float thickness0, float angle0, ImU32 col0,
+                                    int division1, float height1, float thickness1, float angle1, ImU32 col1 )
+{
+	if ( mainLineThickness < 0.5f ||
+		( thickness0 < 0.5f &&
+		thickness1 < 0.5f ) )
+		return;
+	if ( ( mainCol & IM_COL32_A_MASK ) == 0 &&
+			( ( col0 | col1 ) & IM_COL32_A_MASK ) == 0 )
+		return;
+	ImVec2 delta = end - start;
+	float length = delta.length(); // ImLength( delta );
+	ImVec2 forward = delta / length; // ImNormalized( delta );
+	ImVec2 up = ImVec2(forward.y, -forward.x); // ImAntiHalfTurn( forward );
+	if ( division0 > 0 )
+	{
+		float dx0 = length / ( ( float )division0 );
+		float inv_div0 = 1.0f / ( ( float )division0 );
+		ImVec2 up0;
+		if ( angle0 != 0.0f )
+		{
+			float cos0 = ImCos( -angle0 );
+			float sin0 = ImSin( -angle0 );
+			up0 = ImRotate( up, cos0, sin0 );
+		}
+		else
+		{
+			up0 = up;
+		}
+		for ( int k = 0; k <= division0; ++k )
+		{
+			float fk = ( float )k;
+			float t = fk * inv_div0;
+			ImVec2 v = ImLerp( start, end, t );
+			drawlist->AddLine( v, v + up0 * height0, col0, thickness0 );
+		}
+	}
+	if ( division0 > 0 && division1 > 0 )
+	{
+		float dx0 = length / ( ( float )division0 );
+		float inv_div0 = 1.0f / ( ( float )division0 );
+		float dx1 = dx0 / ( ( float )division1 );
+		float inv_div1 = 1.0f / ( ( float )division1 );
+		float scale = 1.0f / ImLog( ( float )( division1 + 1 ) );
+		ImVec2 up1;
+		if ( angle1 != 0.0f )
+		{
+			float cos0 = ImCos( -angle1 );
+			float sin0 = ImSin( -angle1 );
+			up1 = ImRotate( up, cos0, sin0 );
+		}
+		else
+		{
+			up1 = up;
+		}
+		for ( int p = 0; p < division0; ++p )
+		{
+			float fp = ( float )p;
+			float t0 = fp * inv_div0;
+			ImVec2 v0 = ImLerp( start, end, t0 );
+			for ( int k = 2; k < division1 + 1; ++k )
+			{
+				float fk = ImLog( ( float )( k ) ) * scale;
+				ImVec2 v = v0 + forward * ( fk * dx0 );
+				drawlist->AddLine( v, v + up1 * height1, col1, thickness1 );
+			}
+		}
+	}
+	drawlist->AddLine( start, end, mainCol, mainLineThickness );
+}
+
+void ImGui::DrawLinearCircularGraduation( ImDrawList* drawlist, ImVec2 center, float radius, float start_angle, float end_angle, int num_segments,
+                                        float mainLineThickness, ImU32 mainCol,
+                                        int division0, float height0, float thickness0, float angle0, ImU32 col0,
+                                        int division1, float height1, float thickness1, float angle1, ImU32 col1,
+                                        int division2, float height2, float thickness2, float angle2, ImU32 col2 )
+{
+	if ( radius < 0.5f ||
+		( thickness0 < 0.5f &&
+		thickness1 < 0.5f &&
+		thickness2 < 0.5f ) )
+		return;
+	if ( ( mainCol & IM_COL32_A_MASK ) == 0 &&
+		( ( col0 | col1 | col2 ) & IM_COL32_A_MASK ) == 0 )
+		return;
+	if ( start_angle > end_angle )
+	{
+		while ( start_angle > end_angle )
+		{
+			start_angle += 2.0f * IM_PI;
+		}
+	}
+	float angle_spread = end_angle - start_angle;
+	ImVec2 up = ImRotate( ImVec2( 1.0f, 0.0f ), ImCos( start_angle ), ImSin( start_angle ) );
+	if ( division0 > 0 )
+	{
+		float da0 = angle_spread / ( ( float )division0 );
+		for ( int k = 0; k <= division0; ++k )
+		{
+			float fk = ( float )k;
+			float a0 = start_angle + fk * da0;
+			float a1 = a0 + angle0;
+			float cos00 = ImCos( -a0 );
+			float sin00 = ImSin( -a0 );
+			float cos01 = ImCos( -a1 );
+			float sin01 = ImSin( -a1 );
+			ImVec2 up0 = ImRotate( ImVec2( 1.0f, 0.0f ), cos00, sin00 );
+			ImVec2 up1 = ImRotate( ImVec2( 1.0f, 0.0f ), cos01, sin01 );
+			ImVec2 v = center + up0 * radius;
+			drawlist->AddLine( v, v + up1 * height0, col0, thickness0 );
+		}
+	}
+	if ( division0 > 0 && division1 > 0 )
+	{
+		float da0 = angle_spread / ( ( float )division0 );
+		float da1 = da0 / ( ( float )division1 );
+		for ( int p = 0; p < division0; ++p )
+		{
+			float fp = ( float )p;
+			float ap = start_angle + fp * da0;
+			for ( int k = 1; k < division1; ++k )
+			{
+				float fk = ( float )k;
+				float a0 = ap + fk * da1;
+				float a1 = a0 + angle1;
+				float cos00 = ImCos( -a0 );
+				float sin00 = ImSin( -a0 );
+				float cos01 = ImCos( -a1 );
+				float sin01 = ImSin( -a1 );
+				ImVec2 up0 = ImRotate( ImVec2( 1.0f, 0.0f ), cos00, sin00 );
+				ImVec2 up1 = ImRotate( ImVec2( 1.0f, 0.0f ), cos01, sin01 );
+				ImVec2 v = center + up0 * radius;
+				drawlist->AddLine( v, v + up1 * height1, col1, thickness1 );
+			}
+		}
+	}
+	if ( division0 > 0 && division1 > 0 && division2 > 0 )
+	{
+		float da0 = angle_spread / ( ( float )division0 );
+		float da1 = da0 / ( ( float )division1 );
+		float da2 = da1 / ( ( float )division2 );
+		for ( int p = 0; p < division0; ++p )
+		{
+			float fp = ( float )p;
+			float ap = start_angle + fp * da0;
+			for ( int q = 0; q < division1; ++q )
+			{
+				float fq = ( float )q;
+				float aq = ap + fq * da1;
+				for ( int k = 1; k < division2; ++k )
+				{
+					float fk = ( float )k;
+					float a0 = aq + fk * da2;
+					float a1 = a0 + angle2;
+					float cos00 = ImCos( -a0 );
+					float sin00 = ImSin( -a0 );
+					float cos01 = ImCos( -a1 );
+					float sin01 = ImSin( -a1 );
+					ImVec2 up0 = ImRotate( ImVec2( 1.0f, 0.0f ), cos00, sin00 );
+					ImVec2 up1 = ImRotate( ImVec2( 1.0f, 0.0f ), cos01, sin01 );
+					ImVec2 v = center + up0 * radius;
+					drawlist->AddLine( v, v + up1 * height2, col2, thickness2 );
+				}
+			}
+		}
+	}
+	drawlist->PathArcTo( center, radius, -start_angle, -end_angle, num_segments );
+	drawlist->PathStroke( mainCol, ImDrawFlags_None, mainLineThickness );
+}
+
+void ImGui::DrawLogCircularGraduation( ImDrawList* drawlist, ImVec2 center, float radius, float start_angle, float end_angle, int num_segments,
+                                        float mainLineThickness, ImU32 mainCol,
+                                        int division0, float height0, float thickness0, float angle0, ImU32 col0,
+                                        int division1, float height1, float thickness1, float angle1, ImU32 col1 )
+{
+	if ( radius < 0.5f ||
+		( thickness0 < 0.5f &&
+		thickness1 < 0.5f ) )
+		return;
+	if ( ( mainCol & IM_COL32_A_MASK ) == 0 &&
+			( ( col0 | col1 ) & IM_COL32_A_MASK ) == 0 )
+		return;
+	if ( start_angle > end_angle )
+	{
+		while ( start_angle > end_angle )
+		{
+			start_angle += 2.0f * IM_PI;
+		}
+	}
+	float angle_spread = end_angle - start_angle;
+	ImVec2 up = ImRotate( ImVec2( 1.0f, 0.0f ), ImCos( start_angle ), ImSin( start_angle ) );
+	if ( division0 > 0 )
+	{
+		float da0 = angle_spread / ( ( float )division0 );
+		for ( int k = 0; k <= division0; ++k )
+		{
+			float fk = ( float )k;
+			float a0 = start_angle + fk * da0;
+			float a1 = a0 + angle0;
+			float cos00 = ImCos( -a0 );
+			float sin00 = ImSin( -a0 );
+			float cos01 = ImCos( -a1 );
+			float sin01 = ImSin( -a1 );
+			ImVec2 up0 = ImRotate( ImVec2( 1.0f, 0.0f ), cos00, sin00 );
+			ImVec2 up1 = ImRotate( ImVec2( 1.0f, 0.0f ), cos01, sin01 );
+			ImVec2 v = center + up0 * radius;
+			drawlist->AddLine( v, v + up1 * height0, col0, thickness0 );
+		}
+	}
+	if ( division0 > 0 && division1 > 0 )
+	{
+		float da0 = angle_spread / ( ( float )division0 );
+		float da1 = da0 / ( ( float )division1 );
+		float scale = 1.0f / ImLog( ( float )( division1 + 1 ) );
+		for ( int p = 0; p < division0; ++p )
+		{
+			float fp = ( float )p;
+			float ap = start_angle + fp * da0;
+			for ( int k = 2; k < division1 + 1; ++k )
+			{
+				float fk = ImLog( ( float )( k ) ) * scale;
+				float a0 = ap + fk * da0;
+				float a1 = a0 + angle1;
+				float cos00 = ImCos( -a0 );
+				float sin00 = ImSin( -a0 );
+				float cos01 = ImCos( -a1 );
+				float sin01 = ImSin( -a1 );
+				ImVec2 up0 = ImRotate( ImVec2( 1.0f, 0.0f ), cos00, sin00 );
+				ImVec2 up1 = ImRotate( ImVec2( 1.0f, 0.0f ), cos01, sin01 );
+				ImVec2 v = center + up0 * radius;
+				drawlist->AddLine( v, v + up1 * height1, col1, thickness1 );
+			}
+		}
+	}
+	drawlist->PathArcTo( center, radius, -start_angle, -end_angle, num_segments );
+	drawlist->PathStroke( mainCol, ImDrawFlags_None, mainLineThickness );
+}
+
 // imgInspect
 inline void histogram(const int width, const int height, const unsigned char* const bits)
 {

@@ -321,6 +321,49 @@ IMGUI_API void ContrastSelector(char const* label, ImVec2 const size, float* con
 IMGUI_API void TemperatureSelector(char const* label, ImVec2 const size, float* tempCenter, float defaultVal, float vmin, float vmax, float ui_zoom = 1.0f, int division = 32);
 IMGUI_API bool BalanceSelector(char const* label, ImVec2 const size, ImVec4 * rgba, ImVec4 defaultVal, ImVec2* offset = nullptr, float ui_zoom = 1.0f, float speed = 1.0f, int division = 128, float thickness = 1.0f, float colorOffset = 0);
 
+//////////////////////////////////////////////////////////////////////////
+// Interactions
+//////////////////////////////////////////////////////////////////////////
+IMGUI_API bool IsPolyConvexContains(const std::vector<ImVec2>& pts, ImVec2 p);
+IMGUI_API bool IsPolyConcaveContains(const std::vector<ImVec2>& pts, ImVec2 p);
+IMGUI_API bool IsPolyWithHoleContains(const std::vector<ImVec2>& pts, ImVec2 p, ImRect* p_bb = NULL, int gap = 1, int strokeWidth = 1);
+
+IMGUI_API bool IsMouseHoveringPolyConvex( const ImVec2& r_min, const ImVec2& r_max, const std::vector<ImVec2>& pts, bool clip = true );
+IMGUI_API bool ItemHoverablePolyConvex( const ImRect& bb, ImGuiID id, const std::vector<ImVec2>& pts, ImGuiItemFlags item_flags );
+IMGUI_API bool IsMouseHoveringPolyConcave( const ImVec2& r_min, const ImVec2& r_max, const std::vector<ImVec2>& pts, bool clip = true );
+IMGUI_API bool ItemHoverablePolyConcave( const ImRect& bb, ImGuiID id, const std::vector<ImVec2>& pts, ImGuiItemFlags item_flags );
+IMGUI_API bool IsMouseHoveringPolyWithHole( const ImVec2& r_min, const ImVec2& r_max, const std::vector<ImVec2>& pts, bool clip = true );
+IMGUI_API bool ItemHoverablePolyWithHole( const ImRect& bb, ImGuiID id, const std::vector<ImVec2>& pts, ImGuiItemFlags item_flags );
+
+IMGUI_API void DrawShapeWithHole( ImDrawList* draw, const std::vector<ImVec2>& poly, ImU32 color, ImRect* p_bb = NULL, int gap = 1, int strokeWidth = 1 );
+IMGUI_API void DrawTriangleCursor( ImDrawList* pDrawList, ImVec2 targetPoint, float angle, float size, float thickness, ImU32 col );
+IMGUI_API void DrawTriangleCursorFilled( ImDrawList* pDrawList, ImVec2 targetPoint, float angle, float size, ImU32 col );
+IMGUI_API void DrawSignetCursor( ImDrawList* pDrawList, ImVec2 targetPoint, float width, float height, float height_ratio, float align01, float angle, float thickness, ImU32 col );
+IMGUI_API void DrawSignetFilledCursor( ImDrawList* pDrawList, ImVec2 targetPoint, float width, float height, float height_ratio, float align01, float angle, ImU32 col );
+IMGUI_API void SetCurrentWindowBackgroundImage( ImTextureID id, ImVec2 imgSize, bool fixedSize = false, ImU32 col = IM_COL32( 255, 255, 255, 255 ) );
+
+IMGUI_API void DrawLinearLineGraduation( ImDrawList* drawlist, ImVec2 start, ImVec2 end,
+										float mainLineThickness, ImU32 mainCol,
+										int division0, float height0, float thickness0, float angle0, ImU32 col0,
+										int division1 = -1, float height1 = -1.0f, float thickness1 = -1.0f, float angle1 = -1.0f, ImU32 col1 = 0u,
+										int division2 = -1, float height2 = -1.0f, float thickness2 = -1.0f, float angle2 = -1.0f, ImU32 col2 = 0u );
+
+IMGUI_API void DrawLogLineGraduation( ImDrawList* drawlist, ImVec2 start, ImVec2 end,
+									float mainLineThickness, ImU32 mainCol,
+									int division0, float height0, float thickness0, float angle0, ImU32 col0,
+									int division1 = -1, float height1 = -1.0f, float thickness1 = -1.0f, float angle1 = -1.0f, ImU32 col1 = 0u );
+
+IMGUI_API void DrawLinearCircularGraduation( ImDrawList* drawlist, ImVec2 center, float radius, float start_angle, float end_angle, int num_segments,
+											float mainLineThickness, ImU32 mainCol,
+											int division0, float height0, float thickness0, float angle0, ImU32 col0,
+											int division1 = -1, float height1 = -1.0f, float thickness1 = -1.0f, float angle1 = -1.0f, ImU32 col1 = 0u,
+											int division2 = -1, float height2 = -1.0f, float thickness2 = -1.0f, float angle2 = -1.0f, ImU32 col2 = 0u );
+
+IMGUI_API void DrawLogCircularGraduation( ImDrawList* drawlist, ImVec2 center, float radius, float start_angle, float end_angle, int num_segments,
+										float mainLineThickness, ImU32 mainCol,
+										int division0, float height0, float thickness0, float angle0, ImU32 col0,
+										int division1 = -1, float height1 = -1.0f, float thickness1 = -1.0f, float angle1 = -1.0f, ImU32 col1 = 0u );
+
 // https://github.com/CedricGuillemet/imgInspect
 /*
 //example

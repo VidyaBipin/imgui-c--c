@@ -881,6 +881,421 @@ void ShowExtraWidgetDemoWindow()
         ImGui::BezierSelect("##easeInExpo", ImVec2(200, 200), v);
         ImGui::TreePop();
     }
+    if ( ImGui::TreeNode( "Interactions" ) )
+	{
+        if ( ImGui::TreeNode( "Poly Convex Hovered" ) )
+		{
+            //float const size = ImGui::GetContentRegionAvail().x;
+            float const size = 64;
+			ImDrawList* pDrawList = ImGui::GetWindowDrawList();
+			ImVec2 pos = ImGui::GetCursorScreenPos();
+            std::vector<ImVec2> pos_norms = { { 0.0f, 0.0f }, { 0.0f, 1.0f }, { 1.0f, 1.0f } };
+            for ( ImVec2& v : pos_norms )
+			{
+				v.x *= size;
+				v.y *= size;
+				v += pos;
+			}
+            ImGui::SetCursorScreenPos(pos);
+            bool hovered = IsMouseHoveringPolyConvex( pos, pos + ImVec2( size, size ), pos_norms);
+			pDrawList->AddConvexPolyFilled( pos_norms.data(), 3, IM_COL32( hovered ? 255 : 0, hovered ? 0 : 255, 0, 255 ) );
+            ImGui::Dummy( ImVec2( size, size ) );
+
+            ImGui::SameLine();
+            pos = ImGui::GetCursorScreenPos();
+			std::vector<ImVec2> disk;
+			disk.resize( 32 );
+			for ( int k = 0; k < 32; ++k )
+			{
+				float angle = ( ( float )k ) * 2.0f * IM_PI / 32.0f;
+				float cos0 = ImCos( angle );
+				float sin0 = ImSin( angle );
+				disk[ k ].x = pos.x + 0.5f * size + cos0 * size * 0.5f;
+				disk[ k ].y = pos.y + 0.5f * size + sin0 * size * 0.5f;
+			}
+            hovered = IsMouseHoveringPolyConvex( pos, pos + ImVec2( size, size ), disk);
+			pDrawList->AddConvexPolyFilled( disk.data(), 32, IM_COL32( hovered ? 255 : 0, hovered ? 0 : 255, 0, 255 ) );
+			ImGui::Dummy( ImVec2( size, size ) );
+            ImGui::TreePop();
+        }
+        if ( ImGui::TreeNode( "Poly Concave Hovered" ) )
+		{
+            float const size = 64;
+			ImDrawList* pDrawList = ImGui::GetWindowDrawList();
+			ImVec2 pos = ImGui::GetCursorScreenPos();
+			int sz = 8;
+            std::vector<ImVec2> pos_norms = { { 0.0f, 0.0f }, { 0.3f, 0.0f }, { 0.3f, 0.7f }, { 0.7f, 0.7f }, { 0.7f, 0.0f },
+                                            { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+			for ( int k = 0; k < sz; ++k )
+			{
+				ImVec2& v = pos_norms[ k ];
+				v.x *= size;
+				v.y *= size;
+				v += pos;
+			}
+            bool hovered = IsMouseHoveringPolyConcave( pos * 0.99f, pos + ImVec2( 1.01f * size, 1.01f * size ), pos_norms );
+			pDrawList->AddConcavePolyFilled( pos_norms.data(), sz, IM_COL32( hovered ? 255 : 0, hovered ? 0 : 255, 0, 255 ) );
+            ImGui::Dummy( ImVec2( size, size ) );
+
+            ImGui::SameLine();
+            pos = ImGui::GetCursorScreenPos();
+            std::vector<ImVec2> ring;
+			sz = 64;
+			ring.resize( sz );
+			srand( 97 );
+			for ( int k = 0; k < sz; ++k )
+			{
+				float angle = -( ( float )k ) * 2.0f * IM_PI / 32.0f;
+				float cos0 = ImCos( angle );
+				float sin0 = ImSin( angle );
+				float r = ( float )( rand() % ( ( int )roundf( size ) ) );
+				ring[ k ].x = pos.x + size * 0.5f + r * 0.5f * cos0;
+				ring[ k ].y = pos.y + size * 0.5f + r * 0.5f * sin0;
+			}
+			hovered = IsMouseHoveringPolyConcave( pos * 0.99f, pos + ImVec2( 1.01f * size, 1.01f * size ), ring );
+			pDrawList->AddConcavePolyFilled( ring.data(), sz, IM_COL32( hovered ? 255 : 0, hovered ? 0 : 255, 0, 255 ) );
+			ImGui::Dummy( ImVec2( size, size ) );
+
+            ImGui::TreePop();
+        }
+        if ( ImGui::TreeNode( "Poly With Hole Hovered" ) )
+		{
+			float const size = 64;
+			ImDrawList* pDrawList = ImGui::GetWindowDrawList();
+			ImVec2 pos = ImGui::GetCursorScreenPos();
+			int sz = 10;
+			std::vector<ImVec2> pos_norms = { { 0.0f, 0.0f }, { 0.0f, 1.0f }, { 1.0f, 1.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f },
+                                            { 0.3f, 0.3f }, { 0.7f, 0.3f }, { 0.7f, 0.7f }, { 0.3f, 0.7f }, { 0.3f, 0.3f } };
+			for ( int k = 0; k < sz; ++k )
+			{
+				ImVec2& v = pos_norms[ k ];
+				v.x *= size;
+				v.y *= size;
+				v += pos;
+			}
+			bool hovered = IsMouseHoveringPolyWithHole( pos * 0.99f, pos + ImVec2( 1.01f * size, 1.01f * size ), pos_norms );
+			DrawShapeWithHole( pDrawList, pos_norms, IM_COL32( hovered ? 255 : 0, hovered ? 0 : 255, 0, 255 ) );
+			ImGui::Dummy( ImVec2( size, size ) );
+            ImGui::SameLine();
+			pos = ImGui::GetCursorScreenPos();
+			std::vector<ImVec2> ring;
+			sz = 64;
+			ring.resize( sz );
+			float r;
+			for ( int k = 0; k < 32; ++k )
+			{
+				float angle = -( ( float )k ) * 2.0f * IM_PI / 31.0f;
+				float cos0 = ImCos( angle );
+				float sin0 = ImSin( angle );
+				r = size * ( ( ( float )( rand() % 1000 ) / 1000.0f ) * 0.25f + 0.75f );
+				ring[ k ].x = pos.x + size * 0.5f + r * 0.5f * cos0;
+				ring[ k ].y = pos.y + size * 0.5f + r * 0.5f * sin0;
+			}
+			srand( 97 );
+			for ( int k = 32; k < 64; ++k )
+			{
+				float angle = ( ( float )( k - 32 ) ) * 2.0f * IM_PI / 31.0f;
+				float cos0 = ImCos( angle );
+				float sin0 = ImSin( angle );
+				r = size * 0.75f * ( ( ( float )( rand() % 1000 ) / 1000.0f ) * 0.5f + 0.5f );
+				ring[ k ].x = pos.x + size * 0.5f + r * 0.5f * cos0;
+				ring[ k ].y = pos.y + size * 0.5f + r * 0.5f * sin0;
+			}
+			hovered = IsMouseHoveringPolyWithHole( pos, pos + ImVec2( size, size ), ring );
+			DrawShapeWithHole( pDrawList, ring, IM_COL32( hovered ? 255 : 0, hovered ? 0 : 255, 0, 255 ) );
+			ImGui::Dummy( ImVec2( size, size ) );
+            ImGui::TreePop();
+		}
+        ImGui::TreePop();
+    }
+    if ( ImGui::TreeNode( "Triangles Pointers" ) )
+	{
+		float const width = ImGui::GetContentRegionAvail().x;
+
+		static float angle = 0.0f;
+		static float size = 16.0f;
+		static float thickness = 1.0f;
+		ImGui::SliderAngle( "Angle##Triangle", &angle );
+		ImGui::SliderFloat( "Size##Triangle", &size, 1.0f, 64.0f );
+		ImGui::SliderFloat( "Thickness##Triangle", &thickness, 1.0f, 5.0f );
+
+		ImVec2 curPos = ImGui::GetCursorScreenPos();
+		ImDrawList* pDrawList = ImGui::GetWindowDrawList();
+		ImGui::InvisibleButton( "##Zone", ImVec2( width, 96.0f ), 0 );
+		ImGui::InvisibleButton( "##Zone", ImVec2( width, 96.0f ), 0 );
+		float fPointerLine = 64.0f;
+		pDrawList->AddLine( ImVec2( curPos.x + 0.5f * 32.0f, curPos.y + fPointerLine ), ImVec2( curPos.x + 3.5f * 32.0f, curPos.y + fPointerLine ), IM_COL32( 0, 255, 0, 255 ), 2.0f );
+		pDrawList->AddLine( ImVec2( curPos.x + 5.0f * 32.0f, curPos.y ), ImVec2( curPos.x + 5.0f * 32.0f, curPos.y + 72.0f ), IM_COL32( 0, 255, 0, 255 ), 2.0f );
+		pDrawList->AddLine( ImVec2( curPos.x + 7.0f * 32.0f, curPos.y ), ImVec2( curPos.x + 7.0f * 32.0f, curPos.y + 72.0f ), IM_COL32( 0, 255, 0, 255 ), 2.0f );
+		pDrawList->AddCircleFilled( ImVec2( curPos.x + 1.0f * 32.0f, curPos.y + fPointerLine ), 4.0f, IM_COL32( 255, 128, 0, 255 ), 16 );
+		pDrawList->AddCircleFilled( ImVec2( curPos.x + 3.0f * 32.0f, curPos.y + fPointerLine ), 4.0f, IM_COL32( 255, 128, 0, 255 ), 16 );
+		pDrawList->AddCircleFilled( ImVec2( curPos.x + 5.0f * 32.0f, curPos.y + fPointerLine ), 4.0f, IM_COL32( 255, 128, 0, 255 ), 16 );
+		pDrawList->AddCircleFilled( ImVec2( curPos.x + 7.0f * 32.0f, curPos.y + fPointerLine ), 4.0f, IM_COL32( 255, 128, 0, 255 ), 16 );
+		ImGui::DrawTriangleCursor( pDrawList, ImVec2( curPos.x + 1.0f * 32.0f, curPos.y + fPointerLine ), angle, size, thickness, IM_COL32( 255, 0, 0, 255 ) );
+		ImGui::DrawTriangleCursor( pDrawList, ImVec2( curPos.x + 3.0f * 32.0f, curPos.y + fPointerLine ), angle, size, thickness, IM_COL32( 255, 0, 0, 255 ) );
+		ImGui::DrawTriangleCursor( pDrawList, ImVec2( curPos.x + 5.0f * 32.0f, curPos.y + fPointerLine ), angle, size, thickness, IM_COL32( 255, 0, 0, 255 ) );
+		ImGui::DrawTriangleCursor( pDrawList, ImVec2( curPos.x + 7.0f * 32.0f, curPos.y + fPointerLine ), angle, size, thickness, IM_COL32( 255, 0, 0, 255 ) );
+
+		fPointerLine *= 3.0f;
+		pDrawList->AddLine( ImVec2( curPos.x + 0.5f * 32.0f, curPos.y + fPointerLine ), ImVec2( curPos.x + 3.5f * 32.0f, curPos.y + fPointerLine ), IM_COL32( 0, 255, 0, 255 ), 2.0f );
+		pDrawList->AddLine( ImVec2( curPos.x + 5.0f * 32.0f, curPos.y ), ImVec2( curPos.x + 5.0f * 32.0f, curPos.y + fPointerLine ), IM_COL32( 0, 255, 0, 255 ), 2.0f );
+		pDrawList->AddLine( ImVec2( curPos.x + 7.0f * 32.0f, curPos.y ), ImVec2( curPos.x + 7.0f * 32.0f, curPos.y + fPointerLine ), IM_COL32( 0, 255, 0, 255 ), 2.0f );
+		pDrawList->AddCircleFilled( ImVec2( curPos.x + 1.0f * 32.0f, curPos.y + fPointerLine ), 4.0f, IM_COL32( 255, 128, 0, 255 ), 16 );
+		pDrawList->AddCircleFilled( ImVec2( curPos.x + 3.0f * 32.0f, curPos.y + fPointerLine ), 4.0f, IM_COL32( 255, 128, 0, 255 ), 16 );
+		pDrawList->AddCircleFilled( ImVec2( curPos.x + 5.0f * 32.0f, curPos.y + fPointerLine ), 4.0f, IM_COL32( 255, 128, 0, 255 ), 16 );
+		pDrawList->AddCircleFilled( ImVec2( curPos.x + 7.0f * 32.0f, curPos.y + fPointerLine ), 4.0f, IM_COL32( 255, 128, 0, 255 ), 16 );
+		ImGui::DrawTriangleCursorFilled( pDrawList, ImVec2( curPos.x + 1.0f * 32.0f, curPos.y + fPointerLine ), angle, size, IM_COL32( 255, 0, 0, 255 ) );
+		ImGui::DrawTriangleCursorFilled( pDrawList, ImVec2( curPos.x + 3.0f * 32.0f, curPos.y + fPointerLine ), angle, size, IM_COL32( 255, 0, 0, 255 ) );
+		ImGui::DrawTriangleCursorFilled( pDrawList, ImVec2( curPos.x + 5.0f * 32.0f, curPos.y + fPointerLine ), angle, size, IM_COL32( 255, 0, 0, 255 ) );
+		ImGui::DrawTriangleCursorFilled( pDrawList, ImVec2( curPos.x + 7.0f * 32.0f, curPos.y + fPointerLine ), angle, size, IM_COL32( 255, 0, 0, 255 ) );
+        ImGui::TreePop();
+	}
+    if ( ImGui::TreeNode( "Signet Pointer" ) )
+	{
+		float const widthZone = ImGui::GetContentRegionAvail().x;
+
+		static float angle = 0.0f;
+		static float width = 16.0f;
+		static float height = 21.0f;
+		static float height_ratio = 1.0f / 3.0f;
+		static float align01 = 0.5f;
+		static float thickness = 5.0f;
+		ImGui::SliderAngle( "Angle##Triangle", &angle );
+		ImGui::SliderFloat( "Width##Triangle", &width, 1.0f, 64.0f );
+		ImGui::SliderFloat( "Height##Triangle", &height, 1.0f, 128.0f );
+		ImGui::SliderFloat( "Array Ratio##Triangle", &height_ratio, 0.0f, 1.0f );
+		ImGui::SliderFloat( "Align##Triangle", &align01, 0.0f, 1.0f );
+		ImGui::SliderFloat( "Thickness##Triangle", &thickness, 1.0f, 16.0f );
+
+		ImVec2 curPos = ImGui::GetCursorScreenPos();
+		ImDrawList* pDrawList = ImGui::GetWindowDrawList();
+		ImGui::InvisibleButton( "##Zone", ImVec2( widthZone, height * 1.1f ), 0 );
+		ImGui::InvisibleButton( "##Zone", ImVec2( widthZone, height * 1.1f ), 0 );
+		float fPointerLine = 32.0f;
+		float dx = 16.0f;
+		pDrawList->AddLine( ImVec2( curPos.x + 0.5f * dx, curPos.y + fPointerLine ), ImVec2( curPos.x + 11.5f * dx, curPos.y + fPointerLine ), IM_COL32( 0, 255, 0, 255 ), 2.0f );
+		ImVec4 vBlue( 91.0f / 255.0f, 194.0f / 255.0f, 231.0f / 255.0f, 1.0f );
+		ImU32 uBlue = ImGui::GetColorU32( vBlue );
+		ImGui::DrawSignetCursor( pDrawList, ImVec2( curPos.x + 1.0f * dx, curPos.y + fPointerLine ), width, height, height_ratio, align01, angle, thickness, uBlue );
+		pDrawList->AddCircleFilled( ImVec2( curPos.x + 1.0f * dx, curPos.y + fPointerLine ), 4.0f, IM_COL32( 255, 128, 0, 255 ), 16 );
+		ImGui::DrawSignetFilledCursor( pDrawList, ImVec2( curPos.x + 3.0f * dx, curPos.y + fPointerLine ), width, height, height_ratio, align01, angle, uBlue );
+		pDrawList->AddCircleFilled( ImVec2( curPos.x + 3.0f * dx, curPos.y + fPointerLine ), 4.0f, IM_COL32( 255, 128, 0, 255 ), 16 );
+		ImGui::DrawSignetCursor( pDrawList, ImVec2( curPos.x + 5.0f * dx, curPos.y + fPointerLine ), width, height, height_ratio, 0.0f, angle, thickness, uBlue );
+		pDrawList->AddCircleFilled( ImVec2( curPos.x + 5.0f * dx, curPos.y + fPointerLine ), 4.0f, IM_COL32( 255, 128, 0, 255 ), 16 );
+		ImGui::DrawSignetFilledCursor( pDrawList, ImVec2( curPos.x + 7.0f * dx, curPos.y + fPointerLine ), width, height, height_ratio, 0.0f, angle, uBlue );
+		pDrawList->AddCircleFilled( ImVec2( curPos.x + 7.0f * dx, curPos.y + fPointerLine ), 4.0f, IM_COL32( 255, 128, 0, 255 ), 16 );
+		ImGui::DrawSignetCursor( pDrawList, ImVec2( curPos.x + 9.0f * dx, curPos.y + fPointerLine ), width, height, height_ratio, 1.0f, angle, thickness, uBlue );
+		pDrawList->AddCircleFilled( ImVec2( curPos.x + 9.0f * dx, curPos.y + fPointerLine ), 4.0f, IM_COL32( 255, 128, 0, 255 ), 16 );
+		ImGui::DrawSignetFilledCursor( pDrawList, ImVec2( curPos.x + 11.0f * dx, curPos.y + fPointerLine ), width, height, height_ratio, 1.0f, angle, uBlue );
+		pDrawList->AddCircleFilled( ImVec2( curPos.x + 11.0f * dx, curPos.y + fPointerLine ), 4.0f, IM_COL32( 255, 128, 0, 255 ), 16 );
+        ImGui::TreePop();
+	}
+    if ( ImGui::TreeNode( "Linear Line Graduation" ) )
+	{
+		float const size = 256;
+		ImDrawList* pDrawList = ImGui::GetWindowDrawList();
+		static float mainLineThickness = 1.0f;
+		static ImU32 mainCol = IM_COL32( 255, 255, 255, 255 );
+		static int division0 = 3;  static float height0 = 32.0f; static float thickness0 = 5.0f; static float angle0 = 0; static ImU32 col0 = IM_COL32( 255, 0, 0, 255 );
+		static int division1 = 5;  static float height1 = 16.0f; static float thickness1 = 2.0f; static float angle1 = 0; static ImU32 col1 = IM_COL32( 0, 255, 0, 255 );
+		static int division2 = 10; static float height2 = 8.0f;  static float thickness2 = 1.0f; static float angle2 = 0; static ImU32 col2 = IM_COL32( 255, 255, 0, 255 );
+		static int divisions[] = { division0, division1, division2 };
+		static float heights[] = { height0, height1, height2 };
+		static float thicknesses[] = { thickness0, thickness1, thickness2 };
+		static float angles[] = { angle0, angle1, angle2 };
+		static ImVec4 colors[] = { ImGui::ColorConvertU32ToFloat4( col0 ), ImGui::ColorConvertU32ToFloat4( col1 ), ImGui::ColorConvertU32ToFloat4( col2 ) };
+
+		ImGui::DragFloat( "Main Thickness", &mainLineThickness, 1.0f, 1.0f, 16.0f );
+		ImVec4 vMainCol = ImGui::ColorConvertU32ToFloat4( mainCol );
+		if ( ImGui::ColorEdit3( "Main", &vMainCol.x ) )
+			mainCol = ImGui::GetColorU32( vMainCol );
+
+		ImGui::DragInt3( "Divisions", &divisions[ 0 ], 1.0f, 1, 10 );
+		ImGui::DragFloat3( "Heights", &heights[ 0 ], 1.0f, 1.0f, 128.0f );
+		ImGui::DragFloat3( "Thicknesses", &thicknesses[ 0 ], 1.0f, 1.0f, 16.0f );
+		ImGui::PushMultiItemsWidths( 3, ImGui::CalcItemWidth() );
+		ImGui::SliderAngle( "a0", &angles[ 0 ] ); ImGui::SameLine();
+		ImGui::SliderAngle( "a1", &angles[ 1 ] ); ImGui::SameLine();
+		ImGui::SliderAngle( "a2", &angles[ 2 ] );
+		ImGui::PushMultiItemsWidths( 3, ImGui::CalcItemWidth() );
+		if ( ImGui::ColorEdit3( "c0", &colors[ 0 ].x ) )
+			col0 = ImGui::GetColorU32( colors[ 0 ] );
+		ImGui::SameLine();
+		if ( ImGui::ColorEdit3( "c1", &colors[ 1 ].x ) )
+			col1 = ImGui::GetColorU32( colors[ 1 ] );
+		ImGui::SameLine();
+		if ( ImGui::ColorEdit3( "c2", &colors[ 2 ].x ) )
+			col2 = ImGui::GetColorU32( colors[ 2 ] );
+
+		float height = ImMax( heights[ 0 ], ImMax( heights[ 1 ], heights[ 2 ] ) );
+		ImVec2 pos = ImGui::GetCursorScreenPos() + ImVec2( 0.0f, height );
+		DrawLinearLineGraduation( pDrawList, pos, pos + ImVec2( size, 0.0f ),
+								mainLineThickness, mainCol,
+								divisions[ 0 ], heights[ 0 ], thicknesses[ 0 ], angles[ 0 ], col0,
+								divisions[ 1 ], heights[ 1 ], thicknesses[ 1 ], angles[ 1 ], col1,
+								divisions[ 2 ], heights[ 2 ], thicknesses[ 2 ], angles[ 2 ], col2 );
+		ImGui::Dummy( ImVec2( size, height ) );
+		DrawLinearLineGraduation( pDrawList, pos, pos + ImVec2( size, size ),
+								mainLineThickness, mainCol,
+								divisions[ 0 ], heights[ 0 ], thicknesses[ 0 ], angles[ 0 ], col0,
+								divisions[ 1 ], heights[ 1 ], thicknesses[ 1 ], angles[ 1 ], col1,
+								divisions[ 2 ], heights[ 2 ], thicknesses[ 2 ], angles[ 2 ], col2 );
+		ImGui::Dummy( ImVec2( size, size ) );
+        ImGui::TreePop();
+	}
+    if ( ImGui::TreeNode( "Log Line Graduation" ) )
+	{
+		float const size = 256;
+		ImDrawList* pDrawList = ImGui::GetWindowDrawList();
+		static float mainLineThickness = 1.0f;
+		static ImU32 mainCol = IM_COL32( 255, 255, 255, 255 );
+		static int division0 = 3;  static float height0 = 32.0f; static float thickness0 = 5.0f; static float angle0 = 0; static ImU32 col0 = IM_COL32( 255, 0, 0, 255 );
+		static int division1 = 10;  static float height1 = 16.0f; static float thickness1 = 2.0f; static float angle1 = 0; static ImU32 col1 = IM_COL32( 0, 255, 0, 255 );
+		static int divisions[] = { division0, division1 };
+		static float heights[] = { height0, height1 };
+		static float thicknesses[] = { thickness0, thickness1 };
+		static float angles[] = { angle0, angle1  };
+		static ImVec4 colors[] = { ImGui::ColorConvertU32ToFloat4( col0 ), ImGui::ColorConvertU32ToFloat4( col1 ) };
+
+		ImGui::DragFloat( "Main Thickness", &mainLineThickness, 1.0f, 1.0f, 16.0f );
+		ImVec4 vMainCol = ImGui::ColorConvertU32ToFloat4( mainCol );
+		if ( ImGui::ColorEdit3( "Main", &vMainCol.x ) )
+			mainCol = ImGui::GetColorU32( vMainCol );
+
+		ImGui::DragInt2( "Divisions", &divisions[ 0 ], 1.0f, 1, 20 );
+		ImGui::DragFloat2( "Heights", &heights[ 0 ], 1.0f, 1.0f, 128.0f );
+		ImGui::DragFloat2( "Thicknesses", &thicknesses[ 0 ], 1.0f, 1.0f, 16.0f );
+		ImGui::PushMultiItemsWidths( 2, ImGui::CalcItemWidth() );
+		ImGui::SliderAngle( "a0", &angles[ 0 ] ); ImGui::SameLine();
+		ImGui::SliderAngle( "a1", &angles[ 1 ] ); ImGui::SameLine();
+		ImGui::SliderAngle( "a2", &angles[ 2 ] );
+		ImGui::PushMultiItemsWidths( 2, ImGui::CalcItemWidth() );
+		if ( ImGui::ColorEdit3( "c0", &colors[ 0 ].x ) )
+			col0 = ImGui::GetColorU32( colors[ 0 ] );
+		ImGui::SameLine();
+		if ( ImGui::ColorEdit3( "c1", &colors[ 1 ].x ) )
+			col1 = ImGui::GetColorU32( colors[ 1 ] );
+
+		float height = ImMax( heights[ 0 ], heights[ 1 ] );
+		ImVec2 pos = ImGui::GetCursorScreenPos() + ImVec2( 0.0f, height );
+		DrawLogLineGraduation( pDrawList, pos, pos + ImVec2( size, 0.0f ),
+							mainLineThickness, mainCol,
+							divisions[ 0 ], heights[ 0 ], thicknesses[ 0 ], angles[ 0 ], col0,
+							divisions[ 1 ], heights[ 1 ], thicknesses[ 1 ], angles[ 1 ], col1 );
+		ImGui::Dummy( ImVec2( size, height ) );
+		DrawLogLineGraduation( pDrawList, pos, pos + ImVec2( size, size ),
+							mainLineThickness, mainCol,
+							divisions[ 0 ], heights[ 0 ], thicknesses[ 0 ], angles[ 0 ], col0,
+							divisions[ 1 ], heights[ 1 ], thicknesses[ 1 ], angles[ 1 ], col1 );
+		ImGui::Dummy( ImVec2( size, size ) );
+        ImGui::TreePop();
+	}
+    if ( ImGui::TreeNode( "Linear Circular Graduation" ) )
+	{
+		float const size = 256;
+		ImDrawList* pDrawList = ImGui::GetWindowDrawList();
+		static float mainLineThickness = 1.0f;
+		static ImU32 mainCol = IM_COL32( 255, 255, 255, 255 );
+		static int division0 = 3;  static float height0 = 32.0f; static float thickness0 = 5.0f; static float angle0 = 0; static ImU32 col0 = IM_COL32( 255, 0, 0, 255 );
+		static int division1 = 5;  static float height1 = 16.0f; static float thickness1 = 2.0f; static float angle1 = 0; static ImU32 col1 = IM_COL32( 0, 255, 0, 255 );
+		static int division2 = 10; static float height2 = 8.0f;  static float thickness2 = 1.0f; static float angle2 = 0; static ImU32 col2 = IM_COL32( 255, 255, 0, 255 );
+		static int divisions[] = { division0, division1, division2 };
+		static float heights[] = { height0, height1, height2 };
+		static float thicknesses[] = { thickness0, thickness1, thickness2 };
+		static float angles[] = { angle0, angle1, angle2 };
+		static float start_angle = -IM_PI / 3.0f;
+		static float end_angle = 4.0f * IM_PI / 3.0f;
+		static float angles_bound[] = { start_angle, end_angle };
+		static float radius = size * 0.5f - 2.0f * ImMax( height0, ImMax( height1, height2 ) );
+		static int num_segments = 0;
+		static ImVec4 colors[] = { ImGui::ColorConvertU32ToFloat4( col0 ), ImGui::ColorConvertU32ToFloat4( col1 ), ImGui::ColorConvertU32ToFloat4( col2 ) };
+
+		ImGui::DragFloat( "Main Thickness", &mainLineThickness, 1.0f, 1.0f, 16.0f );
+		ImVec4 vMainCol = ImGui::ColorConvertU32ToFloat4( mainCol );
+		if ( ImGui::ColorEdit3( "Main", &vMainCol.x ) )
+			mainCol = ImGui::GetColorU32( vMainCol );
+
+		ImGui::DragInt3( "Divisions", &divisions[ 0 ], 1.0f, 1, 10 );
+		ImGui::DragFloat3( "Heights", &heights[ 0 ], 1.0f, 1.0f, 128.0f );
+		ImGui::DragFloat3( "Thicknesses", &thicknesses[ 0 ], 1.0f, 1.0f, 16.0f );
+		ImGui::DragFloat( "Radius", &radius, 1.0f, 1.0f, size );
+		ImGui::DragInt( "Segment", &num_segments, 1.0f, 0, 64 );
+		ImGui::PushMultiItemsWidths( 2, ImGui::CalcItemWidth() );
+		ImGui::SliderAngle( "start angle", &angles_bound[ 0 ], -360.0f, angles_bound[ 1 ] * 180.0f / IM_PI ); ImGui::SameLine();
+		ImGui::SliderAngle( "end angle", &angles_bound[ 1 ], angles_bound[ 0 ] * 180.0f / IM_PI, 360.0f );
+		ImGui::PushMultiItemsWidths( 3, ImGui::CalcItemWidth() );
+		ImGui::SliderAngle( "a0", &angles[ 0 ] ); ImGui::SameLine();
+		ImGui::SliderAngle( "a1", &angles[ 1 ] ); ImGui::SameLine();
+		ImGui::SliderAngle( "a2", &angles[ 2 ] );
+		ImGui::PushMultiItemsWidths( 3, ImGui::CalcItemWidth() );
+		if ( ImGui::ColorEdit3( "c0", &colors[ 0 ].x ) )
+			col0 = ImGui::GetColorU32( colors[ 0 ] );
+		ImGui::SameLine();
+		if ( ImGui::ColorEdit3( "c1", &colors[ 1 ].x ) )
+			col1 = ImGui::GetColorU32( colors[ 1 ] );
+		ImGui::SameLine();
+		if ( ImGui::ColorEdit3( "c2", &colors[ 2 ].x ) )
+			col2 = ImGui::GetColorU32( colors[ 2 ] );
+		ImVec2 pos = ImGui::GetCursorScreenPos();
+		DrawLinearCircularGraduation( pDrawList, pos + ImVec2( size * 0.5f, size * 0.5f ), radius, angles_bound[ 0 ], angles_bound[ 1 ], num_segments,
+									mainLineThickness, mainCol,
+									divisions[ 0 ], heights[ 0 ], thicknesses[ 0 ], angles[ 0 ], col0,
+									divisions[ 1 ], heights[ 1 ], thicknesses[ 1 ], angles[ 1 ], col1,
+									divisions[ 2 ], heights[ 2 ], thicknesses[ 2 ], angles[ 2 ], col2 );
+		ImGui::Dummy( ImVec2( size, size ) );
+        ImGui::TreePop();
+	}
+    if ( ImGui::TreeNode( "Log Circular Graduation" ) )
+	{
+		float const size = 256;
+		ImDrawList* pDrawList = ImGui::GetWindowDrawList();
+		static float mainLineThickness = 1.0f;
+		static ImU32 mainCol = IM_COL32( 255, 255, 255, 255 );
+		static int division0 =  3;  static float height0 = 32.0f; static float thickness0 = 5.0f; static float angle0 = 0; static ImU32 col0 = IM_COL32( 255, 0, 0, 255 );
+		static int division1 = 10;  static float height1 = 16.0f; static float thickness1 = 2.0f; static float angle1 = 0; static ImU32 col1 = IM_COL32( 0, 255, 0, 255 );
+		static int divisions[] = { division0, division1 };
+		static float heights[] = { height0, height1 };
+		static float thicknesses[] = { thickness0, thickness1 };
+		static float angles[] = { angle0, angle1 };
+		static float start_angle = -IM_PI / 3.0f;
+		static float end_angle = 4.0f * IM_PI / 3.0f;
+		static float angles_bound[] = { start_angle, end_angle };
+		static float radius = size * 0.5f - 2.0f * ImMax( height0, height1 );
+		static int num_segments = 0;
+		static ImVec4 colors[] = { ImGui::ColorConvertU32ToFloat4( col0 ), ImGui::ColorConvertU32ToFloat4( col1 ) };
+
+		ImGui::DragFloat( "Main Thickness", &mainLineThickness, 1.0f, 1.0f, 16.0f );
+		ImVec4 vMainCol = ImGui::ColorConvertU32ToFloat4( mainCol );
+		if ( ImGui::ColorEdit3( "Main", &vMainCol.x ) )
+			mainCol = ImGui::GetColorU32( vMainCol );
+
+		ImGui::DragInt2( "Divisions", &divisions[ 0 ], 1.0f, 1, 20 );
+		ImGui::DragFloat2( "Heights", &heights[ 0 ], 1.0f, 1.0f, 128.0f );
+		ImGui::DragFloat2( "Thicknesses", &thicknesses[ 0 ], 1.0f, 1.0f, 16.0f );
+		ImGui::DragFloat( "Radius", &radius, 1.0f, 1.0f, size );
+		ImGui::DragInt( "Segment", &num_segments, 1.0f, 0, 64 );
+		ImGui::PushMultiItemsWidths( 2, ImGui::CalcItemWidth() );
+		ImGui::SliderAngle( "start angle", &angles_bound[ 0 ], -360.0f, angles_bound[ 1 ] * 180.0f / IM_PI ); ImGui::SameLine();
+		ImGui::SliderAngle( "end angle", &angles_bound[ 1 ], angles_bound[ 0 ] * 180.0f / IM_PI, 360.0f );
+		ImGui::PushMultiItemsWidths( 2, ImGui::CalcItemWidth() );
+		ImGui::SliderAngle( "a0", &angles[ 0 ] ); ImGui::SameLine();
+		ImGui::SliderAngle( "a1", &angles[ 1 ] );
+		ImGui::PushMultiItemsWidths( 2, ImGui::CalcItemWidth() );
+		if ( ImGui::ColorEdit3( "c0", &colors[ 0 ].x ) )
+			col0 = ImGui::GetColorU32( colors[ 0 ] );
+		ImGui::SameLine();
+		if ( ImGui::ColorEdit3( "c1", &colors[ 1 ].x ) )
+			col1 = ImGui::GetColorU32( colors[ 1 ] );
+
+		float height = ImMax( heights[ 0 ], heights[ 1 ] );
+		ImVec2 pos = ImGui::GetCursorScreenPos() + ImVec2( 0.0f, height );
+		DrawLogCircularGraduation( pDrawList, pos + ImVec2( size * 0.5f, size * 0.5f ), radius, angles_bound[ 0 ], angles_bound[ 1 ], num_segments,
+								   mainLineThickness, mainCol,
+								   divisions[ 0 ], heights[ 0 ], thicknesses[ 0 ], angles[ 0 ], col0,
+								   divisions[ 1 ], heights[ 1 ], thicknesses[ 1 ], angles[ 1 ], col1 );
+		ImGui::Dummy( ImVec2( size, size ) );
+        ImGui::TreePop();
+	}
     if (ImGui::TreeNode("virtual keyboard##VK"))
     {
         static int keyboardLogicalLayoutIndex = ImGui::KLL_QWERTY;
