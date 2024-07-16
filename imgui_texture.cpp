@@ -299,7 +299,7 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
 # ifdef __APPLE__
     GLenum grayFormat = GL_RED;
 #else
-    GLenum grayFormat = GL_ALPHA;
+    GLenum grayFormat = GL_LUMINANCE;
 #endif
     GLenum fmt = channels==1 ? grayFormat : channels==2 ? luminanceAlphaEnum : channels==3 ? GL_RGB : GL_RGBA;  // channels == 1 could be GL_LUMINANCE, GL_ALPHA, GL_RED ...
     GLenum ifmt = GL_RGBA;//fmt;

@@ -8,6 +8,8 @@
 #include <neon2sse.h>
 #endif // __ARM_NEON
 
+#define BE2LE16(x) ((x << 8) | (x >> 8))
+
 namespace ImGui
 {
 void ImMat::get_pixel(int x, int y, ImPixel& color) const
@@ -31,6 +33,12 @@ void ImMat::get_pixel(int x, int y, ImPixel& color) const
                 if (c > 1) color.g = (float)at<uint16_t>(x, y, 1) / UINT16_MAX;
                 if (c > 2) color.b = (float)at<uint16_t>(x, y, 2) / UINT16_MAX;
                 if (c > 3) color.a = (float)at<uint16_t>(x, y, 3) / UINT16_MAX;
+            break;
+            case IM_DT_INT16_BE:
+                if (c > 0) color.r = (float)BE2LE16(at<uint16_t>(x, y, 0)) / UINT16_MAX;
+                if (c > 1) color.g = (float)BE2LE16(at<uint16_t>(x, y, 1)) / UINT16_MAX;
+                if (c > 2) color.b = (float)BE2LE16(at<uint16_t>(x, y, 2)) / UINT16_MAX;
+                if (c > 3) color.a = (float)BE2LE16(at<uint16_t>(x, y, 3)) / UINT16_MAX;
             break;
             case IM_DT_INT32:
                 if (c > 0) color.r = (float)at<uint32_t>(x, y, 0) / (float)UINT32_MAX;
