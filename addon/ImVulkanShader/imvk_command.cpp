@@ -920,6 +920,7 @@ void VkCompute::record_clone(const VkMat& src, ImMat& dst, const Option& opt)
     }
     if (dst.empty())
         return;
+    dst.type = src.type;
 
     // barrier device any @ compute to host-read @ compute
     VkBufferMemory * _data = (VkBufferMemory *)src.data;

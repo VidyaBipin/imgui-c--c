@@ -810,7 +810,7 @@ public:
     IMGUI_API ImMat erode(int radius = 1, uint8_t flags = 0xFF);
 
     // simple filters
-    IMGUI_API ImMat blur(int kernel_size, float sigma = 1.0f); // Gaussian Blur
+    IMGUI_API ImMat blur(int kernel_size, float sigma = 1.0f, bool norm = true); // Gaussian Blur
     IMGUI_API ImMat adaptive_threshold(float maxValue, int kernel_size, float delta);
     IMGUI_API ImMat resize(float w, float h, ImInterpolateMode interpolate = IM_INTERPOLATE_BILINEAR, bool norm = true) const;
     IMGUI_API ImMat resize(ImPoint scale, ImInterpolateMode interpolate = IM_INTERPOLATE_BILINEAR, bool norm = true) const;

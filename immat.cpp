@@ -8,7 +8,7 @@
 #include <neon2sse.h>
 #endif // __ARM_NEON
 
-#define BE2LE16(x) ((x << 8) | (x >> 8))
+#define BE2LE16(x) (((x & 0xFF) << 8) | ((x & 0xFF00) >> 8))
 
 namespace ImGui
 {
@@ -79,6 +79,7 @@ void ImMat::get_pixel(int x, int y, ImPixel& color) const
         {
             case IM_DT_INT8: color.r = (float)at<uint8_t>(x, y) / UINT8_MAX; break;
             case IM_DT_INT16: color.r = (float)at<uint16_t>(x, y) / UINT16_MAX; break;
+            case IM_DT_INT16_BE: color.r = (float)BE2LE16(at<uint16_t>(x, y)) / UINT16_MAX; break;
             case IM_DT_INT32: color.r = (float)at<uint32_t>(x, y) / (float)UINT32_MAX; break;
             case IM_DT_INT64: color.r = (float)at<uint64_t>(x, y) / (float)UINT64_MAX; break;
             case IM_DT_FLOAT16: color.r = im_float16_to_float32(at<uint16_t>(x, y)); break;
@@ -134,6 +135,12 @@ void ImMat::set_pixel(int x, int y, ImPixel color, bool norm)
                 if (c > 2) at<uint16_t>(x, y, 2) = color.b * UINT16_MAX;
                 if (c > 3) at<uint16_t>(x, y, 3) = color.a * UINT16_MAX;
             break;
+            case IM_DT_INT16_BE:
+                if (c > 0) at<uint16_t>(x, y, 0) = BE2LE16((uint16_t)(color.r * UINT16_MAX));
+                if (c > 1) at<uint16_t>(x, y, 1) = BE2LE16((uint16_t)(color.g * UINT16_MAX));
+                if (c > 2) at<uint16_t>(x, y, 2) = BE2LE16((uint16_t)(color.b * UINT16_MAX));
+                if (c > 3) at<uint16_t>(x, y, 3) = BE2LE16((uint16_t)(color.a * UINT16_MAX));
+            break;
             case IM_DT_INT32:
                 if (c > 0) at<uint32_t>(x, y, 0) = color.r * (float)UINT32_MAX;
                 if (c > 1) at<uint32_t>(x, y, 1) = color.g * (float)UINT32_MAX;
@@ -173,6 +180,7 @@ void ImMat::set_pixel(int x, int y, ImPixel color, bool norm)
         {
             case IM_DT_INT8: at<uint8_t>(x, y) = color.r * UINT8_MAX; break;
             case IM_DT_INT16: at<uint16_t>(x, y) = color.r * UINT16_MAX; break;
+            case IM_DT_INT16_BE: at<uint16_t>(x, y) = BE2LE16((uint16_t)(color.r * UINT16_MAX)); break;
             case IM_DT_INT32: at<uint32_t>(x, y) = color.r * (float)UINT32_MAX; break;
             case IM_DT_INT64: at<uint64_t>(x, y) = color.r * (float)UINT64_MAX; break;
             case IM_DT_FLOAT16: at<uint16_t>(x, y) = im_float32_to_float16(color.r); break;
@@ -573,7 +581,7 @@ void ImMat::draw_circle(ImPoint p, float r, float t, std::function<ImPixel(float
     draw_circle(p.x, p.y, r, t, color);
 }
 
-ImMat ImMat::blur(int kernel_size, float sigma)
+ImMat ImMat::blur(int kernel_size, float sigma, bool norm)
 {
     assert(device == IM_DD_CPU);
     assert(w > 0 && h > 0);
@@ -613,7 +621,7 @@ ImMat ImMat::blur(int kernel_size, float sigma)
                     sum = sum + p * weight;
                 }
             }
-            dst.set_pixel(j, i, sum);
+            dst.set_pixel(j, i, sum, norm);
         }
     }
     return dst;
