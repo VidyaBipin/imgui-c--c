@@ -319,14 +319,14 @@ void ImGenerateOrUpdateTexture(ImTextureID& imtexid,int width,int height,int cha
             if (!vkmat->empty())
             {
                 auto data = ImGui::ImVulkanVkMatMapping(*vkmat);
-                if (data) glTexImage2D(GL_TEXTURE_2D, 0, ifmt, width, height, 0, fmt, mat->type == IM_DT_FLOAT32 ? GL_FLOAT : GL_UNSIGNED_BYTE, data);
+                if (data) glTexImage2D(GL_TEXTURE_2D, 0, ifmt, width, height, 0, fmt, mat->type == IM_DT_FLOAT32 ? GL_FLOAT : mat->type == IM_DT_INT16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE, data);
             }
         }
         else
 #endif
         if (mat->device == IM_DD_CPU)
         {
-            glTexImage2D(GL_TEXTURE_2D, 0, ifmt, width, height, 0, fmt, mat->type == IM_DT_FLOAT32 ? GL_FLOAT : GL_UNSIGNED_BYTE, mat->data);
+            glTexImage2D(GL_TEXTURE_2D, 0, ifmt, width, height, 0, fmt, mat->type == IM_DT_FLOAT32 ? GL_FLOAT : mat->type == IM_DT_INT16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE, mat->data);
         }
     }
     else
