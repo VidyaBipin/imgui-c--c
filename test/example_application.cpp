@@ -1018,7 +1018,7 @@ bool Example_Frame(void* handle, bool app_will_quit)
         static int i = 0;
         int * test_point = (int *)example->data;
         *test_point = i; i++;
-        example->mem_edit.DrawWindow("Memory Editor", example->data, 0x400, 0, &example->mem_edit.Open, 768);
+        example->mem_edit.DrawWindow("Memory Editor", example->data, 0x400, 0);
     }
 
     // Show Markdown Window
