@@ -35,6 +35,8 @@
 // Note:
 //     It is not valid to call canvas API outside of BeginCanvas() / EndCanvas() scope.
 //
+// VERSION 0.1
+//
 // LICENSE
 //   This software is dual-licensed to the public domain and under the following
 //   license: you are granted a perpetual, irrevocable license to copy, modify,
@@ -256,13 +258,8 @@ private:
     ImVec2 m_WindowPosBackup;
     ImVec2 m_ViewportPosBackup;
     ImVec2 m_ViewportSizeBackup;
-# if IMGUI_VERSION_NUM > 18002
     ImVec2 m_ViewportWorkPosBackup;
     ImVec2 m_ViewportWorkSizeBackup;
-# else
-    ImVec2 m_ViewportWorkOffsetMinBackup;
-    ImVec2 m_ViewportWorkOffsetMaxBackup;
-# endif
 # endif
 };
 

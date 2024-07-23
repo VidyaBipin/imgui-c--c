@@ -1,4 +1,6 @@
 //------------------------------------------------------------------------------
+// VERSION 0.9.1
+//
 // LICENSE
 //   This software is dual-licensed to the public domain and under the following
 //   license: you are granted a perpetual, irrevocable license to copy, modify,
@@ -21,14 +23,20 @@
 # include <string>
 
 //------------------------------------------------------------------------------
+# define IMGUI_NODE_EDITOR_VERSION      "0.10.0"
+# define IMGUI_NODE_EDITOR_VERSION_NUM  001000
+
+// add by Dicky
+//------------------------------------------------------------------------------
 namespace imgui_json {
 struct value;
-} // imgui_json
+} // add by Dicky end
 
 //------------------------------------------------------------------------------
 #ifndef IMGUI_NODE_EDITOR_API
 #define IMGUI_NODE_EDITOR_API IMGUI_API // modify by Dicky
 #endif
+
 
 //------------------------------------------------------------------------------
 namespace ax {
@@ -296,11 +304,7 @@ struct Style
         PivotAlignment           = ImVec2(0.5f, 0.5f);
         PivotSize                = ImVec2(0.0f, 0.0f);
         PivotScale               = ImVec2(1, 1);
-#if IMGUI_VERSION_NUM > 18101
         PinCorners               = ImDrawFlags_RoundCornersAll;
-#else
-        PinCorners               = ImDrawCornerFlags_All;
-#endif
         PinRadius                = 0.0f;
         PinArrowSize             = 0.0f;
         PinArrowWidth            = 0.0f;

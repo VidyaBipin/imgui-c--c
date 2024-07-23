@@ -47,6 +47,7 @@ struct VtxCurrentOffsetRef
         return drawList->_CmdHeader.VtxOffset;
     }
 };
+
 } // namespace ImCanvasDetails
 
 // Returns a reference to _FringeScale extension to ImDrawList
@@ -82,13 +83,8 @@ bool ImGuiEx::Canvas::Begin(ImGuiID id, const ImVec2& size)
 
     UpdateViewTransformPosition();
 
-# if IMGUI_VERSION_NUM > 18415
     if (ImGui::IsClippedEx(m_WidgetRect, id))
         return false;
-# else
-    if (ImGui::IsClippedEx(m_WidgetRect, id, false))
-        return false;
-# endif
 
     // Save current channel, so we can assert when user
     // call canvas API with different one.
@@ -96,7 +92,7 @@ bool ImGuiEx::Canvas::Begin(ImGuiID id, const ImVec2& size)
 
     // #debug: Canvas content.
     //m_DrawList->AddRectFilled(m_StartPos, m_StartPos + m_CurrentSize, IM_COL32(0, 0, 0, 64));
-    m_DrawList->AddRect(m_WidgetRect.Min, m_WidgetRect.Max, IM_COL32(255, 0, 255, 64));
+    //m_DrawList->AddRect(m_WidgetRect.Min, m_WidgetRect.Max, IM_COL32(255, 0, 255, 64));
 
     ImGui::SetCursorScreenPos(ImVec2(0.0f, 0.0f));
 
@@ -349,13 +345,8 @@ void ImGuiEx::Canvas::SaveViewportState()
     m_WindowPosBackup = window->Pos;
     m_ViewportPosBackup = viewport->Pos;
     m_ViewportSizeBackup = viewport->Size;
-# if IMGUI_VERSION_NUM > 18002
     m_ViewportWorkPosBackup = viewport->WorkPos;
     m_ViewportWorkSizeBackup = viewport->WorkSize;
-# else
-    m_ViewportWorkOffsetMinBackup = viewport->WorkOffsetMin;
-    m_ViewportWorkOffsetMaxBackup = viewport->WorkOffsetMax;
-# endif
 # endif
 }
 
@@ -368,13 +359,8 @@ void ImGuiEx::Canvas::RestoreViewportState()
     window->Pos = m_WindowPosBackup;
     viewport->Pos = m_ViewportPosBackup;
     viewport->Size = m_ViewportSizeBackup;
-# if IMGUI_VERSION_NUM > 18002
     viewport->WorkPos = m_ViewportWorkPosBackup;
     viewport->WorkSize = m_ViewportWorkSizeBackup;
-# else
-    viewport->WorkOffsetMin = m_ViewportWorkOffsetMinBackup;
-    viewport->WorkOffsetMax = m_ViewportWorkOffsetMaxBackup;
-# endif
 # endif
 }
 
@@ -439,13 +425,8 @@ void ImGuiEx::Canvas::EnterLocalSpace()
     viewport->Pos  = viewport_min;
     viewport->Size = viewport_max - viewport_min;
 
-# if IMGUI_VERSION_NUM > 18002
     viewport->WorkPos  = m_ViewportWorkPosBackup  * m_View.InvScale;
     viewport->WorkSize = m_ViewportWorkSizeBackup * m_View.InvScale;
-# else
-    viewport->WorkOffsetMin = m_ViewportWorkOffsetMinBackup * m_View.InvScale;
-    viewport->WorkOffsetMax = m_ViewportWorkOffsetMaxBackup * m_View.InvScale;
-# endif
 # endif
 
     // Clip rectangle in parent canvas space and move it to local space.
