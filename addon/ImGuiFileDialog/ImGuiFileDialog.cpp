@@ -32,7 +32,8 @@ SOFTWARE.
 
 #include "imgui.h" // add by Dicky
 #include "imgui_helper.h" // add by Dicky
-#include <cfloat>
+#include "dir_iterate.h"  // add by Dicky for DIR iterate
+#include <cfloat> // add by Dicky
 #include <cstring>  // stricmp / strcasecmp
 #include <cstdarg>  // variadic
 #include <sstream>
@@ -721,6 +722,24 @@ public:
                 res.push_back(path_name);
             }
         }
+#elif defined(__APPLE__)
+// add by Dicky, try to support MacOS Drivers
+        std::vector<std::string> drivers, drivers_names, filters;
+        if (DIR_Iterate("/Volumes", drivers, drivers_names, filters, false, false, false) == 0)
+        {
+            if (drivers.size() == drivers_names.size())
+            for (int i = 0; i < drivers.size(); i++)
+            {
+                if (IsDirectory(drivers[i]))
+                {
+                    IGFD::PathDisplayedName path_name;
+                    path_name.first = drivers[i];
+                    path_name.second = drivers_names[i];
+                    res.push_back(path_name);
+                }
+            }
+        }
+// add by Dicky end
 #endif  // _IGFD_WIN_
         return res;
     }
@@ -2613,7 +2632,7 @@ void IGFD::FileManager::DrawPathComposer(const FileDialogInternal& vFileDialogIn
     if (ImGui::IsItemHovered()) {
         ImGui::SetTooltip(buttonResetPathString);
     }
-#ifdef _IGFD_WIN_
+//#ifdef _IGFD_WIN_
 	// enable by Dicky, windows always enabled
     //if (vFileDialogInternal.getDialogConfig().flags & ImGuiFileDialogFlags_ShowDevicesButton)
     {
@@ -2625,7 +2644,7 @@ void IGFD::FileManager::DrawPathComposer(const FileDialogInternal& vFileDialogIn
             ImGui::SetTooltip(buttonDriveString);
         }
     }
-#endif  // _IGFD_WIN_
+//#endif  // _IGFD_WIN_
 
     ImGui::SameLine();
 
@@ -3613,7 +3632,7 @@ bool IGFD::KeyExplorerFeature::m_FlashableSelectable(const char* label, bool sel
 
     // Submit label or explicit size to ItemSize(), whereas ItemAdd() will submit a larger/spanning rectangle.
     ImGuiID id        = window->GetID(label);
-    ImVec2 label_size = CalcTextSize(label, nullptr, true);
+    ImVec2 label_size = CalcTextSize(label, NULL, true);
     ImVec2 size(size_arg.x != 0.0f ? size_arg.x : label_size.x, size_arg.y != 0.0f ? size_arg.y : label_size.y);
     ImVec2 pos = window->DC.CursorPos;
     pos.y += window->DC.CurrLineTextBaseOffset;
@@ -3631,6 +3650,7 @@ bool IGFD::KeyExplorerFeature::m_FlashableSelectable(const char* label, bool sel
     const ImVec2 text_max(min_x + size.x, pos.y + size.y);
 
     // Selectables are meant to be tightly packed together with no click-gap, so we extend their box to cover spacing between selectable.
+    // FIXME: Not part of layout so not included in clipper calculation, but ItemSize currenty doesn't allow offsetting CursorPos.
     ImRect bb(min_x, pos.y, text_max.x, text_max.y);
     if ((flags & ImGuiSelectableFlags_NoPadWithHalfSpacing) == 0) {
         const float spacing_x = span_all_columns ? 0.0f : style.ItemSpacing.x;
@@ -3653,13 +3673,17 @@ bool IGFD::KeyExplorerFeature::m_FlashableSelectable(const char* label, bool sel
     }
 
     const bool disabled_item = (flags & ImGuiSelectableFlags_Disabled) != 0;
-    const bool item_add      = ItemAdd(bb, id, nullptr, disabled_item ? ImGuiItemFlags_Disabled : ImGuiItemFlags_None);
+    const bool is_visible    = ItemAdd(bb, id, NULL, disabled_item ? (ImGuiItemFlags)ImGuiItemFlags_Disabled : ImGuiItemFlags_None);
+
     if (span_all_columns) {
         window->ClipRect.Min.x = backup_clip_rect_min_x;
         window->ClipRect.Max.x = backup_clip_rect_max_x;
     }
 
-    if (!item_add) return false;
+    const bool is_multi_select = (g.LastItemData.InFlags & ImGuiItemFlags_IsMultiSelect) != 0;
+    if (!is_visible)
+        if (!is_multi_select || !g.BoxSelectState.UnclipMode || !g.BoxSelectState.UnclipRect.Overlaps(bb))  // Extra layer of "no logic clip" for box-select support (would be more overhead to add to ItemAdd)
+            return false;
 
     const bool disabled_global = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
     if (disabled_item && !disabled_global)  // Only testing this as an optimization
@@ -3697,19 +3721,35 @@ bool IGFD::KeyExplorerFeature::m_FlashableSelectable(const char* label, bool sel
         button_flags |= ImGuiButtonFlags_AllowOverlap;
     }
 
+    // Multi-selection support (header)
     const bool was_selected = selected;
+    if (is_multi_select) {
+        // Handle multi-select + alter button flags for it
+        MultiSelectItemHeader(id, &selected, &button_flags);
+    }
+
     bool hovered, held;
     bool pressed = ButtonBehavior(bb, id, &hovered, &held, button_flags);
 
-    // Auto-select when moved into
-    // - This will be more fully fleshed in the range-select branch
-    // - This is not exposed as it won't nicely work with some user side handling of shift/control
-    // - We cannot do 'if (g.NavJustMovedToId != id) { selected = false; pressed = was_selected; }' for two reasons
-    //   - (1) it would require focus scope to be set, need exposing PushFocusScope() or equivalent (e.g. BeginSelection() calling PushFocusScope())
-    //   - (2) usage will fail with clipped items
-    //   The multi-select API aim to fix those issues, e.g. may be replaced with a BeginSelection() API.
-    if ((flags & ImGuiSelectableFlags_SelectOnNav) && g.NavJustMovedToId != 0 && g.NavJustMovedToFocusScopeId == g.CurrentFocusScopeId)
-        if (g.NavJustMovedToId == id) selected = pressed = true;
+    // Multi-selection support (footer)
+    if (is_multi_select) {
+        MultiSelectItemFooter(id, &selected, &pressed);
+    } else {
+        // Auto-select when moved into
+        // - This will be more fully fleshed in the range-select branch
+        // - This is not exposed as it won't nicely work with some user side handling of shift/control
+        // - We cannot do 'if (g.NavJustMovedToId != id) { selected = false; pressed = was_selected; }' for two reasons
+        //   - (1) it would require focus scope to be set, need exposing PushFocusScope() or equivalent (e.g. BeginSelection() calling PushFocusScope())
+        //   - (2) usage will fail with clipped items
+        //   The multi-select API aim to fix those issues, e.g. may be replaced with a BeginSelection() API.
+        if ((flags & ImGuiSelectableFlags_SelectOnNav) && g.NavJustMovedToId != 0 && g.NavJustMovedToFocusScopeId == g.CurrentFocusScopeId)
+            if (g.NavJustMovedToId == id) selected = pressed = true;
+    }
+
+    //////////////////////////////////////////////////////////////////
+    // this function copy ImGui::Selectable just for this line....
+    hovered |= vFlashing;
+    //////////////////////////////////////////////////////////////////
 
     // Update NavId when clicking or when Hovering (this doesn't happen on most widgets), so navigation can be resumed with gamepad/keyboard
     if (pressed || (hovered && (flags & ImGuiSelectableFlags_SetNavIdOnHover))) {
@@ -3720,21 +3760,25 @@ bool IGFD::KeyExplorerFeature::m_FlashableSelectable(const char* label, bool sel
     }
     if (pressed) MarkItemEdited(id);
 
-    // In this branch, Selectable() cannot toggle the selection so this will never trigger.
-    if (selected != was_selected)  //-V547
-        g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledSelection;
-
-    //////////////////////////////////////////////////////////////////
-    // this function copy ImGui::Selectable just for this line....
-    hovered |= vFlashing;
-    //////////////////////////////////////////////////////////////////
+    if (selected != was_selected) g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledSelection;
 
     // Render
-    if (hovered || selected) {
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
-        RenderFrame(bb.Min, bb.Max, col, false, 0.0f);
+    if (is_visible) {
+        if (hovered || selected) {
+            // FIXME-MULTISELECT: Styling: Color for 'selected' elements? ImGuiCol_HeaderSelected
+            ImU32 col;
+            if (selected && !hovered)
+                col = GetColorU32(ImLerp(GetStyleColorVec4(ImGuiCol_Header), GetStyleColorVec4(ImGuiCol_HeaderHovered), 0.5f));
+            else
+                col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
+            RenderFrame(bb.Min, bb.Max, col, false, 0.0f);
+        }
+        if (g.NavId == id) {
+            ImGuiNavHighlightFlags nav_highlight_flags = ImGuiNavHighlightFlags_Compact | ImGuiNavHighlightFlags_NoRounding;
+            if (is_multi_select) nav_highlight_flags |= ImGuiNavHighlightFlags_AlwaysDraw;  // Always show the nav rectangle
+            RenderNavHighlight(bb, id, nav_highlight_flags);
+        }
     }
-    if (g.NavId == id) RenderNavHighlight(bb, id, ImGuiNavHighlightFlags_Compact | ImGuiNavHighlightFlags_NoRounding);
 
     if (span_all_columns) {
         if (g.CurrentTable)
@@ -3743,13 +3787,16 @@ bool IGFD::KeyExplorerFeature::m_FlashableSelectable(const char* label, bool sel
             PopColumnsBackground();
     }
 
-    RenderTextClipped(text_min, text_max, label, nullptr, &label_size, style.SelectableTextAlign, &bb);
+    if (is_visible) RenderTextClipped(text_min, text_max, label, NULL, &label_size, style.SelectableTextAlign, &bb);
 
     // Automatically close popups
-    if (pressed && (window->Flags & ImGuiWindowFlags_Popup) && !(flags & ImGuiSelectableFlags_DontClosePopups) && !(g.LastItemData.InFlags & ImGuiItemFlags_SelectableDontClosePopup)) CloseCurrentPopup();
+    if (pressed && (window->Flags & ImGuiWindowFlags_Popup) && !(flags & ImGuiSelectableFlags_NoAutoClosePopups) && (g.LastItemData.InFlags & ImGuiItemFlags_AutoClosePopups)) CloseCurrentPopup();
 
     if (disabled_item && !disabled_global) EndDisabled();
 
+    // Selectable() always returns a pressed state!
+    // Users of BeginMultiSelect()/EndMultiSelect() scope: you may call ImGui::IsItemToggledSelection() to retrieve
+    // selection toggle, only useful if you need that state updated (e.g. for rendering purpose) before reaching EndMultiSelect().
     IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
     return pressed;  //-V1020
 }
@@ -3949,20 +3996,19 @@ bool IGFD::FileDialog::Display(const std::string& vKey, ImGuiWindowFlags vFlags,
         auto& fdFile   = m_FileDialogInternal.fileManager;
         auto& fdFilter = m_FileDialogInternal.filterManager;
 
-        static ImGuiWindowFlags flags;  // todo: not a good solution for multi instance, to fix
-
         // to be sure than only one dialog is displayed per frame
         ImGuiContext& g = *GImGui;
-        if (g.FrameCount == m_FileDialogInternal.lastImGuiFrameCount)  // one instance was displayed this frame before
-                                                                       // for this key +> quit
-            return res;
+        if (g.FrameCount == m_FileDialogInternal.lastImGuiFrameCount) {  // one instance was displayed this frame before
+            return res;                                                  // for this key +> quit
+        }
         m_FileDialogInternal.lastImGuiFrameCount = g.FrameCount;  // mark this instance as used this frame
 
+        m_CurrentDisplayedFlags = ImGuiWindowFlags_None;
         std::string name = m_FileDialogInternal.dLGtitle + "##" + m_FileDialogInternal.dLGkey;
         if (m_FileDialogInternal.name != name) {
             fdFile.ClearComposer();
             fdFile.ClearFileLists();
-            flags = vFlags;
+            m_CurrentDisplayedFlags = vFlags;
         }
 
         m_NewFrame();
@@ -3976,44 +4022,41 @@ bool IGFD::FileDialog::Display(const std::string& vKey, ImGuiWindowFlags vFlags,
         }
 #endif  // IMGUI_HAS_VIEWPORT
 
-        bool beg = false;
-        if (m_FileDialogInternal.getDialogConfig().flags & ImGuiFileDialogFlags_NoDialog)  // disable our own dialog system (standard or modal)
-        {
+        bool beg         = false;
+        ImVec2 frameSize = ImVec2(0, 0);
+        if (m_FileDialogInternal.getDialogConfig().flags & ImGuiFileDialogFlags_NoDialog) {  // disable our own dialog system (standard or modal)
+            frameSize = vMinSize;
             beg = true;
         } else {
             ImGui::SetNextWindowSizeConstraints(vMinSize, vMaxSize);
-
-            if (m_FileDialogInternal.getDialogConfig().flags & ImGuiFileDialogFlags_Modal && !m_FileDialogInternal.okResultToConfirm)  // disable modal because the confirm dialog for overwrite is
-                                                                                                                        // a new modal
-            {
+            if (m_FileDialogInternal.getDialogConfig().flags & ImGuiFileDialogFlags_Modal &&  // disable modal because the confirm dialog for overwrite is
+                !m_FileDialogInternal.okResultToConfirm) {                                    // a new modal
                 ImGui::OpenPopup(name.c_str());
-                beg = ImGui::BeginPopupModal(name.c_str(), (bool*)nullptr, flags | ImGuiWindowFlags_NoScrollbar);
+                beg = ImGui::BeginPopupModal(name.c_str(), (bool*)nullptr, m_CurrentDisplayedFlags | ImGuiWindowFlags_NoScrollbar);
             } else {
-                beg = ImGui::Begin(name.c_str(), (bool*)nullptr, flags | ImGuiWindowFlags_NoScrollbar);
+                beg = ImGui::Begin(name.c_str(), (bool*)nullptr, m_CurrentDisplayedFlags | ImGuiWindowFlags_NoScrollbar);
             }
         }
         if (beg) {
 #ifdef IMGUI_HAS_VIEWPORT
             // if decoration is enabled we disable the resizing feature of imgui for avoid crash with SDL2 and GLFW3
             if (ImGui::GetIO().ConfigViewportsNoDecoration) {
-                flags = vFlags;
+                m_CurrentDisplayedFlags = vFlags;
             } else {
                 auto win = ImGui::GetCurrentWindowRead();
                 if (win->Viewport->Idx != 0)
-                    flags |= ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar;
+                    m_CurrentDisplayedFlags |= ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar;
                 else
-                    flags = vFlags;
+                    m_CurrentDisplayedFlags = vFlags;
             }
 #endif  // IMGUI_HAS_VIEWPORT
 
             ImGuiID _frameId = ImGui::GetID(name.c_str());
-            ImVec2 frameSize = ImVec2(0, 0);
-            if (m_FileDialogInternal.getDialogConfig().flags & ImGuiFileDialogFlags_NoDialog) frameSize = vMaxSize;
-            if (ImGui::BeginChild(_frameId, frameSize, false, flags | ImGuiWindowFlags_NoScrollbar)) {
+            if (ImGui::BeginChild(_frameId, frameSize, false, m_CurrentDisplayedFlags | ImGuiWindowFlags_NoScrollbar)) {
                 m_FileDialogInternal.name = name;  //-V820
-
-                if (fdFile.dLGpath.empty()) fdFile.dLGpath = ".";  // defaut path is '.'
-
+                if (fdFile.dLGpath.empty()) {
+                    fdFile.dLGpath = ".";  // defaut path is '.'
+                }
                 fdFilter.SetDefaultFilterIfNotDefined();
 
                 // init list of files
@@ -4347,10 +4390,11 @@ void IGFD::FileDialog::m_SelectableItem(int vidx, std::shared_ptr<FileInfos> vIn
 #ifdef USE_EXPLORATION_BY_KEYS
     bool flashed = m_BeginFlashItem((size_t)vidx);
     bool res = m_FlashableSelectable(fdi.variadicBuffer, vSelected, selectableFlags, flashed, ImVec2(-1.0f, h));
-    if (flashed)
+    if (flashed) {
         m_EndFlashItem();
+    }
 #else   // USE_EXPLORATION_BY_KEYS
-    (void)vidx;  // remove a warnings ofr unused var
+    (void)vidx;  // remove a warnings for unused var
 
     bool res = ImGui::Selectable(fdi.variadicBuffer, vSelected, selectableFlags, ImVec2(-1.0f, h));
 #endif  // USE_EXPLORATION_BY_KEYS

@@ -74,13 +74,14 @@ static inline int IM_XADD(int* addr, int delta)
 }
 #endif
 
-#ifndef IMGUI_API
+#ifndef IMMAT_API
 #ifdef _WIN32
-#define IMGUI_API __declspec( dllexport )
+#define IMMAT_API __declspec( dllexport )
 #else
-#define IMGUI_API
+#define IMMAT_API __attribute__((visibility("default")))
 #endif
 #endif
+
 //////////////////////////////////////////////////
 //  memory functions
 /////////////////////////////////////////////////
@@ -763,67 +764,67 @@ public:
     // convert type
     ImMat convert(ImDataType t, float scale = 1.0f) const;
     // convert color
-    IMGUI_API ImMat cvtToLAB() const;
-    IMGUI_API ImMat cvtToGray() const;
-    IMGUI_API ImMat cvtToHSV() const;
-    IMGUI_API ImMat cvtToHSL() const;
-    IMGUI_API ImMat cvtToRGB(ImColorFormat format = IM_CF_BGR, ImDataType dtype = IM_DT_UNDEFINED, bool planar = true) const;
+    IMMAT_API ImMat cvtToLAB() const;
+    IMMAT_API ImMat cvtToGray() const;
+    IMMAT_API ImMat cvtToHSV() const;
+    IMMAT_API ImMat cvtToHSL() const;
+    IMMAT_API ImMat cvtToRGB(ImColorFormat format = IM_CF_BGR, ImDataType dtype = IM_DT_UNDEFINED, bool planar = true) const;
 
     // some draw function only support 3 dims
     // mat default ordination is ncwh
     // if need using nwhc then we need set elempack as elemsize * c
-    IMGUI_API void clean(ImPixel color);
-    IMGUI_API void get_pixel(int x, int y, ImPixel& color) const;
-    IMGUI_API void get_pixel(ImPoint p, ImPixel& color) const;
-    IMGUI_API ImPixel get_pixel(int x, int y) const;
-    IMGUI_API ImPixel get_pixel(ImPoint p) const;
-    IMGUI_API void set_pixel(int x, int y, ImPixel color, bool norm = true);
-    IMGUI_API void set_pixel(ImPoint p, ImPixel color, bool norm = true);
-    IMGUI_API void alphablend(int x, int y, float alpha, ImPixel color);
-    IMGUI_API void alphablend(int x, int y, ImPixel color);
-    IMGUI_API void draw_line(float x1, float y1, float x2, float y2, float t, ImPixel color);
-    IMGUI_API void draw_line(ImPoint p1, ImPoint p2, float t, ImPixel color);
-    IMGUI_API void draw_line(float x1, float y1, float x2, float y2, ImPixel color, int weight = 1);
-    IMGUI_API void draw_line(ImPoint p1, ImPoint p2, ImPixel color, int weight = 1);
-    IMGUI_API void draw_rectangle(float x1, float y1, float x2, float y2, ImPixel color, int weight = 1);
-    IMGUI_API void draw_rectangle(ImPoint p1, ImPoint p2, ImPixel color, int weight = 1);
-    IMGUI_API void draw_rectangle(float x1, float y1, float x2, float y2, float t, ImPixel color);
-    IMGUI_API void draw_rectangle(ImPoint p1, ImPoint p2, float t, ImPixel color);
-    IMGUI_API void draw_circle(float x, float y, float r, ImPixel color);
-    IMGUI_API void draw_circle(ImPoint p, float r, ImPixel color);
-    IMGUI_API void draw_circle_filled(float x, float y, float r, ImPixel color);
-    IMGUI_API void draw_circle_filled(ImPoint p, float r, ImPixel color);
-    IMGUI_API void draw_circle(float x, float y, float r, float t, ImPixel color);
-    IMGUI_API void draw_circle(ImPoint p, float r, float t, ImPixel color);
-    IMGUI_API void draw_circle(float x, float y, float r, float t, std::function<ImPixel(float)> const &color);
-    IMGUI_API void draw_circle(ImPoint p, float r, float t, std::function<ImPixel(float)> const &color);
+    IMMAT_API void clean(ImPixel color);
+    IMMAT_API void get_pixel(int x, int y, ImPixel& color) const;
+    IMMAT_API void get_pixel(ImPoint p, ImPixel& color) const;
+    IMMAT_API ImPixel get_pixel(int x, int y) const;
+    IMMAT_API ImPixel get_pixel(ImPoint p) const;
+    IMMAT_API void set_pixel(int x, int y, ImPixel color, bool norm = true);
+    IMMAT_API void set_pixel(ImPoint p, ImPixel color, bool norm = true);
+    IMMAT_API void alphablend(int x, int y, float alpha, ImPixel color);
+    IMMAT_API void alphablend(int x, int y, ImPixel color);
+    IMMAT_API void draw_line(float x1, float y1, float x2, float y2, float t, ImPixel color);
+    IMMAT_API void draw_line(ImPoint p1, ImPoint p2, float t, ImPixel color);
+    IMMAT_API void draw_line(float x1, float y1, float x2, float y2, ImPixel color, int weight = 1);
+    IMMAT_API void draw_line(ImPoint p1, ImPoint p2, ImPixel color, int weight = 1);
+    IMMAT_API void draw_rectangle(float x1, float y1, float x2, float y2, ImPixel color, int weight = 1);
+    IMMAT_API void draw_rectangle(ImPoint p1, ImPoint p2, ImPixel color, int weight = 1);
+    IMMAT_API void draw_rectangle(float x1, float y1, float x2, float y2, float t, ImPixel color);
+    IMMAT_API void draw_rectangle(ImPoint p1, ImPoint p2, float t, ImPixel color);
+    IMMAT_API void draw_circle(float x, float y, float r, ImPixel color);
+    IMMAT_API void draw_circle(ImPoint p, float r, ImPixel color);
+    IMMAT_API void draw_circle_filled(float x, float y, float r, ImPixel color);
+    IMMAT_API void draw_circle_filled(ImPoint p, float r, ImPixel color);
+    IMMAT_API void draw_circle(float x, float y, float r, float t, ImPixel color);
+    IMMAT_API void draw_circle(ImPoint p, float r, float t, ImPixel color);
+    IMMAT_API void draw_circle(float x, float y, float r, float t, std::function<ImPixel(float)> const &color);
+    IMMAT_API void draw_circle(ImPoint p, float r, float t, std::function<ImPixel(float)> const &color);
 
     // simple filters for gray
-    IMGUI_API ImMat lowpass(float lambda);
-    IMGUI_API ImMat highpass(float lambda);
-    IMGUI_API ImMat threshold(float thres);
+    IMMAT_API ImMat lowpass(float lambda);
+    IMMAT_API ImMat highpass(float lambda);
+    IMMAT_API ImMat threshold(float thres);
     #define MORPH_FLAGS_LEFT    (1 << 0)
     #define MORPH_FLAGS_RIGHT   (1 << 1)
     #define MORPH_FLAGS_TOP     (1 << 2)
     #define MORPH_FLAGS_BOTTOM  (1 << 3)
-    IMGUI_API ImMat dilate(int radius = 1, uint8_t flags = 0xFF);
-    IMGUI_API ImMat erode(int radius = 1, uint8_t flags = 0xFF);
+    IMMAT_API ImMat dilate(int radius = 1, uint8_t flags = 0xFF);
+    IMMAT_API ImMat erode(int radius = 1, uint8_t flags = 0xFF);
 
     // simple filters
-    IMGUI_API ImMat blur(int kernel_size, float sigma = 1.0f, bool norm = true); // Gaussian Blur
-    IMGUI_API ImMat adaptive_threshold(float maxValue, int kernel_size, float delta);
-    IMGUI_API ImMat resize(float w, float h, ImInterpolateMode interpolate = IM_INTERPOLATE_BILINEAR, bool norm = true) const;
-    IMGUI_API ImMat resize(ImPoint scale, ImInterpolateMode interpolate = IM_INTERPOLATE_BILINEAR, bool norm = true) const;
+    IMMAT_API ImMat blur(int kernel_size, float sigma = 1.0f, bool norm = true); // Gaussian Blur
+    IMMAT_API ImMat adaptive_threshold(float maxValue, int kernel_size, float delta);
+    IMMAT_API ImMat resize(float w, float h, ImInterpolateMode interpolate = IM_INTERPOLATE_BILINEAR, bool norm = true) const;
+    IMMAT_API ImMat resize(ImPoint scale, ImInterpolateMode interpolate = IM_INTERPOLATE_BILINEAR, bool norm = true) const;
 
     // copy to
-    IMGUI_API void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);
+    IMMAT_API void copy_to(ImMat & mat, ImPoint offset = {}, float alpha = 1.0f);
 
     // crop
-    IMGUI_API ImMat crop(ImPoint p1, ImPoint p2) const;
-    IMGUI_API ImMat crop(ImBox box) const;
+    IMMAT_API ImMat crop(ImPoint p1, ImPoint p2) const;
+    IMMAT_API ImMat crop(ImBox box) const;
 
     // repeat
-    IMGUI_API ImMat repeat(int nx, int ny);
+    IMMAT_API ImMat repeat(int nx, int ny);
     
     // release
     void release();
@@ -902,8 +903,8 @@ public:
     };
 
     // debug
-    IMGUI_API void print(std::string name = {});
-    IMGUI_API void print_shape(std::string name = {});
+    IMMAT_API void print(std::string name = {});
+    IMMAT_API void print_shape(std::string name = {});
 
     // convenient access float vec element
     float& operator[](size_t i);
@@ -5547,7 +5548,7 @@ inline ImMat ImMat::convert(ImDataType t, float scale) const
 namespace ImGui
 {
 // Kalman filter
-class IMGUI_API ImKalman
+class IMMAT_API ImKalman
 {
 public:
     ImKalman() {};
@@ -5573,42 +5574,42 @@ public:
     ImMat errorCovPost;        //转移噪声修正矩阵(p(k)) p(k) = (I - K(k) * H) * p'(k)  ： 8 * 8
 };
 
-IMGUI_API ImMat getPerspectiveTransform(const ImPoint src[], const ImPoint dst[]);
-IMGUI_API ImMat getPerspectiveTransform(const ImMat src, const ImMat dst);
-IMGUI_API ImMat getAffineTransform(const ImPoint src[], const ImPoint dst[]);
-IMGUI_API ImMat getAffineTransform(int sw, int sh, int dw, int dh, float x_offset, float y_offset, float x_scale, float y_scale, float angle);
-IMGUI_API void  getAffineParam(const ImMat& M, float& x_offset, float& y_offset, float& x_scale, float& y_scale, float& angle);
-IMGUI_API ImMat similarTransform(const ImMat& src, const ImMat& dst);
-IMGUI_API ImMat calcCovarMatrix(std::vector<ImPoint>& vertices, ImPoint& avgPos);
-IMGUI_API ImMat calcCovarMatrix(std::vector<ImPoint3D>& vertices, ImPoint3D& avgPos);
-IMGUI_API void jacobiSolver(ImMat M, std::vector<float> &eVal, std::vector<ImPoint> &eVec, float precision = 1e-5, float iteration = 1e4);
-IMGUI_API void jacobiSolver(ImMat M, std::vector<float> &eVal, std::vector<ImPoint3D> &eVec, float precision = 1e-5, float iteration = 1e4);
-IMGUI_API void schmidtOrthogonal(ImPoint &u, ImPoint &v);
-IMGUI_API void schmidtOrthogonal(ImPoint3D &u, ImPoint3D &v, ImPoint3D &w);
-IMGUI_API void calcCenterDimension(std::vector<ImPoint> &vertices, std::vector<ImPoint> &axis, ImPoint &center, ImPoint &halfDimension);
-IMGUI_API void calcCenterDimension(std::vector<ImPoint3D> &vertices, std::vector<ImPoint3D> &axis, ImPoint3D &center, ImPoint3D &halfDimension);
-IMGUI_API void calcOrientedBoundingBox(std::vector<ImPoint> &vertices, std::vector<ImPoint> &axis, ImPoint &center, ImPoint &halfDimension);
-IMGUI_API void calcOrientedBoundingBox(std::vector<ImPoint3D> &vertices, std::vector<ImPoint3D> &axis, ImPoint3D &center, ImPoint3D &halfDimension);
-IMGUI_API void findContours(const ImMat& src, std::vector<std::vector<ImPoint>>& contours);
+IMMAT_API ImMat getPerspectiveTransform(const ImPoint src[], const ImPoint dst[]);
+IMMAT_API ImMat getPerspectiveTransform(const ImMat src, const ImMat dst);
+IMMAT_API ImMat getAffineTransform(const ImPoint src[], const ImPoint dst[]);
+IMMAT_API ImMat getAffineTransform(int sw, int sh, int dw, int dh, float x_offset, float y_offset, float x_scale, float y_scale, float angle);
+IMMAT_API void  getAffineParam(const ImMat& M, float& x_offset, float& y_offset, float& x_scale, float& y_scale, float& angle);
+IMMAT_API ImMat similarTransform(const ImMat& src, const ImMat& dst);
+IMMAT_API ImMat calcCovarMatrix(std::vector<ImPoint>& vertices, ImPoint& avgPos);
+IMMAT_API ImMat calcCovarMatrix(std::vector<ImPoint3D>& vertices, ImPoint3D& avgPos);
+IMMAT_API void jacobiSolver(ImMat M, std::vector<float> &eVal, std::vector<ImPoint> &eVec, float precision = 1e-5, float iteration = 1e4);
+IMMAT_API void jacobiSolver(ImMat M, std::vector<float> &eVal, std::vector<ImPoint3D> &eVec, float precision = 1e-5, float iteration = 1e4);
+IMMAT_API void schmidtOrthogonal(ImPoint &u, ImPoint &v);
+IMMAT_API void schmidtOrthogonal(ImPoint3D &u, ImPoint3D &v, ImPoint3D &w);
+IMMAT_API void calcCenterDimension(std::vector<ImPoint> &vertices, std::vector<ImPoint> &axis, ImPoint &center, ImPoint &halfDimension);
+IMMAT_API void calcCenterDimension(std::vector<ImPoint3D> &vertices, std::vector<ImPoint3D> &axis, ImPoint3D &center, ImPoint3D &halfDimension);
+IMMAT_API void calcOrientedBoundingBox(std::vector<ImPoint> &vertices, std::vector<ImPoint> &axis, ImPoint &center, ImPoint &halfDimension);
+IMMAT_API void calcOrientedBoundingBox(std::vector<ImPoint3D> &vertices, std::vector<ImPoint3D> &axis, ImPoint3D &center, ImPoint3D &halfDimension);
+IMMAT_API void findContours(const ImMat& src, std::vector<std::vector<ImPoint>>& contours);
 
 // draw utils
-IMGUI_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);
-IMGUI_API ImMat MatRotate(const ImMat& mat, float angle);
-IMGUI_API ImMat MatWarpAffine(const ImMat& mat, const ImMat& M, ImSize dsize);
-IMGUI_API ImMat MatWarpPerspective(const ImMat& src, const ImMat& M, ImSize dsize, ImInterpolateMode mode = IM_INTERPOLATE_NEAREST);
-IMGUI_API ImMat GrayToImage(const ImMat& mat);
-IMGUI_API ImMat GrayInfernoMap(const ImMat& mat);
-IMGUI_API ImMat CreateTextMat(const char* str, const ImPixel& color, const ImPixel& bk_color = ImPixel(0,0,0,0), float scale = 1.f, bool square = false);
-IMGUI_API void  DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, const ImPixel& color, float scale = 1.f);
-IMGUI_API void  ImageMatCopyTo(const ImMat& src, ImMat& dst, ImPoint pos);
+IMMAT_API ImMat MatResize(const ImMat& mat, const ImSize size, float sw = 1.0, float sh = 1.0);
+IMMAT_API ImMat MatRotate(const ImMat& mat, float angle);
+IMMAT_API ImMat MatWarpAffine(const ImMat& mat, const ImMat& M, ImSize dsize);
+IMMAT_API ImMat MatWarpPerspective(const ImMat& src, const ImMat& M, ImSize dsize, ImInterpolateMode mode = IM_INTERPOLATE_NEAREST);
+IMMAT_API ImMat GrayToImage(const ImMat& mat);
+IMMAT_API ImMat GrayInfernoMap(const ImMat& mat);
+IMMAT_API ImMat CreateTextMat(const char* str, const ImPixel& color, const ImPixel& bk_color = ImPixel(0,0,0,0), float scale = 1.f, bool square = false);
+IMMAT_API void  DrawTextToMat(ImMat& mat, const ImPoint pos, const char* str, const ImPixel& color, float scale = 1.f);
+IMMAT_API void  ImageMatCopyTo(const ImMat& src, ImMat& dst, ImPoint pos);
 } // namespace ImGui
 
 // fast-global-smooth filter
 namespace ImGui
 {
-IMGUI_API void prepareBLFKernel(std::vector<float>& BLFKernel, const double sigma);
-IMGUI_API void solve_tridiagonal_in_place_destructive(float x[], const size_t N, const float a[], const float b[], float c[]);
-IMGUI_API void FGS_simple(float* image, float* joint_image, const int width, const int height, const int nChannels, 
+IMMAT_API void prepareBLFKernel(std::vector<float>& BLFKernel, const double sigma);
+IMMAT_API void solve_tridiagonal_in_place_destructive(float x[], const size_t N, const float a[], const float b[], float c[]);
+IMMAT_API void FGS_simple(float* image, float* joint_image, const int width, const int height, const int nChannels, 
                 const int nChannels_guide, const float sigma, const float lambda, const int solver_iteration, const float solver_attenuation);
 } // namespace ImGui
 

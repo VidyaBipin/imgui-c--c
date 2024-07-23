@@ -317,7 +317,7 @@ int main(int, char**)
         // Show Memory Edit window
         if (mem_edit.Open)
         {
-            mem_edit.DrawWindow("Memory Editor", data, data_size, 0, &mem_edit.Open, 768);
+            mem_edit.DrawWindow("Memory Editor", data, data_size, 0);
         }
 
         // Show Markdown Window

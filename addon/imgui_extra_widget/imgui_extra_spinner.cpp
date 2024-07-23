@@ -797,6 +797,16 @@ void ImGui::SpinnerRotateDots(const char *label, float radius, float thickness, 
         }
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), thickness, color_alpha(color, 1.f), 8);
     }
+
+    if (mode == 3) {
+        float sm_thickness = thickness * 0.5f;
+        const float bstart = (float)ImGui::GetTime() * speed;
+        for (size_t i = 0; i < dots; i++)
+        {
+            const float b = bstart + (IM_PI - i * PI_DIV(dots) * 2.f);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(b) * radius, centre.y + ImSin(b) * radius), sm_thickness, color_alpha(color, 1.f), 8);
+        }
+    }
 }
 
 void ImGui::SpinnerOrionDots(const char *label, float radius, float thickness, const ImColor &color, float speed, int arcs)

@@ -68,6 +68,12 @@ int DIR_Iterate(std::string directory, std::vector<std::string>& filesAbsolutePa
                         need_add = true;
                     }
                 }
+                else
+                {
+                    std::string absolutePath = directory + std::string("/") + std::string(d_ent->d_name);
+                    filesAbsolutePath.push_back(absolutePath);
+                    filesname.push_back(d_ent->d_name);
+                }
 			}
 			else
 			{
