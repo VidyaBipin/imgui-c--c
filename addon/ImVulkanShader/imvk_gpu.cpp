@@ -4397,7 +4397,7 @@ int compile_spirv_module(const char* comp_data, int comp_data_size, const Option
         }
 
         TBuiltInResource resources = get_default_TBuiltInResource();
-        EShMessages messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules | EShMsgSuppressWarnings | EShMsgDebugInfo | EShMsgCascadingErrors);
+        EShMessages messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules /*| EShMsgSuppressWarnings | EShMsgDebugInfo*/ | EShMsgCascadingErrors);
 
         bool pr = s.parse(&resources, 100, ENoProfile, false, false, messages);
         if (!pr)
