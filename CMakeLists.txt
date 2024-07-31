@@ -1057,6 +1057,10 @@ set(IMGUI_SRC
 set(IMGUI_INCS
     ${IMGUI_INCS}
     addon/imgui_extra_widget/imgui_extra_widget.h
+    addon/imgui_extra_widget/imgui_markdown.h
+    addon/imgui_extra_widget/imgui_memory_editor.h
+    addon/imgui_extra_widget/portable-file-dialogs.h
+    addon/imgui_extra_widget/HotKey.h
 )
 set(IMGUI_INC_DIRS
     ${IMGUI_INC_DIRS}
@@ -1125,46 +1129,6 @@ add_subdirectory(addon/ImMaskCreator)
 set(IMGUI_INC_DIRS
     ${IMGUI_INC_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/addon/ImMaskCreator/Include
-)
-
-# Memory Editor
-set(IMGUI_INCS
-    ${IMGUI_INCS}
-    addon/MemoryEditor/imgui_memory_editor.h
-)
-set(IMGUI_INC_DIRS
-    ${IMGUI_INC_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/addon/MemoryEditor
-)
-
-# Portable File Dialogs
-set(IMGUI_INCS
-    ${IMGUI_INCS}
-    addon/PortableFileDialogs/portable-file-dialogs.h
-)
-set(IMGUI_INC_DIRS
-    ${IMGUI_INC_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/addon/PortableFileDialogs
-)
-
-# Simple Markdown
-set(IMGUI_INCS
-    ${IMGUI_INCS}
-    addon/markdown/imgui_markdown.h
-)
-set(IMGUI_INC_DIRS
-    ${IMGUI_INC_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/addon/markdown
-)
-
-# HotKeys
-set(IMGUI_INCS
-    ${IMGUI_INCS}
-    addon/HotKey/HotKey.h
-)
-set(IMGUI_INC_DIRS
-    ${IMGUI_INC_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/addon/HotKey
 )
 
 # Tab Window
