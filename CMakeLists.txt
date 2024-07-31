@@ -369,6 +369,7 @@ set(IMGUI_SRC
     misc/cpp/dir_iterate.cpp
     misc/cpp/imgui_cpu.cpp
     misc/cpp/imgui_fft.cpp
+    misc/cpp/imgui_socket.cpp
     misc/json/imgui_json.cpp
 )
 
