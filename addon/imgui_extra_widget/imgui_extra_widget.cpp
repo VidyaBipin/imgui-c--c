@@ -8709,6 +8709,7 @@ void ImGui::ImGuiMultiContextCompositor_PreNewFrameUpdateAll(ImGuiMultiContextCo
     mcc->CtxMouseFirst = NULL;
     mcc->CtxMouseExclusive = NULL;
     mcc->CtxMouseShape = NULL;
+    mcc->CtxKeyboardExclusive = NULL;
     mcc->CtxDragDropSrc = NULL;
     mcc->CtxDragDropDst = NULL;
     mcc->DragDropPayload.Clear();
@@ -8722,11 +8723,24 @@ void ImGui::ImGuiMultiContextCompositor_PreNewFrameUpdateAll(ImGuiMultiContextCo
     {
         const bool ctx_is_front = (ctx == mcc->ContextsFrontToBack.front());
 
-        // When hovering a secondary viewport, only enable mouse for the context owning it
 #if 1 // IMGUI_HAS_DOCK
-        if (mcc->CtxMouseExclusive == NULL && ctx->MouseLastHoveredViewport != NULL)
-            if ((ctx->MouseLastHoveredViewport->Flags & ImGuiViewportFlags_CanHostOtherWindows) == 0)
+        // When hovering a secondary viewport, only enable mouse for the context owning it
+        // We specifically use 'ctx->IO.MouseHoveredViewport' (current, submitted by backend) and not 'ctx->MouseLastHoveredViewport' (last valid one)
+        if (mcc->CtxMouseExclusive == NULL && ctx->IO.MouseHoveredViewport != 0)
+        {
+            ImGuiViewport* hovered_viewport = NULL;
+            for (ImGuiViewport* viewport : ctx->PlatformIO.Viewports)
+                if (viewport->ID == ctx->IO.MouseHoveredViewport)
+                    hovered_viewport = viewport;
+            if (hovered_viewport != NULL && (hovered_viewport->Flags & ImGuiViewportFlags_CanHostOtherWindows) == 0)
                 mcc->CtxMouseExclusive = ctx;
+        }
+
+        // When a secondary viewport is focused, only enable keyboard for the context owning it.
+        if (mcc->CtxKeyboardExclusive == NULL && ctx->NavWindow != NULL)
+            if (ImGuiViewport* viewport = ctx->NavWindow->Viewport)
+                if ((viewport->Flags & ImGuiViewportFlags_IsFocused) && (viewport->Flags & ImGuiViewportFlags_CanHostOtherWindows) == 0)
+                    mcc->CtxKeyboardExclusive = ctx;
 #endif
 
         // When hovering a main/shared viewport,
@@ -8747,6 +8761,10 @@ void ImGui::ImGuiMultiContextCompositor_PreNewFrameUpdateAll(ImGuiMultiContextCo
         else if (ctx->DragDropActive == false && mcc->CtxDragDropSrc == ctx)
             mcc->CtxDragDropSrc = NULL;
     }
+
+    // If no secondary viewport are focused, we'll keep keyboard to top-most context
+    if (mcc->CtxKeyboardExclusive == NULL)
+        mcc->CtxKeyboardExclusive = mcc->ContextsFrontToBack.front();
 
     // Deep copy payload for replication
     if (mcc->CtxDragDropSrc)
@@ -8779,8 +8797,8 @@ void ImGui::ImGuiMultiContextCompositor_PreNewFrameUpdateAll(ImGuiMultiContextCo
         ImGuiIO& io = ctx->IO;
         const bool ctx_is_front = (ctx == mcc->ContextsFrontToBack.front());
 
-        // Only top-most context gets keyboard
-        if (ctx_is_front)
+        // Focused secondary viewport or top-most context in shared viewport gets keyboard
+        if (mcc->CtxKeyboardExclusive == ctx)
             io.ConfigFlags &= ~ImGuiConfigFlags_NoKeyboard; // Allow keyboard interactions
         else
             io.ConfigFlags |= ImGuiConfigFlags_NoKeyboard; // Disable keyboard interactions

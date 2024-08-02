@@ -859,6 +859,7 @@ namespace ImGui
         ImGuiContext*   CtxMouseFirst = NULL;       // When hovering a main/shared viewport, first context with io.WantCaptureMouse
         ImGuiContext*   CtxMouseExclusive = NULL;   // When hovering a secondary viewport
         ImGuiContext*   CtxMouseShape = NULL;       // Context owning mouse cursor shape
+        ImGuiContext*   CtxKeyboardExclusive = NULL;// When focusing a secondary viewport
         ImGuiContext*   CtxDragDropSrc = NULL;      // Source context for drag and drop
         ImGuiContext*   CtxDragDropDst = NULL;      // When hovering a main/shared viewport, second context with io.WantCaptureMouse for Drag Drop target
         ImGuiPayload    DragDropPayload;            // Deep copy of drag and drop payload.
