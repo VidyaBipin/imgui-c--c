@@ -399,6 +399,13 @@ int main(int argc, char** argv)
         glfwPollEvents();
         if (glfwWindowShouldClose(window))
             done = true;
+
+        if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0 || glfwGetWindowAttrib(window, GLFW_VISIBLE) == 0)
+        {
+            ImGui_ImplGlfw_Sleep(10);
+            app_done = done;
+            continue;
+        }
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();

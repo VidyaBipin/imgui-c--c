@@ -383,6 +383,14 @@ int main(int argc, char** argv)
         glfwPollEvents();
         if (glfwWindowShouldClose(window))
             done = true;
+
+        if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0 || glfwGetWindowAttrib(window, GLFW_VISIBLE) == 0)
+        {
+            ImGui_ImplGlfw_Sleep(10);
+            app_done = done;
+            continue;
+        }
+
         // Resize swap chain?
         int fb_width, fb_height;
         glfwGetFramebufferSize(window, &fb_width, &fb_height);

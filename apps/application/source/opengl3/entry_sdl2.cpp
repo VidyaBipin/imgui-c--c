@@ -132,6 +132,10 @@ static bool Show_Splash_Window(ApplicationWindowProperty& property, ImGuiContext
                 show = true;
             }
         }
+        if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED || SDL_GetWindowFlags(window) & SDL_WINDOW_HIDDEN || !(SDL_GetWindowFlags(window) & SDL_WINDOW_SHOWN))
+        {
+            show = false;
+        }
 #ifndef __EMSCRIPTEN__
         if (!show && !(io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable))
         {

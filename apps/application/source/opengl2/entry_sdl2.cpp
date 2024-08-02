@@ -355,6 +355,10 @@ int main(int argc, char** argv)
                 show = true;
             }
         }
+        if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED || SDL_GetWindowFlags(window) & SDL_WINDOW_HIDDEN || !(SDL_GetWindowFlags(window) & SDL_WINDOW_SHOWN))
+        {
+            show = false;
+        }
         if (!show && !(io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable))
         {
             ImGui::sleep(10);
