@@ -491,6 +491,10 @@ if(WIN32)
         misc/cpp/dlfcn_win.h
         misc/cpp/mman_win.h
     )
+    set(LINK_LIBS
+        ${LINK_LIBS}
+        ws2_32
+    )
 endif(WIN32)
 
 if(FREETYPE_FOUND AND IMGUI_FREETYPE)
