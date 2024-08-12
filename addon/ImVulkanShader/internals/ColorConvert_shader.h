@@ -137,17 +137,17 @@ sfpvec3 load_src_yuv(int x, int y) \n\
 } \
 "
 
-#define INTERPLATE_NONE \
+#define CC_INTERPLATE_NONE \
 " \n\
-sfpvec3 interplate_none(int x, int y) \n\
+sfpvec3 cc_interplate_none(int x, int y) \n\
 { \n\
     return load_src_yuv(x, y); \n\
 } \
 "
 
-#define INTERPLATE_NEAREST \
+#define CC_INTERPLATE_NEAREST \
 " \n\
-sfpvec3 interplate_nearest(int x, int y) \n\
+sfpvec3 cc_interplate_nearest(int x, int y) \n\
 { \n\
     float fx = float(p.out_w) / float(p.in_real_w); \n\
     float fy = float(p.out_h) / float(p.in_real_h); \n\
@@ -159,9 +159,9 @@ sfpvec3 interplate_nearest(int x, int y) \n\
 } \
 "
 
-#define INTERPLATE_BILINEAR \
+#define CC_INTERPLATE_BILINEAR \
 " \n\
-sfpvec3 interplate_bilinear(int x, int y) \n\
+sfpvec3 cc_interplate_bilinear(int x, int y) \n\
 { \n\
     float fx = float(p.out_w) / float(p.in_real_w); \n\
     float fy = float(p.out_h) / float(p.in_real_h); \n\
@@ -204,9 +204,9 @@ sfpvec3 interplate_bilinear(int x, int y) \n\
 } \
 "
 
-#define INTERPLATE_BICUBIC \
+#define CC_INTERPLATE_BICUBIC \
 " \n\
-sfpvec3 interplate_bicubic(int x, int y) \n\
+sfpvec3 cc_interplate_bicubic(int x, int y) \n\
 { \n\
     const sfp A = sfp(-0.75f); \n\
     sfp scale_x = sfp(p.in_real_w) / sfp(p.out_w); \n\
@@ -269,9 +269,9 @@ sfpvec3 interplate_bicubic(int x, int y) \n\
 } \
 "
 
-#define INTERPLATE_AREA \
+#define CC_INTERPLATE_AREA \
 " \n\
-sfpvec3 interplate_area(int x, int y) \n\
+sfpvec3 cc_interplate_area(int x, int y) \n\
 { \n\
     sfpvec3 _v = {sfp(0.f), sfp(0.f), sfp(0.f)}; \n\
     sfp scale_x = sfp(p.in_real_w) / sfp(p.out_w); \n\
@@ -335,27 +335,27 @@ sfpvec3 interplate_area(int x, int y) \n\
 } \
 "
 
-#define INTERPLATE \
-INTERPLATE_NONE \
-INTERPLATE_NEAREST \
-INTERPLATE_BILINEAR \
-INTERPLATE_BICUBIC \
-INTERPLATE_AREA \
+#define CC_INTERPLATE \
+CC_INTERPLATE_NONE \
+CC_INTERPLATE_NEAREST \
+CC_INTERPLATE_BILINEAR \
+CC_INTERPLATE_BICUBIC \
+CC_INTERPLATE_AREA \
 " \n\
-sfpvec3 interplate(int x, int y) \n\
+sfpvec3 cc_interplate(int x, int y) \n\
 { \n\
     if (p.interp_type == INTERPOLATE_NONE) \n\
-        return interplate_none(x, y); \n\
+        return cc_interplate_none(x, y); \n\
     if (p.interp_type == INTERPOLATE_NEAREST) \n\
-        return interplate_nearest(x, y); \n\
+        return cc_interplate_nearest(x, y); \n\
     else if (p.interp_type == INTERPOLATE_BILINEAR) \n\
-        return interplate_bilinear(x, y); \n\
+        return cc_interplate_bilinear(x, y); \n\
     else if (p.interp_type == INTERPOLATE_BICUBIC) \n\
-        return interplate_bicubic(x, y); \n\
+        return cc_interplate_bicubic(x, y); \n\
     else if (p.interp_type == INTERPOLATE_AREA) \n\
-        return interplate_area(x, y); \n\
+        return cc_interplate_area(x, y); \n\
     else \n\
-        return interplate_nearest(x, y); \n\
+        return cc_interplate_nearest(x, y); \n\
 } \
 "
 
@@ -369,7 +369,7 @@ void main() \n\
         return; \n\
     sfpvec3 rgb; \n\
     if (p.resize == 1) \n\
-        rgb = yuv_to_rgb(interplate(gx, gy)); \n\
+        rgb = yuv_to_rgb(cc_interplate(gx, gy)); \n\
     else \n\
         rgb = yuv_to_rgb(load_src_yuv(gx, gy)); \n\
     if (p.out_format == CF_ABGR || p.out_format == CF_ARGB || p.out_format == CF_BGRA || p.out_format == CF_RGBA) \n\
@@ -403,7 +403,7 @@ SHADER_MAT_Y2R
 SHADER_PARAM_Y2R
 SHADER_YUV2RGB
 SHADER_LOAD_SRC_YUV
-INTERPLATE
+CC_INTERPLATE
 SHADER_STORE_RGB
 SHADER_STORE_RGBA
 SHADER_YUV2RGB_MAIN
@@ -538,7 +538,7 @@ SHADER_MAT_Y2R
 SHADER_PARAM_Y_U_V_2R
 SHADER_YUV2RGB
 SHADER_LOAD_SRC_Y_U_V
-INTERPLATE
+CC_INTERPLATE
 SHADER_STORE_RGB
 SHADER_STORE_RGBA
 SHADER_YUV2RGB_MAIN
