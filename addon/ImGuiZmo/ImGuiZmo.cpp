@@ -2636,6 +2636,23 @@ namespace IMGUIZMO_NAMESPACE
       return isDraging;
    }
 
+   void DrawLine(const float *view, const float *projection, const float *matrix, ImVec3 p1, ImVec3 p2, ImU32 col, float thickness)
+   {
+      matrix_t viewProjection = *(matrix_t *)view * *(matrix_t *)projection;
+      matrix_t res = *(matrix_t *)matrix * viewProjection;
+      vec_t ptA = makeVect(p1.x, p1.y, p1.z);
+      vec_t ptB = makeVect(p2.x, p2.y, p2.z);
+      gContext.mDrawList->AddLine(worldToPos(ptA, res), worldToPos(ptB, res), col, thickness);
+   }
+
+   void DrawPoint(const float *view, const float *projection, const float *matrix, ImVec3 p, ImU32 col, float size)
+   {
+      matrix_t viewProjection = *(matrix_t *)view * *(matrix_t *)projection;
+      matrix_t res = *(matrix_t *)matrix * viewProjection;
+      vec_t pt = makeVect(p.x, p.y, p.z);
+      gContext.mDrawList->AddCircleFilled(worldToPos(pt, res), size, col);
+   }
+
    void DrawBoundingBox(
       const float *_View,
       const float *_Projection,

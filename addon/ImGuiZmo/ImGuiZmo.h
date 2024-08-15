@@ -51,6 +51,8 @@ namespace IMGUIZMO_NAMESPACE
     // default is false
     IMGUI_API void SetOrthographic(bool isOrthographic);
 
+    IMGUI_API void DrawLine(const float *view, const float *projection, const float *matrix, ImVec3 p1, ImVec3 p2, ImU32 col = IM_COL32_WHITE, float thickness = 1.f);
+    IMGUI_API void DrawPoint(const float *view, const float *projection, const float *matrix, ImVec3 p, ImU32 col = IM_COL32_WHITE, float size = 1.f);
     IMGUI_API void DrawGrid(const float *view, const float *projection, const float *matrix, const float gridSize);
 
     IMGUI_API void DrawTriangles(ImDrawList* draw_list, const std::vector<Model_Triangle>& triangles);
