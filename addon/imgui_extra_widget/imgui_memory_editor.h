@@ -44,6 +44,8 @@
 // - v0.52 (2024/03/08): removed unnecessary GetKeyIndex() calls, they are a no-op since 1.87.
 // - v0.53 (2024/05/27): fixed right-click popup from not appearing when using DrawContents(). warning fixes. (#35)
 // - v0.54 (2024/07/29): allow ReadOnly mode to still select and preview data. (#46) [@DeltaGW2]
+// - v0.55 (2024/08/19): add BgColorFn to allow setting background colors independently from highlighted selection. (#27) [@StrikerX3]
+//                       fixed a data preview crash with 1.91.0 WIP. fixed contiguous highlight color when using data preview.
 //
 // TODO:
 // - This is generally old/crappy code, it should work but isn't very good.. to be rewritten some day.
@@ -96,6 +98,7 @@ struct MemoryEditor
     ImU8            (*ReadFn)(const ImU8* data, size_t off);    // = 0      // optional handler to read bytes.
     void            (*WriteFn)(ImU8* data, size_t off, ImU8 d); // = 0      // optional handler to write bytes.
     bool            (*HighlightFn)(const ImU8* data, size_t off);//= 0      // optional handler to return Highlight property (to support non-contiguous highlighting).
+    ImU32           (*BgColorFn)(const ImU8* data, size_t off); // = 0      // optional handler to return custom background color of individual bytes.
 
     // [Internal State]
     bool            ContentsWidthChanged;
@@ -128,6 +131,7 @@ struct MemoryEditor
         ReadFn = NULL;
         WriteFn = NULL;
         HighlightFn = NULL;
+        BgColorFn = NULL;
 
         // State/Internals
         ContentsWidthChanged = false;
@@ -287,22 +291,34 @@ struct MemoryEditor
                         byte_pos_x += (float)(n / OptMidColsCount) * s.SpacingBetweenMidCols;
                     ImGui::SameLine(byte_pos_x);
 
-                    // Draw highlight
-                    bool is_highlight_from_user_range = (addr >= HighlightMin && addr < HighlightMax);
-                    bool is_highlight_from_user_func = (HighlightFn && HighlightFn(mem_data, addr));
-                    bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr < DataPreviewAddr + preview_data_type_size);
+                    // Draw highlight or custom background color
+                    const bool is_highlight_from_user_range = (addr >= HighlightMin && addr < HighlightMax);
+                    const bool is_highlight_from_user_func = (HighlightFn && HighlightFn(mem_data, addr));
+                    const bool is_highlight_from_preview = (addr >= DataPreviewAddr && addr < DataPreviewAddr + preview_data_type_size);
+
+                    ImU32 bg_color = 0;
+                    bool is_next_byte_highlighted = false;
                     if (is_highlight_from_user_range || is_highlight_from_user_func || is_highlight_from_preview)
                     {
-                        ImVec2 pos = ImGui::GetCursorScreenPos();
-                        float highlight_width = s.GlyphWidth * 2;
-                        bool is_next_byte_highlighted = (addr + 1 < mem_size) && ((HighlightMax != (size_t)-1 && addr + 1 < HighlightMax) || (HighlightFn && HighlightFn(mem_data, addr + 1)));
+                        is_next_byte_highlighted = (addr + 1 < mem_size) && ((HighlightMax != (size_t)-1 && addr + 1 < HighlightMax) || (HighlightFn && HighlightFn(mem_data, addr + 1)) || (addr + 1 < DataPreviewAddr + preview_data_type_size));
+                        bg_color = HighlightColor;
+                    }
+                    else if (BgColorFn != NULL)
+                    {
+                        is_next_byte_highlighted = (addr + 1 < mem_size) && ((BgColorFn(mem_data, addr + 1) & IM_COL32_A_MASK) != 0);
+                        bg_color = BgColorFn(mem_data, addr);
+                    }
+                    if (bg_color != 0)
+                    {
+                        float bg_width = s.GlyphWidth * 2;
                         if (is_next_byte_highlighted || (n + 1 == Cols))
                         {
-                            highlight_width = s.HexCellWidth;
+                            bg_width = s.HexCellWidth;
                             if (OptMidColsCount > 0 && n > 0 && (n + 1) < Cols && ((n + 1) % OptMidColsCount) == 0)
-                                highlight_width += s.SpacingBetweenMidCols;
+                                bg_width += s.SpacingBetweenMidCols;
                         }
-                        draw_list->AddRectFilled(pos, ImVec2(pos.x + highlight_width, pos.y + s.LineHeight), HighlightColor);
+                        ImVec2 pos = ImGui::GetCursorScreenPos();
+                        draw_list->AddRectFilled(pos, ImVec2(pos.x + bg_width, pos.y + s.LineHeight), bg_color);
                     }
 
                     if (DataEditingAddr == addr)
@@ -403,10 +419,11 @@ struct MemoryEditor
                     ImGui::SameLine(s.PosAsciiStart);
                     ImVec2 pos = ImGui::GetCursorScreenPos();
                     addr = line_i * Cols;
+                    size_t mouse_addr = addr + (size_t)((ImGui::GetIO().MousePos.x - pos.x) / s.GlyphWidth);
                     ImGui::PushID(line_i);
                     if (ImGui::InvisibleButton("ascii", ImVec2(s.PosAsciiEnd - s.PosAsciiStart, s.LineHeight)))
                     {
-                        DataEditingAddr = DataPreviewAddr = addr + (size_t)((ImGui::GetIO().MousePos.x - pos.x) / s.GlyphWidth);
+                        DataEditingAddr = DataPreviewAddr = mouse_addr;
                         DataEditingTakeFocus = true;
                     }
                     ImGui::PopID();
@@ -416,6 +433,10 @@ struct MemoryEditor
                         {
                             draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_FrameBg));
                             draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), ImGui::GetColorU32(ImGuiCol_TextSelectedBg));
+                        }
+                        else if (BgColorFn)
+                        {
+                            draw_list->AddRectFilled(pos, ImVec2(pos.x + s.GlyphWidth, pos.y + s.LineHeight), BgColorFn(mem_data, addr));
                         }
                         unsigned char c = ReadFn ? ReadFn(mem_data, addr) : mem_data[addr];
                         char display_c = (c < 32 || c >= 128) ? '.' : c;
@@ -524,11 +545,16 @@ struct MemoryEditor
         ImGui::Text("Preview as:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth((s.GlyphWidth * 10.0f) + style.FramePadding.x * 2.0f + style.ItemInnerSpacing.x);
+
+        static const ImGuiDataType supported_data_types[] = { ImGuiDataType_S8, ImGuiDataType_U8, ImGuiDataType_S16, ImGuiDataType_U16, ImGuiDataType_S32, ImGuiDataType_U32, ImGuiDataType_S64, ImGuiDataType_U64, ImGuiDataType_Float, ImGuiDataType_Double, ImGuiDataType_Bool }; // modify by Dicky
         if (ImGui::BeginCombo("##combo_type", DataTypeGetDesc(PreviewDataType), ImGuiComboFlags_HeightLargest))
         {
-            for (int n = 0; n < ImGuiDataType_COUNT; n++)
-                if (ImGui::Selectable(DataTypeGetDesc((ImGuiDataType)n), PreviewDataType == n))
-                    PreviewDataType = (ImGuiDataType)n;
+            for (int n = 0; n < IM_ARRAYSIZE(supported_data_types); n++)
+            {
+                ImGuiDataType data_type = supported_data_types[n];
+                if (ImGui::Selectable(DataTypeGetDesc(data_type), PreviewDataType == data_type))
+                    PreviewDataType = data_type;
+            }
             ImGui::EndCombo();
         }
         ImGui::SameLine();
@@ -550,18 +576,19 @@ struct MemoryEditor
         ImGui::Text("Bin"); ImGui::SameLine(x); ImGui::TextUnformatted(has_value ? buf : "N/A");
     }
 
-    // Utilities for Data Preview
+    // Utilities for Data Preview (since we don't access imgui_internal.h)
+    // FIXME: This technically depends on ImGuiDataType order.
     const char* DataTypeGetDesc(ImGuiDataType data_type) const
     {
         const char* descs[] = { "Int8", "Uint8", "Int16", "Uint16", "Int32", "Uint32", "Int64", "Uint64", "Float", "Double", "Bool" }; // Modify by Dicky
-        IM_ASSERT(data_type >= 0 && data_type < ImGuiDataType_COUNT);
+        IM_ASSERT(data_type >= 0 && data_type < IM_ARRAYSIZE(descs));
         return descs[data_type];
     }
 
     size_t DataTypeGetSize(ImGuiDataType data_type) const
     {
         const size_t sizes[] = { 1, 1, 2, 2, 4, 4, 8, 8, sizeof(float), sizeof(double), sizeof(bool) }; // Modify by Dicky
-        IM_ASSERT(data_type >= 0 && data_type < ImGuiDataType_COUNT);
+        IM_ASSERT(data_type >= 0 && data_type < IM_ARRAYSIZE(sizes));
         return sizes[data_type];
     }
 
@@ -740,6 +767,7 @@ struct MemoryEditor
             if (data_format == DataFormat_Hex) { ImSnprintf(out_buf, out_buf_size, "%a", data); return; }
             break;
         }
+        default:
         case ImGuiDataType_COUNT:
             break;
         } // Switch
