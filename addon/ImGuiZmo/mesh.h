@@ -26,10 +26,11 @@ public:
     std::vector <vec3> objectVertices;
     std::vector <vec3> objectNormals;
     std::vector <vec3> objectColors;
-    std::vector <unsigned int> objectIndices;    
+    std::vector <unsigned int> objectIndices;
+    std::vector <unsigned int> uvIndices;
+    std::vector <unsigned int> normalIndices;
 
     int render_mode = 0;
-    float sx = 1.f, sy = 1.f; 
     float tx = 0.f, ty = 0.f; 
     float fovy = 70.0f;
     float zFar = 99.0f;
@@ -65,18 +66,7 @@ private:
 public:
     void set_view_size(float width, float height);
     void set_angle(float angleX, float angleY);
-    void display(float& ambient_slider, float& diffuse_slider, float& specular_slider, float& shininess_slider, bool custom_color, float& light_position, float& light_color);
-};
-}
-
-namespace gl {
-class Transform{
-public:
-	static void left(float degrees, vec3& eye, vec3& up);
-	static void up(float degrees, vec3& eye, vec3& up);
-    static mat3 rotate(const float degrees, const vec3& axis);
-    static mat4 scale(const float &sx, const float &sy, const float &sz); 
-    static mat4 translate(const float &tx, const float &ty, const float &tz);
-    static vec3 upvector(const vec3 &up, const vec3 &zvec); 
+    void update();
+    void display(float& ambient_slider, float& diffuse_slider, float& specular_slider, float& shininess_slider, bool custom_color, float& light_position, float& light_color, float scale = 1.f, float x_arg = 0.f, float y_arg = 0.f, float z_arg = 0.f);
 };
 }

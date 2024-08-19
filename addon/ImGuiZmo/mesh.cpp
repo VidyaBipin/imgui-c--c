@@ -11,7 +11,6 @@ Mesh::Mesh(const std::string path)
     up = vec3(0.0, 1.0, 0.0);
     center = vec3(0.0, 0.0, 0.0);
     amount = 5;
-    sx = sy = 1.0;   
     tx = ty = 0.0;  
 
 	object_path = path;
@@ -33,7 +32,6 @@ Mesh::Mesh(const ImGui::ImMat& image, const ImGui::ImMat& map, const float depth
     up = vec3(0.0, 1.0, 0.0);
     center = vec3(0.0, 0.0, 0.0);
     amount = 5;
-    sx = sy = 1.0;   
     tx = ty = 0.0;
 
     // Initialize shaders
@@ -198,13 +196,18 @@ void Mesh::set_view_size(float width, float height)
     glUniformMatrix4fv(projectionPos, 1, GL_FALSE, &projection[0][0]);
 }
 
+void Mesh::update()
+{
+	projection = glm::perspective(glm::radians(fovy), view_width / view_height, zNear, zFar); 
+    glUniformMatrix4fv(projectionPos, 1, GL_FALSE, &projection[0][0]);
+}
+
 void Mesh::set_angle(float angleX, float angleY)
 {
 	eye.x = cosf(angleY) * cosf(angleX) * amount;
     eye.y = sinf(angleX) * amount;
     eye.z = sinf(angleY) * cosf(angleX) * amount;
-	projection = glm::perspective(glm::radians(fovy), view_width / view_height, zNear, zFar); 
-    glUniformMatrix4fv(projectionPos, 1, GL_FALSE, &projection[0][0]);
+	update();
 }
 
 void Mesh::parse_file_and_bind()
@@ -226,7 +229,9 @@ void Mesh::parse_file_and_bind()
 	{
 		float x, y, z;
         float r, g, b;
-		int fx, fy, fz, ignore;
+		int fx, fy, fz, fw;
+        int uvx, uvy, uvz, uvw;
+        int nx, ny, nz, nw;
 		int c1, c2;
 		
 		//
@@ -242,9 +247,12 @@ void Mesh::parse_file_and_bind()
 			if ((c1 == 'v') && (c2 == ' ')) {
 				// scan the first 3 floating number and scan it to x,y and z.
                 // scan the last 3 floating number and scan it to r,g and b.
-				fscanf(fp, "%f %f %f %f %f %f", &x, &y, &z, &r, &g, &b);
+				int ret = fscanf(fp, "%f %f %f %f %f %f", &x, &y, &z, &r, &g, &b);
 				objectVertices.push_back(vec3(x, y, z));
-                objectColors.push_back(vec3(r, g, b));
+                if (ret > 3) 
+                    objectColors.push_back(vec3(r, g, b));
+                else 
+                    objectColors.push_back(vec3(0.5, 0.5, 0.5));
 				if (y < minY) minY = y;
 				if (z < minZ) minZ = z;
 				if (y > maxY) maxY = y;
@@ -257,10 +265,81 @@ void Mesh::parse_file_and_bind()
 			}
 			else if (c1 == 'f') {
 				// the face information, depends on the format of the obj file.
-				fscanf(fp, "%d//%d %d//%d %d//%d", &fx, &ignore, &fy, &ignore, &fz, &ignore);
-				objectIndices.push_back(fx - 1);
-				objectIndices.push_back(fy - 1);
-				objectIndices.push_back(fz - 1);
+				int ret = fscanf(fp, "%d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d", &fx, &uvx, &nx, &fy, &uvy, &ny, &fz, &uvz, &nz, &fw, &uvw, &nw);
+                if (ret == 3)
+                {
+                    objectIndices.push_back(fx - 1);
+                    objectIndices.push_back(fy - 1);
+                    objectIndices.push_back(fz - 1);
+                }
+                else if (ret == 4)
+                {
+                    objectIndices.push_back(fx - 1);
+                    objectIndices.push_back(fy - 1);
+                    objectIndices.push_back(fz - 1);
+                    objectIndices.push_back(fx - 1);
+                    objectIndices.push_back(fz - 1);
+                    objectIndices.push_back(fw - 1);
+                }
+                else if (ret == 6)
+                {
+                    objectIndices.push_back(fx - 1);
+                    objectIndices.push_back(fy - 1);
+                    objectIndices.push_back(fz - 1);
+                    // TODO::Dicky check input
+                    uvIndices.push_back(uvx - 1);
+                    uvIndices.push_back(uvy - 1);
+                    uvIndices.push_back(uvz - 1);
+                }
+                else if (ret == 8)
+                {
+                    objectIndices.push_back(fx - 1);
+                    objectIndices.push_back(fy - 1);
+                    objectIndices.push_back(fz - 1);
+                    objectIndices.push_back(fx - 1);
+                    objectIndices.push_back(fz - 1);
+                    objectIndices.push_back(fw - 1);
+                    // TODO::Dicky check input
+                    uvIndices.push_back(uvx - 1);
+                    uvIndices.push_back(uvy - 1);
+                    uvIndices.push_back(uvz - 1);
+                    uvIndices.push_back(uvx - 1);
+                    uvIndices.push_back(uvz - 1);
+                    uvIndices.push_back(uvw - 1);
+                }
+                else if (ret == 9)
+                {
+                    objectIndices.push_back(fx - 1);
+                    objectIndices.push_back(fy - 1);
+                    objectIndices.push_back(fz - 1);
+                    uvIndices.push_back(uvx - 1);
+                    uvIndices.push_back(uvy - 1);
+                    uvIndices.push_back(uvz - 1);
+                    normalIndices.push_back(nx - 1);
+                    normalIndices.push_back(ny - 1);
+                    normalIndices.push_back(nz - 1);
+                }
+                else if (ret == 12)
+                {
+                    objectIndices.push_back(fx - 1);
+                    objectIndices.push_back(fy - 1);
+                    objectIndices.push_back(fz - 1);
+                    objectIndices.push_back(fx - 1);
+                    objectIndices.push_back(fz - 1);
+                    objectIndices.push_back(fw - 1);
+                    uvIndices.push_back(uvx - 1);
+                    uvIndices.push_back(uvy - 1);
+                    uvIndices.push_back(uvz - 1);
+                    uvIndices.push_back(uvx - 1);
+                    uvIndices.push_back(uvz - 1);
+                    uvIndices.push_back(uvw - 1);
+                    normalIndices.push_back(nx - 1);
+                    normalIndices.push_back(ny - 1);
+                    normalIndices.push_back(nz - 1);
+                    normalIndices.push_back(nx - 1);
+                    normalIndices.push_back(nz - 1);
+                    normalIndices.push_back(nw - 1);
+                }
 			}
 		}
 	}
@@ -456,7 +535,7 @@ void Mesh::parse_image_and_bind(const ImGui::ImMat& image, const ImGui::ImMat& m
 	glBindVertexArray(0);
 }
 
-void Mesh::display(float& ambient_slider, float& diffuse_slider, float& specular_slider, float& shininess_slider, bool custom_color, float& light_position, float& light_color)
+void Mesh::display(float& ambient_slider, float& diffuse_slider, float& specular_slider, float& shininess_slider, bool custom_color, float& light_position, float& light_color, float scale, float x_arg, float y_arg, float z_arg)
 {
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
@@ -467,10 +546,13 @@ void Mesh::display(float& ambient_slider, float& diffuse_slider, float& specular
     glUniform4fv(lightcol, MAX_LIGHTS, &light_color);  
 
     // Transformations for objects, involving translation and scaling 
-    mat4 sc(1.0) , tr(1.0), transf(1.0); 
-    sc = gl::Transform::scale(sx,sy,1.0); 
-    tr = gl::Transform::translate(tx,ty,0.0);   
-    modelview = tr * sc * modelview;
+    mat4 transf(1.0);
+    transf = glm::translate(transf, glm::vec3(tx, ty, 0.0f));
+    transf = glm::scale(transf, glm::vec3(scale, scale, scale)); 
+    transf = glm::rotate(transf, x_arg, glm::vec3(1.0, 0.0, 0.0));
+    transf = glm::rotate(transf, y_arg, glm::vec3(0.0, 1.0, 0.0));
+    transf = glm::rotate(transf, z_arg, glm::vec3(0.0, 0.0, 1.0));
+    modelview = modelview * transf;
 
     if (!custom_color){
         *(&ambient_slider + 1) = ambient_slider;
@@ -522,64 +604,5 @@ void Mesh::display(float& ambient_slider, float& diffuse_slider, float& specular
         glDrawElements(GL_TRIANGLES, objectIndices.size(), GL_UNSIGNED_INT, 0);
     } 
     glBindVertexArray(0);
-}
-}
-
-namespace gl {
-mat3 Transform::rotate(const float degrees, const vec3& axis){
-	const float radian = degrees * (3.14159265f / 180.0f);  
-	glm::mat3 dot = glm::mat3(
-		axis.x * axis.x, axis.x * axis.y, axis.x * axis.z,
-		axis.x * axis.y, axis.y * axis.y, axis.y * axis.z,
-		axis.x * axis.z, axis.y * axis.z, axis.z * axis.z
-		);
-	glm::mat3 cross = glm::mat3(
-		0, -axis.z, axis.y,
-		axis.z, 0, -axis.x,
-		-axis.y, axis.x, 0
-		);
-	return mat3(mat3(cos(radian)) * mat3(1.0f) + mat3(1.0f - cos(radian)) * dot \
-			+ mat3(sin(radian)) * glm::transpose(cross));
-}
-
-void Transform::left(float degrees, vec3& eye, vec3& up){
-	mat3 rotation = (rotate(degrees, normalize(up))); 
-	eye = rotation * eye; 
-}
-
-void Transform::up(float degrees, vec3& eye, vec3& up){
-	vec3 axis_for_up = glm::cross(glm::normalize(up), glm::normalize(eye));
-	mat3 rotation = rotate(degrees, glm::normalize(axis_for_up)); 
-	eye = eye * rotation; 
-	up = up * rotation; 
-}
-
-mat4 Transform::scale(const float &sx, const float &sy, const float &sz){
-	mat4 ret;
-	ret = glm::transpose(mat4(
-		sx, 0, 0, 0,
-		0, sy, 0, 0,
-		0, 0, sz, 0,
-		0, 0, 0, 1
-		));
-	return ret;
-}
-
-mat4 Transform::translate(const float &tx, const float &ty, const float &tz){
-	mat4 ret;
-	ret = transpose(mat4(
-		1, 0, 0, tx,
-		0, 1, 0, ty,
-		0, 0, 1, tz,
-		0, 0, 0, 1
-		));	
-	return ret;
-}
-
-vec3 Transform::upvector(const vec3 &up, const vec3 & zvec){
-    vec3 x = glm::cross(up,zvec); 
-    vec3 y = glm::cross(zvec,x); 
-    vec3 ret = glm::normalize(y); 
-    return ret; 
 }
 }

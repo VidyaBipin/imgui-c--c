@@ -22,18 +22,19 @@ static void show_main_view()
     static float light_positions[20] = {10.0f, 10.0f, 10.0f};
     static float light_colors[20] = {1.0f, 1.0f, 1.0f};
     static float shininess = 1; 
+    static float scale = 1.0f;
     static bool custom_color = false;
     bool bControlHoverd = false;
     bool bAnyPopup = ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopupId);
 
     auto cameraViewUpdate = [&]()
     {
-        if (mesh) mesh->set_angle(camXAngle, camYAngle);
+        if (mesh) mesh->update();
     };
 
     if (mesh)
     {
-        mesh->display(*ambient, *diffusion, *specular, shininess, custom_color, *light_positions, *light_colors);
+        mesh->display(*ambient, *diffusion, *specular, shininess, custom_color, *light_positions, *light_colors, scale, camXAngle, camYAngle);
     }
 
     // draw control panel
@@ -76,6 +77,7 @@ static void show_main_view()
             ImGui::SliderFloat3("Camera position ", &mesh->eye[0], -10.0f, 10.0f);
             ImGui::Separator(); 
             ImGui::TextColored({0.0f,1.0f,1.0f,1.0f}, "Camera"); ImGui::Separator(); 
+            if (ImGui::SliderFloat("Scale", &scale, 0.01f, 2.0f)) cameraViewUpdate();
             if (ImGui::SliderFloat("Field of view", &mesh->fovy, 0.0f, 180.0f)) cameraViewUpdate();
             if (ImGui::SliderFloat("Frustum near", &mesh->zNear, -15.0f, 15.0f)) cameraViewUpdate();
             if (ImGui::SliderFloat("Frustum far", &mesh->zFar, -150.0f, 150.0f)) cameraViewUpdate();
@@ -86,6 +88,7 @@ static void show_main_view()
                 mesh->amount = 5.f;
                 mesh->tx = 0.0f;
                 mesh->ty = 0.0f;
+                scale = 1.f;
                 cameraViewUpdate();
             }
             ImGui::Separator(); 
@@ -167,6 +170,12 @@ static void show_main_view()
         {
             camYAngle += io.MouseDelta.x / Canvas_size.x / mesh->amount * 20;
             camXAngle += io.MouseDelta.y / Canvas_size.y / mesh->amount * 20;
+            if (ImGui::BeginTooltip())
+            {
+                ImGui::Text("CamX Angle:%0.3f", ImRadToDeg(camYAngle));
+                ImGui::Text("CamY Angle:%0.3f", ImRadToDeg(camXAngle));
+                ImGui::EndTooltip();
+            }
             cameraViewUpdate();
         }
     }

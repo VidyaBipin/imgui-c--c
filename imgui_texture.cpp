@@ -758,6 +758,14 @@ void ImLoadImageToMat(const char* path, ImMat& mat, bool gray)
         mat = tmp.clone();
         stbi_image_free(data);
     }
+    else if (auto data = stbi_load_16(path, &width, &height, &component, gray ? 1 : 4))
+    {
+        ImMat tmp;
+        tmp.create_type(width, height, gray ? 1 : 4, data, IM_DT_INT16);
+        tmp.elempack = gray ? 1 : 4;
+        mat = tmp.clone();
+        stbi_image_free(data);
+    }
 }
 
 int ImGetTextureData(ImTextureID texture, void* data)
